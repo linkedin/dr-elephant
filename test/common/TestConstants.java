@@ -49,6 +49,10 @@ public class TestConstants {
   public static final String DB_DEFAULT_DRIVER_VALUE = "org.h2.Driver";
   public static final String DB_DEFAULT_URL_KEY = "db.default.url";
   public static final String DB_DEFAULT_URL_VALUE = "jdbc:h2:mem:test;MODE=MySQL;";
+  public static final String EVOLUTION_PLUGIN_KEY = "evolutionplugin";
+  public static final String EVOLUTION_PLUGIN_VALUE = "enabled";
+  public static final String APPLY_EVOLUTIONS_DEFAULT_KEY = "applyEvolutions.default";
+  public static final String APPLY_EVOLUTIONS_DEFAULT_VALUE = "true";
 
   // Paths to the rest end-points
   public static final String REST_APP_RESULT_PATH = "/rest/job";

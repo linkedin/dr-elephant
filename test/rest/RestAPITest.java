@@ -59,6 +59,8 @@ public class RestAPITest {
     Map<String, String> dbConn = new HashMap<String, String>();
     dbConn.put(DB_DEFAULT_DRIVER_KEY, DB_DEFAULT_DRIVER_VALUE);
     dbConn.put(DB_DEFAULT_URL_KEY, DB_DEFAULT_URL_VALUE);
+    dbConn.put(EVOLUTION_PLUGIN_KEY, EVOLUTION_PLUGIN_VALUE);
+    dbConn.put(APPLY_EVOLUTIONS_DEFAULT_KEY, APPLY_EVOLUTIONS_DEFAULT_VALUE);
 
     GlobalSettings gs = new GlobalSettings() {
       @Override
@@ -139,7 +141,7 @@ public class RestAPITest {
    * </p>
    */
   @Test
-  public void restFlowExecResult() {
+  public void testrestFlowExecResult() {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
