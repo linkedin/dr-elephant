@@ -31,12 +31,12 @@ object Dependencies {
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
 
-  var hadoopVersion = "2.3.0"
+  var hadoopVersion = "2.7.2"
   if (System.getProperties.getProperty(HADOOP_VERSION) != null) {
     hadoopVersion = System.getProperties.getProperty(HADOOP_VERSION)
   }
 
-  var sparkVersion = "1.4.0"
+  var sparkVersion = "1.6.1"
   if (System.getProperties.getProperty(SPARK_VERSION) != null) {
     sparkVersion = System.getProperties.getProperty(SPARK_VERSION)
   }
@@ -47,13 +47,13 @@ object Dependencies {
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-    )
+      )
   } else {
     "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-    )
+      )
   }
 
   // Dependency coordinates
