@@ -31,12 +31,12 @@ object Dependencies {
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
 
-  var hadoopVersion = "2.7.2"
+  var hadoopVersion = "2.3.0"
   if (System.getProperties.getProperty(HADOOP_VERSION) != null) {
     hadoopVersion = System.getProperties.getProperty(HADOOP_VERSION)
   }
 
-  var sparkVersion = "1.6.1"
+  var sparkVersion = "1.4.0"
   if (System.getProperties.getProperty(SPARK_VERSION) != null) {
     sparkVersion = System.getProperties.getProperty(SPARK_VERSION)
   }
