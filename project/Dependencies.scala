@@ -40,6 +40,21 @@ object Dependencies {
     sparkVersion = System.getProperties.getProperty(SPARK_VERSION)
   }
 
+  val sparkExclusion = if (sparkVersion >= "1.5.0") {
+    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+      ExclusionRule(organization = "com.typesafe.akka"),
+      ExclusionRule(organization = "org.apache.avro"),
+      ExclusionRule(organization = "org.apache.hadoop"),
+      ExclusionRule(organization = "net.razorvine")
+    )
+  } else {
+    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+      ExclusionRule(organization = "org.apache.avro"),
+      ExclusionRule(organization = "org.apache.hadoop"),
+      ExclusionRule(organization = "net.razorvine")
+    )
+  }
+
   // Dependency coordinates
   var requiredDep = Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
@@ -50,16 +65,10 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-common" % hadoopVersion % "compileonly",
     "org.apache.hadoop" % "hadoop-common" % hadoopVersion % Test,
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % "compileonly",
-    // TODO: Cleanup Spark dependencies
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
-            ExclusionRule(organization = "org.apache.avro"),
-            ExclusionRule(organization = "org.apache.hadoop"),
-            ExclusionRule(organization = "net.razorvine")
-            ),
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.mockito" % "mockito-core" % "1.10.19"
-  )
+  ) :+ sparkExclusion 
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
   dependencies ++= requiredDep
