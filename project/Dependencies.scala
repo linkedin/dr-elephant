@@ -47,17 +47,17 @@ object Dependencies {
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-    )
+      )
   } else {
     "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-    )
+      )
   }
 
   // Dependency coordinates
-  var requiredDep = Seq(
+  var requiredDep =sparkExclusion  +: Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
     "commons-codec" % "commons-codec" % commonsCodecVersion,
@@ -70,7 +70,7 @@ object Dependencies {
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.mockito" % "mockito-core" % "1.10.19"
-  ) :+ sparkExclusion 
+  )
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
   dependencies ++= requiredDep
