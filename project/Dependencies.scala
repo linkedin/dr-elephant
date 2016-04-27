@@ -20,6 +20,7 @@ import sbt._
 object Dependencies {
 
   // Dependency Version
+  lazy val commonsCodecVersion = "1.10"
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
   lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
@@ -44,6 +45,7 @@ object Dependencies {
   var requiredDep = Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
+    "commons-codec" % "commons-codec" % commonsCodecVersion,
     "commons-io" % "commons-io" % commonsIoVersion,
     "mysql" % "mysql-connector-java" % mysqlConnectorVersion,
     "org.apache.hadoop" % "hadoop-auth" % hadoopVersion % "compileonly",
