@@ -36,6 +36,14 @@ public class FetcherConfigurationTest {
   private static Document document2 = null;
   private static Document document3 = null;
   private static Document document4 = null;
+  private static Document document5 = null;
+
+  private static final String spark = "SPARK";
+  private static final String logDirField = "event_log_dir";
+  private static final String logDirValue = "/system/spark-history";
+  private static final String logSizeField = "event_log_size_limit_in_mb";
+  private static final String logSizeValue = "100";
+
 
   @BeforeClass
   public static void runBeforeClass() {
@@ -54,6 +62,9 @@ public class FetcherConfigurationTest {
       document4 = builder.parse(
           FetcherConfigurationTest.class.getClassLoader().getResourceAsStream(
               "configurations/fetcher/FetcherConfTest4.xml"));
+      document5 = builder.parse(
+              FetcherConfigurationTest.class.getClassLoader().getResourceAsStream(
+                      "configurations/fetcher/FetcherConfTest5.xml"));
     } catch (ParserConfigurationException e) {
       throw new RuntimeException("XML Parser could not be created.", e);
     } catch (SAXException e) {
@@ -104,6 +115,19 @@ public class FetcherConfigurationTest {
     expectedEx.expectMessage("No tag or invalid tag 'applicationtype' in fetcher 1"
         + " classname com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2");
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
+  }
+
+  /**
+   *  Test Spark fetcher params, Event log size and log directory
+   */
+  @Test
+  public void testParseFetcherConf5() {
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document5.getDocumentElement());
+    assertEquals(fetcherConf.getFetchersConfigurationData().size(), 1);
+    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getAppType().getName(), spark);
+    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().size(), 3);
+    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().get(logSizeField), logSizeValue);
+    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().get(logDirField), logDirValue);
   }
 }
 
