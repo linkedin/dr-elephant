@@ -80,7 +80,6 @@ public class ElephantRunner implements Runnable {
         @Override
         public Void run() {
           HDFSContext.load();
-        //  loadAnalyticJobGenerator();
           ElephantContext.init();
 
           _service = Executors.newFixedThreadPool(EXECUTOR_NUM);
