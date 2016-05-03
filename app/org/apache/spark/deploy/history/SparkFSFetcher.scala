@@ -49,21 +49,20 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   import SparkFSFetcher._
 
+  var confEventLogSizeInMb = defEventLogSizeInMb
   if (fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD) != null) {
     val logLimitSize = Utils.getParam(fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD), 1)
     if (logLimitSize != null) {
-      EVENT_LOG_SIZE_LIMIT_MB = logLimitSize(0)
+      confEventLogSizeInMb = logLimitSize(0)
     }
   }
-  logger.info("The event log limit of Spark application is set to " + EVENT_LOG_SIZE_LIMIT_MB + " MB")
+  logger.info("The event log limit of Spark application is set to " + confEventLogSizeInMb + " MB")
 
-  if (fetcherConfData.getParamMap.get(LOG_DIR_XML_FIELD) != null) {
-    val logDir = fetcherConfData.getParamMap.get(LOG_DIR_XML_FIELD)
-    if (!logDir.isEmpty) {
-      DEFAULT_LOG_DIR = logDir
-    }
+  var confEventLogDir = fetcherConfData.getParamMap.get(LOG_DIR_XML_FIELD)
+  if (confEventLogDir == null || confEventLogDir.isEmpty) {
+    confEventLogDir = defEventLogDir
   }
-  logger.info("The default event log directory of Spark application is set to " + DEFAULT_LOG_DIR)
+  logger.info("The event log directory of Spark application is set to " + confEventLogDir)
 
   private val _sparkConf = new SparkConf()
 
@@ -75,7 +74,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     val nodeAddress = conf.get("dfs.namenode.http-address", null)
     val hdfsAddress = if (nodeAddress == null) "" else "webhdfs://" + nodeAddress
 
-    val uri = new URI(_sparkConf.get("spark.eventLog.dir", DEFAULT_LOG_DIR))
+    val uri = new URI(_sparkConf.get("spark.eventLog.dir", confEventLogDir))
     val logDir = hdfsAddress + uri.getPath
     logger.info("Looking for spark logs at logDir: " + logDir)
     logDir
@@ -164,7 +163,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
           dataCollection.getConf().setProperty("spark.app.id", appId)
 
           logger.info("The event log of Spark application: " + appId + " is over the limit size of "
-              + EVENT_LOG_SIZE_LIMIT_MB + " MB, the parsing process gets throttled.")
+              + defEventLogSizeInMb + " MB, the parsing process gets throttled.")
         } else {
           logger.info("Replaying Spark logs for application: " + appId)
 
@@ -231,7 +230,15 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * @return If the event log parsing should be throttled
    */
   private def shouldThrottle(eventLogPath: Path): Boolean = {
-    fs.getFileStatus(eventLogPath).getLen() > (EVENT_LOG_SIZE_LIMIT_MB * FileUtils.ONE_MB)
+    fs.getFileStatus(eventLogPath).getLen() > (confEventLogSizeInMb * FileUtils.ONE_MB)
+  }
+
+  def getEventLogSize(): Double = {
+    confEventLogSizeInMb
+  }
+
+  def getEventLogDir(): String = {
+    confEventLogDir
   }
 
 }
@@ -239,12 +246,11 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 private object SparkFSFetcher {
   private val logger = Logger.getLogger(SparkFSFetcher.getClass)
 
-  var DEFAULT_LOG_DIR = "/system/spark-history"
+  var defEventLogDir = "/system/spark-history"
+  var defEventLogSizeInMb = 100d; // 100MB
 
   val LOG_SIZE_XML_FIELD = "event_log_size_limit_in_mb"
   val LOG_DIR_XML_FIELD = "event_log_dir"
-
-  var EVENT_LOG_SIZE_LIMIT_MB = 100d; // 100MB
 
   // Constants used to parse <= Spark 1.2.0 log directories.
   val LOG_PREFIX = "EVENT_LOG_"

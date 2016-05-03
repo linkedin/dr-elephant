@@ -20,6 +20,8 @@ import java.io.IOException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,9 +42,9 @@ public class FetcherConfigurationTest {
 
   private static final String spark = "SPARK";
   private static final String logDirField = "event_log_dir";
-  private static final String logDirValue = "/system/spark-history";
+  private static final String logDirValue = "/custom/configured";
   private static final String logSizeField = "event_log_size_limit_in_mb";
-  private static final String logSizeValue = "100";
+  private static final String logSizeValue = "50";
 
 
   @BeforeClass
@@ -113,7 +115,7 @@ public class FetcherConfigurationTest {
   public void testParseFetcherConf4() {
     expectedEx.expect(RuntimeException.class);
     expectedEx.expectMessage("No tag or invalid tag 'applicationtype' in fetcher 1"
-        + " classname com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2");
+            + " classname com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2");
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
   }
 
@@ -129,5 +131,6 @@ public class FetcherConfigurationTest {
     assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().get(logSizeField), logSizeValue);
     assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().get(logDirField), logDirValue);
   }
+
 }
 

@@ -20,8 +20,6 @@
     <applicationtype>spark</applicationtype>
     <classname>org.apache.spark.deploy.history.SparkFSFetcher</classname>
     <params>
-      <event_log_size_limit_in_mb>50</event_log_size_limit_in_mb>
-      <event_log_dir>/custom/configured</event_log_dir>
     </params>
   </fetcher>
 </fetchers>
