@@ -38,6 +38,11 @@ public interface AnalyticJobGenerator {
       throws IOException;
 
   /**
+   * Configures the resource manager addresses considering HA
+   */
+  public void updateResourceManagerAddresses();
+
+  /**
    * Provides a list of AnalyticJobs that should be calculated
    *
    * @return a list of AnalyticJobs

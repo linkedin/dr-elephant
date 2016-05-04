@@ -45,6 +45,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final String IS_RM_HA_ENABLED = "yarn.resourcemanager.ha.enabled";
   private static final String RESOURCE_MANAGER_IDS = "yarn.resourcemanager.ha.rm-ids";
   private static final String RM_NODE_STATE_URL = "http://%s/ws/v1/cluster/info";
+  private static Configuration configuration;
 
   // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
   private static final long FETCH_DELAY = 60000;
@@ -64,9 +65,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
   private final Queue<AnalyticJob> _retryQueue = new ConcurrentLinkedQueue<AnalyticJob>();
 
-  @Override
-  public void configure(Configuration configuration)
-      throws IOException {
+  public void updateResourceManagerAddresses() {
     if (Boolean.valueOf(configuration.get(IS_RM_HA_ENABLED))) {
       String resourceManagers = configuration.get(RESOURCE_MANAGER_IDS);
       if (resourceManagers != null) {
@@ -94,17 +93,25 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         catch (AuthenticationException e) {
           logger.error("Error fetching resource manager state " + e.getMessage());
         }
+        catch (IOException e) {
+          logger.error("Error fetching Json for resource manager status " + e.getMessage());
+        }
       }
-    }
-    else {
+    } else {
       _resourceManagerAddress = configuration.get(RESOURCE_MANAGER_ADDRESS);
     }
-
     if (_resourceManagerAddress == null) {
       throw new RuntimeException(
-          "Cannot get YARN resource manager address from Hadoop Configuration property: [" + RESOURCE_MANAGER_ADDRESS
-              + "].");
+              "Cannot get YARN resource manager address from Hadoop Configuration property: [" + RESOURCE_MANAGER_ADDRESS
+                      + "].");
     }
+  }
+
+  @Override
+  public void configure(Configuration configuration)
+      throws IOException {
+    this.configuration = configuration;
+    updateResourceManagerAddresses();
   }
 
   /**
