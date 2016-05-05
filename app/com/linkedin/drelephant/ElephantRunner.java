@@ -80,7 +80,6 @@ public class ElephantRunner implements Runnable {
         @Override
         public Void run() {
           HDFSContext.load();
-          loadAnalyticJobGenerator();
           ElephantContext.init();
 
           _service = Executors.newFixedThreadPool(EXECUTOR_NUM);
@@ -90,6 +89,7 @@ public class ElephantRunner implements Runnable {
           }
 
           while (_running.get() && !Thread.currentThread().isInterrupted()) {
+            loadAnalyticJobGenerator();
             lastRun = System.currentTimeMillis();
 
             logger.info("Fetching analytic job list...");
