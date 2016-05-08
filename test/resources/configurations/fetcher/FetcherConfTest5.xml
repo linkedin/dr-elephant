@@ -15,32 +15,13 @@
   the License.
 -->
 
-<!-- Data fetchers configurations
-  A Fetcher implements ElephantFetcher interface and help fetch a certain application type data.
-
-  Example:
-  <fetcher>
-    # Choose the application type that this fetcher is for
-    <applicationtype>mapreduce</applicationtype>
-
-
-    # Specify the implementation class
-    <classname>com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2</classname>
-  </fetcher>
--->
 <fetchers>
-  <fetcher>
-    <applicationtype>mapreduce</applicationtype>
-    <classname>com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2</classname>
-  </fetcher>
   <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>org.apache.spark.deploy.history.SparkFSFetcher</classname>
-    <!--
     <params>
-      <event_log_size_limit_in_mb>100</event_log_size_limit_in_mb>
-      <event_log_dir>/system/spark-history</event_log_dir>
+      <event_log_size_limit_in_mb>50</event_log_size_limit_in_mb>
+      <event_log_dir>/custom/configured</event_log_dir>
     </params>
-    -->
   </fetcher>
 </fetchers>
