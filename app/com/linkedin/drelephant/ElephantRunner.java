@@ -90,6 +90,7 @@ public class ElephantRunner implements Runnable {
           }
 
           while (_running.get() && !Thread.currentThread().isInterrupted()) {
+            _analyticJobGenerator.updateResourceManagerAddresses();
             lastRun = System.currentTimeMillis();
 
             logger.info("Fetching analytic job list...");
