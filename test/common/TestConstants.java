@@ -28,7 +28,9 @@ public class TestConstants {
   public static final String TEST_JOB_ID2 = "application_1458194917883_1453362";
   public static final String TEST_JOB_NAME = "Email Overwriter";
   public static final String TEST_JOB_TYPE = "HadoopJava";
+  public static final String TEST_APP_TYPE = "HadoopJava";
   public static final String TEST_USERNAME = "growth";
+  public static final String TEST_DEFAULT_QUEUE_NAME = "default";
 
   public static final String TEST_JOB_EXEC_ID1 =
       "https://elephant.linkedin.com:8443/executor?execid=1654676&job=overwriter-reminder2&attempt=0";
@@ -62,4 +64,20 @@ public class TestConstants {
   public static final String REST_COMPARE_PATH = "/rest/compare";
   public static final String REST_FLOW_GRAPH_DATA_PATH = "/rest/flowgraphdata";
   public static final String REST_JOB_GRAPH_DATA_PATH = "/rest/jobgraphdata";
+
+  public static final String DEFAULT_ENCODING = "UTF-8";
+
+  // Sample mapreduce constants
+  public static final String FILENAME_JOBCOUNTER = "mrdata/sampleJobCounter.properties";
+  public static final String FILENAME_MAPPERTASK = "mrdata/mapperTaskCounter$.properties";
+  public static final String FILENAME_REDUCERTASK = "mrdata/reducerTaskCounter$.properties";
+  public static final String FILENAME_JOBCONF = "mrdata/sampleJobConf.properties";
+
+  public static final String TEST_TRACKING_URL = "http://hostname/jobhistory/job/job_1460381439677_0001";
+  public static final String TEST_JOBCONF_NAME = "mapred.child.java.opts";
+  public static final String TEST_JOBCONF_PATTERN = ".*.";
+  public static final String TEST_SCHEDULER = "azkaban";
+  public static final long TEST_SCORE = 0;
+  public static final String TEST_SEVERITY = "NONE";
+
 }
