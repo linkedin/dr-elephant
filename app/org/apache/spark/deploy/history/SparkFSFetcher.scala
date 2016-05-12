@@ -30,7 +30,6 @@ import org.apache.commons.io.FileUtils
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
-import org.apache.hadoop.hdfs.web.WebHdfsFileSystem
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{EventLoggingListener, ReplayListenerBus, ApplicationEventListener}
@@ -70,12 +69,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * properties in the configuration files. Triggering it too early will sometimes make the configuration object empty.
    */
   private lazy val _logDir: String = {
-    val conf = new Configuration()
-    val nodeAddress = conf.get("dfs.namenode.http-address", null)
-    val hdfsAddress = if (nodeAddress == null) "" else "webhdfs://" + nodeAddress
-
-    val uri = new URI(_sparkConf.get("spark.eventLog.dir", confEventLogDir))
-    val logDir = hdfsAddress + uri.getPath
+	val logDir = "hdfs://" + confEventLogDir
     logger.info("Looking for spark logs at logDir: " + logDir)
     logDir
   }
@@ -88,9 +82,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     if (new URI(_logDir).getHost == null) {
       FileSystem.getLocal(new Configuration())
     } else {
-      val filesystem = new WebHdfsFileSystem()
-      filesystem.initialize(new URI(_logDir), new Configuration())
-      filesystem
+	  FileSystem.get(new Configuration())
     }
   }
 
