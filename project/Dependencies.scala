@@ -70,7 +70,8 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % Test,
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
-    "org.mockito" % "mockito-core" % "1.10.19"
+    "org.mockito" % "mockito-core" % "1.10.19",
+    "org.jmockit" % "jmockit" % "1.23" % Test
   ) :+ sparkExclusion 
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
