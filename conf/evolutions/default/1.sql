@@ -50,6 +50,7 @@ create index yarn_app_result_i4 on yarn_app_result (flow_exec_id);
 create index yarn_app_result_i5 on yarn_app_result (job_def_id);
 create index yarn_app_result_i6 on yarn_app_result (flow_def_id);
 create index yarn_app_result_i7 on yarn_app_result (start_time);
+create index yarn_app_result_i8 on yarn_app_result (queue_name);
 
 CREATE TABLE yarn_app_heuristic_result (
   id                  INT(11)       NOT NULL AUTO_INCREMENT COMMENT 'The application heuristic result id',
