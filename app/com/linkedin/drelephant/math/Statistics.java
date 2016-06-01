@@ -79,7 +79,7 @@ public final class Statistics {
   public static long[][] findTwoGroupsRecursive(long[] values, long middle, int levels) {
     if (levels > 0) {
       long[][] result = twoMeans(values, middle);
-      long newMiddle = average(result[1]) - average(result[0]);
+      long newMiddle = (average(result[1]) + average(result[0])) / 2;
       return findTwoGroupsRecursive(values, newMiddle, levels - 1);
     }
     return twoMeans(values, middle);
