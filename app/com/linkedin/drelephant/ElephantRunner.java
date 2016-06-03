@@ -46,7 +46,7 @@ public class ElephantRunner implements Runnable {
   private static final Logger logger = Logger.getLogger(ElephantRunner.class);
 
   private static final long WAIT_INTERVAL = 60 * 1000;      // Interval between fetches and retries
-  private static final int EXECUTOR_NUM = 3;                // The number of executor threads to analyse the jobs
+  private static final int EXECUTOR_NUM = 96;                // The number of executor threads to analyse the jobs
 
   private AtomicBoolean _running = new AtomicBoolean(true);
   private long lastRun;

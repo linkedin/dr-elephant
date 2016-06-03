@@ -18,6 +18,7 @@ package com.linkedin.drelephant.mapreduce;
 
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
+import com.linkedin.drelephant.analysis.HttpConnectionPooling;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceCounterData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
@@ -26,10 +27,8 @@ import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.util.Utils;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.InputStream;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +41,11 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -50,6 +54,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 /**
  * This class implements the Fetcher for MapReduce Applications on Hadoop2
  */
+
+
 public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplicationData> {
   private static final Logger logger = Logger.getLogger(ElephantFetcher.class);
   private static final int MAX_SAMPLE_SIZE = 200;
@@ -74,7 +80,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
   }
 
   @Override
-  public MapReduceApplicationData fetchData(AnalyticJob analyticJob) throws IOException, AuthenticationException {
+  public MapReduceApplicationData fetchData(AnalyticJob analyticJob) throws IOException, AuthenticationException, URISyntaxException {
     String appId = analyticJob.getAppId();
     MapReduceApplicationData jobData = new MapReduceApplicationData();
     String jobId = Utils.getJobIdFromApplicationId(appId);
@@ -111,8 +117,8 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
         jobData.setSucceeded(false);
         String diagnosticInfo;
         try {
-          diagnosticInfo = parseException(jobData.getJobId(),  _jsonFactory.getDiagnosticInfo(jobURL));
-        } catch(Exception e) {
+          diagnosticInfo = parseException(jobData.getJobId(), _jsonFactory.getDiagnosticInfo(jobURL));
+        } catch (Exception e) {
           diagnosticInfo = null;
         }
         jobData.setDiagnosticInfo(diagnosticInfo);
@@ -128,7 +134,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
   }
 
   private String parseException(String jobId, String diagnosticInfo) throws MalformedURLException, IOException,
-                                                                            AuthenticationException {
+                                                                            AuthenticationException, URISyntaxException {
     Matcher m = ThreadContextMR2.getDiagnosticMatcher(diagnosticInfo);
     if (m.matches()) {
       if (Integer.parseInt(m.group(2)) == 0) {
@@ -198,18 +204,18 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
   }
 
   private class JSONFactory {
-    private String getState(URL url) throws IOException, AuthenticationException {
+    private String getState(URL url) throws IOException, AuthenticationException, URISyntaxException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       return rootNode.path("job").path("state").getValueAsText();
     }
 
-    private String getDiagnosticInfo(URL url) throws IOException, AuthenticationException {
+    private String getDiagnosticInfo(URL url) throws IOException, AuthenticationException, URISyntaxException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       String diag = rootNode.path("job").path("diagnostics").getValueAsText();
       return diag;
     }
 
-    private Properties getProperties(URL url) throws IOException, AuthenticationException {
+    private Properties getProperties(URL url) throws IOException, AuthenticationException, URISyntaxException {
       Properties jobConf = new Properties();
 
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
@@ -223,7 +229,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
       return jobConf;
     }
 
-    private MapReduceCounterData getJobCounter(URL url) throws IOException, AuthenticationException {
+    private MapReduceCounterData getJobCounter(URL url) throws IOException, AuthenticationException, URISyntaxException {
       MapReduceCounterData holder = new MapReduceCounterData();
 
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
@@ -240,7 +246,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
       return holder;
     }
 
-    private MapReduceCounterData getTaskCounter(URL url) throws IOException, AuthenticationException {
+    private MapReduceCounterData getTaskCounter(URL url) throws IOException, AuthenticationException, URISyntaxException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode groups = rootNode.path("jobTaskCounters").path("taskCounterGroup");
       MapReduceCounterData holder = new MapReduceCounterData();
@@ -256,7 +262,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
       return holder;
     }
 
-    private long[] getTaskExecTime(URL url) throws IOException, AuthenticationException {
+    private long[] getTaskExecTime(URL url) throws IOException, AuthenticationException, URISyntaxException {
 
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode taskAttempt = rootNode.path("taskAttempt");
@@ -279,7 +285,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
     }
 
     private void getTaskDataAll(URL url, String jobId, List<MapReduceTaskData> mapperList,
-        List<MapReduceTaskData> reducerList) throws IOException, AuthenticationException {
+        List<MapReduceTaskData> reducerList) throws IOException, AuthenticationException, URISyntaxException {
 
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode tasks = rootNode.path("tasks").path("task");
@@ -305,7 +311,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
       getTaskData(jobId, reducerList);
     }
 
-    private void getTaskData(String jobId, List<MapReduceTaskData> taskList) throws IOException, AuthenticationException {
+    private void getTaskData(String jobId, List<MapReduceTaskData> taskList) throws IOException, AuthenticationException, URISyntaxException {
       if (taskList.size() > MAX_SAMPLE_SIZE) {
         logger.info(jobId + " needs sampling.");
         Collections.shuffle(taskList);
@@ -327,7 +333,7 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
       }
     }
 
-    private String getTaskFailedStackTrace(URL taskAllAttemptsUrl) throws IOException, AuthenticationException {
+    private String getTaskFailedStackTrace(URL taskAllAttemptsUrl) throws IOException, AuthenticationException, URISyntaxException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(taskAllAttemptsUrl);
       JsonNode tasks = rootNode.path("taskAttempts").path("taskAttempt");
       for (JsonNode task : tasks) {
@@ -407,9 +413,31 @@ final class ThreadContextMR2 {
     return _LOCAL_DIAGNOSTIC_PATTERN.get().matcher(diagnosticInfo);
   }
 
-  public static JsonNode readJsonNode(URL url) throws IOException, AuthenticationException {
-    HttpURLConnection conn = _LOCAL_AUTH_URL.get().openConnection(url, _LOCAL_AUTH_TOKEN.get());
-    return _LOCAL_MAPPER.get().readTree(conn.getInputStream());
+  public static JsonNode readJsonNode(URL url) throws IOException, AuthenticationException, URISyntaxException {
+
+    PoolingHttpClientConnectionManager cm;
+    cm = HttpConnectionPooling.getInstance().getCm();
+    CloseableHttpClient client = HttpClientBuilder.create()
+            .setConnectionManager(cm)
+            .setConnectionManagerShared(true)
+            .build();
+
+    HttpGet httpGet = new HttpGet(url.toURI());
+    httpGet.setHeader("Content-Type", "application/json");
+    CloseableHttpResponse response = client.execute(httpGet);
+
+    String result = null;
+
+    try {
+      InputStream in = response.getEntity().getContent();
+        result = org.apache.commons.io.IOUtils.toString(in);
+      in.close();
+    } finally {
+      response.close();
+    }
+    // TODO: Clean this up a bit. Calling this here to ensure local variables are appropriately initialized.
+    _LOCAL_AUTH_TOKEN.get();
+    return _LOCAL_MAPPER.get().readTree(result);
   }
 
   public static void updateAuthToken() {
