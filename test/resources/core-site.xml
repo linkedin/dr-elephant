@@ -29,5 +29,25 @@
     <value>localhost:19888</value>
   </property>
 
+  <property>
+    <name>dfs.nameservices</name>
+    <value>sample</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.namenodes.sample</name>
+    <value>ha1,ha2</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.http-address.sample.ha1</name>
+    <value>sample-ha1.grid.company.com:50070</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.http-address.sample.ha2</name>
+    <value>sample-ha2.grid.company.com:50070</value>
+  </property>
+
 </configuration>
 

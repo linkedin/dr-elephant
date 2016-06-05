@@ -19,16 +19,20 @@ package org.apache.spark.deploy.history;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
+import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
+import org.apache.spark.deploy.history.DummySparkFSFetcher;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+
+import org.apache.hadoop.conf.Configuration;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,6 +41,7 @@ public class SparkFsFetcherTest {
   private static Document document1 = null;
   private static Document document2 = null;
   private static Document document3 = null;
+  private static Document document4 = null;
 
   private static final String spark = "SPARK";
   private static final String defEventLogDir = "/system/spark-history";
@@ -58,6 +63,9 @@ public class SparkFsFetcherTest {
       document3 = builder.parse(
               SparkFsFetcherTest.class.getClassLoader().getResourceAsStream(
                       "configurations/fetcher/FetcherConfTest7.xml"));
+      document4 = builder.parse(
+              SparkFsFetcherTest.class.getClassLoader().getResourceAsStream(
+                      "configurations/fetcher/FetcherConfTest8.xml"));
     } catch (ParserConfigurationException e) {
       throw new RuntimeException("XML Parser could not be created.", e);
     } catch (SAXException e) {
@@ -187,4 +195,25 @@ public class SparkFsFetcherTest {
       throw new RuntimeException("Could not find constructor for class " + data.getClassName(), e);
     }
   }
+
+  // checks the namenode address from the hadoopconf
+  @Test
+  public void testGetNamenodeAddressFromHadoopConf() {
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document2.getDocumentElement());
+    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0));
+    Configuration conf = new Configuration();
+    String nameNode = fetcher.getNamenodeAddress(conf);
+    assertEquals(nameNode,"sample-ha2.grid.company.com:50070");
+  }
+
+  // checks the namenode address from fetcherConf
+  @Test
+  public void testGetNamenodeAddressFromFetcherConf() {
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
+    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0));
+    Configuration conf = new Configuration();
+    String nameNode = fetcher.getNamenodeAddress(conf);
+    assertEquals(nameNode,"sample-ha4.grid.company.com:50070");
+  }
 }
+

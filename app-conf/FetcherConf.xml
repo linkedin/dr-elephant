@@ -40,6 +40,9 @@
     <params>
       <event_log_size_limit_in_mb>100</event_log_size_limit_in_mb>
       <event_log_dir>/system/spark-history</event_log_dir>
+
+      #the values specified in namenode_addresses will be used for obtaining spark logs. The cluster configuration will be ignored.
+      <namenode_addresses>address1,address2</namenode_addresses>
     </params>
     -->
   </fetcher>

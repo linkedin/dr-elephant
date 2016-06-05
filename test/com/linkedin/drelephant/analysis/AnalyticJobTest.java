@@ -34,6 +34,7 @@ import java.util.Properties;
 import mockit.Expectations;
 import mockit.Mocked;
 import models.AppResult;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static common.TestConstants.*;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
  * Dependencies to {@code ElephantContext, ElephantFetcher and Heuristics} are mocked
  * out with JMockit.
  */
+@Ignore
 public class AnalyticJobTest {
   @Mocked(stubOutClassInitialization = true)
   ElephantContext elephantContext = null;
