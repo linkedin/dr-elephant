@@ -178,7 +178,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     if (new URI(_logDir).getHost == null) {
       FileSystem.getLocal(new Configuration())
     } else {
-	  FileSystem.get(new Configuration())
+      val filesystem = new WebHdfsFileSystem()
+      filesystem.initialize(new URI(_logDir), new Configuration())
+      filesystem
     }
   }
 
