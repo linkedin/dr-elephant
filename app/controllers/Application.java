@@ -110,7 +110,7 @@ public class Application extends Controller {
    */
   public static Result dashboard() {
     long now = System.currentTimeMillis();
-    Date finishDate = new Date(now - DAY);
+    long finishDate = now - DAY;
 
     // Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {

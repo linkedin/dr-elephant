@@ -135,7 +135,7 @@ public final class Utils {
       } else {
         // Evaluate the limits
         parsedLimits = new double[thresholdLevels];
-        ScriptEngineManager mgr = new ScriptEngineManager();
+        ScriptEngineManager mgr = new ScriptEngineManager(null);
         ScriptEngine engine = mgr.getEngineByName("JavaScript");
         for (int i = 0; i < thresholdLevels; i++) {
           try {

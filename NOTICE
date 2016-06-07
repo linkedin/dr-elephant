@@ -59,6 +59,14 @@ This product requires the following play dependencies in addition to the core Pl
 javaEbean, the Ebean plugin for Java.
 javaJdbc, the Java database API.
 
+This product includes/uses JMockit (http://jmockit.org/)
+Notice: https://github.com/jmockit/jmockit1/blob/master/NOTICE.txt
+License: The MIT License (https://github.com/jmockit/jmockit1/blob/master/LICENSE.txt)
+
+This product includes/uses Mockito (http://mockito.org)
+Copyright (c) 2007 Mockito contributors
+License: The MIT License (https://github.com/mockito/mockito/blob/master/LICENSE)
+
 ------------------------------------------------------------------------------
 Attribution for JavaScript Libraries
 ------------------------------------------------------------------------------

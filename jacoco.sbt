@@ -14,23 +14,15 @@
 // the License.
 //
 
-import play.Project._
-import Dependencies._
+import de.johoop.jacoco4sbt.JacocoPlugin._
+import de.johoop.jacoco4sbt._
 
-name := "dr-elephant"
+jacoco.settings
 
-version := "2.0.3-SNAPSHOT"
+parallelExecution      in jacoco.Config := false
 
-organization := "com.linkedin.drelephant"
+jacoco.outputDirectory in jacoco.Config := file("target/jacoco")
 
-javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
+jacoco.reportFormats   in jacoco.Config := Seq(XMLReport(encoding = "utf-8"), HTMLReport("utf-8"))
 
-libraryDependencies ++= dependencies
-
-// Create a new custom configuration called compileonly
-ivyConfigurations += config("compileonly").hide
-
-// Append all dependencies with 'compileonly' configuration to unmanagedClasspath in Compile.
-unmanagedClasspath in Compile ++= update.value.select(configurationFilter("compileonly"))
-
-playJavaSettings
+jacoco.excludes        in jacoco.Config := Seq("views*", "*Routes*", "controllers*routes*", "controllers*Reverse*", "controllers*javascript*", "controller*ref*")

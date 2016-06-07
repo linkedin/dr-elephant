@@ -21,3 +21,6 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 // Use the Play sbt plugin for Play projects
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("play.version")).getOrElse("2.2.2"))
+
+// Jacoco code coverage plugin
+addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6")

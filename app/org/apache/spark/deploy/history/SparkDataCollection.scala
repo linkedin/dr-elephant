@@ -27,6 +27,7 @@ import org.apache.spark.ui.env.EnvironmentListener
 import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
+import org.apache.spark.util.collection.OpenHashSet
 
 import java.util.{Set => JSet}
 import java.util.{HashSet => JHashSet}
@@ -214,7 +215,7 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
         jobInfo.endTime = data.completionTime.getOrElse(0)
 
         data.stageIds.foreach{ case (id: Int) => jobInfo.addStageId(id)}
-        addIntSetToJSet(data.completedStageIndices.asInstanceOf[mutable.HashSet[Int]], jobInfo.completedStageIndices)
+        addIntSetToJSet(data.completedStageIndices, jobInfo.completedStageIndices)
 
         _jobProgressData.addJobInfo(id, jobInfo)
       }
@@ -249,7 +250,7 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
           stageInfo.outputBytes = data.outputBytes
           stageInfo.shuffleReadBytes = data.shuffleReadTotalBytes
           stageInfo.shuffleWriteBytes = data.shuffleWriteBytes
-          addIntSetToJSet(data.completedIndices.asInstanceOf[mutable.HashSet[Int]], stageInfo.completedIndices)
+          addIntSetToJSet(data.completedIndices, stageInfo.completedIndices)
 
           _jobProgressData.addStageInfo(id._1, id._2, stageInfo)
       }
@@ -298,6 +299,13 @@ object SparkDataCollection {
     val list = new JArrayList[T]()
     seq.foreach { case (item: T) => list.add(item)}
     list
+  }
+
+  def addIntSetToJSet(set: OpenHashSet[Int], jset: JSet[Integer]): Unit = {
+    val it = set.iterator
+    while (it.hasNext) {
+      jset.add(it.next())
+    }
   }
 
   def addIntSetToJSet(set: mutable.HashSet[Int], jset: JSet[Integer]): Unit = {

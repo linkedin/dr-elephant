@@ -17,18 +17,23 @@
 package org.apache.spark.deploy.history
 
 
-import java.net.URI
+import java.net.{HttpURLConnection, URL, URI}
 import java.security.PrivilegedAction
-import java.io.BufferedInputStream
-import java.io.InputStream
+import java.io.{IOException, BufferedInputStream, InputStream}
+import java.{io, util}
+import java.util.ArrayList
+import javax.ws.rs.core.UriBuilder
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.security.HadoopSecurity
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
-import com.linkedin.drelephant.analysis.{ApplicationType, AnalyticJob, ElephantFetcher};
+import com.linkedin.drelephant.analysis.{ApplicationType, AnalyticJob, ElephantFetcher}
+import org.apache.commons.io.FileUtils
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem
+import org.apache.hadoop.security.authentication.client.{AuthenticatedURL, AuthenticationException}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{EventLoggingListener, ReplayListenerBus, ApplicationEventListener}
@@ -38,6 +43,10 @@ import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.io.CompressionCodec
+import org.codehaus.jackson.JsonNode
+import org.codehaus.jackson.map.ObjectMapper
+
+import scala.collection.mutable.ArrayBuffer
 
 
 /**
@@ -47,13 +56,24 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   import SparkFSFetcher._
 
+  val NAME_SERVICES = "dfs.nameservices";
+  val DFS_HA_NAMENODES = "dfs.ha.namenodes";
+  val DFS_NAMENODE_HTTP_ADDRESS = "dfs.namenode.http-address";
+
+  var confEventLogSizeInMb = defEventLogSizeInMb
   if (fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD) != null) {
     val logLimitSize = Utils.getParam(fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD), 1)
     if (logLimitSize != null) {
-      EVENT_LOG_SIZE_LIMIT_MB = MemoryFormatUtils.stringToBytes(logLimitSize(0) + "M");
+      confEventLogSizeInMb = logLimitSize(0)
     }
   }
-  logger.info("The event log limit of Spark application is set to " + EVENT_LOG_SIZE_LIMIT_MB + " MB")
+  logger.info("The event log limit of Spark application is set to " + confEventLogSizeInMb + " MB")
+
+  var confEventLogDir = fetcherConfData.getParamMap.get(LOG_DIR_XML_FIELD)
+  if (confEventLogDir == null || confEventLogDir.isEmpty) {
+    confEventLogDir = defEventLogDir
+  }
+  logger.info("The event log directory of Spark application is set to " + confEventLogDir)
 
   private val _sparkConf = new SparkConf()
 
@@ -62,14 +82,93 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    */
   private lazy val _logDir: String = {
     val conf = new Configuration()
-    val nodeAddress = conf.get("dfs.namenode.http-address", null)
+    val nodeAddress = getNamenodeAddress(conf);
     val hdfsAddress = if (nodeAddress == null) "" else "webhdfs://" + nodeAddress
 
-    val uri = new URI(_sparkConf.get("spark.eventLog.dir", DEFAULT_LOG_DIR))
+    val uri = new URI(_sparkConf.get("spark.eventLog.dir", confEventLogDir))
     val logDir = hdfsAddress + uri.getPath
     logger.info("Looking for spark logs at logDir: " + logDir)
     logDir
   }
+
+  /**
+   * Returns the namenode address of the  active nameNode
+   * @param conf The Hadoop configuration
+   * @return The namenode address of the active namenode
+   */
+  def getNamenodeAddress(conf: Configuration): String = {
+
+    // check if the fetcherconf has namenode addresses. There can be multiple addresses and
+    // we need to check the active namenode address. If a value is specified in the fetcherconf
+    // then the value obtained from hadoop configuration won't be used.
+    if (fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES) != null) {
+      val nameNodes: Array[String] = fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES).split(",");
+      for (nameNode <- nameNodes) {
+        if (checkActivation(nameNode)) {
+          return nameNode;
+        }
+      }
+    }
+
+    // if we couldn't find the namenode address in fetcherconf, try to find it in hadoop configuration.
+    var isHAEnabled: Boolean = false;
+    if (conf.get(NAME_SERVICES) != null) {
+      isHAEnabled = true;
+    }
+
+    // check if HA is enabled
+    if (isHAEnabled) {
+      // There can be multiple nameservices separated by ',' in case of HDFS federation. It is not supported right now.
+      if (conf.get(NAME_SERVICES).split(",").length > 1) {
+        logger.info("Multiple name services found. HDFS federation is not supported right now.")
+        return null;
+      }
+      val nameService: String = conf.get(NAME_SERVICES);
+      val nameNodeIdentifier: String = conf.get(DFS_HA_NAMENODES + "." + nameService);
+      if (nameNodeIdentifier != null) {
+        // there can be multiple namenode identifiers separated by ','
+        for (nameNodeIdentifierValue <- nameNodeIdentifier.split(",")) {
+          val httpValue = conf.get(DFS_NAMENODE_HTTP_ADDRESS + "." + nameService + "." + nameNodeIdentifierValue);
+          if (httpValue != null && checkActivation(httpValue)) {
+            logger.info("Active namenode : " + httpValue);
+            return httpValue;
+          }
+        }
+      }
+    }
+
+    // if HA is disabled, return the namenode http-address.
+    return conf.get(DFS_NAMENODE_HTTP_ADDRESS);
+  }
+
+  /**
+   * Checks if the namenode specified is active or not
+   * @param httpValue The namenode configuration http value
+   * @return True if the namenode is active, otherwise false
+   */
+  def checkActivation(httpValue: String): Boolean = {
+    val url: URL = new URL("http://" + httpValue + "/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus");
+    val rootNode: JsonNode = readJsonNode(url);
+    val status: String = rootNode.path("beans").get(0).path("State").getValueAsText();
+    if (status.equals("active")) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns the jsonNode which is read from the url
+   * @param url The url of the server
+   * @return The jsonNode parsed from the url
+   */
+  def readJsonNode(url: URL): JsonNode = {
+    val _token: AuthenticatedURL.Token = new AuthenticatedURL.Token();
+    val _authenticatedURL: AuthenticatedURL = new AuthenticatedURL();
+    val _objectMapper: ObjectMapper = new ObjectMapper();
+    val conn: HttpURLConnection = _authenticatedURL.openConnection(url, _token)
+    return _objectMapper.readTree(conn.getInputStream)
+  }
+
 
   private val _security = new HadoopSecurity()
 
@@ -154,7 +253,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
           dataCollection.getConf().setProperty("spark.app.id", appId)
 
           logger.info("The event log of Spark application: " + appId + " is over the limit size of "
-              + EVENT_LOG_SIZE_LIMIT_MB + " MB, the parsing process gets throttled.")
+              + defEventLogSizeInMb + " MB, the parsing process gets throttled.")
         } else {
           logger.info("Replaying Spark logs for application: " + appId)
 
@@ -174,7 +273,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * @param entry The path to check
    * @return true if it is legacy log path, else false
    */
-  private def isLegacyLogDirectory(entry: Path) : Boolean = fs.exists(entry) && fs.getFileStatus(entry).isDirectory()
+  private def isLegacyLogDirectory(entry: Path): Boolean = fs.exists(entry) && fs.getFileStatus(entry).isDirectory()
 
   /**
    * Opens a legacy log path
@@ -221,7 +320,15 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * @return If the event log parsing should be throttled
    */
   private def shouldThrottle(eventLogPath: Path): Boolean = {
-    fs.getFileStatus(eventLogPath).getLen() > (EVENT_LOG_SIZE_LIMIT_MB * 1024 * 1024)
+    fs.getFileStatus(eventLogPath).getLen() > (confEventLogSizeInMb * FileUtils.ONE_MB)
+  }
+
+  def getEventLogSize(): Double = {
+    confEventLogSizeInMb
+  }
+
+  def getEventLogDir(): String = {
+    confEventLogDir
   }
 
 }
@@ -229,12 +336,15 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 private object SparkFSFetcher {
   private val logger = Logger.getLogger(SparkFSFetcher.getClass)
 
-  val DEFAULT_LOG_DIR = "/system/spark-history"
+  var defEventLogDir = "/system/spark-history"
+  var defEventLogSizeInMb = 100d; // 100MB
 
   val LOG_SIZE_XML_FIELD = "event_log_size_limit_in_mb"
-  var EVENT_LOG_SIZE_LIMIT_MB = 100d // 100MB
+  val LOG_DIR_XML_FIELD = "event_log_dir"
 
   // Constants used to parse <= Spark 1.2.0 log directories.
   val LOG_PREFIX = "EVENT_LOG_"
   val COMPRESSION_CODEC_PREFIX = EventLoggingListener.COMPRESSION_CODEC_KEY + "_"
+
+  val NAMENODE_ADDRESSES = "namenode_addresses"
 }
