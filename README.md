@@ -16,6 +16,8 @@ Administrator guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/A
 
 Google groups mailing list: [Click here](https://groups.google.com/forum/#!forum/dr-elephant-users)
 
+Engineering Blog: [Click here](https://engineering.linkedin.com/blog/2016/04/dr-elephant-open-source-self-serve-performance-tuning-hadoop-spark)
+
 ## License
 
     Copyright 2016 LinkedIn Corp.

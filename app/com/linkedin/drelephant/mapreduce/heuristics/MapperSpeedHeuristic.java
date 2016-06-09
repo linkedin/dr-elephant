@@ -61,7 +61,7 @@ public class MapperSpeedHeuristic implements Heuristic<MapReduceApplicationData>
     logger.info(heuristicName + " will use " + DISK_SPEED_SEVERITY + " with the following threshold settings: "
         + Arrays.toString(diskSpeedLimits));
     for (int i = 0; i < diskSpeedLimits.length; i++) {
-      diskSpeedLimits[i] = diskSpeedLimits[i] * HDFSContext.HDFS_BLOCK_SIZE;
+      diskSpeedLimits[i] = diskSpeedLimits[i] * HDFSContext.DISK_READ_SPEED;
     }
 
     double[] confRuntimeThreshold = Utils.getParam(paramMap.get(RUNTIME_SEVERITY), runtimeLimits.length);

@@ -87,6 +87,7 @@ public class Application extends Controller {
   public static final String FLOW_EXEC_ID = "flow-exec-id";
   public static final String JOB_DEF_ID = "job-def-id";
   public static final String USERNAME = "username";
+  public static final String QUEUE_NAME = "queue-name";
   public static final String SEVERITY = "severity";
   public static final String JOB_TYPE = "job-type";
   public static final String ANALYSIS = "analysis";
@@ -110,7 +111,7 @@ public class Application extends Controller {
    */
   public static Result dashboard() {
     long now = System.currentTimeMillis();
-    Date finishDate = new Date(now - DAY);
+    long finishDate = now - DAY;
 
     // Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
@@ -163,11 +164,7 @@ public class Application extends Controller {
               + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
           .where()
           .idEq(appId).findUnique();
-      if (result != null) {
-        return ok(searchPage.render(null, jobDetails.render(result)));
-      } else {
-        return ok(searchPage.render(null, jobDetails.render(null)));
-      }
+      return ok(searchPage.render(null, jobDetails.render(result)));
     } else if (flowExecId != null && !flowExecId.isEmpty()) {
       List<AppResult> results = AppResult.find
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_EXEC_ID)
@@ -241,6 +238,9 @@ public class Application extends Controller {
     String username = form.get(USERNAME);
     username = username != null ? username.trim().toLowerCase() : null;
     searchParams.put(USERNAME, username);
+    String queuename = form.get(QUEUE_NAME);
+    queuename = queuename != null ? queuename.trim().toLowerCase() : null;
+    searchParams.put(QUEUE_NAME, queuename);
     searchParams.put(SEVERITY, form.get(SEVERITY));
     searchParams.put(JOB_TYPE, form.get(JOB_TYPE));
     searchParams.put(ANALYSIS, form.get(ANALYSIS));
@@ -268,6 +268,11 @@ public class Application extends Controller {
     String username = searchParams.get(USERNAME);
     if (Utils.isSet(username)) {
       query = query.eq(AppResult.TABLE.USERNAME, username);
+    }
+
+    String queuename = searchParams.get(QUEUE_NAME);
+    if (Utils.isSet(queuename)) {
+      query = query.eq(AppResult.TABLE.QUEUE_NAME, queuename);
     }
     String jobType = searchParams.get(JOB_TYPE);
     if (Utils.isSet(jobType)) {
@@ -336,13 +341,13 @@ public class Application extends Controller {
     List<AppResult> results1 = null;
     List<AppResult> results2 = null;
     if (flowExecId1 != null && !flowExecId1.isEmpty() && flowExecId2 != null && !flowExecId2.isEmpty()) {
-       results1 = AppResult.find
+      results1 = AppResult.find
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL
               + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
           .where().eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId1).setMaxRows(100)
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
           .findList();
-       results2 = AppResult.find
+      results2 = AppResult.find
           .select(
               AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL + ","
                   + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
@@ -362,7 +367,7 @@ public class Application extends Controller {
    * @return A map of Job Urls to the list of jobs corresponding to the 2 flow execution urls
    */
   private static Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> compareFlows(List<AppResult> results1,
-      List<AppResult> results2) {
+                                                                              List<AppResult> results2) {
     Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> jobDefMap = new HashMap<IdUrlPair, Map<IdUrlPair, List<AppResult>>>();
 
     if (results1 != null && !results1.isEmpty() && results2 != null && !results2.isEmpty()) {
@@ -415,8 +420,8 @@ public class Application extends Controller {
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
     List<AppResult> results = AppResult.find
         .select(
-                AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL + ","
-                        + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL + "," + AppResult.TABLE.JOB_NAME)
+            AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL + ","
+                + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL + "," + AppResult.TABLE.JOB_NAME)
         .where().eq(AppResult.TABLE.FLOW_DEF_ID, flowDefId)
         .order().desc(AppResult.TABLE.FINISH_TIME)
         .setMaxRows(JOB_HISTORY_LIMIT)
@@ -529,7 +534,7 @@ public class Application extends Controller {
    * @return A map after applying the limit.
    */
   private static Map<IdUrlPair, List<AppResult>> limitHistoryResults(Map<IdUrlPair, List<AppResult>> map,
-      int size, int execLimit) {
+                                                                     int size, int execLimit) {
     Map<IdUrlPair, List<AppResult>> resultMap = new LinkedHashMap<IdUrlPair, List<AppResult>>();
 
     int limit;
@@ -899,10 +904,10 @@ public class Application extends Controller {
         .where().eq(AppResult.TABLE.FLOW_DEF_ID, flowDefId)
         .order().desc(AppResult.TABLE.FINISH_TIME)
         .setMaxRows(JOB_HISTORY_LIMIT)
-        // The 2nd and 3rd table are not required for plotting the graph
-        //.fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
-        //.fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "."
-        //    + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
+            // The 2nd and 3rd table are not required for plotting the graph
+            //.fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
+            //.fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "."
+            //    + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .findList();
     if (results.size() == 0) {
       logger.info("No results for Job url");

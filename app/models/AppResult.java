@@ -57,6 +57,7 @@ public class AppResult extends Model {
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String USERNAME = "username";
+      public static final String QUEUE_NAME = "queueName";
     public static final String START_TIME = "startTime";
     public static final String FINISH_TIME = "finishTime";
     public static final String TRACKING_URL = "trackingUrl";
@@ -78,7 +79,7 @@ public class AppResult extends Model {
   }
 
   public static String getSearchFields() {
-    return Utils.commaSeparated(AppResult.TABLE.NAME, AppResult.TABLE.USERNAME, AppResult.TABLE.JOB_TYPE,
+    return Utils.commaSeparated(AppResult.TABLE.NAME, AppResult.TABLE.USERNAME, TABLE.QUEUE_NAME, AppResult.TABLE.JOB_TYPE,
         AppResult.TABLE.SEVERITY, AppResult.TABLE.FINISH_TIME);
   }
 

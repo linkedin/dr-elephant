@@ -94,7 +94,17 @@ public class ApplicationTest {
     assertTrue(sql2.contains("from yarn_app_result t0 where"));
     assertTrue(sql2.contains("t0.username = ?  order by t0.finish_time desc"));
 
-    // Query by jobtype
+    // Query by queuename
+    searchParams.put(Application.QUEUE_NAME, "queueName");
+    query2 = Application.generateSearchQuery("*", searchParams);
+    assertNotNull(query2.findList());
+    sql2 = query2.getGeneratedSql();
+    assertTrue(sql2.contains("select t0.id c0"));
+    assertTrue(sql2.contains("from yarn_app_result t0 where"));
+    assertTrue(sql2.contains("t0.queue_name = ?  order by t0.finish_time desc"));
+
+
+      // Query by jobtype
     searchParams.put(Application.JOB_TYPE, "Pig");
     query2 = Application.generateSearchQuery("*", searchParams);
     assertNotNull(query2.findList());
