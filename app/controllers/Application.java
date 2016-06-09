@@ -110,7 +110,7 @@ public class Application extends Controller {
    */
   public static Result dashboard() {
     long now = System.currentTimeMillis();
-    Date finishDate = new Date(now - DAY);
+    long finishDate = now - DAY;
 
     // Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
@@ -163,11 +163,7 @@ public class Application extends Controller {
               + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
           .where()
           .idEq(appId).findUnique();
-      if (result != null) {
-        return ok(searchPage.render(null, jobDetails.render(result)));
-      } else {
-        return ok(searchPage.render(null, jobDetails.render(null)));
-      }
+      return ok(searchPage.render(null, jobDetails.render(result)));
     } else if (flowExecId != null && !flowExecId.isEmpty()) {
       List<AppResult> results = AppResult.find
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_EXEC_ID)
