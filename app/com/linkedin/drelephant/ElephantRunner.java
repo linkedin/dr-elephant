@@ -48,15 +48,30 @@ public class ElephantRunner implements Runnable {
   private static final long WAIT_INTERVAL = 60 * 1000;      // Interval between fetches and retries
   private static final int EXECUTOR_NUM = 3;                // The number of executor threads to analyse the jobs
 
+  public static final String EXECUTOR_NUM_KEY = "elephant.analysis.thread.num";
+
   private AtomicBoolean _running = new AtomicBoolean(true);
   private long lastRun;
+  private int _executorNum;
   private HadoopSecurity _hadoopSecurity;
   private ExecutorService _service;
   private BlockingQueue<AnalyticJob> _jobQueue;
   private AnalyticJobGenerator _analyticJobGenerator;
+  private Configuration _configuration;
+
+  private void loadGeneralConfiguration() {
+    _configuration = new Configuration();
+    _configuration.addResource(this.getClass().getClassLoader().getResourceAsStream("GeneralConf.xml"));
+
+    try {
+      _executorNum = _configuration.getInt(EXECUTOR_NUM_KEY, EXECUTOR_NUM);
+    } catch (NumberFormatException e) {
+      logger.error("invalid config " + EXECUTOR_NUM_KEY + " value: " + _configuration.get(EXECUTOR_NUM_KEY)
+              + ", reset it to default value: " + EXECUTOR_NUM);
+    }
+  }
 
   private void loadAnalyticJobGenerator() {
-    Configuration configuration = new Configuration();
     if (HadoopSystemContext.isHadoop2Env()) {
       _analyticJobGenerator = new AnalyticJobGeneratorHadoop2();
     } else {
@@ -64,7 +79,7 @@ public class ElephantRunner implements Runnable {
     }
 
     try {
-      _analyticJobGenerator.configure(configuration);
+      _analyticJobGenerator.configure(_configuration);
     } catch (Exception e) {
       logger.error("Error occurred when configuring the analysis provider.", e);
       throw new RuntimeException(e);
@@ -80,13 +95,17 @@ public class ElephantRunner implements Runnable {
         @Override
         public Void run() {
           HDFSContext.load();
+          loadGeneralConfiguration();
           loadAnalyticJobGenerator();
           ElephantContext.init();
 
-          _service = Executors.newFixedThreadPool(EXECUTOR_NUM);
           _jobQueue = new LinkedBlockingQueue<AnalyticJob>();
-          for (int i = 0; i < EXECUTOR_NUM; i++) {
-            _service.submit(new ExecutorThread(i + 1, _jobQueue));
+          logger.info("executor num is " + _executorNum);
+          if (_executorNum > 0) {
+            _service = Executors.newFixedThreadPool(EXECUTOR_NUM);
+            for (int i = 0; i < _executorNum; i++) {
+              _service.submit(new ExecutorThread(i + 1, _jobQueue));
+            }
           }
 
           while (_running.get() && !Thread.currentThread().isInterrupted()) {
