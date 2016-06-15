@@ -102,7 +102,7 @@ public class ElephantRunner implements Runnable {
           _jobQueue = new LinkedBlockingQueue<AnalyticJob>();
           logger.info("executor num is " + _executorNum);
           if (_executorNum > 0) {
-            _service = Executors.newFixedThreadPool(EXECUTOR_NUM);
+            _service = Executors.newFixedThreadPool(_executorNum);
             for (int i = 0; i < _executorNum; i++) {
               _service.submit(new ExecutorThread(i + 1, _jobQueue));
             }
