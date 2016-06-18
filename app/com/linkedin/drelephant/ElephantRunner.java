@@ -37,6 +37,7 @@ import models.AppResult;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+import play.Play;
 
 
 /**
@@ -45,8 +46,14 @@ import org.apache.log4j.Logger;
 public class ElephantRunner implements Runnable {
   private static final Logger logger = Logger.getLogger(ElephantRunner.class);
 
-  private static final long WAIT_INTERVAL = 60 * 1000;      // Interval between fetches and retries
-  private static final int EXECUTOR_NUM = 3;                // The number of executor threads to analyse the jobs
+  public static final String WAIT_INTERVAL_CONF_KEY = "elephant.runner.wait.interval";
+  public static final String EXECUTOR_NUM_CONF_KEY = "elephant.runner.executors.num";
+
+  private static final long WAIT_INTERVAL_DEFAULT = 60 * 1000;
+  private static final int EXECUTOR_NUM_DEFAULT = 3;
+
+  private static final long WAIT_INTERVAL = Play.application().configuration().getLong(WAIT_INTERVAL_CONF_KEY, WAIT_INTERVAL_DEFAULT);      // Interval between fetches and retries
+  private static final int EXECUTOR_NUM = Play.application().configuration().getInt(EXECUTOR_NUM_CONF_KEY, EXECUTOR_NUM_DEFAULT);                // The number of executor threads to analyse the jobs,
 
   private AtomicBoolean _running = new AtomicBoolean(true);
   private long lastRun;
@@ -73,7 +80,7 @@ public class ElephantRunner implements Runnable {
 
   @Override
   public void run() {
-    logger.info("Dr.elephant has started");
+    logger.info("Dr.elephant has started with no. of executors = " +  EXECUTOR_NUM);
     try {
       _hadoopSecurity = new HadoopSecurity();
       _hadoopSecurity.doAs(new PrivilegedAction<Void>() {
