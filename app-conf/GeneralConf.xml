@@ -19,8 +19,13 @@
 -->
 <configuration>
   <property>
-    <name>elephant.analysis.thread.num</name>
+    <name>drelephant.analysis.thread.count</name>
     <value>3</value>
-    <description>consumer thread number</description>
+    <description>Number of threads to analyze the completed jobs</description>
+  </property>
+  <property>
+    <name>drelephant.work.interval</name>
+    <value>60000</value>
+    <description>Interval between fetches and retries in milliseconds</description>
   </property>
 </configuration>

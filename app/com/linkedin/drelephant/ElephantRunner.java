@@ -48,10 +48,12 @@ public class ElephantRunner implements Runnable {
   private static final long WAIT_INTERVAL = 60 * 1000;      // Interval between fetches and retries
   private static final int EXECUTOR_NUM = 3;                // The number of executor threads to analyse the jobs
 
-  public static final String EXECUTOR_NUM_KEY = "elephant.analysis.thread.num";
+  private static final String WAIT_INTERVAL_KEY = "drelephant.work.interval";
+  private static final String EXECUTOR_NUM_KEY = "drelephant.analysis.thread.count";
 
   private AtomicBoolean _running = new AtomicBoolean(true);
   private long lastRun;
+  private long _waitInterval;
   private int _executorNum;
   private HadoopSecurity _hadoopSecurity;
   private ExecutorService _service;
@@ -65,9 +67,28 @@ public class ElephantRunner implements Runnable {
 
     try {
       _executorNum = _configuration.getInt(EXECUTOR_NUM_KEY, EXECUTOR_NUM);
+      if (_executorNum < 0) {
+        _executorNum = 0;
+        logger.warn("Configuration " + EXECUTOR_NUM_KEY + " in GeneralConf.xml is negative."
+                + "Resetting it to 0");
+      }
     } catch (NumberFormatException e) {
-      logger.error("invalid config " + EXECUTOR_NUM_KEY + " value: " + _configuration.get(EXECUTOR_NUM_KEY)
-              + ", reset it to default value: " + EXECUTOR_NUM);
+      logger.error("Invalid configuration " + EXECUTOR_NUM_KEY + " in GeneralConf.xml. Value is "
+              + _configuration.get(EXECUTOR_NUM_KEY) + ". Resetting it to default value: "
+              + EXECUTOR_NUM);
+    }
+
+    try {
+      _waitInterval = _configuration.getLong(WAIT_INTERVAL_KEY, WAIT_INTERVAL);
+      if (_waitInterval < 0) {
+        _waitInterval = 0;
+        logger.warn("Configuration " + WAIT_INTERVAL_KEY + " in GeneralConf.xml is negative."
+                + "Resetting it to 0");
+      }
+    } catch (NumberFormatException e) {
+      logger.error("Invalid configuration " + WAIT_INTERVAL_KEY + " in GeneralConf.xml. Value is "
+              + _configuration.get(WAIT_INTERVAL_KEY) + ". Resetting it to default value: "
+              + WAIT_INTERVAL);
     }
   }
 
@@ -193,7 +214,7 @@ public class ElephantRunner implements Runnable {
 
   private void waitInterval() {
     // Wait for long enough
-    long nextRun = lastRun + WAIT_INTERVAL;
+    long nextRun = lastRun + _waitInterval;
     long waitTime = nextRun - System.currentTimeMillis();
 
     if (waitTime <= 0) {
