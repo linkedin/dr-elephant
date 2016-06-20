@@ -27,7 +27,7 @@ import javax.script.ScriptException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import models.AppResult;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -241,5 +241,57 @@ public final class Utils {
    */
   public static boolean isSet(String property) {
     return property != null && !property.isEmpty();
+  }
+
+  /**
+   * Get non negative int value from Configuration.
+   *
+   * If the value is not set or not an integer, the provided default value is returned.
+   * If the value is negative, 0 is returned.
+   *
+   * @param conf Configuration to be extracted
+   * @param key property name
+   * @param defaultValue default value
+   * @return non negative int value
+   */
+  public static int getNonNegativeInt(Configuration conf, String key, int defaultValue) {
+    try {
+      int value = conf.getInt(key, defaultValue);
+      if (value < 0) {
+        value = 0;
+        logger.warn("Configuration " + key + " is negative. Resetting it to 0");
+      }
+      return value;
+    } catch (NumberFormatException e) {
+      logger.error("Invalid configuration " + key + ". Value is " + conf.get(key)
+              + ". Resetting it to default value: " + defaultValue);
+      return defaultValue;
+    }
+  }
+
+  /**
+   * Get non negative long value from Configuration.
+   *
+   * If the value is not set or not a long, the provided default value is returned.
+   * If the value is negative, 0 is returned.
+   *
+   * @param conf Configuration to be extracted
+   * @param key property name
+   * @param defaultValue default value
+   * @return non negative long value
+   */
+  public static long getNonNegativeLong(Configuration conf, String key, long defaultValue) {
+    try {
+      long value = conf.getLong(key, defaultValue);
+      if (value < 0) {
+        value = 0;
+        logger.warn("Configuration " + key + " is negative. Resetting it to 0");
+      }
+      return value;
+    } catch (NumberFormatException e) {
+      logger.error("Invalid configuration " + key + ". Value is " + conf.get(key)
+              + ". Resetting it to default value: " + defaultValue);
+      return defaultValue;
+    }
   }
 }

@@ -15,8 +15,7 @@
   the License.
 -->
 
-<!-- Data general configurations
--->
+<!-- General configurations -->
 <configuration>
   <property>
     <name>drelephant.analysis.thread.count</name>
@@ -24,8 +23,13 @@
     <description>Number of threads to analyze the completed jobs</description>
   </property>
   <property>
-    <name>drelephant.work.interval</name>
+    <name>drelephant.analysis.fetch.interval</name>
     <value>60000</value>
-    <description>Interval between fetches and retries in milliseconds</description>
+    <description>Interval between fetches in milliseconds</description>
+  </property>
+  <property>
+    <name>drelephant.analysis.retry.interval</name>
+    <value>60000</value>
+    <description>Interval between retries in milliseconds</description>
   </property>
 </configuration>

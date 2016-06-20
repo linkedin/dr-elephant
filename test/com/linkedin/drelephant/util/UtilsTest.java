@@ -20,6 +20,7 @@ package com.linkedin.drelephant.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -119,5 +120,46 @@ public class UtilsTest {
     assertEquals("bar1", properties2.get("foo1"));
     assertEquals("bar2", properties2.get("foo2"));
     assertEquals("bar3", properties2.get("foo3"));
+  }
+
+  @Test
+  public void testGetNonNegativeInt() {
+    Configuration conf = new Configuration();
+    conf.set("foo1", "100");
+    conf.set("foo2", "-100");
+    conf.set("foo3", "0");
+    conf.set("foo4", "0.5");
+    conf.set("foo5", "9999999999999999");
+    conf.set("foo6", "bar");
+
+    int defaultValue = 50;
+    assertEquals(100, Utils.getNonNegativeInt(conf, "foo1", defaultValue));
+    assertEquals(0, Utils.getNonNegativeInt(conf, "foo2", defaultValue));
+    assertEquals(0, Utils.getNonNegativeInt(conf, "foo3", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeInt(conf, "foo4", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeInt(conf, "foo5", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeInt(conf, "foo6", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeInt(conf, "foo7", defaultValue));
+  }
+
+  @Test
+  public void testGetNonNegativeLong() {
+    Configuration conf = new Configuration();
+
+    conf.set("foo1", "100");
+    conf.set("foo2", "-100");
+    conf.set("foo3", "0");
+    conf.set("foo4", "0.5");
+    conf.set("foo5", "9999999999999999");
+    conf.set("foo6", "bar");
+
+    long defaultValue = 50;
+    assertEquals(100, Utils.getNonNegativeLong(conf, "foo1", defaultValue));
+    assertEquals(0, Utils.getNonNegativeLong(conf, "foo2", defaultValue));
+    assertEquals(0, Utils.getNonNegativeLong(conf, "foo3", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeLong(conf, "foo4", defaultValue));
+    assertEquals(9999999999999999L, Utils.getNonNegativeLong(conf, "foo5", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeLong(conf, "foo6", defaultValue));
+    assertEquals(defaultValue, Utils.getNonNegativeLong(conf, "foo7", defaultValue));
   }
 }
