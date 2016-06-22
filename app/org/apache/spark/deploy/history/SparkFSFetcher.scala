@@ -237,7 +237,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
               null
             }
           } else {
-            val logFilePath = new Path(logPath + "_1.snappy")
+            val logFilePath = getSnappyOrNot(logPath)
             if (!shouldThrottle(logFilePath)) {
               EventLoggingListener.openEventLog(logFilePath, fs)
             } else {
@@ -266,6 +266,23 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       }
     })
   }
+
+  /**
+    * Try get a non-snappy file if possible, with attempt id (for yarn compatibility) default to be 1.
+    * If it's snappy codec, it'll getting _1.snappy as postfix, otherwise will return correct Path
+    * @param entry configured path to check
+    * @return
+    */
+  private def getSnappyOrNot(entry: Path): Path =
+    fs.exists(entry) match {
+      case true => entry
+      case false =>
+        val temp = new Path(entry + "_1")
+        fs.exists(temp) match {
+          case true => temp
+          case false => new Path(entry + "_1.snappy")
+        }
+    }
 
   /**
    * Checks if the log path stores the legacy event log. (Spark <= 1.2 store an event log in a directory)
