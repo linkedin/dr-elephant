@@ -237,7 +237,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
               null
             }
           } else {
-            val sparkLogExt = fetcherConfData.getParamMap.getOrDefault(SPARK_LOG_EXT, defSparkLogExt)
+            val sparkLogExt = Option(fetcherConfData.getParamMap.get(SPARK_LOG_EXT)).getOrElse(defSparkLogExt)
             val logFilePath = new Path(logPath + sparkLogExt)
             if (!shouldThrottle(logFilePath)) {
               EventLoggingListener.openEventLog(logFilePath, fs)
