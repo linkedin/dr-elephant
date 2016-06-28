@@ -20,13 +20,14 @@ import sbt._
 object Dependencies {
 
   // Dependency Version
-  lazy val commonsCodecVersion = "1.10"
+  lazy val commonsCodecVersion = "1.9" //default was 1.10,changed it to 1.9 for checking azkaban client
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
   lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
-  lazy val jacksonMapperAslVersion = "1.7.3"
+  lazy val jacksonMapperAslVersion = "1.9.13" //default was 1.7.3, chaing for trying azkaban client
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
+  lazy val httpMimeVersion = "4.5"
 
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
@@ -71,8 +72,9 @@ object Dependencies {
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.mockito" % "mockito-core" % "1.10.19",
-    "org.jmockit" % "jmockit" % "1.23" % Test
-  ) :+ sparkExclusion 
+    "org.apache.httpcomponents" % "httpmime" % httpMimeVersion,
+    "org.json" % "json" % "20090211"
+  ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
   dependencies ++= requiredDep

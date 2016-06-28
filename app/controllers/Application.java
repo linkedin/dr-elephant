@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.exceptions.ExceptionFinder;
+import com.linkedin.drelephant.exceptions.HadoopException;
 import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
@@ -63,6 +65,7 @@ import views.html.help.metrics.helpWaittime;
 import views.html.help.metrics.helpUsedResources;
 import views.html.help.metrics.helpWastedResources;
 import views.html.page.comparePage;
+import views.html.page.exceptionsPage;
 import views.html.page.flowHistoryPage;
 import views.html.page.helpPage;
 import views.html.page.homePage;
@@ -103,7 +106,7 @@ public class Application extends Controller {
   public static final String STARTED_TIME_BEGIN = "started-time-begin";
   public static final String STARTED_TIME_END = "started-time-end";
   public static final String FINISHED_TIME_BEGIN = "finished-time-begin";
-  public static final String FINISHED_TIME_END = "finished-time-end";
+  public static final String FINISHED_TIME_END = "f inished-time-end";
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
@@ -616,6 +619,60 @@ public class Application extends Controller {
     }
 
     return notFound("Unable to find graph type: " + graphType);
+  }
+
+  public static Result exceptions() {
+    DynamicForm form = Form.form().bindFromRequest(request());
+    //logger.info("Inside application.java:" + form);
+    String url = form.get("flow-exec-url");
+    logger.info("Inside application.java:" + url);
+    //Html page = null;
+    //String title = "Help";
+    if (url == null || url.isEmpty()) {
+      return ok(exceptionsPage.render(null));
+    }
+    else {
+     /* URL execURL = null;
+      try{
+        execURL = new URL(url);
+      }
+      catch(MalformedURLException e){
+        e.printStackTrace();
+      }*/
+
+//      try{
+        ExceptionFinder expGen = new ExceptionFinder(url);
+        Map<String, List<HadoopException>> jobExceptions = expGen.getExceptions();
+//      Map<String, List<HadoopException>> test = new HashMap<String, List<HadoopException>>();
+//      HadoopException he1 = new HadoopException();
+//      he1.setType("azkaban");
+//      he1.addException("This is a test exception at Azkaban level");
+//      HadoopException he2 = new HadoopException();
+//      he2.setType("script");
+//      he2.addException("This is a test exception at script level");
+//      MRException he3 = new MRException();
+//      he3.setType("mr");
+//      he3.setId("job_test_id1");
+//      HadoopException te1 = new HadoopException();
+//      te1.addException("Task1 exception");
+//      he3.setTaskExceptions(te1);
+//      HadoopException te2 = new HadoopException();
+//      te1.addException("Task2 exception");
+//      he3.setTaskExceptions(te2);
+//      HadoopException he4 = new MRException();
+//      he4.setType("mr");
+//      he4.setId("job_test_id2");
+//      he4.addException("This is an exception in MR job whose reason is anything other than mr task failure");
+//      List<HadoopException> list = new ArrayList<HadoopException>();
+//      list.add(he1);
+//      list.add(he2);
+//      list.add(he3);
+//      list.add(he4);
+//      test.put("az1", list);
+//      test.put("az2", list);
+
+     return ok(exceptionsPage.render(null)); // null -> exceptionsResults.render(jobExceptions)
+    }
   }
 
   /**
