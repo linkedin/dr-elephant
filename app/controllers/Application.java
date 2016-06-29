@@ -83,17 +83,6 @@ import com.google.gson.*;
 
 
 public class Application extends Controller {
-  private static final Logger logger = Logger.getLogger(Application.class);
-  private static final long DAY = 24 * 60 * 60 * 1000;
-  private static final long FETCH_DELAY = 60 * 1000;
-
-  private static final int PAGE_LENGTH = 20;                  // Num of jobs in a search page
-  private static final int PAGE_BAR_LENGTH = 5;               // Num of pages shown in the page bar
-  private static final int REST_PAGE_LENGTH = 100;            // Num of jobs in a rest search page
-  private static final int JOB_HISTORY_LIMIT = 5000;          // Set to avoid memory error.
-  private static final int MAX_HISTORY_LIMIT = 15;            // Upper limit on the number of executions to display
-  private static final int STAGE_LIMIT = 25;                  // Upper limit on the number of stages to display
-
   // Form and Rest parameters
   public static final String APP_ID = "id";
   public static final String FLOW_DEF_ID = "flow-def-id";
@@ -106,11 +95,19 @@ public class Application extends Controller {
   public static final String STARTED_TIME_BEGIN = "started-time-begin";
   public static final String STARTED_TIME_END = "started-time-end";
   public static final String FINISHED_TIME_BEGIN = "finished-time-begin";
-  public static final String FINISHED_TIME_END = "f inished-time-end";
+  public static final String FINISHED_TIME_END = "finished-time-end";
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
-
+  private static final Logger logger = Logger.getLogger(Application.class);
+  private static final long DAY = 24 * 60 * 60 * 1000;
+  private static final long FETCH_DELAY = 60 * 1000;
+  private static final int PAGE_LENGTH = 20;                  // Num of jobs in a search page
+  private static final int PAGE_BAR_LENGTH = 5;               // Num of pages shown in the page bar
+  private static final int REST_PAGE_LENGTH = 100;            // Num of jobs in a rest search page
+  private static final int JOB_HISTORY_LIMIT = 5000;          // Set to avoid memory error.
+  private static final int MAX_HISTORY_LIMIT = 15;            // Upper limit on the number of executions to display
+  private static final int STAGE_LIMIT = 25;                  // Upper limit on the number of stages to display
   private static long _lastFetch = 0;
   private static int _numJobsAnalyzed = 0;
   private static int _numJobsCritical = 0;
@@ -623,55 +620,15 @@ public class Application extends Controller {
 
   public static Result exceptions() {
     DynamicForm form = Form.form().bindFromRequest(request());
-    //logger.info("Inside application.java:" + form);
     String url = form.get("flow-exec-url");
     logger.info("Inside application.java:" + url);
-    //Html page = null;
-    //String title = "Help";
     if (url == null || url.isEmpty()) {
       return ok(exceptionsPage.render(null));
-    }
-    else {
-     /* URL execURL = null;
-      try{
-        execURL = new URL(url);
-      }
-      catch(MalformedURLException e){
-        e.printStackTrace();
-      }*/
-
-//      try{
-        ExceptionFinder expGen = new ExceptionFinder(url);
-        Map<String, List<HadoopException>> jobExceptions = expGen.getExceptions();
-//      Map<String, List<HadoopException>> test = new HashMap<String, List<HadoopException>>();
-//      HadoopException he1 = new HadoopException();
-//      he1.setType("azkaban");
-//      he1.addException("This is a test exception at Azkaban level");
-//      HadoopException he2 = new HadoopException();
-//      he2.setType("script");
-//      he2.addException("This is a test exception at script level");
-//      MRException he3 = new MRException();
-//      he3.setType("mr");
-//      he3.setId("job_test_id1");
-//      HadoopException te1 = new HadoopException();
-//      te1.addException("Task1 exception");
-//      he3.setTaskExceptions(te1);
-//      HadoopException te2 = new HadoopException();
-//      te1.addException("Task2 exception");
-//      he3.setTaskExceptions(te2);
-//      HadoopException he4 = new MRException();
-//      he4.setType("mr");
-//      he4.setId("job_test_id2");
-//      he4.addException("This is an exception in MR job whose reason is anything other than mr task failure");
-//      List<HadoopException> list = new ArrayList<HadoopException>();
-//      list.add(he1);
-//      list.add(he2);
-//      list.add(he3);
-//      list.add(he4);
-//      test.put("az1", list);
-//      test.put("az2", list);
-
-     return ok(exceptionsPage.render(null)); // null -> exceptionsResults.render(jobExceptions)
+    } else {
+      ExceptionFinder expGen = new ExceptionFinder(url);
+      Map<String, List<HadoopException>> jobExceptions = expGen.getExceptions();
+      logger.info("result" + jobExceptions);
+      return ok(exceptionsPage.render(views.html.results.exceptionsResults.render(jobExceptions)));
     }
   }
 
@@ -737,7 +694,7 @@ public class Application extends Controller {
       page = ElephantContext.instance().getHeuristicToView().get(topic);
 
       // check if it is a metrics help
-      if(page == null) {
+      if (page == null) {
         page = getMetricsNameView().get(topic);
       }
 
@@ -749,13 +706,14 @@ public class Application extends Controller {
   }
 
   private static Map<String, Html> getMetricsNameView() {
-    Map<String,Html> metricsViewMap = new HashMap<String, Html>();
+    Map<String, Html> metricsViewMap = new HashMap<String, Html>();
     metricsViewMap.put(Metrics.RUNTIME.getText(), helpRuntime.render());
     metricsViewMap.put(Metrics.WAIT_TIME.getText(), helpWaittime.render());
     metricsViewMap.put(Metrics.USED_RESOURCES.getText(), helpUsedResources.render());
     metricsViewMap.put(Metrics.WASTED_RESOURCES.getText(), helpWastedResources.render());
     return metricsViewMap;
   }
+
   /**
    * Parse the string for time in long
    *
@@ -854,12 +812,6 @@ public class Application extends Controller {
     }
 
     return ok(Json.toJson(resMap));
-  }
-
-  static enum GroupBy {
-    JOB_EXECUTION_ID,
-    JOB_DEFINITION_ID,
-    FLOW_EXECUTION_ID
   }
 
   /**
@@ -1472,5 +1424,11 @@ public class Application extends Controller {
         .findList();
 
     return results;
+  }
+
+  static enum GroupBy {
+    JOB_EXECUTION_ID,
+    JOB_DEFINITION_ID,
+    FLOW_EXECUTION_ID
   }
 }
