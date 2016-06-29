@@ -16,16 +16,18 @@
 
 package com.linkedin.drelephant.mapreduce;
 
+import com.google.common.io.CharStreams;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceCounterData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
-import com.linkedin.drelephant.math.Statistics;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.util.Utils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,11 +36,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -82,7 +85,6 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
     jobData.setAppId(appId).setJobId(jobId);
     // Change job tracking url to job history page
     analyticJob.setTrackingUrl(_jhistoryWebAddr + jobId);
-    try {
 
       // Fetch job config
       Properties jobConf = _jsonFactory.getProperties(_urlFactory.getJobConfigURL(jobId));
@@ -123,13 +125,9 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
         }
         jobData.setDiagnosticInfo(diagnosticInfo);
       } else {
-        // Should not reach here
-        throw new RuntimeException("Job state not supported. Should be either SUCCEEDED or FAILED");
-      }
-    } finally {
-      ThreadContextMR2.updateAuthToken();
+      // Should not reach here
+      throw new RuntimeException("Job state not supported. Should be either SUCCEEDED or FAILED");
     }
-
     return jobData;
   }
 
@@ -170,7 +168,11 @@ public class MapReduceFetcherHadoop2 implements ElephantFetcher<MapReduceApplica
     private void verifyURL(String url) throws IOException {
       final URLConnection connection = new URL(url).openConnection();
       // Check service availability
-      connection.connect();
+      try {
+        connection.connect();
+      } finally {
+        ((HttpURLConnection) (connection)).disconnect();
+      }
       return;
     }
 
@@ -399,27 +401,6 @@ final class ThreadContextMR2 {
     }
   };
 
-  private static final ThreadLocal<AuthenticatedURL.Token> _LOCAL_AUTH_TOKEN =
-      new ThreadLocal<AuthenticatedURL.Token>() {
-        @Override
-        public AuthenticatedURL.Token initialValue() {
-          _LOCAL_LAST_UPDATED.set(System.currentTimeMillis());
-          // Random an interval for each executor to avoid update token at the same time
-          _LOCAL_UPDATE_INTERVAL.set(Statistics.MINUTE_IN_MS * 30 + new Random().nextLong()
-              % (3 * Statistics.MINUTE_IN_MS));
-          logger.info("Executor " + _LOCAL_THREAD_ID.get() + " update interval " + _LOCAL_UPDATE_INTERVAL.get() * 1.0
-              / Statistics.MINUTE_IN_MS);
-          return new AuthenticatedURL.Token();
-        }
-      };
-
-  private static final ThreadLocal<AuthenticatedURL> _LOCAL_AUTH_URL = new ThreadLocal<AuthenticatedURL>() {
-    @Override
-    public AuthenticatedURL initialValue() {
-      return new AuthenticatedURL();
-    }
-  };
-
   private static final ThreadLocal<ObjectMapper> _LOCAL_MAPPER = new ThreadLocal<ObjectMapper>() {
     @Override
     public ObjectMapper initialValue() {
@@ -436,17 +417,51 @@ final class ThreadContextMR2 {
   }
 
   public static JsonNode readJsonNode(URL url) throws IOException, AuthenticationException {
-    HttpURLConnection conn = _LOCAL_AUTH_URL.get().openConnection(url, _LOCAL_AUTH_TOKEN.get());
-    return _LOCAL_MAPPER.get().readTree(conn.getInputStream());
-  }
+    AuthenticatedURL.Token token = new AuthenticatedURL.Token();
+    AuthenticatedURL authenticatedURL = new AuthenticatedURL();
+    HttpURLConnection conn = authenticatedURL.openConnection(url, token);
+    conn.setRequestProperty("Accept-Encoding", "gzip");
 
-  public static void updateAuthToken() {
-    long curTime = System.currentTimeMillis();
-    if (curTime - _LOCAL_LAST_UPDATED.get() > _LOCAL_UPDATE_INTERVAL.get()) {
-      logger.info("Executor " + _LOCAL_THREAD_ID.get() + " updates its AuthenticatedToken.");
-      _LOCAL_AUTH_TOKEN.set(new AuthenticatedURL.Token());
-      _LOCAL_AUTH_URL.set(new AuthenticatedURL());
-      _LOCAL_LAST_UPDATED.set(curTime);
+    String response = "";
+    InputStream inputStream = null;
+    GZIPInputStream gzipInputStream = null;
+    GZIPInputStream gzipErrorStream = null;
+    InputStream errorStream = null;
+
+    try {
+      inputStream = conn.getInputStream();
+
+      gzipInputStream = new GZIPInputStream(inputStream);
+
+      response = CharStreams.toString(new InputStreamReader(gzipInputStream));
+    } catch (IOException inputStreamIOException) {
+      try {
+        errorStream = conn.getErrorStream();
+        int responseCode = conn.getResponseCode();
+        if (errorStream != null) {
+          gzipErrorStream = new GZIPInputStream(errorStream);
+          String errorResponse = CharStreams.toString(new InputStreamReader(gzipErrorStream));
+          logger.error("Executor " + _LOCAL_THREAD_ID.get() + " error response." + errorResponse);
+        }
+        logger.error("Executor " + _LOCAL_THREAD_ID.get() + " error response code." + String.valueOf(responseCode));
+
+
+      } catch (IOException errorStreamIOException) {
+        logger.error("Executor " + _LOCAL_THREAD_ID.get() + " threw another IOException (while getting error response body).");
+        throw errorStreamIOException;
+      }
+      throw inputStreamIOException;
+    } finally {
+      IOUtils.closeQuietly(gzipInputStream);
+      IOUtils.closeQuietly(inputStream);
+
+      IOUtils.closeQuietly(gzipErrorStream);
+      IOUtils.closeQuietly(errorStream);
+
+      conn.disconnect();
     }
+
+
+    return _LOCAL_MAPPER.get().readTree(response);
   }
 }
