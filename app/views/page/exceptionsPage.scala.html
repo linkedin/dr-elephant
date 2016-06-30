@@ -13,27 +13,26 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-
 @(results: Html)
 
-@main("Dr. Elephant - Exceptions", "Exceptions") {
+  @main("Dr. Elephant - Exceptions", "Exceptions") {
 
-  <!-- The Search panel-->
-  @tags.column(12) {
-    @tags.panel(){ Exceptions } {
-      <form id="exceptions-form" role="form" method="get" action="@routes.Application.exceptions()">
-        <div class="form-group">
-          <label for="form-flow-exec-url">Flow Exceution URL/ID</label>
-          <input type="text" class="form-control" id="form-flow-exec-url" name="flow-exec-url" placeholder="Flow Execution URL/ID">
-        </div>
+    <!-- The Search panel-->
+    @tags.column(12) {
+      @tags.panel() { Exceptions } {
+        <form id="exceptions-form" role="form" method="get" action="@routes.Application.exceptions()">
+          <div class="form-group">
+            <label for="form-flow-exec-url">Flow Exceution URL/ID</label>
+            <input type="text" class="form-control" id="form-flow-exec-url" name="flow-exec-url" placeholder="Flow Execution URL/ID">
+          </div>
 
-        <button type="submit" class="btn btn-default">Submit</button>
-      </form>
+          <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+      }
     }
-  }
 
-  @tags.column(12) {
-    @results
-  }
+    @tags.column(12) {
+      @results
+    }
 
-}
+  }
