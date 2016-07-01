@@ -158,6 +158,9 @@ public class AppResult extends Model {
   @Column(nullable = true)
   public long totalDelay;
 
+  @Column(length = 255, nullable = true)
+  public String pigParent;
+
   @JsonManagedReference
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppResult")
   public List<AppHeuristicResult> yarnAppHeuristicResults;

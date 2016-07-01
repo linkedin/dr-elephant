@@ -25,6 +25,11 @@ import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
 import org.apache.log4j.Logger;
+import models.AppJobNameMap;
+import controllers.AzkabanFetchFlowGraph;
+import org.json.JSONArray;
+import java.util.HashMap;
+
 
 
 /**
@@ -267,6 +272,9 @@ public class AnalyticJob {
     result.totalDelay = hadoopAggregatedData.getTotalDelay();
     result.resourceWasted = hadoopAggregatedData.getResourceWasted();
 
+    String pigParent = data.getConf().getProperty("pig.parent.jobid");
+    result.pigParent = pigParent;
+
     // Load App Heuristic information
     int jobScore = 0;
     result.yarnAppHeuristicResults = new ArrayList<AppHeuristicResult>();
@@ -303,6 +311,72 @@ public class AnalyticJob {
 
     // Retrieve information from job configuration like scheduler information and store them into result.
     InfoExtractor.loadInfo(result, data);
+
+    String project_name = data.getConf().getProperty("azkaban.flow.projectname");
+    String flow_name = data.getConf().getProperty("azkaban.flow.flowid");
+    AzkabanFetchFlowGraph fetchGraph = new AzkabanFetchFlowGraph();
+
+    if (AppJobNameMap.find.select("*")
+        .where()
+        .eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, result.flowExecId)
+        .eq(AppJobNameMap.TABLE.JOB_NAME, result.jobName)
+        .findList()
+        .size() != 0) {
+      return result;
+    }
+
+    JSONArray jarr = fetchGraph.fetch(result.flowExecId, project_name, flow_name);
+    String ownName, oneIn;
+
+    int jLen = jarr.length(), i, j, uidNum;
+    HashMap<String, Integer> jobId = new HashMap<String, Integer>();
+    int count, arrLen;
+    for (i = 0; i < jLen; i++) {
+      String inStr = null;
+      ownName = (String) jarr.getJSONObject(i).get("id");
+      if (AppJobNameMap.find.select("*")
+          .where()
+          .eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, result.flowExecId)
+          .eq(AppJobNameMap.TABLE.JOB_NAME, ownName)
+          .findList()
+          .size() == 0) {
+        AppJobNameMap jobNameMap = new AppJobNameMap();
+        jobNameMap.flowExecId = result.flowExecId;
+        jobNameMap.jobName = ownName;
+        if (jobId.get(jobNameMap.jobName) == null) {
+          count = jobId.size();
+          jobNameMap.jobNameId = count + 1;
+        } else {
+          jobNameMap.jobNameId = jobId.get(jobNameMap.jobName);
+        }
+        //adding this entry in the hashmap.
+        jobId.put(jobNameMap.jobName, jobNameMap.jobNameId);
+
+        if (jarr.getJSONObject(i).has("in")) {
+          arrLen = jarr.getJSONObject(i).getJSONArray("in").length();
+          for (j = 0; j < arrLen; j++) {
+            oneIn = (String) jarr.getJSONObject(i).getJSONArray("in").get(j);
+
+            if (jobId.get(oneIn) == null) {
+              jobId.put(oneIn, jobId.size() + 1);
+            }
+            uidNum = jobId.get(oneIn);
+
+            if (inStr != null && !inStr.isEmpty()) {
+              inStr += ",";
+            }
+            if (inStr == null) {
+              inStr = Integer.toString(uidNum);
+            } else {
+              inStr += uidNum;
+            }
+          }
+        }
+        jobNameMap.jobInnodes = inStr;
+
+        jobNameMap.save();
+      }
+    }
 
     return result;
   }

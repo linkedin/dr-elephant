@@ -18,26 +18,15 @@ package controllers;
 
 import com.avaje.ebean.ExpressionList;
 import com.avaje.ebean.Query;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 import com.linkedin.drelephant.util.Utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.Override;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -47,11 +36,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import models.AppHeuristicResult;
+import models.AppJobNameMap;
 import models.AppResult;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import play.api.Play;
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -77,6 +66,11 @@ import views.html.results.flowMetricsHistoryResults;
 import views.html.results.jobMetricsHistoryResults;
 import views.html.results.searchResults;
 import com.google.gson.*;
+import views.html.page.dagPage;
+import views.html.page.mrDagPage;
+import views.html.results.dagResults;
+import views.html.results.mrDagResults;
+
 
 
 public class Application extends Controller {
@@ -107,6 +101,7 @@ public class Application extends Controller {
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
+  public static final String JOB_EXEC_ID= "job-exec-id";
 
   private static long _lastFetch = 0;
   private static int _numJobsAnalyzed = 0;
@@ -118,6 +113,8 @@ public class Application extends Controller {
    *
    * Displays the latest jobs which were analysed in the last 24 hours.
    */
+
+
   public static Result dashboard() {
     long now = System.currentTimeMillis();
     long finishDate = now - DAY;
@@ -713,6 +710,28 @@ public class Application extends Controller {
       // return 0
     }
     return unixTime;
+  }
+
+  /**
+   * Controls the workflow DAG Feature
+   */
+  public static Result dag(){
+    DynamicForm form = Form.form().bindFromRequest(request());
+    String flowExecId = form.get(FLOW_EXEC_ID);
+    if(flowExecId==null || flowExecId.isEmpty())
+      return ok(dagPage.render(null));
+    return ok(dagPage.render(dagResults.render(flowExecId)));
+  }
+
+  /**
+   * Controls the MR DAG Feature
+   */
+  public static Result mrDag(){
+    DynamicForm form = Form.form().bindFromRequest(request());
+    String jobExecId = form.get(JOB_EXEC_ID);
+    if(jobExecId==null || jobExecId.isEmpty())
+      return ok(mrDagPage.render(null));
+    return ok(mrDagPage.render(mrDagResults.render(jobExecId)));
   }
 
   /**
@@ -1416,4 +1435,129 @@ public class Application extends Controller {
 
     return results;
   }
+
+  public static Result restDagGraphData(String flowExecId) {
+    int i,j,oneInnodeNum;
+    JsonObject datasets = new JsonObject();
+
+    if (flowExecId == null || flowExecId.isEmpty()) {
+      return ok(new Gson().toJson(datasets));
+    }
+
+    int max_index= AppJobNameMap.find.select("*").where().eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, flowExecId).findRowCount();
+    max_index= max_index+1;
+    int[][] adjMatrix = new int[max_index][max_index];
+
+    List<AppJobNameMap> reqList= AppJobNameMap.find.select("*").where().eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, flowExecId).findList();
+    for(AppJobNameMap temp1 : reqList){
+      int ownId= temp1.jobNameId;
+      String innodes= temp1.jobInnodes;
+      if(innodes!=null){
+        String[] innodeString = innodes.split(",");
+        for(String oneInnodeString : innodeString){
+          oneInnodeNum= Integer.parseInt(oneInnodeString);
+          adjMatrix[oneInnodeNum][ownId]= 1;
+        }
+      }
+    }
+
+    for (i = 1; i < max_index; i++) {
+      JsonObject row = new JsonObject();
+      for (j = 1; j < max_index; j++) {
+        if(adjMatrix[i][j]==1){
+          row.addProperty(Integer.toString(j), adjMatrix[i][j]);
+        }
+      }
+      AppJobNameMap tempStrStruct= AppJobNameMap.find.select("*").where().eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, flowExecId).eq(AppJobNameMap.TABLE.JOB_NAME_ID, i).findUnique();
+      String label= tempStrStruct.jobName;
+
+      String colour1= "blue";
+
+      List<AppResult> timeStructList= AppResult.find.select("*").where().eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId).eq(AppResult.TABLE.JOB_NAME, label).findList();
+      long runningTime = 10;
+      if(timeStructList.isEmpty()){}else{
+        AppResult timeStruct= timeStructList.get(0);
+        if (timeStruct == null) {
+          // Dummy node
+        } else {
+          long sTime= timeStruct.startTime;
+          long fTime= timeStruct.finishTime;
+          runningTime= fTime - sTime;
+          runningTime= runningTime/5000;
+          logger.debug("Running time for is: " + runningTime);
+          label+= " (JOB TYPE :" + timeStruct.jobType + ") ";
+          colour1= "red";
+        }}
+      JsonObject dataset= new JsonObject();
+      dataset.add("row", row);
+      dataset.addProperty("label", label);
+      dataset.addProperty("time", runningTime);
+      dataset.addProperty("colour", colour1);
+      datasets.add(Integer.toString(i), dataset);
+    }
+
+    return ok(new Gson().toJson(datasets));
+  }
+
+
+  public static Result restMrDagGraphData(String jobExecId) {
+    JsonObject datasets = new JsonObject();
+
+    if (jobExecId == null || jobExecId.isEmpty()) {
+      return ok(new Gson().toJson(datasets));
+    }
+
+    int i, j;
+    List<AppResult> mrJobs= AppResult.find.select("*").where().eq(AppResult.TABLE.JOB_EXEC_ID, jobExecId).findList();
+    if(mrJobs.isEmpty()){
+      return null;
+    }
+    HashMap<String, Integer> jobToId= new HashMap<String, Integer>();
+    HashMap<Integer, String> idToJob= new HashMap<Integer, String>();
+    int count= 0;
+    for(AppResult mrJob : mrJobs){
+      String thisJob= Utils.getJobIdFromApplicationId(mrJob.id);
+      String parentJob= mrJob.pigParent;
+      if(jobToId.get(thisJob)==null){
+        jobToId.put(thisJob, ++count);
+        idToJob.put(count, thisJob);
+      }
+      String[] pigParents = parentJob.split(",");
+      for(String pigParent : pigParents){
+        if(jobToId.get(pigParent)==null){
+          jobToId.put(pigParent, ++count);
+          idToJob.put(count, pigParent);
+        }
+      }
+    }
+    int max_index= count+1;
+    int[][] adjMatrix = new int[max_index][max_index];
+    for(AppResult mrJob : mrJobs){
+      String thisJob= Utils.getJobIdFromApplicationId(mrJob.id);
+      String parentJob= mrJob.pigParent;
+      String[] pigParents = parentJob.split(",");
+      for(String pigParent : pigParents){
+        adjMatrix[jobToId.get(pigParent)][jobToId.get(thisJob)]= 1;
+      }
+    }
+
+    for (i = 1; i < max_index; i++) {
+      JsonObject row = new JsonObject();
+      for (j = 1; j < max_index; j++) {
+        if(adjMatrix[i][j]==1){
+          row.addProperty(Integer.toString(j), adjMatrix[i][j]);
+        }
+      }
+      String label= idToJob.get(i);
+      String colour1= "blue";
+      JsonObject dataset= new JsonObject();
+      dataset.add("row", row);
+      dataset.addProperty("label", label);
+      dataset.addProperty("colour", colour1);
+      datasets.add(Integer.toString(i), dataset);
+    }
+
+    return ok(new Gson().toJson(datasets));
+  }
+
 }
