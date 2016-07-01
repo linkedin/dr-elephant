@@ -111,6 +111,11 @@ if [ -n "${application_secret}" ]; then
   OPTS+=" -Dapplication.secret=$application_secret"
 fi
 
+# Enable web analytics if configured
+if [ -n "${enable_analytics}" ]; then
+  OPTS+=" -Denable.analytics=$enable_analytics"
+fi
+
 # Navigate to project root
 cd $project_root
 
