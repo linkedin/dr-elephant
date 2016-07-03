@@ -18,6 +18,7 @@ package com.linkedin.drelephant.util;
 
 import com.linkedin.drelephant.schedulers.AirflowScheduler;
 import com.linkedin.drelephant.schedulers.AzkabanScheduler;
+import com.linkedin.drelephant.schedulers.OozieScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
 
 import java.util.Properties;
@@ -26,6 +27,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import mockit.Expectations;
+import mockit.Mocked;
+import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.OozieClientException;
+import org.apache.oozie.client.WorkflowJob;
+
 import play.test.FakeApplication;
 import play.test.Helpers;
 
@@ -33,6 +40,11 @@ import static org.junit.Assert.assertEquals;
 
 
 public class InfoExtractorTest {
+  @Mocked
+  OozieClient oozieClient;
+
+  @Mocked
+  WorkflowJob workflowJob;
 
   private FakeApplication app;
 
@@ -82,6 +94,30 @@ public class InfoExtractorTest {
     assertEquals("airflow_dag_id/airflow_dag_run_execution_date/airflow_task_id/airflow_task_instance_execution_date", scheduler.getJobExecId());
     assertEquals("airflow_task_id", scheduler.getJobName());
     assertEquals("airflow", scheduler.getSchedulerName());
+  }
+
+  @Test
+  public void testGetSchedulerInstanceOozie() throws Exception {
+    Properties properties = new Properties();
+    properties.put("oozie.action.id", "0004167-160629080632562-oozie-oozi-W@some-action");
+    properties.put("oozie.job.id", "0004167-160629080632562-oozie-oozi-W");
+
+    new Expectations() {{
+      workflowJob.getAppName();
+      result = "some-workflow-name";
+
+      oozieClient.getJobInfo("0004167-160629080632562-oozie-oozi-W");
+      result = workflowJob;
+    }};
+
+    Scheduler scheduler = InfoExtractor.getSchedulerInstance("id", properties);
+    assertEquals(true, scheduler instanceof OozieScheduler);
+    assertEquals("oozie", scheduler.getSchedulerName());
+    assertEquals("some-workflow-name", scheduler.getFlowDefId());
+    assertEquals("0004167-160629080632562-oozie-oozi-W", scheduler.getFlowExecId());
+    assertEquals("some-action", scheduler.getJobDefId());
+    assertEquals("0004167-160629080632562-oozie-oozi-W@some-action", scheduler.getJobExecId());
+    assertEquals("some-action", scheduler.getJobName());
   }
 
   @Test
