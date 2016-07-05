@@ -30,19 +30,23 @@ import org.apache.log4j.Logger;
 
 public class MRJobLogAnalyzer {
   private static final Logger logger = Logger.getLogger(MRJobLogAnalyzer.class);
-  Pattern _mrJobExceptionPattern =
+  private Pattern _mrJobExceptionPattern =
       Pattern.compile(".*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*");
-  Pattern _unsuccessfulMRTaskIdPattern = Pattern.compile("Task (?:failed|killed) (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
+  private Pattern _unsuccessfulMRTaskIdPattern =
+      Pattern.compile("Task (?:failed|killed) (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
   private LoggingEvent _exception;
   private Set<String> _failedSubEvents;
-      // to do test
 
   public MRJobLogAnalyzer(String rawLog) {
-    findFailedSubEvents(rawLog);
-    findException(rawLog);
+    setFailedSubEvents(rawLog);
+    setException(rawLog);
   }
 
-  private void findFailedSubEvents(String rawLog) {
+  public Set<String> getFailedSubEvents() {
+    return this._failedSubEvents;
+  }
+
+  private void setFailedSubEvents(String rawLog) {
     Set<String> failedSubEvents = new HashSet<String>();
     Matcher unsuccessfulMRTaskIdMatcher = _unsuccessfulMRTaskIdPattern.matcher(rawLog);
     while (unsuccessfulMRTaskIdMatcher.find()) {
@@ -51,18 +55,14 @@ public class MRJobLogAnalyzer {
     this._failedSubEvents = failedSubEvents;
   }
 
-  private void findException(String rawLog) {
+  public LoggingEvent getException() {
+    return this._exception;
+  }
+
+  private void setException(String rawLog) {
     Matcher mrJobExceptionMatcher = _mrJobExceptionPattern.matcher(rawLog);
     if (mrJobExceptionMatcher.find()) {
       this._exception = new LoggingEvent(mrJobExceptionMatcher.group());
     }
-  }
-
-  public Set<String> getFailedSubEvents() {
-    return this._failedSubEvents;
-  }
-
-  public LoggingEvent getException() {
-    return this._exception;
   }
 }

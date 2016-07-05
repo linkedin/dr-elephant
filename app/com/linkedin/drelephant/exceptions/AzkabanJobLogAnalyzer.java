@@ -51,7 +51,7 @@ public class AzkabanJobLogAnalyzer {
     if (_successfulAzkabanJobPattern.matcher(rawLog).find()) {
       succeededAzkabanJob();
     } else if (_failedAzkabanJobPattern.matcher(rawLog).find()) {
-      if(!_subEvents.isEmpty()){
+      if (!_subEvents.isEmpty()) {
         mrLevelFailedAzkabanJob(rawLog);
       } else if (_scriptFailPattern.matcher(rawLog).find()) {
         scriptLevelFailedAzkabanJob(rawLog);
@@ -68,13 +68,14 @@ public class AzkabanJobLogAnalyzer {
     this._exception = null;
   }
 
-  private void mrLevelFailedAzkabanJob(String rawLog){
+  private void mrLevelFailedAzkabanJob(String rawLog) {
     this._state = AzkabanJobState.MRFAIL;
     Matcher matcher = _scriptOrMRFailExceptionPattern.matcher(rawLog);
     if (matcher.find()) {
       this._exception = new LoggingEvent(matcher.group());
     }
   }
+
   private void scriptLevelFailedAzkabanJob(String rawLog) {
     this._state = AzkabanJobState.SCRIPTFAIL;
     Matcher matcher = _scriptOrMRFailExceptionPattern.matcher(rawLog);
@@ -96,6 +97,14 @@ public class AzkabanJobLogAnalyzer {
     this._exception = null;
   }
 
+  public AzkabanJobState getState() {
+    return this._state;
+  }
+
+  public Set<String> getSubEvents() {
+    return this._subEvents;
+  }
+
   private void setSubEvents(String rawLog) {
     Set<String> subEvents = new HashSet<String>();
     Matcher matcher = _mrJobIdPattern.matcher(rawLog);
@@ -103,14 +112,6 @@ public class AzkabanJobLogAnalyzer {
       subEvents.add(matcher.group());
     }
     this._subEvents = subEvents;
-  }
-
-  public AzkabanJobState getState() {
-    return this._state;
-  }
-
-  public Set<String> getSubEvents() {
-    return this._subEvents;
   }
 
   public LoggingEvent getException() {

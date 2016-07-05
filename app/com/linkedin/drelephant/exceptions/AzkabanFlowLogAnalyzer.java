@@ -36,7 +36,11 @@ public class AzkabanFlowLogAnalyzer {
     setFailedSubEvents(rawLog);
   }
 
-  private void setFailedSubEvents(String rawLog){
+  public Set<String> getFailedSubEvents() {
+    return this._failedSubEvents;
+  }
+
+  private void setFailedSubEvents(String rawLog) {
     Set<String> failedSubEvents = new HashSet<String>();
     Matcher matcher = _unsuccessfulAzkabanJobIdPattern.matcher(rawLog);
     while (matcher.find()) {
@@ -44,9 +48,4 @@ public class AzkabanFlowLogAnalyzer {
     }
     this._failedSubEvents = failedSubEvents;
   }
-
-  public Set<String> getFailedSubEvents() {
-    return this._failedSubEvents;
-  }
-
 }

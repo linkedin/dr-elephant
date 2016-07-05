@@ -29,11 +29,9 @@ public class LoggingEvent {
   private List<String> _rawLog;
   private String _log;
   private long _timestamp;
-  private enum LoggingLevel {DEBUG, INFO, WARNING, ERROR, FATAL}
   private LoggingLevel _level = LoggingLevel.ERROR;
   private String _message;
   private List<EventException> _exceptionChain;
-
   public LoggingEvent(String exceptionChainString) {
     this._rawLog = exceptionChainStringToListOfExceptions(exceptionChainString);
     setExceptionChain();
@@ -49,7 +47,7 @@ public class LoggingEvent {
     return log;
   }
 
-  private void setExceptionChain(){
+  private void setExceptionChain() {
     List<EventException> exceptionChain = new ArrayList<EventException>();
     int index = 0;
 
@@ -59,8 +57,8 @@ public class LoggingEvent {
       index += 1;
     }
     _exceptionChain = exceptionChain;
-
   }
+
   private List<String> exceptionChainStringToListOfExceptions(String s) {
     List<String> chain = new ArrayList<String>();
     Pattern stackTraceCausedByClause = Pattern.compile(".*^(?!Caused by).+\\n(?:.*\\tat.+\\n)+");
@@ -90,11 +88,11 @@ public class LoggingEvent {
     return exception;
   }
 
-  private void setMessage(){
-    if(!_exceptionChain.isEmpty()){
+  private void setMessage() {
+    if (!_exceptionChain.isEmpty()) {
       this._message = _exceptionChain.get(0).getMessage();
     }
-
   }
 
+  private enum LoggingLevel {DEBUG, INFO, WARNING, ERROR, FATAL}
 }

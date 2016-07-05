@@ -27,17 +27,21 @@ import org.apache.log4j.Logger;
 public class MRTaskLogAnalyzer {
   private static final Logger logger = Logger.getLogger(MRTaskLogAnalyzer.class);
   private LoggingEvent _exception;
+  private Pattern mrTaskExceptionPattern =
+      Pattern.compile("Error: (.*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*)");
 
   public MRTaskLogAnalyzer(String rawLog) {
-    Pattern mrTaskExceptionPattern =
-        Pattern.compile("Error: (.*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*)");
-    Matcher matcher = mrTaskExceptionPattern.matcher(rawLog);
-    if (matcher.find()) {
-      this._exception = new LoggingEvent(matcher.group());
-    }
+    setException(rawLog);
   }
 
   public LoggingEvent getException() {
     return this._exception;
+  }
+
+  private void setException(String rawLog) {
+    Matcher matcher = mrTaskExceptionPattern.matcher(rawLog);
+    if (matcher.find()) {
+      this._exception = new LoggingEvent(matcher.group());
+    }
   }
 }

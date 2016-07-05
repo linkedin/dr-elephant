@@ -61,7 +61,7 @@ public class ExceptionFinder {
     Set<String> unsuccessfulAzkabanJobIds = analyzedLog.getFailedSubEvents();
 
     for (String failedAzkabanJobId : unsuccessfulAzkabanJobIds) {
-      logger.info("flow failed subevent "+ failedAzkabanJobId);
+      //logger.info("flow failed subevent "+ failedAzkabanJobId);
       String rawAzkabanJobLog =
           _azkabanClient.getAzkabanJobLog(failedAzkabanJobId, azkabanLogOffset, azkabanLogLengthLimit);
       HadoopException azkabanJobLevelException = analyzeAzkabanJob(failedAzkabanJobId, rawAzkabanJobLog);
@@ -72,8 +72,8 @@ public class ExceptionFinder {
     flowLevelException.setId(execId);
     flowLevelException.setLoggingEvent(null); // No flow level exception
     flowLevelException.setChildExceptions(childExceptions);
-    logger.info("flow: "+ flowLevelException.getType());
-    logger.info("flow: "+ flowLevelException.getChildExceptions());
+    logger.info("flow: " + flowLevelException.getType());
+    logger.info("flow: " + flowLevelException.getChildExceptions());
     return flowLevelException;
   }
 
@@ -104,7 +104,7 @@ public class ExceptionFinder {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.SCRIPT);
       azkabanJobLevelException.setLoggingEvent(analyzedLog.getException());
       azkabanJobLevelException.setChildExceptions(null);
-    } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.KILLED){
+    } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.KILLED) {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.KILL);
       azkabanJobLevelException.setLoggingEvent(null);
       azkabanJobLevelException.setChildExceptions(null);

@@ -59,7 +59,7 @@ public class HadoopException {
     _childExceptions = childExceptions;
   }
 
-  public enum HadoopExceptionType {FLOW, AZKABAN, SCRIPT, MR, KILL, MRJOB, MRTASK }
+  public enum HadoopExceptionType {FLOW, AZKABAN, SCRIPT, MR, KILL, MRJOB, MRTASK}
 }
 
 
