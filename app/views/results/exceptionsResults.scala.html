@@ -13,7 +13,11 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-@(result: java.util.Map[java.lang.String, java.util.List[com.linkedin.drelephant.exceptions.HadoopException]])
+
+@(result: com.linkedin.drelephant.exceptions.HadoopException)
+
+@import com.linkedin.drelephant.exceptions.HadoopException
+
 
 
 @tags.panel() { Exception Results} {
@@ -29,78 +33,56 @@
       <div class="panel-collapse collapse" id="level1">
         <ul class="list-group">
 
-        @if(result != null && !result.isEmpty()) {
+        @if(result != null && !result.getChildExceptions().isEmpty()) {
           @* <font color = "red"> <li class="list-group-item" >
             The execution is unsuccessful with following azkaban job failure: </li> </font> *@
-          @for((azjob, hadoopexceptions) <- result) {
-            <font color = "red"> <li class="list-group-item"> <a data-toggle="collapse" href="#@azjob" > Failed Azkabn Job: @azjob</a></li> </font>
-            <div class="panel-collapse collapse" id=@azjob>
+          @for(azkabanJobException <- result.getChildExceptions()) {
+            <font color = "red"> <li class="list-group-item"> <a data-toggle="collapse" href="#@azkabanJobException.getId()" > Failed Azkaban Job: @azkabanJobException.getId()</a></li> </font>
+            <div class="panel-collapse collapse" id=@azkabanJobException.getId()>
               <ul class = "list-group">
-              @for(hadoopexception <- hadoopexceptions) {
-                @for(exception <- hadoopexception.getExceptionLoggingEvents()) {
-                  @if(exception.getType() == "azkaban") {
-                    <li class="list-group-item"> <a data-toggle="collapse" href="#azkaban@azjob">
+                  @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.AZKABAN) {
+                    <li class="list-group-item"> <a data-toggle="collapse" href="#azkaban@azkabanJobException.getId()">
                         &nbsp;&nbsp;&nbsp;Azkaban Level Failure</a></li>
-                    <div class="panel-collapse-collapse" id=azkaban@azjob>
+                    <div class="panel-collapse-collapse" id=azkaban@azkabanJobException.getId()>
                       <ul class = "list-group">
-                      @for(lines <- exception.getExceptionChain()) {
+                      @for(lines <- azkabanJobException.getLoggingEvent().getLog()) {
                         <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
                       }
                       </ul>
                     </div>
                   }
-                  @if(exception.getType() == "script") {
-                    <li class="list-group-item"> <a data-toggle="collapse" href="#script@azjob">&nbsp;&nbsp;&nbsp;Script Level Failure</a></li>
-                    <div class="panel-collapse-collapse" id=script@azjob>
+                  @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.SCRIPT) {
+                    <li class="list-group-item"> <a data-toggle="collapse" href="#script@azkabanJobException.getId()">&nbsp;&nbsp;&nbsp;Script Level Failure</a></li>
+                    <div class="panel-collapse-collapse" id=script@azkabanJobException.getId()>
                       <ul class = "list-group">
-                      @for(lines <- exception.getExceptionChain()) {
+                      @for(lines <- azkabanJobException.getLoggingEvent().getLog()) {
                         <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
                       }
                       </ul>
                     </div>
                   }
-                  @if(exception.getType() == "mr" || exception.getType() == "task") {
-                    <li class="list-group-item"> <a data-toggle="collapse" href="#@exception.getId() @azjob">&nbsp;&nbsp;&nbsp;Failed MR Job/Task: @exception.getId()</a></li>
-                    <div class="panel-collapse-collapse" id=@exception.getId() @azjob>
-                      <ul class = "list-group">
-                      @for(lines <- exception.getExceptionChain()) {
+                  @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.MR) {
+                    @for(mrJobException <- azkabanJobException.getChildExceptions()){
+                      <li class="list-group-item"> <a data-toggle="collapse" href="#@mrJobException.getId()">&nbsp;&nbsp;&nbsp;Failed MR Job: @mrJobException.getId()</a></li>
+                      <div class="panel-collapse-collapse" id=@mrJobException.getId()>
+                        <ul class = "list-group">
+                        @for(lines <- mrJobException.getLoggingEvent.getLog()) {
+                          <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
+                        }
+                        </ul>
+                      </div>
+                      @for(mrTaskException <- mrJobException.getChildExceptions()){
+                        <div class="panel-collapse-collapse" id=@mrJobException.getId()>
+                          <ul class = "list-group">
+                          @for(lines <- mrTaskException.getLoggingEvent.getLog()) {
+                            <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
+                          }
+                          </ul>
+                        </div>
+                      }
+                    }
+                  }
 
-                        <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
-                      }
-                      </ul>
-                    </div>
-                  }
-                  @* @if(exception.getType() == "mr" || exception.getType() == "task"){
-                  <li class="list-group-item"> <a data-toggle="collapse" href="#@exception.getId()@azjob">@exception.getId()</a></li>
-                  //@if(exception.asInstanceOf[MRException].getTaskExceptions() !=null && !exception.asInstanceOf[MRException].getTaskExceptions().isEmpty()){
-                  <div class="panel-collapse-collapse" id=@exception.getId()@azjob>
-                  <ul class = "list-group">
-                  @for(taskexception <- exception.asInstanceOf[MRException].getTaskExceptions()){
-                  <li class="list-group-item"> <a data-toggle="collapse" href="#@taskexception.getId()@azjob">&nbsp;&nbsp;&nbsp;@taskexception.getId()</a> </li>
-                  <div class="panel-collapse-collapse" id=@taskexception.getId()@azjob>
-                  <ul class = "list-group">
-                  @for(lines <- taskexception.getExceptions()){
-                  <li class="list-group-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @for(line <- lines){@line<br>} </li>
-                  }
-                  </ul>
-                  </div>
-                  }
-                  </ul>
-                  </div>
-                  } else { @if(exception.getExceptions()!=null && !exception.getExceptions().isEmpty()){
-                  <div class="panel-collapse-collapse" id=@exception.getId() @azjob>
-                  <ul class = "list-group">
-                  @for(lines <- exception.getExceptions()) {
-                  <li class="list-group-item"> &nbsp;&nbsp;&nbsp;@for(line <- lines){@line<br>} </li>
-                  }
-                  </ul>
-                  </div>
-                  }
-                  }
-                  } *@
-                }
-
-              }
               </ul>
             </div>
           }
