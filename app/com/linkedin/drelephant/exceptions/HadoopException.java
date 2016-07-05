@@ -16,85 +16,50 @@
 
 package com.linkedin.drelephant.exceptions;
 
-import org.apache.log4j.Logger;
-
-import java.util.ArrayList;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 
 public class HadoopException {
   private final Logger logger = Logger.getLogger(HadoopException.class);
-  //    private String message;
-//    private String stackTrace;
-//    private String type;
-//
-//    public String getMessage(){
-//        return this.message;
-//    }
-//
-//    public String getStackTrace(){
-//        return this.stackTrace;
-//    }
-//
-//    public String getType(){
-//        return this.type;
-//    }
-//
-//    public void setMessage(String message){
-//        this.message = message;
-//    }
-//
-//    public void setStackTrace(String stackTrace){
-//        this.stackTrace = stackTrace;
-//    }
-//
-//    public void setType(String type){
-//        this.type = type;
-//    }
-    /*private List<List<String>> exceptionChain;
-    private String type; //azkaban, script, hadoopjobid, hadooptaskid, other(joboverview)
-    private String id;
-    public List<List<String>> getExceptionChain() {
-        return this.exceptionChain;
-    }
+  private String _id = "UNKNOWN";
+  private HadoopExceptionType _type;
+  private LoggingEvent _loggingEvent;
+  private List<HadoopException> _childExceptions;
 
-    public void setExceptionChain(List<List<String>> s) {
-        this.exceptionChain = s;
-    }
-
-    public void addException(List<String> s) {         // add exception to exception chain
-        this.exceptionChain.add(s);
-    }
-
-    public void setType(String s){
-        this.type=s;
-    }
-    public String getType(){
-        return this.type;
-    }
-
-    public void setId(String s){
-        this.id=s;
-    }
-    public String getId(){
-        return this.id;
-    }
-
-    public ExceptionLoggingEvent(){
-        this.exceptionChain = new ArrayList<List<String>>();
-        this.type = "";
-        this.id="";
-    }*/ List<ExceptionLoggingEvent> _exceptionLoggingEvents;
-
-  public HadoopException() {
-    this._exceptionLoggingEvents = new ArrayList<ExceptionLoggingEvent>();
+  public String getId() {
+    return _id;
   }
 
-  public void addExceptionLoggingEvent(ExceptionLoggingEvent e) {
-    _exceptionLoggingEvents.add(e);
+  public void setId(String id) {
+    _id = id;
   }
 
-  public List<ExceptionLoggingEvent> getExceptionLoggingEvents() {
-    return _exceptionLoggingEvents;
+  public HadoopExceptionType getType() {
+    return _type;
   }
+
+  public void setType(HadoopExceptionType type) {
+    _type = type;
+  }
+
+  public LoggingEvent getLoggingEvent() {
+    return _loggingEvent;
+  }
+
+  public void setLoggingEvent(LoggingEvent e) {
+    _loggingEvent = e;
+  }
+
+  public List<HadoopException> getChildExceptions() {
+    return _childExceptions;
+  }
+
+  public void setChildExceptions(List<HadoopException> childExceptions) {
+    _childExceptions = childExceptions;
+  }
+
+  public enum HadoopExceptionType {FLOW, AZKABAN, SCRIPT, MRJOB, MRTASK, MR}
 }
+
+

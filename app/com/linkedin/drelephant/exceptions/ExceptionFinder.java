@@ -13,152 +13,130 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package com.linkedin.drelephant.exceptions;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
-import org.apache.hadoop.security.authentication.client.AuthenticationException;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.log4j.Logger;
 
 
 public class ExceptionFinder {
-
   private final Logger logger = Logger.getLogger(ExceptionFinder.class);
-  //private String url;
-  private Map<String, List<HadoopException>> exceptions;
-  private AzkabanClient _client;
+  private HadoopException _exception;
+  private AzkabanClient _azkabanClient;
+  private MRClient _mrClient;
+  private String azkabanLogOffset = "0";
+  private String azkabanLogLengthLimit = "99999999";
 
-  public ExceptionFinder(String url) {
-    //this.url = url;
-    this.exceptions = new HashMap<String, List<HadoopException>>();
-    _client = new AzkabanClient(url);
-    _client.azkabanLogin("", ""); //Login using Azkaban Credentials
-    fetchAndAnalyzeLogs();
-  }
+  public ExceptionFinder(String url)
+      throws URISyntaxException {
+    String execId = null;
 
-  public void fetchAndAnalyzeLogs() {
-    final String jhistoryAddr = new Configuration().get("mapreduce.jobhistory.webapp.address");
-
-    LogAnalyzer analyzedFlowLog = analyzeAzkabanFlowLog();
-    Set<String> failedAzkabanJobs = analyzedFlowLog.getFailedSubEvents();
-    for (String azkabanJob : failedAzkabanJobs) {
-      LogAnalyzer analyzedAzkabanJobLog = analyzeAzkabanJobLog(azkabanJob);
-      List<HadoopException> exceptions = new ArrayList<HadoopException>();      // azkabanJob exceptions
-
-      Set<String> hadoopJobs = analyzedAzkabanJobLog.getFailedSubEvents();
-      for (String hadoopJob : hadoopJobs) {
-        String jhsURL = "http://" + jhistoryAddr + "/ws/v1/history/mapreduce/jobs/" + hadoopJob;
-        LogAnalyzer AnalyzedMRLog = analyzeHadoopJobOverview(jhsURL);
-        if (AnalyzedMRLog != null) {
-          HadoopException mrException = new HadoopException();
-          if (AnalyzedMRLog.getException().getExceptionChain() != null) {
-            //mr job failed for reason other than task failure
-            ExceptionLoggingEvent mrJobException = AnalyzedMRLog.getException();
-            mrJobException.setType("mr");
-            mrJobException.setId(hadoopJob);
-            mrException.addExceptionLoggingEvent(mrJobException);
-          }
-          Set<String> failedHadoopTasks = AnalyzedMRLog.getFailedSubEvents();
-          for (String hadoopTask : failedHadoopTasks) {
-            jhsURL = "http://" + jhistoryAddr + "/ws/v1/history/mapreduce/jobs/" + hadoopJob + "/tasks/" + hadoopTask
-                + "/attempts";
-            ExceptionLoggingEvent mrTaskException = analyzeHadoopTaskDiagnostic(jhsURL);
-            mrTaskException.setType("task");
-            mrTaskException.setId(hadoopTask);
-            mrException.addExceptionLoggingEvent(mrTaskException);
-          }
-          exceptions.add(mrException);
-        }
+    List<NameValuePair> params = URLEncodedUtils.parse(new URI(url), "UTF-8");
+    for (NameValuePair param : params) {
+      if (param.getName() == "execid") {
+        execId = param.getValue();
       }
-      if (exceptions.isEmpty()
-          && analyzedAzkabanJobLog.getException() != null) {
-        // Azkaban job failed for reason other than mr job failure
-        HadoopException azException = new HadoopException();
-        azException.addExceptionLoggingEvent(analyzedAzkabanJobLog.getException());
-        exceptions.add(azException);
-      }
-      this.exceptions.put(azkabanJob, exceptions);
-    }
-  }
-
-  public LogAnalyzer analyzeAzkabanFlowLog() {
-    String response = _client.getExecutionLog("0", "99999999");
-    LogAnalyzer analyzedLog = new LogAnalyzer(response);
-    return analyzedLog;
-  }
-
-  public LogAnalyzer analyzeAzkabanJobLog(String azkabanJob) {
-    String response = _client.getJobLog(azkabanJob, "0", "99999999");
-    LogAnalyzer analyzedLog = new LogAnalyzer(response);
-    return analyzedLog;
-  }
-
-  public JsonNode readJson(URL url) {
-    AuthenticatedURL.Token token = new AuthenticatedURL.Token();
-    AuthenticatedURL authenticatedURL = new AuthenticatedURL();
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      HttpURLConnection conn = authenticatedURL.openConnection(url, token);
-      return objectMapper.readTree(conn.getInputStream());
-    } catch (AuthenticationException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-
-  public LogAnalyzer analyzeHadoopJobOverview(String jobURL) {
-    try {
-      JsonNode response = readJson(new URL(jobURL));
-      if (response.get("job").get("state").toString() != "SUCCEEDED") {
-        LogAnalyzer analyzedLog = new LogAnalyzer(response.get("job").get("diagnostics").getTextValue());
-        return analyzedLog;
-      }
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-
-  public ExceptionLoggingEvent analyzeHadoopTaskDiagnostic(String taskURL) {
-    // Analyzes the last task attempt
-    try {
-      JsonNode response = readJson(new URL(taskURL));
-      int attempts = response.get("taskAttempts").get("taskAttempt").size();
-      int maxattempt = 0;
-      int maxattemptid = 0;
-      for (int i = 0; i < attempts; i++) {
-        int attempt = Integer.parseInt(
-            response.get("taskAttempts").get("taskAttempt").get(i).get("id").getTextValue().split("_")[5]);
-        if (attempt > maxattempt) {
-          maxattemptid = i;
-          maxattempt = attempt;
-        }
-      }
-      LogAnalyzer analyzedLog = new LogAnalyzer(
-          response.get("taskAttempts").get("taskAttempt").get(maxattemptid).get("diagnostics").getTextValue());
-      return analyzedLog.getException();
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
     }
 
-    return null;
+    _mrClient = new MRClient();
+
+    _azkabanClient = new AzkabanClient(url);
+    _azkabanClient.azkabanLogin("aragrawa", "India052016^");
+    String rawFlowLog = _azkabanClient.getAzkabanFlowLog(azkabanLogOffset, azkabanLogLengthLimit);
+
+    _exception = analyzeAzkabanFlow(execId, rawFlowLog);
   }
 
-  public Map<String, List<HadoopException>> getExceptions() {
-    return this.exceptions;
+  private HadoopException analyzeAzkabanFlow(String execId, String rawAzkabanFlowLog) {
+    HadoopException flowLevelException = new HadoopException();
+    List<HadoopException> childExceptions = new ArrayList<HadoopException>();
+    AzkabanFlowLogAnalyzer analyzedLog = new AzkabanFlowLogAnalyzer(rawAzkabanFlowLog);
+    Set<String> failedAzkabanJobIds = analyzedLog.getFailedSubEvents();
+
+    for (String failedAzkabanJobId : failedAzkabanJobIds) {
+      String rawAzkabanJobLog =
+          _azkabanClient.getAzkabanJobLog(failedAzkabanJobId, azkabanLogOffset, azkabanLogLengthLimit);
+      HadoopException azkabanJobLevelException = analyzeAzkabanJob(failedAzkabanJobId, rawAzkabanJobLog);
+      childExceptions.add(azkabanJobLevelException);
+    }
+
+    flowLevelException.setType(HadoopException.HadoopExceptionType.FLOW);
+    flowLevelException.setId(execId);
+    flowLevelException.setLoggingEvent(null); // No flow level exception
+    flowLevelException.setChildExceptions(childExceptions);
+    return flowLevelException;
+  }
+
+  private HadoopException analyzeAzkabanJob(String azkabanJobId, String rawAzkabanJobLog) {
+    HadoopException azkabanJobLevelException = new HadoopException();
+    List<HadoopException> childExceptions = new ArrayList<HadoopException>();
+    AzkabanJobLogAnalyzer analyzedLog = new AzkabanJobLogAnalyzer(rawAzkabanJobLog);
+    logger.info("analyzedlog exception " + analyzedLog.getException().getLog() + "\n");
+    logger.info("analyzedlog exception " + analyzedLog.getSubEvents() + "\n");
+    logger.info("analyzedlog exception " + analyzedLog.getState() + "\n");
+    Set<String> mrJobIds = analyzedLog.getSubEvents(); // returns all mrjobs in the azkaban job
+
+    for (String mrJobId : mrJobIds) {
+      //To do: Somehow check if mr job logs are there or not
+      String rawMRJobLog = _mrClient.getMRJobLog(mrJobId); // fetches
+      if (rawMRJobLog != null) {  // To do: (Very important)
+        HadoopException mrJobLevelException = analyzeMRJob(mrJobId, rawAzkabanJobLog);
+        childExceptions.add(mrJobLevelException);
+      }
+    }
+    if (!childExceptions.isEmpty()) {
+      azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.MR);
+      azkabanJobLevelException.setLoggingEvent(null);
+      azkabanJobLevelException.setChildExceptions(childExceptions);
+    } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.AZKABANFAIL) {
+      azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.AZKABAN);
+      azkabanJobLevelException.setLoggingEvent(analyzedLog.getException());
+      azkabanJobLevelException.setChildExceptions(null);
+    } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.SCRIPTFAIL) {
+      azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.SCRIPT);
+      azkabanJobLevelException.setLoggingEvent(analyzedLog.getException());
+      azkabanJobLevelException.setChildExceptions(null);
+    }
+    azkabanJobLevelException.setId(azkabanJobId);
+    return azkabanJobLevelException;
+  }
+
+  private HadoopException analyzeMRJob(String mrJobId, String rawMRJoblog) { // Called for unsuccessful mrjob
+    HadoopException mrJobLevelException = new HadoopException();
+    List<HadoopException> childException = new ArrayList<HadoopException>();
+    MRJobLogAnalyzer analyzedLog = new MRJobLogAnalyzer(rawMRJoblog);
+    Set<String> failedMRTaskIds = analyzedLog.getFailedSubEvents();
+
+    for (String failedMRTaskId : failedMRTaskIds) {
+      String rawMRTaskLog = _mrClient.getMRTaskLog(mrJobId, failedMRTaskId);
+      HadoopException mrTaskLevelException = analyzeMRTask(failedMRTaskId, rawMRTaskLog);
+      childException.add(mrTaskLevelException);
+    }
+    mrJobLevelException.setChildExceptions(childException);
+    mrJobLevelException.setLoggingEvent(analyzedLog.getException());
+    mrJobLevelException.setType(HadoopException.HadoopExceptionType.MRJOB);
+    mrJobLevelException.setId(mrJobId);
+    return mrJobLevelException;
+  }
+
+  private HadoopException analyzeMRTask(String mrTaskId, String rawMRTaskLog) {
+    HadoopException mrTaskLevelException = new HadoopException();
+    MRTaskLogAnalyzer analyzedLog = new MRTaskLogAnalyzer(rawMRTaskLog);
+    mrTaskLevelException.setLoggingEvent(analyzedLog.getException());
+    mrTaskLevelException.setType(HadoopException.HadoopExceptionType.MRTASK);
+    mrTaskLevelException.setId(mrTaskId);
+    mrTaskLevelException.setChildExceptions(null);
+    return mrTaskLevelException;
+  }
+
+  public HadoopException getExceptions() {
+    return this._exception;
   }
 }

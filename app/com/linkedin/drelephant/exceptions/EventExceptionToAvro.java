@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.linkedin.drelephant.exceptions;
+/*package com.linkedin.drelephant.exceptions;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -31,13 +31,14 @@ public class EventExceptionToAvro {
 
 
   public JSONObject convert(List<String> exception, int exceptionIndex) {
+    StackTraceFrameToAvro()
     JSONObject eventException = new JSONObject();
     JSONObject stackTraceFrame;
     String errorType = "unknown";
     String message = "empty";
     int frameIndex = 0;
-    Pattern stackTraceLine = Pattern.compile("^[\\\\t \\t]*at (.+)\\.(.+(?=\\())\\((.*)\\)"); //To do
-    Pattern exceptionDetails = Pattern.compile("^([^() :]*): (.*)"); //To do
+    Pattern stackTraceLine = Pattern.compile("^[\\\\t \\t]*at (.+)\\.(.+(?=\\())\\((.*)\\)"); //Test
+    Pattern exceptionDetails = Pattern.compile("^([^() :]*): (.*)"); //Test
 
     for (String line : exception) {
       Matcher match = stackTraceLine.matcher(line);
@@ -101,3 +102,4 @@ public class EventExceptionToAvro {
     return stackTraceFrame;
   }
 }
+*/

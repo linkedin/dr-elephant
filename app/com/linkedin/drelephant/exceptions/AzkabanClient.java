@@ -16,13 +16,29 @@
 
 package com.linkedin.drelephant.exceptions;
 
-import controllers.HtmlUtil;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
@@ -32,25 +48,6 @@ import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
-
-
 
 public class AzkabanClient {
 
@@ -59,19 +56,21 @@ public class AzkabanClient {
   private String _executionId;
   private String _sessionId;
 
-  public AzkabanClient(String url) {
+  public AzkabanClient(String url)
+      throws URISyntaxException {
     if (url == null || url.isEmpty()) {
       logger.info("Empty Azkaban URL");
     }
     this._azkabanUrl = url;
-    try {
-      this._executionId = new URL(url).getQuery().toString().substring(7);
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
+    List<NameValuePair> params = URLEncodedUtils.parse(new URI(url), "UTF-8");
+    for (NameValuePair param : params) {
+      if (param.getName() == "execid") {
+        this._executionId = param.getValue();
+      }
     }
   }
 
-  public JSONObject fetchJson(List<NameValuePair> urlParameters) {
+  private JSONObject fetchJson(List<NameValuePair> urlParameters) {
 
     HttpPost httpPost = new HttpPost(_azkabanUrl);
     try {
@@ -99,8 +98,7 @@ public class AzkabanClient {
 
       if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
         throw new RuntimeException(
-            "Login attempt failed.\nStatus line: " + response.getStatusLine().toString() + "\nStatus code: "
-                + response.getStatusLine().getStatusCode());
+            response.getStatusLine().toString() + "\nStatus code: " + response.getStatusLine().getStatusCode());
       }
 
       String result = parseContent(response.getEntity().getContent());
@@ -130,36 +128,7 @@ public class AzkabanClient {
     return jsonObj;
   }
 
-  public void azkabanLogin(String userName, String password) {
-    List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-    urlParameters.add(new BasicNameValuePair("action", "login"));
-    urlParameters.add(new BasicNameValuePair("username", userName));
-    urlParameters.add(new BasicNameValuePair("password", password));
-
-    try {
-      JSONObject jsonObject = fetchJson(urlParameters);
-
-      if (!jsonObject.has("session.id")) {
-        throw new RuntimeException("Login attempt failed. The session ID could not be obtained.");
-      }
-
-      this._sessionId = jsonObject.get("session.id").toString();
-    } catch (JSONException e) {
-      e.printStackTrace();
-    }
-  }
-
-  String parseResponse(String response) {
-    String newline = System.getProperty("line.separator");
-    return HtmlUtil.toText(response).replaceAll("azkaban.failure.message=", newline + newline);
-  }
-
-  /**
-   * Gets the content from the HTTP response.
-   *
-   * @return The content from the response
-   */
-  String parseContent(InputStream response)
+  private String parseContent(InputStream response)
       throws IOException {
     BufferedReader reader = null;
     StringBuilder result = new StringBuilder();
@@ -181,7 +150,37 @@ public class AzkabanClient {
     return result.toString();
   }
 
-  public String getExecutionLog(String offset, String length) {
+  public void azkabanLogin(String userName, String password) {
+    List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+    urlParameters.add(new BasicNameValuePair("action", "login"));
+    urlParameters.add(new BasicNameValuePair("username", userName));
+    urlParameters.add(new BasicNameValuePair("password", password));
+
+    try {
+      JSONObject jsonObject = fetchJson(urlParameters);
+
+      if (!jsonObject.has("session.id")) {
+        throw new RuntimeException("Login attempt failed. The session ID could not be obtained.");
+      }
+
+      this._sessionId = jsonObject.get("session.id").toString();
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /*String parseResponse(String response) {
+    String newline = System.getProperty("line.separator");
+    return HtmlUtil.toText(response).replaceAll("azkaban.failure.message=", newline + newline);
+  }
+
+  /**
+   * Gets the content from the HTTP response.
+   *
+   * @return The content from the response
+   */
+
+  public String getAzkabanFlowLog(String offset, String length) {
     List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
     urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
     urlParameters.add(new BasicNameValuePair("ajax", "fetchExecFlowLogs"));
@@ -191,6 +190,7 @@ public class AzkabanClient {
 
     try {
       JSONObject jsonObject = fetchJson(urlParameters);
+      logger.info("JSON log " + jsonObject);
 
       if (jsonObject.get("length").toString() == "0") {
         throw new RuntimeException("No log found for given execution url!.");
@@ -202,7 +202,7 @@ public class AzkabanClient {
     return null;
   }
 
-  public String getJobLog(String jobId, String offset, String length) {
+  public String getAzkabanJobLog(String jobId, String offset, String length) {
     List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
     urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
     urlParameters.add(new BasicNameValuePair("ajax", "fetchExecJobLogs"));
@@ -212,7 +212,7 @@ public class AzkabanClient {
     urlParameters.add(new BasicNameValuePair("length", length));
     try {
       JSONObject jsonObject = fetchJson(urlParameters);
-
+      logger.info("JSON log " + jsonObject);
       if (jsonObject.get("length").toString() == "0") {
         logger.error("No log found for azkaban job" + jobId);
       }

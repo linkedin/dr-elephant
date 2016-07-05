@@ -12,16 +12,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- */
+
 
 package com.linkedin.drelephant.exceptions;
-
-/*
-Given a log string, analyzes and returns the following information:
-state:
-exception:
-
- */
 
 import org.apache.log4j.Logger;
 import java.util.ArrayList;
@@ -32,14 +25,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+/*
+Given a raw log string, analyzes and returns the following information. The logs can be Azkaban flow/job lo and, MR job/task log.
+_state: The state of flow/job/task
+_exception: Exception in flow/job/task
+_failedSubEvents: for Azkaban flow log returns the set of failed azkaban job ids,for azkaban job log returns the set of failed MR jobs ids,for mr job log returns the set of failed mr task ids
+
+
 public class LogAnalyzer {
   private static final Logger logger = Logger.getLogger(LogAnalyzer.class);
-  //private enum STATES {SUCCEEDED, FAILED, KILLED, SCRIPTFAIL, AZKABANFAIL, UNKNOWN};
   private String _state;
   private ExceptionLoggingEvent _exception;
-  private Set<String> _failedSubEvents; /* for azkaban flow log: returns the set of failed azkaban job ids
-                                                for azkaban job log: returns the set of failed MR jobs ids
-                                                for mr job log: returns the set of failed mr task ids*/
+  private Set<String> _failedSubEvents;
   private String _rawLog;
 
   public LogAnalyzer(String rawLog) {
@@ -53,40 +50,40 @@ public class LogAnalyzer {
   public void analyzeRawLog(){
     Matcher matcher;
     Set<String> allFailedSubEventMatchs = new HashSet<String>();
-    if (match(
+    if (matchPattern(
         "Flow \\'\\' is set to SUCCEEDED in [0-9]+ seconds").find()) {
       //Successful Azkaban flow log
       this._state = "SUCCEEDED";
-    } else if (match(
+    } else if (matchPattern(
         "Setting flow \\'\\' status to FAILED in [0-9]+ seconds").find()) {
       //Failed Azkaban flow log
-      matcher = match("Job (.*) finished with status (?:FAILED|KILLED) in [0-9]+ seconds");
+      matcher = matchPattern("Job (.*) finished with status (?:FAILED|KILLED) in [0-9]+ seconds");
       while (matcher.find()) {
         allFailedSubEventMatchs.add(matcher.group(1));
       }
       this._state = "FAILED";
       this._failedSubEvents = allFailedSubEventMatchs;
-    } else if (match(
+    } else if (matchPattern(
         "Setting flow \\'\\' status to KILLED in [0-9]+ seconds").find()) {
       //Killed Azkaban flow log
-      matcher = match("Job (.*) finished with status (?:FAILED|KILLED) in [0-9]+ seconds");
+      matcher = matchPattern("Job (.*) finished with status (?:FAILED|KILLED) in [0-9]+ seconds");
       while (matcher.find()) {
         allFailedSubEventMatchs.add(matcher.group(1));
       }
       this._state = "KILLED";
       this._failedSubEvents = allFailedSubEventMatchs;
-    } else if (match(
+    } else if (matchPattern(
         "Finishing job [^\\s]+ attempt: [0-9]+ at [0-9]+ with status SUCCEEDED").find()) {
       //Succeeded Azkaban Job log
       this._state = "SUCCEEDED";
-    } else if (match(
+    } else if (matchPattern(
         "Finishing job [^\\s]+ attempt: [0-9]+ at [0-9]+ with status FAILED").find()) {
       //Failed Azkaban Job log
-      matcher = match("job_[0-9]+_[0-9]+");
+      matcher = matchPattern("job_[0-9]+_[0-9]+");
       while (matcher.find()) {
         allFailedSubEventMatchs.add(matcher.group());
       }
-      if (match("ERROR - Job run failed!").find()) {
+      if (matchPattern("ERROR - Job run failed!").find()) {
         this._state = "SCRIPT FAILED";
         this._exception.setType("script");
         this._failedSubEvents = allFailedSubEventMatchs;
@@ -95,15 +92,15 @@ public class LogAnalyzer {
       } else {
         this._state = "Azkaban Fail";
         this._exception.setType("azkaban");
-        matcher = match("\\d{2}[-/]\\d{2}[-/]\\d{4} \\d{2}:\\d{2}:\\d{2} PDT [^\\s]+ (?:ERROR|WARN|FATAL|Exception) .*\\n");
+        matcher = matchPattern("\\d{2}[-/]\\d{2}[-/]\\d{4} \\d{2}:\\d{2}:\\d{2} PDT [^\\s]+ (?:ERROR|WARN|FATAL|Exception) .*\\n");
         if (matcher.find()) {
           this._exception.addEventException(stringToExceptionEvent(matcher.group()));
         }
       }
-    } else if (match(
+    } else if (matchPattern(
         "Finishing job [^\\s]+ attempt: [0-9]+ at [0-9]+ with status KILLED").find()) {
       // Killed Azkaban Job log
-      matcher = match("job_[0-9]+_[0-9]+");
+      matcher = matchPattern("job_[0-9]+_[0-9]+");
       while (matcher.find()) {
         allFailedSubEventMatchs.add(matcher.group());
       }
@@ -111,22 +108,22 @@ public class LogAnalyzer {
       this._failedSubEvents = allFailedSubEventMatchs;
       //**Incomplete**
 
-    } else if (match(
+    } else if (matchPattern(
         "Job failed as tasks failed").find()) {
       // Failed MR Job log
       this._state = "FAILED";
-      matcher = match("Task failed (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
+      matcher = matchPattern("Task failed (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
       while (matcher.find()) {
         allFailedSubEventMatchs.add(matcher.group(1));
       }
       this._failedSubEvents = allFailedSubEventMatchs;
       this._exception.setExceptionChain(
           matchExceptionChain(".*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*"));
-    } else if (match(
+    } else if (matchPattern(
         "Job failed as tasks killed").find()) {
       // Killed MR Job log
       this._state = "KILLED";
-      matcher = match("Task killed (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
+      matcher = matchPattern("Task killed (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
       while (matcher.find()) {
         allFailedSubEventMatchs.add(matcher.group(1));
       }
@@ -154,7 +151,7 @@ public class LogAnalyzer {
     return null;
   }
 
-  public Matcher match(String pattern) {
+  public Matcher matchPattern(String pattern) {
     return Pattern.compile(pattern).matcher(_rawLog);
   }
 
@@ -192,3 +189,4 @@ public class LogAnalyzer {
     return this._exception;
   }
 }
+*/
