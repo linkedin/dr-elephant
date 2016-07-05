@@ -24,30 +24,37 @@ import org.apache.log4j.Logger;
 
 
 /*
-* Given a MR Job log returns the list of unseccessful tasks and MR job level exception (if any)
+* Given a MR Job log returns the list of unsuccessful tasks and MR job level exception (if any)
 *
 * */
 
 public class MRJobLogAnalyzer {
   private static final Logger logger = Logger.getLogger(MRJobLogAnalyzer.class);
+  Pattern _mrJobExceptionPattern =
+      Pattern.compile(".*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*");
+  Pattern _unsuccessfulMRTaskIdPattern = Pattern.compile("Task (?:failed|killed) (task_[0-9]+_[0-9]+_[mr]_[0-9]+)");
   private LoggingEvent _exception;
   private Set<String> _failedSubEvents;
+      // to do test
 
   public MRJobLogAnalyzer(String rawLog) {
-    Pattern mrJobExceptionPattern =
-        Pattern.compile(".*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*");
-    Pattern unsuccessfulMRTaskIdPattern =
-        Pattern.compile("Task (?:failed|killed) (task_[0-9]+_[0-9]+_[mr]_[0-9]+)"); // to do test
-    Set<String> failedSubEvents = new HashSet<String>();
+    findFailedSubEvents(rawLog);
+    findException(rawLog);
+  }
 
-    Matcher matcher = unsuccessfulMRTaskIdPattern.matcher(rawLog);
-    while (matcher.find()) {
-      failedSubEvents.add(matcher.group(1));
+  private void findFailedSubEvents(String rawLog) {
+    Set<String> failedSubEvents = new HashSet<String>();
+    Matcher unsuccessfulMRTaskIdMatcher = _unsuccessfulMRTaskIdPattern.matcher(rawLog);
+    while (unsuccessfulMRTaskIdMatcher.find()) {
+      failedSubEvents.add(unsuccessfulMRTaskIdMatcher.group(1));
     }
     this._failedSubEvents = failedSubEvents;
-    matcher = mrJobExceptionPattern.matcher(rawLog);
-    if (matcher.find()) {
-      this._exception = new LoggingEvent(matcher.group());
+  }
+
+  private void findException(String rawLog) {
+    Matcher mrJobExceptionMatcher = _mrJobExceptionPattern.matcher(rawLog);
+    if (mrJobExceptionMatcher.find()) {
+      this._exception = new LoggingEvent(mrJobExceptionMatcher.group());
     }
   }
 

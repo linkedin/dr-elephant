@@ -32,11 +32,12 @@ public class LoggingEvent {
   private LoggingLevel _level;
   private String _message;
   private List<EventException> _exceptionChain;
+
   public LoggingEvent(String exceptionChainString) {
-    logger.info("In loggingevent " + exceptionChainString);
     this._rawLog = exceptionChainStringToListOfExceptions(exceptionChainString);
     List<EventException> exceptionChain = new ArrayList<EventException>();
     int index = 0;
+
     for (String rawEventException : _rawLog) {
       EventException eventException = new EventException(index, rawEventException);
       exceptionChain.add(eventException);
@@ -45,13 +46,12 @@ public class LoggingEvent {
     _exceptionChain = exceptionChain;
   }
 
-  public List<List<String>> getLog() {    // To do
+  public List<List<String>> getLog() {
     List<List<String>> log = new ArrayList<List<String>>();
-    List<String> exception = new ArrayList<String>();
     for (String exceptionString : _rawLog) {
-      exception = exceptionStringToListOfLine(exceptionString);
+      List<String> exception = exceptionStringToListOfLines(exceptionString);
+      log.add(exception);
     }
-    log.add(exception);
     return log;
   }
 
@@ -72,7 +72,7 @@ public class LoggingEvent {
     return chain;
   }
 
-  private List<String> exceptionStringToListOfLine(String s) {
+  private List<String> exceptionStringToListOfLines(String s) {
     List<String> exception = new ArrayList<String>();
     Matcher matcher = Pattern.compile(".*\\n").matcher(s);
     while (matcher.find()) {

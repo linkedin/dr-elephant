@@ -25,8 +25,9 @@ import org.apache.log4j.Logger;
 
 public class EventException {
   private final Logger logger = Logger.getLogger(EventException.class);
-  Pattern stackTraceLine = Pattern.compile("^[\\\\t \\t]*at (.+)\\.(.+(?=\\())\\((.*)\\)"); //Test
-  Pattern exceptionDetails = Pattern.compile("^([^() :]*): (.*)"); //Test
+  Pattern stackTraceLinePattern = Pattern.compile("^[\\\\t \\t]*at (.+)\\.(.+(?=\\())\\((.*)\\)"); //Test
+  Pattern exceptionDetailsPattern = Pattern.compile("^([^() :]*): (.*)"); //Test
+  Pattern separateLinesPattern = Pattern.compile(".*\\n");
   private String _type;
   private int _index;
   private String _message;
@@ -42,24 +43,21 @@ public class EventException {
   }
 
   private void processRawString(String rawEventException) {
-    List<StackTraceFrame> stackTrace = new ArrayList<StackTraceFrame>();
     int frameIndex = 0;
-    Matcher matcher = Pattern.compile(".*\\n").matcher(rawEventException);
-    List<String> lines = new ArrayList<String>();
-    while (matcher.find()) {
-      lines.add(matcher.group());
-    }
+    List<StackTraceFrame> stackTrace = new ArrayList<StackTraceFrame>();
+    List<String> lines = stringToListOfLines(rawEventException);
+
     for (String line : lines) {
-      matcher = exceptionDetails.matcher(line);
-      if (matcher.find()) {
-        this._type = matcher.group(1);
-        this._message = matcher.group(2);
+      Matcher exceptionDetailsMatcher = exceptionDetailsPattern.matcher(line);
+      if (exceptionDetailsMatcher.find()) {
+        this._type = exceptionDetailsMatcher.group(1);
+        this._message = exceptionDetailsMatcher.group(2);
       } else {
-        Matcher match = stackTraceLine.matcher(line);
-        if (match.find()) {
-          String source = match.group(1);
-          String call = match.group(2);
-          String fileDetails = match.group(3);
+        Matcher stackTraceLineMatcher = stackTraceLinePattern.matcher(line);
+        if (stackTraceLineMatcher.find()) {
+          String source = stackTraceLineMatcher.group(1);
+          String call = stackTraceLineMatcher.group(2);
+          String fileDetails = stackTraceLineMatcher.group(3);
           StackTraceFrame stackTraceFrame = new StackTraceFrame(frameIndex, source, call, fileDetails);
           stackTrace.add(stackTraceFrame);
           frameIndex += 1;
@@ -67,5 +65,14 @@ public class EventException {
       }
     }
     this._stackTrace = stackTrace;
+  }
+
+  private List<String> stringToListOfLines(String rawEventException) {
+    Matcher separateLinesMatcher = separateLinesPattern.matcher(rawEventException);
+    List<String> lines = new ArrayList<String>();
+    while (separateLinesMatcher.find()) {
+      lines.add(separateLinesMatcher.group());
+    }
+    return lines;
   }
 }

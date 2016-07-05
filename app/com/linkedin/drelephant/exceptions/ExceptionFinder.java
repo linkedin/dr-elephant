@@ -36,8 +36,8 @@ public class ExceptionFinder {
 
   public ExceptionFinder(String url)
       throws URISyntaxException {
-    String execId = null;
 
+    String execId = null;
     List<NameValuePair> params = URLEncodedUtils.parse(new URI(url), "UTF-8");
     for (NameValuePair param : params) {
       if (param.getName() == "execid") {
@@ -46,9 +46,8 @@ public class ExceptionFinder {
     }
 
     _mrClient = new MRClient();
-
     _azkabanClient = new AzkabanClient(url);
-    _azkabanClient.azkabanLogin("aragrawa", "India052016^");
+    _azkabanClient.azkabanLogin(username, password);
     String rawFlowLog = _azkabanClient.getAzkabanFlowLog(azkabanLogOffset, azkabanLogLengthLimit);
 
     _exception = analyzeAzkabanFlow(execId, rawFlowLog);
@@ -57,6 +56,7 @@ public class ExceptionFinder {
   private HadoopException analyzeAzkabanFlow(String execId, String rawAzkabanFlowLog) {
     HadoopException flowLevelException = new HadoopException();
     List<HadoopException> childExceptions = new ArrayList<HadoopException>();
+
     AzkabanFlowLogAnalyzer analyzedLog = new AzkabanFlowLogAnalyzer(rawAzkabanFlowLog);
     Set<String> failedAzkabanJobIds = analyzedLog.getFailedSubEvents();
 
@@ -78,15 +78,13 @@ public class ExceptionFinder {
     HadoopException azkabanJobLevelException = new HadoopException();
     List<HadoopException> childExceptions = new ArrayList<HadoopException>();
     AzkabanJobLogAnalyzer analyzedLog = new AzkabanJobLogAnalyzer(rawAzkabanJobLog);
-    logger.info("analyzedlog exception " + analyzedLog.getException().getLog() + "\n");
-    logger.info("analyzedlog exception " + analyzedLog.getSubEvents() + "\n");
-    logger.info("analyzedlog exception " + analyzedLog.getState() + "\n");
     Set<String> mrJobIds = analyzedLog.getSubEvents(); // returns all mrjobs in the azkaban job
 
     for (String mrJobId : mrJobIds) {
-      //To do: Somehow check if mr job logs are there or not
-      String rawMRJobLog = _mrClient.getMRJobLog(mrJobId); // fetches
-      if (rawMRJobLog != null) {  // To do: (Very important)
+      //To do: Check if mr job logs are there or not in job history server
+      String rawMRJobLog = _mrClient.getMRJobLog(mrJobId);
+      if (rawMRJobLog != null) {
+        //To do: rawMRJob is null for successful mr jobs but this is not a job to figure out whether a job failed or succeeded
         HadoopException mrJobLevelException = analyzeMRJob(mrJobId, rawAzkabanJobLog);
         childExceptions.add(mrJobLevelException);
       }
@@ -108,7 +106,8 @@ public class ExceptionFinder {
     return azkabanJobLevelException;
   }
 
-  private HadoopException analyzeMRJob(String mrJobId, String rawMRJoblog) { // Called for unsuccessful mrjob
+  private HadoopException analyzeMRJob(String mrJobId, String rawMRJoblog) {
+    // This method is called only for unsuccessful MR jobs
     HadoopException mrJobLevelException = new HadoopException();
     List<HadoopException> childException = new ArrayList<HadoopException>();
     MRJobLogAnalyzer analyzedLog = new MRJobLogAnalyzer(rawMRJoblog);
