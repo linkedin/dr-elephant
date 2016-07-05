@@ -33,11 +33,11 @@
       <div class="panel-collapse collapse" id="level1">
         <ul class="list-group">
 
-        @if(result != null && !result.getChildExceptions().isEmpty()) {
+        @if(result != null) {
           @* <font color = "red"> <li class="list-group-item" >
             The execution is unsuccessful with following azkaban job failure: </li> </font> *@
           @for(azkabanJobException <- result.getChildExceptions()) {
-            <font color = "red"> <li class="list-group-item"> <a data-toggle="collapse" href="#@azkabanJobException.getId()" > Failed Azkaban Job: @azkabanJobException.getId()</a></li> </font>
+            <font color = "red"> <li class="list-group-item"> <a data-toggle="collapse" href="#@azkabanJobException.getId()" > Unsuccessful Azkaban Job: @azkabanJobException.getId()</a></li> </font>
             <div class="panel-collapse collapse" id=@azkabanJobException.getId()>
               <ul class = "list-group">
                   @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.AZKABAN) {
@@ -46,28 +46,34 @@
                     <div class="panel-collapse-collapse" id=azkaban@azkabanJobException.getId()>
                       <ul class = "list-group">
                       @for(lines <- azkabanJobException.getLoggingEvent().getLog()) {
-                        <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
+                        <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @Html(line) <br>} </li>
                       }
                       </ul>
                     </div>
                   }
+
                   @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.SCRIPT) {
                     <li class="list-group-item"> <a data-toggle="collapse" href="#script@azkabanJobException.getId()">&nbsp;&nbsp;&nbsp;Script Level Failure</a></li>
                     <div class="panel-collapse-collapse" id=script@azkabanJobException.getId()>
                       <ul class = "list-group">
                       @for(lines <- azkabanJobException.getLoggingEvent().getLog()) {
-                        <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
+                        <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @Html(line) <br>} </li>
                       }
                       </ul>
                     </div>
                   }
+
+                  @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.KILL) {
+                  <li class="list-group-item"> &nbsp;&nbsp;&nbsp;Azkaban Job Killed</li>
+                  }
+
                   @if(azkabanJobException.getType() == HadoopException.HadoopExceptionType.MR) {
                     @for(mrJobException <- azkabanJobException.getChildExceptions()){
                       <li class="list-group-item"> <a data-toggle="collapse" href="#@mrJobException.getId()">&nbsp;&nbsp;&nbsp;Failed MR Job: @mrJobException.getId()</a></li>
                       <div class="panel-collapse-collapse" id=@mrJobException.getId()>
                         <ul class = "list-group">
                         @for(lines <- mrJobException.getLoggingEvent.getLog()) {
-                          <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
+                          <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@Html(line) <br>} </li>
                         }
                         </ul>
                       </div>
@@ -75,11 +81,21 @@
                         <div class="panel-collapse-collapse" id=@mrJobException.getId()>
                           <ul class = "list-group">
                           @for(lines <- mrTaskException.getLoggingEvent.getLog()) {
-                            <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@line <br>} </li>
+                            <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@Html(line) <br>} </li>
                           }
                           </ul>
                         </div>
                       }
+                    }
+                    @if(azkabanJobException.getChildExceptions().isEmpty()){
+                      <li class="list-group-item"> <a data-toggle="collapse" href="#mr@azkabanJobException.getId()">&nbsp;&nbsp;&nbsp;MR Level Failure but could not find MR logs in server. Click to get information from azkaban log.</a></li>
+                      <div class="panel-collapse-collapse" id=mr@azkabanJobException.getId()>
+                        <ul class = "list-group">
+                        @for(lines <- azkabanJobException.getLoggingEvent().getLog()) {
+                          <li class="list-group-item"> @for(line <- lines) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @Html(line) <br>} </li>
+                        }
+                        </ul>
+                      </div>
                     }
                   }
 
@@ -87,9 +103,10 @@
             </div>
           }
         } else {
-          <font color="green"> <li class="list-group-item" font color="green">
-            The execution completed successfully! </li> </font>
+            <font color="green"> <li class="list-group-item" font color="green">
+              The execution completed successfully! </li> </font>
         }
+
         </ul>
       </div>
     </div>

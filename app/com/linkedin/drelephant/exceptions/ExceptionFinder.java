@@ -47,7 +47,7 @@ public class ExceptionFinder {
 
     _mrClient = new MRClient();
     _azkabanClient = new AzkabanClient(url);
-    _azkabanClient.azkabanLogin(username, password);
+    _azkabanClient.azkabanLogin("", "");
     String rawFlowLog = _azkabanClient.getAzkabanFlowLog(azkabanLogOffset, azkabanLogLengthLimit);
 
     _exception = analyzeAzkabanFlow(execId, rawFlowLog);
@@ -58,9 +58,10 @@ public class ExceptionFinder {
     List<HadoopException> childExceptions = new ArrayList<HadoopException>();
 
     AzkabanFlowLogAnalyzer analyzedLog = new AzkabanFlowLogAnalyzer(rawAzkabanFlowLog);
-    Set<String> failedAzkabanJobIds = analyzedLog.getFailedSubEvents();
+    Set<String> unsuccessfulAzkabanJobIds = analyzedLog.getFailedSubEvents();
 
-    for (String failedAzkabanJobId : failedAzkabanJobIds) {
+    for (String failedAzkabanJobId : unsuccessfulAzkabanJobIds) {
+      logger.info("flow failed subevent "+ failedAzkabanJobId);
       String rawAzkabanJobLog =
           _azkabanClient.getAzkabanJobLog(failedAzkabanJobId, azkabanLogOffset, azkabanLogLengthLimit);
       HadoopException azkabanJobLevelException = analyzeAzkabanJob(failedAzkabanJobId, rawAzkabanJobLog);
@@ -71,6 +72,8 @@ public class ExceptionFinder {
     flowLevelException.setId(execId);
     flowLevelException.setLoggingEvent(null); // No flow level exception
     flowLevelException.setChildExceptions(childExceptions);
+    logger.info("flow: "+ flowLevelException.getType());
+    logger.info("flow: "+ flowLevelException.getChildExceptions());
     return flowLevelException;
   }
 
@@ -83,15 +86,15 @@ public class ExceptionFinder {
     for (String mrJobId : mrJobIds) {
       //To do: Check if mr job logs are there or not in job history server
       String rawMRJobLog = _mrClient.getMRJobLog(mrJobId);
-      if (rawMRJobLog != null) {
+      if (rawMRJobLog != null) { // log not found or successful job
         //To do: rawMRJob is null for successful mr jobs but this is not a job to figure out whether a job failed or succeeded
         HadoopException mrJobLevelException = analyzeMRJob(mrJobId, rawAzkabanJobLog);
         childExceptions.add(mrJobLevelException);
       }
     }
-    if (!childExceptions.isEmpty()) {
+    if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.MRFAIL) {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.MR);
-      azkabanJobLevelException.setLoggingEvent(null);
+      azkabanJobLevelException.setLoggingEvent(analyzedLog.getException());
       azkabanJobLevelException.setChildExceptions(childExceptions);
     } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.AZKABANFAIL) {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.AZKABAN);
@@ -100,6 +103,10 @@ public class ExceptionFinder {
     } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.SCRIPTFAIL) {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.SCRIPT);
       azkabanJobLevelException.setLoggingEvent(analyzedLog.getException());
+      azkabanJobLevelException.setChildExceptions(null);
+    } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.KILLED){
+      azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.KILL);
+      azkabanJobLevelException.setLoggingEvent(null);
       azkabanJobLevelException.setChildExceptions(null);
     }
     azkabanJobLevelException.setId(azkabanJobId);

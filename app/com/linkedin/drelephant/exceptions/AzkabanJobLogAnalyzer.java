@@ -36,7 +36,7 @@ public class AzkabanJobLogAnalyzer {
   Pattern _killedAzkabanJobPattern =
       Pattern.compile("Finishing job [^\\s]+ attempt: [0-9]+ at [0-9]+ with status KILLED");
   Pattern _scriptFailPattern = Pattern.compile("ERROR - Job run failed!");
-  Pattern _scriptFailExceptionPattern =
+  Pattern _scriptOrMRFailExceptionPattern =
       Pattern.compile(".+\\n(?:.+\\tat.+\\n)+(?:.+Caused by.+\\n(?:.*\\n)?(?:.+\\s+at.+\\n)*)*");
   Pattern _azkabanFailExceptionPattern = Pattern.compile(
       "\\d{2}[-/]\\d{2}[-/]\\d{4} \\d{2}:\\d{2}:\\d{2} PDT [^\\s]+ (?:ERROR|WARN|FATAL|Exception) .*\\n");
@@ -46,10 +46,14 @@ public class AzkabanJobLogAnalyzer {
   private Set<String> _subEvents;
 
   public AzkabanJobLogAnalyzer(String rawLog) {
+    setSubEvents(rawLog);
+
     if (_successfulAzkabanJobPattern.matcher(rawLog).find()) {
       succeededAzkabanJob();
     } else if (_failedAzkabanJobPattern.matcher(rawLog).find()) {
-      if (_scriptFailPattern.matcher(rawLog).find()) {
+      if(!_subEvents.isEmpty()){
+        mrLevelFailedAzkabanJob(rawLog);
+      } else if (_scriptFailPattern.matcher(rawLog).find()) {
         scriptLevelFailedAzkabanJob(rawLog);
       } else {
         azkabanLevelFailedAzkabanJob(rawLog);
@@ -57,7 +61,6 @@ public class AzkabanJobLogAnalyzer {
     } else if (_killedAzkabanJobPattern.matcher(rawLog).find()) {
       killedAzkabanJob();
     }
-    findSubEventIds(rawLog);
   }
 
   private void succeededAzkabanJob() {
@@ -65,9 +68,16 @@ public class AzkabanJobLogAnalyzer {
     this._exception = null;
   }
 
+  private void mrLevelFailedAzkabanJob(String rawLog){
+    this._state = AzkabanJobState.MRFAIL;
+    Matcher matcher = _scriptOrMRFailExceptionPattern.matcher(rawLog);
+    if (matcher.find()) {
+      this._exception = new LoggingEvent(matcher.group());
+    }
+  }
   private void scriptLevelFailedAzkabanJob(String rawLog) {
     this._state = AzkabanJobState.SCRIPTFAIL;
-    Matcher matcher = _scriptFailExceptionPattern.matcher(rawLog);
+    Matcher matcher = _scriptOrMRFailExceptionPattern.matcher(rawLog);
     if (matcher.find()) {
       this._exception = new LoggingEvent(matcher.group());
     }
@@ -86,7 +96,7 @@ public class AzkabanJobLogAnalyzer {
     this._exception = null;
   }
 
-  private void findSubEventIds(String rawLog) {
+  private void setSubEvents(String rawLog) {
     Set<String> subEvents = new HashSet<String>();
     Matcher matcher = _mrJobIdPattern.matcher(rawLog);
     while (matcher.find()) {

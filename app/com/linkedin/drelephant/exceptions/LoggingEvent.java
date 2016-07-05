@@ -29,21 +29,15 @@ public class LoggingEvent {
   private List<String> _rawLog;
   private String _log;
   private long _timestamp;
-  private LoggingLevel _level;
+  private enum LoggingLevel {DEBUG, INFO, WARNING, ERROR, FATAL}
+  private LoggingLevel _level = LoggingLevel.ERROR;
   private String _message;
   private List<EventException> _exceptionChain;
 
   public LoggingEvent(String exceptionChainString) {
     this._rawLog = exceptionChainStringToListOfExceptions(exceptionChainString);
-    List<EventException> exceptionChain = new ArrayList<EventException>();
-    int index = 0;
-
-    for (String rawEventException : _rawLog) {
-      EventException eventException = new EventException(index, rawEventException);
-      exceptionChain.add(eventException);
-      index += 1;
-    }
-    _exceptionChain = exceptionChain;
+    setExceptionChain();
+    setMessage();
   }
 
   public List<List<String>> getLog() {
@@ -55,18 +49,33 @@ public class LoggingEvent {
     return log;
   }
 
+  private void setExceptionChain(){
+    List<EventException> exceptionChain = new ArrayList<EventException>();
+    int index = 0;
+
+    for (String rawEventException : _rawLog) {
+      EventException eventException = new EventException(index, rawEventException);
+      exceptionChain.add(eventException);
+      index += 1;
+    }
+    _exceptionChain = exceptionChain;
+
+  }
   private List<String> exceptionChainStringToListOfExceptions(String s) {
     List<String> chain = new ArrayList<String>();
-    Matcher matcher = Pattern.compile(".*^(?!Caused by).+\\n(?:.*\\tat.+\\n)+").matcher(s);
+    Pattern stackTraceCausedByClause = Pattern.compile(".*^(?!Caused by).+\\n(?:.*\\tat.+\\n)+");
+    Pattern stackTraceOtherThanCausedByClause = Pattern.compile(".*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*");
+
+    Matcher matcher = stackTraceCausedByClause.matcher(s);
     while (matcher.find()) {
       chain.add(matcher.group());
     }
-    matcher = Pattern.compile(".*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*").matcher(s);
+    matcher = stackTraceOtherThanCausedByClause.matcher(s);
     while (matcher.find()) {
       chain.add(matcher.group());
     }
 
-    if (chain.isEmpty()) { // Azkaban fail log
+    if (chain.isEmpty()) { //logs other than stack traces for ex- log of azkaban level failure in azkaban job
       chain.add(s);
     }
     return chain;
@@ -81,5 +90,11 @@ public class LoggingEvent {
     return exception;
   }
 
-  private enum LoggingLevel {DEBUG, INFO, WARNING, ERROR, FATAL}
+  private void setMessage(){
+    if(!_exceptionChain.isEmpty()){
+      this._message = _exceptionChain.get(0).getMessage();
+    }
+
+  }
+
 }

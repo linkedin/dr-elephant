@@ -29,13 +29,16 @@ import org.apache.log4j.Logger;
 public class AzkabanFlowLogAnalyzer {
   private static final Logger logger = Logger.getLogger(AzkabanFlowLogAnalyzer.class);
   private Set<String> _failedSubEvents;
-  //private Pattern unsuccessfulAzkabanFlowPattern = Pattern.compile("Setting flow \\'\\' status to (?:FAILED|KILLED) in [0-9]+ seconds");
+  private Pattern _unsuccessfulAzkabanJobIdPattern =
+      Pattern.compile("Job (.*) finished with status (?:FAILED|KILLED) in [0-9]+ seconds");
 
   public AzkabanFlowLogAnalyzer(String rawLog) {
-    Pattern unsuccessfulAzkabanJobIdPattern =
-        Pattern.compile("Job (.*) finished with status (?:FAILED|KILLED) in [0-9]+ seconds");
+    setFailedSubEvents(rawLog);
+  }
+
+  private void setFailedSubEvents(String rawLog){
     Set<String> failedSubEvents = new HashSet<String>();
-    Matcher matcher = unsuccessfulAzkabanJobIdPattern.matcher(rawLog);
+    Matcher matcher = _unsuccessfulAzkabanJobIdPattern.matcher(rawLog);
     while (matcher.find()) {
       failedSubEvents.add(matcher.group(1));
     }
@@ -45,4 +48,5 @@ public class AzkabanFlowLogAnalyzer {
   public Set<String> getFailedSubEvents() {
     return this._failedSubEvents;
   }
+
 }
