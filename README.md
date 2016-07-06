@@ -2,6 +2,7 @@
 
 
 [![Build Status](https://api.travis-ci.org/linkedin/dr-elephant.svg)](https://travis-ci.org/linkedin/dr-elephant/)
+[![Coverage Status](https://coveralls.io/repos/github/paulbramsen/dr-elephant/badge.svg?branch=master)](https://coveralls.io/github/paulbramsen/dr-elephant?branch=master)
 
 <a href=""><img src="images/wiki/dr-elephant-logo-150x150.png" align="left" hspace="10" vspace="6"></a>
 
