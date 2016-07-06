@@ -30,6 +30,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import play.Play;
 
@@ -293,5 +296,42 @@ public final class Utils {
               + ". Resetting it to default value: " + defaultValue);
       return defaultValue;
     }
+  }
+
+  /**
+   * Return the formatted string unless one of the args is null in which case null is returned
+   *
+   * @param formatString the standard Java format string
+   * @param args objects to put in the format string
+   * @return formatted String or null
+   */
+  public static String formatStringOrNull(String formatString, Object... args) {
+    for (Object o : args) {
+      if (o == null) {
+        return null;
+      }
+    }
+    return String.format(formatString, args);
+  }
+
+  /**
+   * Given a configuration element, extract the params map.
+   *
+   * @param confElem the configuration element
+   * @return the params map or an empty map if one can't be found
+   */
+  public static Map<String, String> getConfigurationParameters(Element confElem) {
+    Map<String, String> paramsMap = new HashMap<String, String>();
+    Node paramsNode = confElem.getElementsByTagName("params").item(0);
+    if (paramsNode != null) {
+      NodeList paramsList = paramsNode.getChildNodes();
+      for (int j = 0; j < paramsList.getLength(); j++) {
+        Node paramNode = paramsList.item(j);
+        if (paramNode != null && !paramsMap.containsKey(paramNode.getNodeName())) {
+          paramsMap.put(paramNode.getNodeName(), paramNode.getTextContent());
+        }
+      }
+    }
+    return paramsMap;
   }
 }

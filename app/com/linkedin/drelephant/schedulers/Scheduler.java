@@ -30,6 +30,13 @@ public interface Scheduler {
   public String getSchedulerName();
 
   /**
+   * True if the the scheduler object was not able to parse the given properties
+   *
+   * @return true the scheduler is empty
+   */
+  public boolean isEmpty();
+
+  /**
    * Return the Job Definition Id of the job in the workflow
    *
    * @return the job definition id

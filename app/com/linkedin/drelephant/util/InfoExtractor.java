@@ -17,16 +17,24 @@
 package com.linkedin.drelephant.util;
 
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
+import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
+import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
+import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
+import com.linkedin.drelephant.schedulers.AirflowScheduler;
 import com.linkedin.drelephant.schedulers.AzkabanScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
 import com.linkedin.drelephant.spark.data.SparkApplicationData;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import java.util.Set;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
 
 import models.AppResult;
+import play.api.Play;
 
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 
@@ -39,32 +47,19 @@ public class InfoExtractor {
   private static final Logger logger = Logger.getLogger(InfoExtractor.class);
   private static final String SPARK_EXTRA_JAVA_OPTIONS = "spark.driver.extraJavaOptions";
 
+  private static final String SCHEDULER_CONF = "SchedulerConf.xml";
+
+  private static List<SchedulerConfigurationData> _schedulerConfData;
+
   /**
-   * All the supported Schedulers.
-   * JobScheduler(x, y) where,
-   * x, is the unique property in the job conf that identifies the scheduler. This property must exist
-   *    in every job scheduled by the scheduler.
-   * y, is an instance of the Scheduler.
+   * Load all the schedulers configured in SchedulerConf.xml
    */
-  static enum JobScheduler {
-    AZKABAN(AzkabanScheduler.AZKABAN_JOB_URL);
 
-    String identifier;
-
-    JobScheduler(String identifier) {
-      this.identifier = identifier;
-    }
-
-    String getIdentifier() {
-      return this.identifier;
-    }
-
-    Scheduler getSchedulerInstance(String appId, Properties properties) {
-      if (this.equals(JobScheduler.AZKABAN)) {
-        return new AzkabanScheduler(appId, properties);
-      } else {
-        return null;
-      }
+  private static void loadSchedulers() {
+    Document document = Utils.loadXMLDoc(SCHEDULER_CONF);
+    _schedulerConfData = new SchedulerConfiguration(document.getDocumentElement()).getSchedulerConfigurationData();
+    for (SchedulerConfigurationData data : _schedulerConfData) {
+      logger.info(String.format("Load Scheduler %s with class : %s", data.getSchedulerName(), data.getClassName()));
     }
   }
 
@@ -76,10 +71,34 @@ public class InfoExtractor {
    * @return the corresponding Scheduler which scheduled the job.
    */
   public static Scheduler getSchedulerInstance(String appId, Properties properties) {
+    if (_schedulerConfData == null) {
+      loadSchedulers();
+    }
     if (properties != null) {
-      for (JobScheduler scheduler : JobScheduler.values()) {
-        if (properties.containsKey(scheduler.getIdentifier())) {
-          return scheduler.getSchedulerInstance(appId, properties);
+      for (SchedulerConfigurationData data : _schedulerConfData) {
+        try {
+          Class<?> schedulerClass = Play.current().classloader().loadClass(data.getClassName());
+          Object instance = schedulerClass.getConstructor(String.class, Properties.class, SchedulerConfigurationData.class).newInstance(appId, properties, data);
+          if (!(instance instanceof Scheduler)) {
+            throw new IllegalArgumentException(
+                    "Class " + schedulerClass.getName() + " is not an implementation of " + Scheduler.class.getName());
+          }
+          Scheduler scheduler = (Scheduler)instance;
+          if (!scheduler.isEmpty()) {
+            return scheduler;
+          }
+        } catch (ClassNotFoundException e) {
+          throw new RuntimeException("Could not find class " + data.getClassName(), e);
+        } catch (InstantiationException e) {
+          throw new RuntimeException("Could not instantiate class " + data.getClassName(), e);
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
+        } catch (RuntimeException e) {
+          throw new RuntimeException(data.getClassName() + " is not a valid Fetcher class.", e);
+        } catch (InvocationTargetException e) {
+          throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
+        } catch (NoSuchMethodException e) {
+          throw new RuntimeException("Could not find constructor for class " + data.getClassName(), e);
         }
       }
     }

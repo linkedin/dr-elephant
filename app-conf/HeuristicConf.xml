@@ -84,6 +84,7 @@
     <!--<params>
       <container_memory_severity>1, 1.5, 2, 2.5</container_memory_severity>
       <memory_ratio_severity>0.6, 0.5, 0.4, 0.3</memory_ratio_severity>
+      <container_memory_default_mb>2048</container_memory_default_mb>
     </params>-->
   </heuristic>
 
@@ -130,6 +131,7 @@
     <!--<params>
       <container_memory_severity>1, 1.5, 2, 2.5</container_memory_severity>
       <memory_ratio_severity>0.6, 0.5, 0.4, 0.3</memory_ratio_severity>
+      <container_memory_default_mb>2048</container_memory_default_mb>
     </params>-->
   </heuristic>
 

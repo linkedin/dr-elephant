@@ -162,4 +162,10 @@ public class UtilsTest {
     assertEquals(defaultValue, Utils.getNonNegativeLong(conf, "foo6", defaultValue));
     assertEquals(defaultValue, Utils.getNonNegativeLong(conf, "foo7", defaultValue));
   }
+
+  @Test
+  public void testFormatStringOrNull() {
+    assertEquals("Hello world!", Utils.formatStringOrNull("%s %s!", "Hello", "world"));
+    assertEquals(null, Utils.formatStringOrNull("%s %s!", "Hello", null));
+  }
 }

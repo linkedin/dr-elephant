@@ -15,6 +15,8 @@
 *@
 
 @(title: String, page: String)(content: Html)
+@import java.lang.Boolean; var analytics = false
+@(analytics=play.Play.application().configuration().getBoolean("enable.analytics", false))
 
 @*
 * The base layout of Dr. Elephant
@@ -80,5 +82,8 @@
     <script src="@routes.Assets.at("assets/jquery/jquery.deserialize.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("js/searchform.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("assets/d3/d3.min.js")" type="text/javascript"></script>
+    @if(analytics) {
+      <script src="@routes.Assets.at("assets/analytics/track.js")" type="text/javascript"></script>
+    }
   </body>
 </html>

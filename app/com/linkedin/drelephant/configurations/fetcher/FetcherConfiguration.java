@@ -17,6 +17,8 @@
 package com.linkedin.drelephant.configurations.fetcher;
 
 import com.linkedin.drelephant.analysis.ApplicationType;
+import com.linkedin.drelephant.util.Utils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,10 +65,10 @@ public class FetcherConfiguration {
       Node node = nodes.item(i);
       if (node.getNodeType() == Node.ELEMENT_NODE) {
         n++;
-        Element fetcherNode = (Element) node;
+        Element fetcherElem = (Element) node;
 
         String className;
-        Node classNameNode = fetcherNode.getElementsByTagName("classname").item(0);
+        Node classNameNode = fetcherElem.getElementsByTagName("classname").item(0);
         if (classNameNode == null) {
           throw new RuntimeException("No tag 'classname' in fetcher " + n);
         }
@@ -75,7 +77,7 @@ public class FetcherConfiguration {
           throw new RuntimeException("Empty tag 'classname' in fetcher " + n);
         }
 
-        Node appTypeNode = fetcherNode.getElementsByTagName("applicationtype").item(0);
+        Node appTypeNode = fetcherElem.getElementsByTagName("applicationtype").item(0);
         if (appTypeNode == null) {
           throw new RuntimeException(
               "No tag or invalid tag 'applicationtype' in fetcher " + n + " classname " + className);
@@ -89,17 +91,7 @@ public class FetcherConfiguration {
         ApplicationType appType = new ApplicationType(appTypeStr);
 
         // Check if parameters are defined for the heuristic
-        Map<String, String> paramsMap = new HashMap<String, String>();
-        Node paramsNode = fetcherNode.getElementsByTagName("params").item(0);
-        if (paramsNode != null) {
-          NodeList paramsList = paramsNode.getChildNodes();
-          for (int j = 0; j < paramsList.getLength(); j++) {
-            Node paramNode = paramsList.item(j);
-            if (paramNode != null && !paramsMap.containsKey(paramNode.getNodeName())) {
-              paramsMap.put(paramNode.getNodeName(), paramNode.getTextContent());
-            }
-          }
-        }
+        Map<String, String> paramsMap = Utils.getConfigurationParameters(fetcherElem);
 
         FetcherConfigurationData fetcherData = new FetcherConfigurationData(className, appType, paramsMap);
         _fetchersConfDataList.add(fetcherData);
