@@ -43,6 +43,10 @@ public class StackTraceFrame {
     String fileName = fileDetails;
     String lineNumber = "0";
     Pattern file = Pattern.compile("(.*):(.*)");
+    /**
+     Example string: 'Assert.java:89'
+     matches: ['Assert.java', '89']
+     */
 
     if (fileDetails == "Native Method") {
       nativeMethod = true;

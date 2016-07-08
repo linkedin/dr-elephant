@@ -29,8 +29,22 @@ import org.apache.log4j.Logger;
 
 public class EventException {
   private final Logger logger = Logger.getLogger(EventException.class);
+
+
   Pattern stackTraceLinePattern = Pattern.compile("^[\\\\t \\t]*at (.+)\\.(.+(?=\\())\\((.*)\\)"); //Test
+  /**
+    Example string: '\tat org.testng.Assert.fail(Assert.java:89)'
+    matches: ['org.testng.Assert', 'fail', "Assert.java:89']
+  */
+
+
   Pattern exceptionDetailsPattern = Pattern.compile("^([^() :]*): (.*)"); //Test
+  /**
+  Example string: 'java.lang.AssertionError: Failure 1 expected:<true> but was:<false>'
+   matches: ['java.lang.AssertionError','Failure 1 expected:<true> but was:<false>']
+  */
+
+
   Pattern separateLinesPattern = Pattern.compile(".*\\n");
   private String _type;
   private int _index;
