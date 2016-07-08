@@ -73,7 +73,6 @@ object Dependencies {
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.mockito" % "mockito-core" % "1.10.19",
     "org.jmockit" % "jmockit" % "1.23" % Test,
-    "org.apache.httpcomponents" % "httpmime" % httpMimeVersion,
     "org.json" % "json" % "20090211"
   ) :+ sparkExclusion
 

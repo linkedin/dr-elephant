@@ -48,7 +48,7 @@ public class StackTraceFrame {
      matches: ['Assert.java', '89']
      */
 
-    if (fileDetails == "Native Method") {
+    if (fileDetails.equals("Native Method")) {
       nativeMethod = true;
     } else {
       Matcher match = file.matcher(fileDetails);
@@ -58,7 +58,7 @@ public class StackTraceFrame {
       }
     }
     this._fileName = fileName;
-    this._lineNumber = Integer.parseInt(lineNumber);
+    this._lineNumber = Integer.parseInt(lineNumber); // To do: Can throw parseException
     this._nativeMethod = nativeMethod;
   }
 }

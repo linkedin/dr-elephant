@@ -87,7 +87,7 @@ public class MRClient {
   * @return Diagnostic in a string format
   */
 
-  /*
+  /* To do:
   It is a heuristic that for a failed task, the last task attempt should be look at to get the correct stack trace
   Counter example:
   http://ltx1-holdemjh01.grid.linkedin.com:19888/ws/v1/history/mapreduce/jobs/job_1466048666726_706209/tasks/task_1466048666726_706209_r_000623/attempts
