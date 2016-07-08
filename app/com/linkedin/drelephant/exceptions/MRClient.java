@@ -26,6 +26,7 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
+/* Client to interact with job history server and get the mapreduce logs*/
 
 public class MRClient {
   final String jhistoryAddr = new Configuration().get("mapreduce.jobhistory.webapp.address");
@@ -37,6 +38,12 @@ public class MRClient {
     _authenticatedURL = new AuthenticatedURL();
   }
 
+  /*
+  * For a given rest url, fetchs and return the jsonnode
+  *
+  * @param rest job history server url
+  * @return Json node to which the url points
+  */
   private JsonNode fetchJson(URL url) {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
@@ -49,6 +56,13 @@ public class MRClient {
     }
     return null;
   }
+
+  /*
+  * Returns the diagnostics for a given MR Job Id
+  *
+  * @param mrJobId   MR Job Id
+  * @return Diagnostics in a string format
+  */
 
   public String getMRJobLog(String mrJobId) {
     String mrJobHistoryURL = "http://" + jhistoryAddr + "/ws/v1/history/mapreduce/jobs/" + mrJobId;
@@ -65,6 +79,21 @@ public class MRClient {
     return null;
   }
 
+  /*
+  * Returns the last task attempt diagnostic for a given failed taskId
+  *
+  * @param mrJobId   MR Job Id
+  * @param mrTaskId  MRTask Id
+  * @return Diagnostic in a string format
+  */
+
+  /*
+  It is a heuristic that for a failed task, the last task attempt should be look at to get the correct stack trace
+  Counter example:
+  http://ltx1-holdemjh01.grid.linkedin.com:19888/ws/v1/history/mapreduce/jobs/job_1466048666726_706209/tasks/task_1466048666726_706209_r_000623/attempts
+
+  Probably we should look at the first attempt, it is a better assumption than above
+  */
   public String getMRTaskLog(String mrJobId, String mrTaskId) {
     String mrTaskHistoryURL =
         "http://" + jhistoryAddr + "/ws/v1/history/mapreduce/jobs/" + mrJobId + "/tasks/" + mrTaskId + "/attempts";

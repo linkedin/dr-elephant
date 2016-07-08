@@ -23,6 +23,10 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 
+/**
+ * This class represents an exception in the exception chain(a list of exceptions)
+ */
+
 public class EventException {
   private final Logger logger = Logger.getLogger(EventException.class);
   Pattern stackTraceLinePattern = Pattern.compile("^[\\\\t \\t]*at (.+)\\.(.+(?=\\())\\((.*)\\)"); //Test
@@ -38,10 +42,18 @@ public class EventException {
     processRawString(rawEventException);
   }
 
+  /**
+   * Returns the message in EventException
+   * @return message in event exception
+   */
   public String getMessage() {
     return _message;
   }
 
+  /**
+   * Process a raw exception string and sets the field of EventException Object
+   * @param rawEventException exception in a string form
+   */
   private void processRawString(String rawEventException) {
     int frameIndex = 0;
     List<StackTraceFrame> stackTrace = new ArrayList<StackTraceFrame>();
@@ -67,6 +79,12 @@ public class EventException {
     this._stackTrace = stackTrace;
   }
 
+  /**
+   * Takes a exception in string form and converts it into a list of string where each string corresponds to a line in
+   * exception
+   * @param rawEventException exception in a string form
+   * @return list of lines in the exception
+   */
   private List<String> stringToListOfLines(String rawEventException) {
     Matcher separateLinesMatcher = separateLinesPattern.matcher(rawEventException);
     List<String> lines = new ArrayList<String>();

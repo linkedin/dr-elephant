@@ -23,6 +23,17 @@ import org.apache.log4j.Logger;
 public class HadoopException {
   private final Logger logger = Logger.getLogger(HadoopException.class);
   private String _id = "UNKNOWN";
+  public enum HadoopExceptionType {FLOW, AZKABAN, SCRIPT, MR, KILL, MRJOB, MRTASK}
+  /**
+  * FLOW: HadoopException object for Azkaban flow
+  * AZKABAN : HadoopException object for Azkaban job with Azkaban level failure
+  * SCRIPT : HadoopException object for Azkaban job with Script level failure
+  * MR: HadoopException object for Azkaban job with MR level failure
+  * KILL: HadoopException object for killed Azkaban job
+  * MRJOB: HadoopException object for MR Job
+  * MRTASK: HadoopException object for MR Task
+  * */
+
   private HadoopExceptionType _type;
   private LoggingEvent _loggingEvent;
   private List<HadoopException> _childExceptions;
@@ -59,7 +70,7 @@ public class HadoopException {
     _childExceptions = childExceptions;
   }
 
-  public enum HadoopExceptionType {FLOW, AZKABAN, SCRIPT, MR, KILL, MRJOB, MRTASK}
+
 }
 
 

@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 
 /*
 * Given a MR Task log returns the exception (if any) in the log
-* */
+*/
 public class MRTaskLogAnalyzer {
   private static final Logger logger = Logger.getLogger(MRTaskLogAnalyzer.class);
   private LoggingEvent _exception;
@@ -42,6 +42,9 @@ public class MRTaskLogAnalyzer {
     Matcher matcher = mrTaskExceptionPattern.matcher(rawLog);
     if (matcher.find()) {
       this._exception = new LoggingEvent(matcher.group());
+    }
+    else{
+      this._exception = new LoggingEvent("");
     }
   }
 }

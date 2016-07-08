@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 
 public class MRJobLogAnalyzer {
   private static final Logger logger = Logger.getLogger(MRJobLogAnalyzer.class);
+
   private Pattern _mrJobExceptionPattern =
       Pattern.compile(".*\\n(?:.*\\tat.+\\n)+(?:.*Caused by.+\\n(?:.*\\n)?(?:.*\\s+at.+\\n)*)*");
   private Pattern _unsuccessfulMRTaskIdPattern =
@@ -42,10 +43,6 @@ public class MRJobLogAnalyzer {
     setException(rawLog);
   }
 
-  public Set<String> getFailedSubEvents() {
-    return this._failedSubEvents;
-  }
-
   private void setFailedSubEvents(String rawLog) {
     Set<String> failedSubEvents = new HashSet<String>();
     Matcher unsuccessfulMRTaskIdMatcher = _unsuccessfulMRTaskIdPattern.matcher(rawLog);
@@ -55,14 +52,20 @@ public class MRJobLogAnalyzer {
     this._failedSubEvents = failedSubEvents;
   }
 
-  public LoggingEvent getException() {
-    return this._exception;
-  }
-
   private void setException(String rawLog) {
     Matcher mrJobExceptionMatcher = _mrJobExceptionPattern.matcher(rawLog);
     if (mrJobExceptionMatcher.find()) {
       this._exception = new LoggingEvent(mrJobExceptionMatcher.group());
     }
   }
+
+  public Set<String> getFailedSubEvents() {
+    return this._failedSubEvents;
+  }
+
+  public LoggingEvent getException() {
+    return this._exception;
+  }
+
+
 }

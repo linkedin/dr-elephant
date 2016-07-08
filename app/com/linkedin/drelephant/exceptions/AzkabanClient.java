@@ -49,6 +49,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 
+/* Client to interact with Azkaban to fetch required information from Azkaban*/
 public class AzkabanClient {
 
   private final Logger logger = Logger.getLogger(AzkabanClient.class);
@@ -70,12 +71,12 @@ public class AzkabanClient {
     }
   }
 
-  /*
-  * Makes REST API Call for given url parameters and returns the json object
-  *
-  * @param urlParameters
-  * @return Json Object in the response body
-  */
+  /**
+   * Makes REST API Call for given url parameters and returns the json object
+   *
+   * @param urlParameters
+   * @return Json Object in the response body
+   */
   private JSONObject fetchJson(List<NameValuePair> urlParameters) {
 
     HttpPost httpPost = new HttpPost(_azkabanUrl);
@@ -156,11 +157,11 @@ public class AzkabanClient {
     return result.toString();
   }
 
-  /*
-  * Authenticates Dr. Elephant in Azkaban and sets the sessionId
-  * @param username
-  * @param password
-  */
+  /**
+   * Authenticates Dr. Elephant in Azkaban and sets the sessionId
+   * @param userName
+   * @param password
+   */
   public void azkabanLogin(String userName, String password) {
     List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
     urlParameters.add(new BasicNameValuePair("action", "login"));
@@ -180,26 +181,26 @@ public class AzkabanClient {
     }
   }
 
-
-  /*
+  /**
    * Returns the Azkaban flow log for given Azkaban execution url.
    *
    * @param offset Offset of log from the start
-   * @param length Maximum limit on length of log
+   * @param maximumlLogLengthLimit Maximum limit on length of log
    * @return Azkaban flow log in the form of string
    */
 
-  public String getAzkabanFlowLog(String offset, String length) {
+  public String getAzkabanFlowLog(String offset, String maximumlLogLengthLimit) {
     List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
     urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
     urlParameters.add(new BasicNameValuePair("ajax", "fetchExecFlowLogs"));
     urlParameters.add(new BasicNameValuePair("execid", _executionId));
     urlParameters.add(new BasicNameValuePair("offset", offset));
-    urlParameters.add(new BasicNameValuePair("length", length));
+    urlParameters.add(new BasicNameValuePair("length", maximumlLogLengthLimit));
 
     try {
       JSONObject jsonObject = fetchJson(urlParameters);
-      if (jsonObject.get("length").toString() == "0") {  // To do: If length ==0 throw exception
+      logger.info("azcli: " + jsonObject.toString());
+      if (jsonObject.getLong("length") == 0) {
         throw new RuntimeException("No log found for given execution url!.");
       }
       return jsonObject.get("data").toString();
@@ -209,7 +210,7 @@ public class AzkabanClient {
     return null;
   }
 
-  /*
+  /**
    * Returns the Azkaban Job log for given Azkaban job id.
    *
    * @param jobId Azkaban job id
@@ -227,7 +228,7 @@ public class AzkabanClient {
     urlParameters.add(new BasicNameValuePair("length", length));
     try {
       JSONObject jsonObject = fetchJson(urlParameters);
-      if (jsonObject.get("length").toString() == "0") { // To do: If length ==0 throw exception
+      if (jsonObject.getLong("length") == 0) { // To do: If length ==0 throw exception
         logger.info("No log found for azkaban job" + jobId);
       }
       return jsonObject.get("data").toString();

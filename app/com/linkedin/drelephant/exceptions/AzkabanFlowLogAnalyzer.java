@@ -22,7 +22,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
-/*
+
+/**
  *  Given a raw Azkaban Flow log, it returns the list of unsuccessful azkaban job
  */
 
@@ -40,7 +41,12 @@ public class AzkabanFlowLogAnalyzer {
     return this._failedSubEvents;
   }
 
+  /**
+   * Given a Azkaban flow log, returns the list of failed Azkaban jobs in the flow
+   * @param rawLog Azkaban flow
+   */
   private void setFailedSubEvents(String rawLog) {
+    //To do: Instead of using regex this can be done using azkaban rest api calls
     Set<String> failedSubEvents = new HashSet<String>();
     Matcher matcher = _unsuccessfulAzkabanJobIdPattern.matcher(rawLog);
     while (matcher.find()) {

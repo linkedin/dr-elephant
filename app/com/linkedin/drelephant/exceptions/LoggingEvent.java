@@ -27,16 +27,25 @@ public class LoggingEvent {
 
   private final Logger logger = Logger.getLogger(LoggingEvent.class);
   private List<String> _rawLog;
-  private String _log;
-  private long _timestamp;
-  private LoggingLevel _level = LoggingLevel.ERROR;
+  private String _log; // To do
+  private long _timestamp; //To do: Get time from logs and fill this field
+  private enum LoggingLevel {DEBUG, INFO, WARNING, ERROR, FATAL}
+  private LoggingLevel _level = LoggingLevel.ERROR; // For now I have this to be eeror
   private String _message;
   private List<EventException> _exceptionChain;
+
   public LoggingEvent(String exceptionChainString) {
     this._rawLog = exceptionChainStringToListOfExceptions(exceptionChainString);
     setExceptionChain();
     setMessage();
   }
+
+
+  /**
+    @return Returns the exception chain in the form of list of list of string.
+    A list of string corresponds to an exception in the exception chain
+    A string corresponds to a line in an exception
+  */
 
   public List<List<String>> getLog() {
     List<List<String>> log = new ArrayList<List<String>>();
@@ -46,6 +55,7 @@ public class LoggingEvent {
     }
     return log;
   }
+
 
   private void setExceptionChain() {
     List<EventException> exceptionChain = new ArrayList<EventException>();
@@ -58,6 +68,12 @@ public class LoggingEvent {
     }
     _exceptionChain = exceptionChain;
   }
+
+  /**
+  * Converts a exception chain string to a list of string exceptions
+  * @param Exception chain in a string
+  * @return List of exceptions in given the exception chain
+  */
 
   private List<String> exceptionChainStringToListOfExceptions(String s) {
     List<String> chain = new ArrayList<String>();
@@ -73,12 +89,18 @@ public class LoggingEvent {
       chain.add(matcher.group());
     }
 
-    if (chain.isEmpty()) { //logs other than stack traces for ex- log of azkaban level failure in azkaban job
+    if (chain.isEmpty()) {
+      //error logs other than stack traces for ex- logs of azkaban level failure in azkaban job
       chain.add(s);
     }
     return chain;
   }
 
+  /**
+  * Converts a exception string to a list of string corresponding to lines in the exception
+  * @param Exception in a single string
+  * @return List of individual lines in the string
+  */
   private List<String> exceptionStringToListOfLines(String s) {
     List<String> exception = new ArrayList<String>();
     Matcher matcher = Pattern.compile(".*\\n").matcher(s);
@@ -88,11 +110,15 @@ public class LoggingEvent {
     return exception;
   }
 
+  /* Sets message for the logging event
+  For now, It is set to be equal to the message field of first EventException in _exceptionChain
+  This can be changed depending on message of which EventException is most relevant for the user to see
+  */
+
   private void setMessage() {
     if (!_exceptionChain.isEmpty()) {
       this._message = _exceptionChain.get(0).getMessage();
     }
   }
 
-  private enum LoggingLevel {DEBUG, INFO, WARNING, ERROR, FATAL}
 }

@@ -26,6 +26,10 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.log4j.Logger;
 
 
+/**
+ * This is the main class of com.linkedin.drelephant.exceptions package. It takes Azkaban execution url as input and returns
+ * a HadoopException object which contains all the relevant exceptions in the Azkaban flow.
+ */
 public class ExceptionFinder {
   private final Logger logger = Logger.getLogger(ExceptionFinder.class);
   private HadoopException _exception;
@@ -53,6 +57,12 @@ public class ExceptionFinder {
     _exception = analyzeAzkabanFlow(execId, rawFlowLog);
   }
 
+  /**
+   * Analyzes Azkaban flow and returns a HadoopException object which captures all the exception in the Azkaban flow.
+   * @param execId Azkaban flow execution id
+   * @param rawAzkabanFlowLog Azkaban flow log in a string
+   * @return HadoopException object which captures all the exceptions in the given Azkaban flow
+   */
   private HadoopException analyzeAzkabanFlow(String execId, String rawAzkabanFlowLog) {
     HadoopException flowLevelException = new HadoopException();
     List<HadoopException> childExceptions = new ArrayList<HadoopException>();
@@ -60,11 +70,10 @@ public class ExceptionFinder {
     AzkabanFlowLogAnalyzer analyzedLog = new AzkabanFlowLogAnalyzer(rawAzkabanFlowLog);
     Set<String> unsuccessfulAzkabanJobIds = analyzedLog.getFailedSubEvents();
 
-    for (String failedAzkabanJobId : unsuccessfulAzkabanJobIds) {
-      //logger.info("flow failed subevent "+ failedAzkabanJobId);
+    for (String unsuccessfulAzkabanJobId : unsuccessfulAzkabanJobIds) {
       String rawAzkabanJobLog =
-          _azkabanClient.getAzkabanJobLog(failedAzkabanJobId, azkabanLogOffset, azkabanLogLengthLimit);
-      HadoopException azkabanJobLevelException = analyzeAzkabanJob(failedAzkabanJobId, rawAzkabanJobLog);
+          _azkabanClient.getAzkabanJobLog(unsuccessfulAzkabanJobId, azkabanLogOffset, azkabanLogLengthLimit);
+      HadoopException azkabanJobLevelException = analyzeAzkabanJob(unsuccessfulAzkabanJobId, rawAzkabanJobLog);
       childExceptions.add(azkabanJobLevelException);
     }
 
@@ -72,11 +81,15 @@ public class ExceptionFinder {
     flowLevelException.setId(execId);
     flowLevelException.setLoggingEvent(null); // No flow level exception
     flowLevelException.setChildExceptions(childExceptions);
-    logger.info("flow: " + flowLevelException.getType());
-    logger.info("flow: " + flowLevelException.getChildExceptions());
     return flowLevelException;
   }
 
+  /**
+   * Given a failed Azkaban job it and it's log in a string, this method analyzes it and returns a HadoopException object which captures all the exception in the given Azkaban job.
+   * @param azkabanJobId Azkaban job id
+   * @param rawAzkabanJobLog Azkaban job log in a string
+   * @return HadoopException object which captures all the exceptions in the given Azkaban job
+   */
   private HadoopException analyzeAzkabanJob(String azkabanJobId, String rawAzkabanJobLog) {
     HadoopException azkabanJobLevelException = new HadoopException();
     List<HadoopException> childExceptions = new ArrayList<HadoopException>();
@@ -86,15 +99,18 @@ public class ExceptionFinder {
     for (String mrJobId : mrJobIds) {
       //To do: Check if mr job logs are there or not in job history server
       String rawMRJobLog = _mrClient.getMRJobLog(mrJobId);
-      if (rawMRJobLog != null) { // log not found or successful job
-        //To do: rawMRJob is null for successful mr jobs but this is not a job to figure out whether a job failed or succeeded
-        HadoopException mrJobLevelException = analyzeMRJob(mrJobId, rawAzkabanJobLog);
+      if (rawMRJobLog != null && !rawMRJobLog.isEmpty()) { // null for log not found and empty for successful mr jobs
+        //To do: rawMRJob is empty for successful mr jobs but this is not a good way to figure out whether a job failed
+        // or succeeded, do this using the state field in rest api
+        HadoopException mrJobLevelException = analyzeMRJob(mrJobId, rawMRJobLog);
         childExceptions.add(mrJobLevelException);
       }
     }
     if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.MRFAIL) {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.MR);
       azkabanJobLevelException.setLoggingEvent(analyzedLog.getException());
+      //LoggingEvent is set only for the case if mr logs could not be found in job history server and childException is
+      // empty
       azkabanJobLevelException.setChildExceptions(childExceptions);
     } else if (analyzedLog.getState() == AzkabanJobLogAnalyzer.AzkabanJobState.AZKABANFAIL) {
       azkabanJobLevelException.setType(HadoopException.HadoopExceptionType.AZKABAN);
@@ -113,25 +129,37 @@ public class ExceptionFinder {
     return azkabanJobLevelException;
   }
 
+  /**
+   * Given a failed MR Job id and diagnostics of the job, this method analyzes it and returns a HadoopException object which captures all the exception in the given MR Job.
+   * @param mrJobId Mapreduce job id
+   * @param rawMRJoblog Diagnostics of the mapreduce job in a string
+   * @return HadoopException object which captures all the exceptions in the given Mapreduce job
+   */
   private HadoopException analyzeMRJob(String mrJobId, String rawMRJoblog) {
     // This method is called only for unsuccessful MR jobs
     HadoopException mrJobLevelException = new HadoopException();
-    List<HadoopException> childException = new ArrayList<HadoopException>();
+    List<HadoopException> childExceptions = new ArrayList<HadoopException>();
     MRJobLogAnalyzer analyzedLog = new MRJobLogAnalyzer(rawMRJoblog);
     Set<String> failedMRTaskIds = analyzedLog.getFailedSubEvents();
 
     for (String failedMRTaskId : failedMRTaskIds) {
       String rawMRTaskLog = _mrClient.getMRTaskLog(mrJobId, failedMRTaskId);
       HadoopException mrTaskLevelException = analyzeMRTask(failedMRTaskId, rawMRTaskLog);
-      childException.add(mrTaskLevelException);
+      childExceptions.add(mrTaskLevelException);
     }
-    mrJobLevelException.setChildExceptions(childException);
+    mrJobLevelException.setChildExceptions(childExceptions);
     mrJobLevelException.setLoggingEvent(analyzedLog.getException());
     mrJobLevelException.setType(HadoopException.HadoopExceptionType.MRJOB);
     mrJobLevelException.setId(mrJobId);
     return mrJobLevelException;
   }
 
+  /**
+   * Given a failed MR Task id and diagnostics of the task, this method analyzes it and returns a HadoopException object which captures all the exception in the given MR task.
+   * @param mrTaskId
+   * @param rawMRTaskLog
+   * @return HadoopException object which captures all the exceptions in the given Mapreduce task
+   */
   private HadoopException analyzeMRTask(String mrTaskId, String rawMRTaskLog) {
     HadoopException mrTaskLevelException = new HadoopException();
     MRTaskLogAnalyzer analyzedLog = new MRTaskLogAnalyzer(rawMRTaskLog);
@@ -142,6 +170,10 @@ public class ExceptionFinder {
     return mrTaskLevelException;
   }
 
+  /**
+   * Returns the Hadoop Exception object
+   * @return Returns the Hadoop Exception object
+   */
   public HadoopException getExceptions() {
     return this._exception;
   }
