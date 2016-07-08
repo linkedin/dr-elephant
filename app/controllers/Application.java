@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.lang.Override;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -618,17 +619,20 @@ public class Application extends Controller {
     return notFound("Unable to find graph type: " + graphType);
   }
 
-  public static Result exceptions() {
+  /**
+   * Controls Exceptions
+   * @throws URISyntaxException
+   */
+
+  public static Result exceptions() throws URISyntaxException{
     DynamicForm form = Form.form().bindFromRequest(request());
     String url = form.get("flow-exec-url");
-    logger.info("Inside application.java:" + url);
     if (url == null || url.isEmpty()) {
       return ok(exceptionsPage.render(null));
     } else {
       ExceptionFinder expGen = new ExceptionFinder(url);
-      Map<String, List<HadoopException>> jobExceptions = expGen.getExceptions();
-      logger.info("result" + jobExceptions);
-      return ok(exceptionsPage.render(views.html.results.exceptionsResults.render(jobExceptions)));
+      HadoopException flowException = expGen.getExceptions();
+      return ok(exceptionsPage.render(views.html.results.exceptionsResults.render(flowException)));
     }
   }
 
