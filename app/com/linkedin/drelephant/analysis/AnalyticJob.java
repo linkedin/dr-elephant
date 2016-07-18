@@ -272,8 +272,8 @@ public class AnalyticJob {
     result.totalDelay = hadoopAggregatedData.getTotalDelay();
     result.resourceWasted = hadoopAggregatedData.getResourceWasted();
 
-    String pigParent = data.getConf().getProperty("pig.parent.jobid");
-    result.pigParent = pigParent;
+    String parents = data.getConf().getProperty("pig.parent.jobid");
+    result.parents = parents;
 
     // Load App Heuristic information
     int jobScore = 0;

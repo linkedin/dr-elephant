@@ -42,7 +42,7 @@ CREATE TABLE yarn_app_result (
   resource_used    BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The resources used by the job in MB Seconds',
   resource_wasted  BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The resources wasted by the job in MB Seconds',
   total_delay      BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The total delay in starting of mappers and reducers',
-  pig_parent      VARCHAR(225)  DEFAULT NULL           COMMENT 'Parent of a pig job',
+  parents      VARCHAR(225)  DEFAULT NULL           COMMENT 'Comma separated list of parents of the application',
 
 
   PRIMARY KEY (id)

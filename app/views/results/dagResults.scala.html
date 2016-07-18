@@ -22,10 +22,33 @@
 * @param flowExecId
 *@
 
-@tags.panel(){DAG} {
-  <script src="@routes.Assets.at("assets/vis/vis.min.js")" type="text/javascript"></script>
-  <script src="@routes.Assets.at("js/dagResults.js")" type="text/javascript"></script>
-  <script src="@routes.Assets.at("js/graphutility.js")" type="text/javascript"></script>
+<script src="@routes.Assets.at("assets/vis/vis.min.js")" type="text/javascript"></script>
+<script src="@routes.Assets.at("js/dagResults.js")" type="text/javascript"></script>
+<script src="@routes.Assets.at("js/graphutility.js")" type="text/javascript"></script>
+<link rel='stylesheet' href='@routes.Assets.at("css/vis.min.css")'>
 
-  <div id="dag_container" style="height: 500px">@flowExecId</div>
+
+@tags.panel(){WORKFLOW DAG} {
+  <button onclick="rectangles()">Top Down</button>
+  <button onclick="left_right_dag()">Left Right</button>
+  <button onclick="random_dag()">Entertain me</button>
+  <div id="dag_container" style="height: 700px">@flowExecId</div>
+
 }
+
+@*
+@tags.panel(){MR DAG for a job} {
+
+  <div id="nested_dag_container" style="height: 500px">'No MR DAG available.'</div>
+
+}*@
+
+
+<div  class="panel panel-default">
+  <div class="panel-heading">
+    <h3 id="mr_header" class="panel-title">CLICK ANY ABOVE JOB</h3>
+  </div>
+  <div class="panel-body">
+    <div id="nested_dag_container" style="height: 500px"></div>
+  </div>
+</div>

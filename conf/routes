@@ -41,7 +41,7 @@ GET     /rest/jobmetricsgraphdata   controllers.Application.restJobMetricsGraphD
 GET     /rest/flowmetricsgraphdata  controllers.Application.restFlowMetricsGraphData(id: String)
 GET     /rest/daggraphdata          controllers.Application.restDagGraphData(id: String)
 GET     /rest/mrdaggraphdata        controllers.Application.restMrDagGraphData(id: String)
-
+GET     /rest/nesteddagdata         controllers.Application.restNestedDagData(id: String, name: String)
 
 
 # Map static resources from the /public folder to the /assets URL path

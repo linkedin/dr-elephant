@@ -293,10 +293,8 @@ public class AzkabanFetchFlowGraph {
 
       String line = null;
       while ((line = reader.readLine()) != null) {
-        logger.info(line);
         result.append(line);
       }
-      logger.info("FIRST RETURN STAT");
       return result.toString();
     } catch (IOException e) {
       e.printStackTrace();
@@ -305,7 +303,6 @@ public class AzkabanFetchFlowGraph {
         reader.close();
       }
     }
-    logger.info("BAAD KA RETURN");
     return result.toString();
   }
 
@@ -355,7 +352,7 @@ public class AzkabanFetchFlowGraph {
    */
 
   void saveSession(String sessionId, String url) {
-    if (sessionId.isEmpty()) {
+    if (sessionId==null || sessionId.isEmpty()) {
       throw new RuntimeException("No session ID obtained to save");
     }
 

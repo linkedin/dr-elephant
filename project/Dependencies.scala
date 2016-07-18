@@ -28,6 +28,7 @@ object Dependencies {
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
   lazy val httpMimeVersion = "4.5"
+  lazy val jsonVersion = "20090211"
 
 
   lazy val HADOOP_VERSION = "hadoopversion"
@@ -75,7 +76,7 @@ object Dependencies {
     "org.mockito" % "mockito-core" % "1.10.19",
     "org.jmockit" % "jmockit" % "1.23" % Test,
     "org.apache.httpcomponents" % "httpmime" % httpMimeVersion,
-    "org.json" % "json" % "20090211"
+    "org.json" % "json" % jsonVersion
   ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)

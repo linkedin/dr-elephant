@@ -22,7 +22,6 @@ package controllers;
 class AzkabanProject {
   String azkabanProjName = "";
   String azkabanUrl = "";
-  String azkabanUserName = "aragrawa";
-  String azkabanValidatorAutoFix = "";
-  String azkabanPassword = "India052016*";
+  String azkabanUserName = "skakker";
+  String azkabanPassword = "sophiemanu2:)";
 }

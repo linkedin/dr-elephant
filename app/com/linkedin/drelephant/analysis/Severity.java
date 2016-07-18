@@ -24,33 +24,35 @@ import com.avaje.ebean.annotation.EnumValue;
  */
 public enum Severity {
   @EnumValue("4")
-  CRITICAL(4, "Critical", "danger"),
+  CRITICAL(4, "Critical", "danger", "#d9534f"),
 
   @EnumValue("3")
-  SEVERE(3, "Severe", "severe"),
+  SEVERE(3, "Severe", "severe", "#e4804e"),
 
   @EnumValue("2")
-  MODERATE(2, "Moderate", "warning"),
+  MODERATE(2, "Moderate", "warning", "#f0ad4e"),
 
   @EnumValue("1")
-  LOW(1, "Low", "success"),
+  LOW(1, "Low", "success", "#5cb85c"),
 
   @EnumValue("0")
-  NONE(0, "None", "success");
+  NONE(0, "None", "success", "#5cb85c");
 
   private int _value;
   private String _text;
   private String _bootstrapColor;
+  private String _bootstrapColorValue;
 
   /**
    * @param value The severity value
    * @param text The severity name
    * @param bootstrapColor The severity level for color coding
    */
-  Severity(int value, String text, String bootstrapColor) {
+  Severity(int value, String text, String bootstrapColor, String bootstrapColorValue) {
     this._value = value;
     this._text = text;
     this._bootstrapColor = bootstrapColor;
+    this._bootstrapColorValue = bootstrapColorValue;
   }
 
   /**
@@ -80,6 +82,9 @@ public enum Severity {
     return _bootstrapColor;
   }
 
+  public String getBootstrapColorValue() {
+    return _bootstrapColorValue;
+  }
   /**
    * Returns the Severity corresponding to the severity value, NONE severity otherwise
    *

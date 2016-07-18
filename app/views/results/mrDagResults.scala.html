@@ -27,6 +27,9 @@
   <script src="@routes.Assets.at("assets/vis/vis.min.js")" type="text/javascript"></script>
   <script src="@routes.Assets.at("js/mrDagResults.js")" type="text/javascript"></script>
   <script src="@routes.Assets.at("js/graphutility.js")" type="text/javascript"></script>
+  <link rel='stylesheet' href='@routes.Assets.at("css/vis.min.css")'>
 
-  <div id="mr_dag_container" style="height: 400px">@jobExecId</div>
 }
+  <div id="mr_dag_container" style="height: 400px"> <button onclick="myFunction()">Click me</button>
+     @jobExecId</div>
+  <pre id="eventSpan"></pre>

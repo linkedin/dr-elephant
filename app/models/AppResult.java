@@ -159,7 +159,7 @@ public class AppResult extends Model {
   public long totalDelay;
 
   @Column(length = 255, nullable = true)
-  public String pigParent;
+  public String parents;
 
   @JsonManagedReference
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppResult")
