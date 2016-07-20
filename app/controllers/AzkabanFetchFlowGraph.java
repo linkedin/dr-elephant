@@ -324,6 +324,8 @@ public class AzkabanFetchFlowGraph {
    * @return sessionId the saved session id
    */
   String readSession(String flowExecId) {
+    if(flowExecId==null || flowExecId.isEmpty())
+      return null;
     String fileName =
         "/Users/skakker/.azkaban/session_" + flowExecId.substring((flowExecId.indexOf(".grid.linkedin.com")) - 4,
             flowExecId.indexOf(".grid.linkedin.com"));

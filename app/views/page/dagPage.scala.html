@@ -28,7 +28,7 @@
 @main("Dr. Elephant - DAG", "dag") {
   @tags.column(12) {
     @tags.panel(){ DAG } {
-      <form id="dag-form" role="form" method="get" action="@routes.Application.dag()">
+      <form id="dag-form" role="form" method="get" action="@routes.Application.buildWorkflowDag()">
         <div class="form-group">
           <label for="form-flow-id">Flow Execution ID</label>
           <input type="text" class="form-control" id="form-flow-id" name="flow-exec-id" placeholder="Flow Exec ID">

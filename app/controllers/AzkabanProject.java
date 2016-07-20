@@ -16,12 +16,9 @@
 
 package controllers;
 
-/**
- * Created by skakker on 08/06/16.
- */
 class AzkabanProject {
   String azkabanProjName = "";
   String azkabanUrl = "";
-  String azkabanUserName = "skakker";
-  String azkabanPassword = "sophiemanu2:)";
+  String azkabanUserName = "";
+  String azkabanPassword = "";
 }

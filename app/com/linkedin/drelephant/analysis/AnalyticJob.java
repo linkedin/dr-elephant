@@ -328,7 +328,12 @@ public class AnalyticJob {
     JSONArray jarr = fetchGraph.fetch(result.flowExecId, project_name, flow_name);
     String ownName, oneIn;
 
-    int jLen = jarr.length(), i, j, uidNum;
+    int jLen, i, j, uidNum;
+    if(jarr==null)
+      jLen=0;
+    else
+      jLen= jarr.length();
+
     HashMap<String, Integer> jobId = new HashMap<String, Integer>();
     int count, arrLen;
     for (i = 0; i < jLen; i++) {

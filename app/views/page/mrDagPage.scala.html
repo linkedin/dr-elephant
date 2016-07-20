@@ -28,7 +28,7 @@
 @main("Dr. Elephant - MR DAG", "mrDag") {
   @tags.column(3) {
     @tags.panel(){ MR DAG } {
-      <form id="mr-dag-form" role="form" method="get" action="@routes.Application.mrDag()">
+      <form id="mr-dag-form" role="form" method="get" action="@routes.Application.buildMRDag()">
         <div class="form-group">
           <label for="form-exec-id">Job Execution ID</label>
           <input type="text" class="form-control" id="form-exec-id" name="job-exec-id" placeholder="Job Exec ID">

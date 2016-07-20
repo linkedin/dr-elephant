@@ -89,7 +89,7 @@ stop_script=${project_root}/scripts/stop.sh
 rm -rf ${project_root}/dist
 mkdir dist
 
-play_command $OPTS clean compile dist
+play_command $OPTS clean test compile dist
 
 cd target/universal
 

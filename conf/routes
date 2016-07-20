@@ -25,8 +25,8 @@ GET     /search                     controllers.Application.search()
 GET     /compare                    controllers.Application.compare()
 GET     /flowhistory                controllers.Application.flowHistory()
 GET     /jobhistory                 controllers.Application.jobHistory()
-GET     /dag                        controllers.Application.dag()
-GET     /mrdag                      controllers.Application.mrDag()
+GET     /dag                        controllers.Application.buildWorkflowDag()
+GET     /mrdag                      controllers.Application.buildMRDag()
 
 
 # Rest calls
@@ -42,6 +42,7 @@ GET     /rest/flowmetricsgraphdata  controllers.Application.restFlowMetricsGraph
 GET     /rest/daggraphdata          controllers.Application.restDagGraphData(id: String)
 GET     /rest/mrdaggraphdata        controllers.Application.restMrDagGraphData(id: String)
 GET     /rest/nesteddagdata         controllers.Application.restNestedDagData(id: String, name: String)
+GET     /rest/timeline              controllers.Application.viewAsTimeline(id: String)
 
 
 # Map static resources from the /public folder to the /assets URL path
