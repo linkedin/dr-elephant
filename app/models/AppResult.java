@@ -49,6 +49,7 @@ public class AppResult extends Model {
   public static final int SCHEDULER_LIMIT = 20;
   public static final int URL_LEN_LIMIT = 800;
   public static final int FLOW_EXEC_ID_LIMIT = 255;
+  public static final int PARENT_LEN_LIMIT = 255;
 
   // Note that the Table column constants are actually the java variable names defined in this model.
   // This is because ebean operations require the model variable names to be passed as strings.
@@ -158,7 +159,7 @@ public class AppResult extends Model {
   @Column(nullable = true)
   public long totalDelay;
 
-  @Column(length = 255, nullable = true)
+  @Column(length = PARENT_LEN_LIMIT, nullable = true)
   public String parents;
 
   @JsonManagedReference

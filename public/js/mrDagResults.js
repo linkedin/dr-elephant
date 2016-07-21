@@ -18,39 +18,36 @@ var network = null;
 var nodes = new vis.DataSet();
 var edges = new vis.DataSet();
 var g = {nodes: nodes, edges: edges}
+var edge_colour_default= '#808080';   //gray colour for now
 
-function draw(adjMatrixWrapper){
-  for(var i in adjMatrixWrapper){
-        var info= adjMatrixWrapper[i];
-        var o = {id: i.toString(), label: info["label"], x: 0, y: 0, size: 10,color: info["colour"], originalColor: 'blue'};
-        nodes.add(o);
-        for (var j in info["row"]) {
+function draw(adjMatrixWrapper) {
+  for (var i in adjMatrixWrapper) {
+    var info = adjMatrixWrapper[i];
+    var o = {id: i.toString(), label: info["label"], x: 0, y: 0, size: 10, color: info["colour"]};
+    nodes.add(o);
+    for (var j in info["row"]) {
 
-            var e = {id: i.toString() + "_" + j.toString(), from: i.toString(), to: j.toString(), color: '#808080'};
-            edges.add(e);
+      var e = {id: i.toString() + "_" + j.toString(), from: i.toString(), to: j.toString(), color: edge_colour_default};
+      edges.add(e);
 
-        }
     }
+  }
 
-
-    container = document.getElementById("mr_dag_container");
-    options = {
-        edges: {arrows: 'middle'},
-        nodes: {shape: 'dot', scaling: {min:5, max:30}, font: {size: 12, face: "Tahoma"}},
-       layout:{hierarchical: {enabled: true, sortMethod: 'directed'}}
-    }
-    network = new vis.Network(container, g, options);
-
+  container = document.getElementById("mr_dag_container");
+  options = {
+    edges: {arrows: 'middle'},
+    nodes: {shape: 'dot', scaling: {min: 5, max: 30}, font: {size: 12, face: "Tahoma"}},
+    layout: {hierarchical: {enabled: true, sortMethod: 'directed'}}
+  }
+  network = new vis.Network(container, g, options);
 
 }
 
-$(document).ready(function(){
+$(document).ready(function () {
 
-
-    $.getJSON('/rest/mrdaggraphdata?id=' + queryString()['job-exec-id'], function(data) {
-        if (data.size != 0) {
-            draw(data);
-            //network.redraw();
-        }
-    });
+  $.getJSON('/rest/mrdaggraphdata?id=' + queryString()['job-exec-id'], function (data) {
+    if (data.size != 0) {
+      draw(data);
+    }
+  });
 });

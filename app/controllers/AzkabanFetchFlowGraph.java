@@ -21,6 +21,8 @@ package controllers;
  */
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -135,7 +137,7 @@ public class AzkabanFetchFlowGraph {
     try {
       response = httpClient.execute(httpPost);
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("Error connecting to Azkaban: " + e);
     }
 
     if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
@@ -157,13 +159,12 @@ public class AzkabanFetchFlowGraph {
         if (temp.equals("session")) {
           //sessionId has expired. New sessionId generated
           logger.info("Generating new session ID");
-          File dir = new File(("/Users/skakker") + "/.azkaban");
+          File dir = new File(System.getProperty("user.home") + "/.azkaban");
           if (!dir.exists() && !dir.mkdirs()) {
             logger.debug("Unable to create directory: " + dir.toString());
           }
 
-          File file = new File(dir, "session_" + flowExecId.substring((flowExecId.indexOf(".grid.linkedin.com")) - 4,
-              flowExecId.indexOf(".grid.linkedin.com")));
+          File file = new File(dir, "session_" + new URL(flowExecId).getHost());
           if (file.exists() && !file.delete()) {
             logger.debug("Unable to delete the existing file at: " + file.toString());
           }
@@ -326,12 +327,14 @@ public class AzkabanFetchFlowGraph {
   String readSession(String flowExecId) {
     if(flowExecId==null || flowExecId.isEmpty())
       return null;
-    String fileName =
-        "/Users/skakker/.azkaban/session_" + flowExecId.substring((flowExecId.indexOf(".grid.linkedin.com")) - 4,
-            flowExecId.indexOf(".grid.linkedin.com"));
-    File file = new File(
-        "/Users/skakker/.azkaban/session_" + flowExecId.substring((flowExecId.indexOf(".grid.linkedin.com")) - 4,
-            flowExecId.indexOf(".grid.linkedin.com")));
+    String fileName = null;
+    try {
+      fileName = System.getProperty("user.home") + ".azkaban/session_" + new URL(flowExecId).getHost();
+    } catch (MalformedURLException e) {
+      logger.error("Error reading from session file " + fileName + "\n" + e);
+    }
+
+    File file = new File(fileName);
     String sessionId = null;
     if (file.exists()) {
       try {
@@ -358,14 +361,18 @@ public class AzkabanFetchFlowGraph {
       throw new RuntimeException("No session ID obtained to save");
     }
 
-    File dir = new File(("/Users/skakker") + "/.azkaban");
+    File dir = new File(System.getProperty("user.home") + "/.azkaban");
     if (!dir.exists() && !dir.mkdirs()) {
       logger.debug("Unable to create directory: " + dir.toString());
       return;
     }
 
-    File file = new File(dir,
-        "session_" + url.substring(url.indexOf(".grid.linkedin.com") - 4, url.indexOf(".grid.linkedin.com")));
+    File file = null;
+    try {
+      file = new File(dir, "session_" + new URL(url).getHost());
+    } catch (MalformedURLException e) {
+      logger.error("Error saving session id: " + e);
+    }
     if (file.exists() && !file.delete()) {
       logger.debug("Unable to delete the existing file at: " + file.toString());
       return;

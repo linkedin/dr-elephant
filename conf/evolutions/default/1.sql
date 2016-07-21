@@ -42,8 +42,6 @@ CREATE TABLE yarn_app_result (
   resource_used    BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The resources used by the job in MB Seconds',
   resource_wasted  BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The resources wasted by the job in MB Seconds',
   total_delay      BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The total delay in starting of mappers and reducers',
-  parents      VARCHAR(225)  DEFAULT NULL           COMMENT 'Comma separated list of parents of the application',
-
 
   PRIMARY KEY (id)
 );
@@ -83,15 +81,6 @@ CREATE TABLE yarn_app_heuristic_result_details (
 
 create index yarn_app_heuristic_result_details_i1 on yarn_app_heuristic_result_details (name);
 
-create table yarn_app_job_name_map(
-  flow_exec_id    VARCHAR(255)  NOT NULL DEFAULT ''   COMMENT 'A unique reference to a specific flow execution. This should filter all applications fired by a particular flow execution. Note that if the scheduler supports sub-workflows, then this ID should be the super parent flow execution id that triggered the the applications and sub-workflows.',
-  job_name        VARCHAR(255)  NOT NULL DEFAULT ''   COMMENT 'The name of the job in the flow to which this app belongs',
-  job_name_id     INT(4) NOT NULL                     COMMENT 'The unque id for every job of a flow execution',
-  job_innodes     VARCHAR(100)    DEFAULT NULL         COMMENT 'A comma separated list of innodes of a job',
-  PRIMARY KEY (flow_exec_id, job_name)
-);
-
-
 # --- !Downs
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -101,9 +90,6 @@ DROP TABLE yarn_app_result;
 DROP TABLE yarn_app_heuristic_result;
 
 DROP TABLE yarn_app_heuristic_result_details;
-
-DROP TABLE yarn_app_job_name_map;
-
 
 SET FOREIGN_KEY_CHECKS=1;
 

@@ -1549,7 +1549,7 @@ public class Application extends Controller {
         runningTime = fTime - sTime;
         String runTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(runningTime),
             TimeUnit.MILLISECONDS.toMinutes(runningTime) - TimeUnit.HOURS.toMinutes(
-                TimeUnit.MILLISECONDS.toHours(runningTime)), // The change is in this line
+                TimeUnit.MILLISECONDS.toHours(runningTime)),
             TimeUnit.MILLISECONDS.toSeconds(runningTime) - TimeUnit.MINUTES.toSeconds(
                 TimeUnit.MILLISECONDS.toMinutes(runningTime)));
         title = "<b>Metrics:</b></br>Total resources used : " + rUsed + " GB Hours</br>" + "Total resources wasted : "
@@ -1658,7 +1658,6 @@ public class Application extends Controller {
       colour1 = tObj.severity.getBootstrapColorValue();
       String runTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(rTime),
           TimeUnit.MILLISECONDS.toMinutes(rTime) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(rTime)),
-          // The change is in this line
           TimeUnit.MILLISECONDS.toSeconds(rTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(rTime)));
       String title =
           "<b>Metrics:</b></br>Total resources used : " + rUsed + " GB Hours</br>Total resources wasted : " + rWasted
