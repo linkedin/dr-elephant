@@ -1433,8 +1433,27 @@ public class Application extends Controller {
   }
 
   /**
+   * Computes and returns a DAG given the flow execution id of a flow.
    * @param flowExecId
    * @return Workflow DAG for the corresponding flow.
+   *
+   * <pre>
+   *   {
+   *    "1":{
+   *      "row":{
+   *        "3":1,
+   *        "5":1,
+   *        "6":1
+   *      },
+   *       "label":"abi_funnel_hourly_datafile_abi_funnel (JOB TYPE : HadoopJava) ",
+   *       "title":"Total resources used : 16732160 GB Hours\u003c/br\u003eTotal resources wasted : 2392659 GB Hours
+   *       \u003c/br\u003eTotal delay : 104157 ms\u003c/br\u003eRunning time : 00:20:35",
+   *       "time":40,
+   *       "colour":"#e4804e"
+   *     }
+   *    ...
+   *   }
+   *</pre>
    */
   public static Result restDagGraphData(String flowExecId) {
     JsonObject datasets = new JsonObject();
@@ -1442,6 +1461,7 @@ public class Application extends Controller {
       return ok(new Gson().toJson(datasets));
     }
 
+    // The number of nodes in a graph
     int max_index =
         AppJobNameMap.find.select("*").where().eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, flowExecId).findRowCount();
     max_index = max_index + 1;
@@ -1455,9 +1475,12 @@ public class Application extends Controller {
     long sTime = 0, fTime = 10;
     int max_size = 20;
     long max_time = 0;
+
+    // The list of all the jobs in this flow
     List<AppJobNameMap> reqList =
         AppJobNameMap.find.select("*").where().eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, flowExecId).findList();
-    // TODO: COMMENT
+
+    // Computing the adjacency  matrix for the jobs in AppJobNameMap
     for (AppJobNameMap temp1 : reqList) {
       int ownId = temp1.jobNameId;
       String innodes = temp1.jobInnodes;
@@ -1469,12 +1492,12 @@ public class Application extends Controller {
         }
       }
 
+      //Computing maximum running time of all the jobs, needed for scaling afterwards
       List<AppResult> structList = AppResult.find.select("*")
           .where()
           .eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId)
           .eq(AppResult.TABLE.JOB_NAME, temp1.jobName)
           .findList();
-
       if (structList != null && !structList.isEmpty()) {
         sTime = structList.get(0).startTime;
         fTime = structList.get(0).finishTime;
@@ -1488,13 +1511,13 @@ public class Application extends Controller {
             fTime = temp.finishTime;
           }
         }
-
         if (max_time < fTime - sTime) {
           max_time = fTime - sTime;
         }
       }
     }
 
+    // Creating a JsonObject "row" for every node. It contains all those nodes who have have an edge to them from this node.
     for (int i = 1; i < max_index; i++) {
       JsonObject row = new JsonObject();
       for (int j = 1; j < max_index; j++) {
@@ -1573,6 +1596,7 @@ public class Application extends Controller {
   }
 
   /**
+   * Computes and returns the MR DAG for a given job execution id.
    * @param jobExecId
    * @return MR DAG for the corresponding job.
    */
@@ -1593,6 +1617,8 @@ public class Application extends Controller {
     if (jobExecId == null || jobExecId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
     }
+
+    //All the MR jobs in a job.
     List<AppResult> mrJobs = AppResult.find.select("*").where().eq(AppResult.TABLE.JOB_EXEC_ID, jobExecId).findList();
     if (mrJobs.isEmpty()) {
       return null;
@@ -1618,6 +1644,8 @@ public class Application extends Controller {
     }
     int max_index = count + 1;
     int[][] adjMatrix = new int[max_index][max_index];
+
+    //Computing adjacency matrix for the MR DAG
     for (AppResult mrJob : mrJobs) {
       String thisJob = Utils.getJobIdFromApplicationId(mrJob.id);
       String parentJob = mrJob.parents;
@@ -1635,6 +1663,7 @@ public class Application extends Controller {
       }
     }
 
+    //Making a JsonObject "row" for every node. It contains all those nodes which have an edge to them from the current node.
     for (i = 1; i < max_index; i++) {
       JsonObject row = new JsonObject();
       for (j = 1; j < max_index; j++) {
@@ -1677,6 +1706,7 @@ public class Application extends Controller {
   }
 
   /**
+   * Computes and returns a MR DAG given flow execution id and job name for a job.
    * @param id:   flowExecId
    * @param name: name of the job
    * @return: MR DAG for the corresponding job
@@ -1692,6 +1722,11 @@ public class Application extends Controller {
     return restMrDagGraphData(jobExecId);
   }
 
+  /**
+   * Returns a timeline view of thejobs.
+   * @param id: flow execution id
+   * @return timeline view of the jobs
+   */
   public static Result viewAsTimeline(String id) {
     String flowExecId = id;
     HashMap<String, Integer> hmap = new HashMap<String, Integer>();
@@ -1718,6 +1753,8 @@ public class Application extends Controller {
 
       startTime = oneJobList.get(0).startTime;
       endTime = oneJobList.get(0).finishTime;
+
+      //Finding minimum of all the start times and maximum all the finish times of the MR jobs of a given job.
       for (AppResult temp : oneJobList) {
         if (startTime > temp.startTime) {
           startTime = temp.startTime;

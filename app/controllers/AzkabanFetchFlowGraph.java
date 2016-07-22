@@ -325,6 +325,7 @@ public class AzkabanFetchFlowGraph {
    * @return sessionId the saved session id
    */
   String readSession(String flowExecId) {
+    // TODO: Handle synchronization
     if(flowExecId==null || flowExecId.isEmpty())
       return null;
     String fileName = null;

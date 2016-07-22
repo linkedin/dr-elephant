@@ -275,6 +275,8 @@ public class AnalyticJob {
     result.resourceUsed = hadoopAggregatedData.getResourceUsed();
     result.totalDelay = hadoopAggregatedData.getTotalDelay();
     result.resourceWasted = hadoopAggregatedData.getResourceWasted();
+
+    // TODO: Make Parent configurable
     result.parents = Utils.truncateField(data.getConf().getProperty(PIG_PARENT_PROPERTY), AppResult.PARENT_LEN_LIMIT, getAppId());;
 
     // Load App Heuristic information
@@ -283,11 +285,10 @@ public class AnalyticJob {
     Severity worstSeverity = Severity.NONE;
     for (HeuristicResult heuristicResult : analysisResults) {
       AppHeuristicResult detail = new AppHeuristicResult();
-      detail.heuristicClass =
-          Utils.truncateField(heuristicResult.getHeuristicClassName(), AppHeuristicResult.HEURISTIC_CLASS_LIMIT,
-              getAppId());
-      detail.heuristicName =
-          Utils.truncateField(heuristicResult.getHeuristicName(), AppHeuristicResult.HEURISTIC_NAME_LIMIT, getAppId());
+      detail.heuristicClass = Utils.truncateField(heuristicResult.getHeuristicClassName(),
+          AppHeuristicResult.HEURISTIC_CLASS_LIMIT, getAppId());
+      detail.heuristicName = Utils.truncateField(heuristicResult.getHeuristicName(),
+          AppHeuristicResult.HEURISTIC_NAME_LIMIT, getAppId());
       detail.severity = heuristicResult.getSeverity();
       detail.score = heuristicResult.getScore();
 
@@ -295,12 +296,12 @@ public class AnalyticJob {
       for (HeuristicResultDetails heuristicResultDetails : heuristicResult.getHeuristicResultDetails()) {
         AppHeuristicResultDetails heuristicDetail = new AppHeuristicResultDetails();
         heuristicDetail.yarnAppHeuristicResult = detail;
-        heuristicDetail.name =
-            Utils.truncateField(heuristicResultDetails.getName(), AppHeuristicResultDetails.NAME_LIMIT, getAppId());
-        heuristicDetail.value =
-            Utils.truncateField(heuristicResultDetails.getValue(), AppHeuristicResultDetails.VALUE_LIMIT, getAppId());
-        heuristicDetail.details =
-            Utils.truncateField(heuristicResultDetails.getDetails(), AppHeuristicResultDetails.DETAILS_LIMIT,
+        heuristicDetail.name = Utils.truncateField(heuristicResultDetails.getName(),
+            AppHeuristicResultDetails.NAME_LIMIT, getAppId());
+        heuristicDetail.value = Utils.truncateField(heuristicResultDetails.getValue(),
+            AppHeuristicResultDetails.VALUE_LIMIT, getAppId());
+        heuristicDetail.details = Utils.truncateField(heuristicResultDetails.getDetails(),
+            AppHeuristicResultDetails.DETAILS_LIMIT,
                 getAppId());
         // This was added for AnalyticTest. Commenting this out to fix a bug. Also disabling AnalyticJobTest.
         //detail.yarnAppHeuristicResultDetails = new ArrayList<AppHeuristicResultDetails>();
@@ -316,10 +317,13 @@ public class AnalyticJob {
     // Retrieve information from job configuration like scheduler information and store them into result.
     InfoExtractor.loadInfo(result, data);
 
+    // TODO: Move this logic to Azkaban class and make it configurable.
     String project_name = data.getConf().getProperty(AZKABAN_PROJECT_NAME_PROPERTY);
     String flow_name = data.getConf().getProperty(AZKABAN_FLOW_NAME_PROPERTY);
     AzkabanFetchFlowGraph fetchGraph = new AzkabanFetchFlowGraph();
 
+    // If we already have an entry for this flow execution id and jobname, it means we already have information for
+    // that flow and hence return the result.
     if (AppJobNameMap.find.select("*")
         .where()
         .eq(AppJobNameMap.TABLE.FLOW_EXEC_ID, result.flowExecId)
@@ -329,6 +333,7 @@ public class AnalyticJob {
       return result;
     }
 
+    // Fetching information for this flow
     JSONArray jarr = fetchGraph.fetch(result.flowExecId, project_name, flow_name);
     String ownName, oneIn;
 
@@ -341,6 +346,8 @@ public class AnalyticJob {
 
     HashMap<String, Integer> jobId = new HashMap<String, Integer>();
     int count, arrLen;
+
+    // Saving information for a flow in the table "AppJobNameMap"
     for (i = 0; i < jLen; i++) {
       String inStr = null;
       ownName = (String) jarr.getJSONObject(i).get("id");
@@ -359,7 +366,8 @@ public class AnalyticJob {
         } else {
           jobNameMap.jobNameId = jobId.get(jobNameMap.jobName);
         }
-        //adding this entry in the hashmap.
+
+        // Adding this entry in the hashmap.
         jobId.put(jobNameMap.jobName, jobNameMap.jobNameId);
 
         if (jarr.getJSONObject(i).has("in")) {
