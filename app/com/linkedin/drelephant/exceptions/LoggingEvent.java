@@ -41,6 +41,7 @@ public class LoggingEvent {
   }
 
 
+
   /**
     @return Returns the exception chain in the form of list of list of string.
     A list of string corresponds to an exception in the exception chain
@@ -71,10 +72,9 @@ public class LoggingEvent {
 
   /**
   * Converts a exception chain string to a list of string exceptions
-  * @param Exception chain in a string
+  * @param s Exception chain in a string
   * @return List of exceptions in given the exception chain
   */
-
   private List<String> exceptionChainStringToListOfExceptions(String s) {
     List<String> chain = new ArrayList<String>();
     Pattern stackTraceCausedByClause = Pattern.compile(".*^(?!Caused by).+\\n(?:.*\\tat.+\\n)+");
@@ -98,7 +98,7 @@ public class LoggingEvent {
 
   /**
   * Converts a exception string to a list of string corresponding to lines in the exception
-  * @param Exception in a single string
+  * @param s Exception in a single string
   * @return List of individual lines in the string
   */
   private List<String> exceptionStringToListOfLines(String s) {

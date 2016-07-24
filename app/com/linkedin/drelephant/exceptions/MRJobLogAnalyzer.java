@@ -23,10 +23,9 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 
-/*
-* Given a MR Job log returns the list of unsuccessful tasks and MR job level exception (if any)
-*
-* */
+/**
+* Given a MR Job log, sets the list of unsuccessful tasks and MR job level exception (if any)
+*/
 
 public class MRJobLogAnalyzer {
   private static final Logger logger = Logger.getLogger(MRJobLogAnalyzer.class);
@@ -43,6 +42,10 @@ public class MRJobLogAnalyzer {
     setException(rawLog);
   }
 
+  /**
+   * Given MR Job log, finds the list of unsuccessful tasks and sets it equal to _failedSubEvents
+   * @param rawLog MR Job log in a string
+   */
   private void setFailedSubEvents(String rawLog) {
     Set<String> failedSubEvents = new HashSet<String>();
     Matcher unsuccessfulMRTaskIdMatcher = _unsuccessfulMRTaskIdPattern.matcher(rawLog);
@@ -52,6 +55,10 @@ public class MRJobLogAnalyzer {
     this._failedSubEvents = failedSubEvents;
   }
 
+  /**
+   * Given MR Job log, finds the MR Job level exception and sets it equal to _exception
+   * @param rawLog MR Job log in a string
+   */
   private void setException(String rawLog) {
     Matcher mrJobExceptionMatcher = _mrJobExceptionPattern.matcher(rawLog);
     if (mrJobExceptionMatcher.find()) {
@@ -59,10 +66,18 @@ public class MRJobLogAnalyzer {
     }
   }
 
+  /**
+   * Returns the list of unsuccessful tasks in given MR Job log
+   * @return list of unsuccessful tasks in MR Job log
+   */
   public Set<String> getFailedSubEvents() {
     return this._failedSubEvents;
   }
 
+  /**
+   * Returns the MR Job level exception
+   * @return _exception of type LoggingEvent.
+   */
   public LoggingEvent getException() {
     return this._exception;
   }
