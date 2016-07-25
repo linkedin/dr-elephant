@@ -18,6 +18,7 @@ package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
+import controllers.MetricsController;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -159,6 +160,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   @Override
   public void addIntoRetries(AnalyticJob promise) {
     _retryQueue.add(promise);
+    int retryQueueSize = _retryQueue.size();
+    MetricsController.setRetryQueueSize(retryQueueSize);
+    logger.info("Retry queue size is " + retryQueueSize);
   }
 
   /**

@@ -70,6 +70,8 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % Test,
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
+    "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
+    "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
     "org.mockito" % "mockito-core" % "1.10.19",
     "org.jmockit" % "jmockit" % "1.23" % Test
   ) :+ sparkExclusion 

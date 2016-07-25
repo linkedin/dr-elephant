@@ -67,6 +67,9 @@ This product includes/uses Mockito (http://mockito.org)
 Copyright (c) 2007 Mockito contributors
 License: The MIT License (https://github.com/mockito/mockito/blob/master/LICENSE)
 
+This product includes/uses Metrics (http://metrics.dropwizard.io/)
+Copyright 2010-2014, Coda Hale, Yammer Inc.. Created using Sphinx 1.4.1.
+License: Apache 2.0 (https://github.com/dropwizard/metrics/blob/master/LICENSE)
 ------------------------------------------------------------------------------
 Attribution for JavaScript Libraries
 ------------------------------------------------------------------------------

@@ -116,6 +116,11 @@ if [ -n "${enable_analytics}" ]; then
   OPTS+=" -Denable.analytics=$enable_analytics"
 fi
 
+# Enable Dropwizard metrics if configured
+if [ -n "${metrics}" ]; then
+  OPTS+=" -Dmetrics=$metrics"
+fi
+
 # Navigate to project root
 cd $project_root
 

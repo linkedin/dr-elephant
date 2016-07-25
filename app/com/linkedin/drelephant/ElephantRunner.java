@@ -23,6 +23,7 @@ import com.linkedin.drelephant.analysis.HadoopSystemContext;
 import com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2;
 
 import com.linkedin.drelephant.security.HadoopSecurity;
+import controllers.MetricsController;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.List;
@@ -106,6 +107,10 @@ public class ElephantRunner implements Runnable {
           ElephantContext.init();
 
           _jobQueue = new LinkedBlockingQueue<AnalyticJob>();
+
+          // Initialize the metrics registries.
+          MetricsController.init();
+
           logger.info("executor num is " + _executorNum);
           if (_executorNum > 0) {
             _service = Executors.newFixedThreadPool(_executorNum);
@@ -140,7 +145,10 @@ public class ElephantRunner implements Runnable {
             }
 
             _jobQueue.addAll(todos);
-            logger.info("Job queue size is " + _jobQueue.size());
+
+            int queueSize = _jobQueue.size();
+            MetricsController.setQueueSize(queueSize);
+            logger.info("Job queue size is " + queueSize);
 
             //Wait for a while before next fetch
             waitInterval(_fetchInterval);
@@ -187,6 +195,7 @@ public class ElephantRunner implements Runnable {
             _analyticJobGenerator.addIntoRetries(analyticJob);
           } else {
             if (analyticJob != null) {
+              MetricsController.markSkippedJob();
               logger.error("Drop the analytic job. Reason: reached the max retries for application id = ["
                       + analyticJob.getAppId() + "].");
             }
