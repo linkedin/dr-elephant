@@ -25,14 +25,16 @@ import com.linkedin.drelephant.analysis.HadoopSystemContext;
 import com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2;
 
 import com.linkedin.drelephant.security.HadoopSecurity;
+
 import controllers.MetricsController;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.linkedin.drelephant.util.Utils;
@@ -63,8 +65,8 @@ public class ElephantRunner implements Runnable {
   private long _retryInterval;
   private int _executorNum;
   private HadoopSecurity _hadoopSecurity;
-  private ExecutorService _service;
-  private BlockingQueue<AnalyticJob> _jobQueue;
+  private ThreadPoolExecutor _service;
+  private BlockingQueue<Runnable> _jobQueue;
   private AnalyticJobGenerator _analyticJobGenerator;
 
   private void loadGeneralConfiguration() {
@@ -103,19 +105,18 @@ public class ElephantRunner implements Runnable {
           loadAnalyticJobGenerator();
           ElephantContext.init();
 
-          _jobQueue = new LinkedBlockingQueue<AnalyticJob>();
+          _jobQueue = new LinkedBlockingQueue<Runnable>();
 
           // Initialize the metrics registries.
           MetricsController.init();
 
           logger.info("executor num is " + _executorNum);
-          if (_executorNum > 0) {
-            _service = Executors.newFixedThreadPool(_executorNum,
-                    new ThreadFactoryBuilder().setNameFormat("dr-el-executor-thread-%d").build());
-            for (int i = 0; i < _executorNum; i++) {
-              _service.submit(new ExecutorThread(_jobQueue));
-            }
+          if (_executorNum < 1) {
+            throw new RuntimeException("Must have at least 1 worker thread.");
           }
+          ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("dr-el-executor-thread-%d").build();
+          _service =  new ThreadPoolExecutor(_executorNum, _executorNum, 0L, TimeUnit.MILLISECONDS,
+                  _jobQueue, factory);
 
           while (_running.get() && !Thread.currentThread().isInterrupted()) {
             _analyticJobGenerator.updateResourceManagerAddresses();
@@ -142,7 +143,9 @@ public class ElephantRunner implements Runnable {
               continue;
             }
 
-            _jobQueue.addAll(todos);
+            for (AnalyticJob analyticJob : todos) {
+              _service.submit(new ExecutorJob(analyticJob));
+            }
 
             int queueSize = _jobQueue.size();
             MetricsController.setQueueSize(queueSize);
@@ -161,46 +164,45 @@ public class ElephantRunner implements Runnable {
     }
   }
 
-  private class ExecutorThread implements Runnable {
+  private class ExecutorJob implements Runnable {
 
-    private BlockingQueue<AnalyticJob> _jobQueue;
+    private AnalyticJob _analyticJob;
 
-    ExecutorThread(BlockingQueue<AnalyticJob> jobQueue) {
-      this._jobQueue = jobQueue;
+    ExecutorJob(AnalyticJob analyticJob) {
+      _analyticJob = analyticJob;
     }
 
     @Override
     public void run() {
-      while (_running.get() && !Thread.currentThread().isInterrupted()) {
-        AnalyticJob analyticJob = null;
-        try {
-          analyticJob = _jobQueue.take();
-          String analysisName = String.format("%s %s", analyticJob.getAppType().getName(), analyticJob.getAppId());
-          long analysisStartTimeMillis = System.currentTimeMillis();
-          logger.info(String.format("Analyzing %s", analysisName));
-          AppResult result = analyticJob.getAnalysis();
-          result.save();
-          logger.info(String.format("Analysis of %s took %sms", analysisName, System.currentTimeMillis() - analysisStartTimeMillis));
+      try {
+        String analysisName = String.format("%s %s", _analyticJob.getAppType().getName(), _analyticJob.getAppId());
+        long analysisStartTimeMillis = System.currentTimeMillis();
+        logger.info(String.format("Analyzing %s", analysisName));
+        AppResult result = _analyticJob.getAnalysis();
+        result.save();
+        logger.info(String.format("Analysis of %s took %sms", analysisName, System.currentTimeMillis() - analysisStartTimeMillis));
 
-        } catch (InterruptedException ex) {
-          Thread.currentThread().interrupt();
-        } catch (Exception e) {
-          logger.error(e.getMessage());
-          logger.error(ExceptionUtils.getStackTrace(e));
+      } catch (InterruptedException e) {
+        logger.info("Thread interrupted");
+        logger.info(e.getMessage());
+        logger.info(ExceptionUtils.getStackTrace(e));
 
-          if (analyticJob != null && analyticJob.retry()) {
-            logger.error("Add analytic job id [" + analyticJob.getAppId() + "] into the retry list.");
-            _analyticJobGenerator.addIntoRetries(analyticJob);
-          } else {
-            if (analyticJob != null) {
-              MetricsController.markSkippedJob();
-              logger.error("Drop the analytic job. Reason: reached the max retries for application id = ["
-                      + analyticJob.getAppId() + "].");
-            }
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+        logger.error(ExceptionUtils.getStackTrace(e));
+
+        if (_analyticJob != null && _analyticJob.retry()) {
+          logger.error("Add analytic job id [" + _analyticJob.getAppId() + "] into the retry list.");
+          _analyticJobGenerator.addIntoRetries(_analyticJob);
+        } else {
+          if (_analyticJob != null) {
+            MetricsController.markSkippedJob();
+            logger.error("Drop the analytic job. Reason: reached the max retries for application id = ["
+                    + _analyticJob.getAppId() + "].");
           }
         }
       }
-      logger.info("Executor thread terminated.");
     }
   }
 
