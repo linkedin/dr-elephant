@@ -37,4 +37,9 @@
     <value>true</value>
     <description>If this property is "false", search will only make exact matches</description>
   </property>
+  <!--<property>
+    <!name>drelephant.data.days.to.keep</name>
+    <value>14</value>
+    <description>If this property is defined and positive, data more than value days old will be thrown out</description>
+  </property>-->
 </configuration>

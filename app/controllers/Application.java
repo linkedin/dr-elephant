@@ -201,7 +201,7 @@ public class Application extends Controller {
     IdUrlPair schedulerInfoPair;
     // check for exact match
     schedulerInfoPair = bestSchedulerInfoMatchLikeValue(partialSchedulerInfoId, schedulerInfoIdField);
-    // check for suffix match if feature isn't disabled
+    // check for prefix match if feature isn't disabled
     if (schedulerInfoPair == null && ElephantContext.instance().getGeneralConf().getBoolean(SEARCH_MATCHES_PARTIAL_CONF, true)) {
       schedulerInfoPair = bestSchedulerInfoMatchLikeValue(String.format("%s%%", partialSchedulerInfoId), schedulerInfoIdField);
     }

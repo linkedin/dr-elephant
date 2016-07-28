@@ -18,6 +18,8 @@ package com.linkedin.drelephant;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.SqlUpdate;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.AnalyticJobGenerator;
 import com.linkedin.drelephant.analysis.HDFSContext;
@@ -52,16 +54,19 @@ public class ElephantRunner implements Runnable {
   private static final long FETCH_INTERVAL = 60 * 1000;     // Interval between fetches
   private static final long RETRY_INTERVAL = 60 * 1000;     // Interval between retries
   private static final int EXECUTOR_NUM = 5;                // The number of executor threads to analyse the jobs
+  private static final int KEEP_ALL_DATA = 0;
 
   private static final String FETCH_INTERVAL_KEY = "drelephant.analysis.fetch.interval";
   private static final String RETRY_INTERVAL_KEY = "drelephant.analysis.retry.interval";
   private static final String EXECUTOR_NUM_KEY = "drelephant.analysis.thread.count";
+  private static final String DAYS_OF_DATA_TO_KEEP_KEY = "drelephant.data.days.to.keep";
 
   private AtomicBoolean _running = new AtomicBoolean(true);
   private long lastRun;
   private long _fetchInterval;
   private long _retryInterval;
   private int _executorNum;
+  private int _daysOfDataToKeep;
   private HadoopSecurity _hadoopSecurity;
   private ExecutorService _service;
   private BlockingQueue<AnalyticJob> _jobQueue;
@@ -71,8 +76,13 @@ public class ElephantRunner implements Runnable {
     Configuration configuration = ElephantContext.instance().getGeneralConf();
 
     _executorNum = Utils.getNonNegativeInt(configuration, EXECUTOR_NUM_KEY, EXECUTOR_NUM);
+    logger.info(String.format("Number of executors set to: %s", _executorNum));
     _fetchInterval = Utils.getNonNegativeLong(configuration, FETCH_INTERVAL_KEY, FETCH_INTERVAL);
+    logger.info(String.format("Fetch interval set to: %s", _fetchInterval));
     _retryInterval = Utils.getNonNegativeLong(configuration, RETRY_INTERVAL_KEY, RETRY_INTERVAL);
+    logger.info(String.format("Retry interval set to: %s", _retryInterval));
+    _daysOfDataToKeep = Utils.getNonNegativeInt(configuration, DAYS_OF_DATA_TO_KEEP_KEY, KEEP_ALL_DATA);
+    logger.info(String.format("Days of data that will be kept: %s", _daysOfDataToKeep));
   }
 
   private void loadAnalyticJobGenerator() {
@@ -148,6 +158,10 @@ public class ElephantRunner implements Runnable {
             MetricsController.setQueueSize(queueSize);
             logger.info("Job queue size is " + queueSize);
 
+            if (_daysOfDataToKeep != KEEP_ALL_DATA && _daysOfDataToKeep > 0) {
+              deleteOldData(_daysOfDataToKeep);
+            }
+
             //Wait for a while before next fetch
             waitInterval(_fetchInterval);
           }
@@ -159,6 +173,18 @@ public class ElephantRunner implements Runnable {
       logger.error(e.getMessage());
       logger.error(ExceptionUtils.getStackTrace(e));
     }
+  }
+
+  private static int deleteOldData(int daysOfDataToKeep) {
+    String deleteOldRowsQuery = "DELETE FROM yarn_app_result\n" +
+            "WHERE finish_time < 1000 * (UNIX_TIMESTAMP() - (:days * 24 * 60 * 60));";
+    SqlUpdate update = Ebean.createSqlUpdate(deleteOldRowsQuery);
+
+    update.setParameter("days", daysOfDataToKeep);
+    int deletedRowsCount = Ebean.execute(update);
+    logger.info(String.format("Deleted %s rows that were more than %s days old",
+            deletedRowsCount, daysOfDataToKeep));
+    return deletedRowsCount;
   }
 
   private class ExecutorThread implements Runnable {
