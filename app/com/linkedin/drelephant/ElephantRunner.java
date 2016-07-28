@@ -26,11 +26,12 @@ import com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2;
 
 import com.linkedin.drelephant.security.HadoopSecurity;
 
+import akka.dispatch.ThreadPoolConfig;
+import akka.dispatch.ThreadPoolExecutorConfigurator;
 import controllers.MetricsController;
 import java.io.IOException;
 import java.security.PrivilegedAction;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -43,6 +44,7 @@ import models.AppResult;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+import org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean;
 
 
 /**
@@ -65,8 +67,7 @@ public class ElephantRunner implements Runnable {
   private long _retryInterval;
   private int _executorNum;
   private HadoopSecurity _hadoopSecurity;
-  private ThreadPoolExecutor _service;
-  private BlockingQueue<Runnable> _jobQueue;
+  private ThreadPoolExecutor _threadPoolExecutor;
   private AnalyticJobGenerator _analyticJobGenerator;
 
   private void loadGeneralConfiguration() {
@@ -105,8 +106,6 @@ public class ElephantRunner implements Runnable {
           loadAnalyticJobGenerator();
           ElephantContext.init();
 
-          _jobQueue = new LinkedBlockingQueue<Runnable>();
-
           // Initialize the metrics registries.
           MetricsController.init();
 
@@ -115,8 +114,8 @@ public class ElephantRunner implements Runnable {
             throw new RuntimeException("Must have at least 1 worker thread.");
           }
           ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("dr-el-executor-thread-%d").build();
-          _service =  new ThreadPoolExecutor(_executorNum, _executorNum, 0L, TimeUnit.MILLISECONDS,
-                  _jobQueue, factory);
+          _threadPoolExecutor = new ThreadPoolExecutor(_executorNum, _executorNum, 0L, TimeUnit.MILLISECONDS,
+                  new LinkedBlockingQueue<Runnable>(), factory);
 
           while (_running.get() && !Thread.currentThread().isInterrupted()) {
             _analyticJobGenerator.updateResourceManagerAddresses();
@@ -144,10 +143,10 @@ public class ElephantRunner implements Runnable {
             }
 
             for (AnalyticJob analyticJob : todos) {
-              _service.submit(new ExecutorJob(analyticJob));
+              _threadPoolExecutor.submit(new ExecutorJob(analyticJob));
             }
 
-            int queueSize = _jobQueue.size();
+            int queueSize = _threadPoolExecutor.getQueue().size();
             MetricsController.setQueueSize(queueSize);
             logger.info("Job queue size is " + queueSize);
 
@@ -224,8 +223,8 @@ public class ElephantRunner implements Runnable {
 
   public void kill() {
     _running.set(false);
-    if (_service != null) {
-      _service.shutdownNow();
+    if (_threadPoolExecutor != null) {
+      _threadPoolExecutor.shutdownNow();
     }
   }
 }
