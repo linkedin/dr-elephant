@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.exceptions.ExceptionFinder;
+import com.linkedin.drelephant.exceptions.HadoopException;
 import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
@@ -34,6 +36,7 @@ import java.io.IOException;
 import java.lang.Override;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -63,6 +66,7 @@ import views.html.help.metrics.helpWaittime;
 import views.html.help.metrics.helpUsedResources;
 import views.html.help.metrics.helpWastedResources;
 import views.html.page.comparePage;
+import views.html.page.exceptionsPage;
 import views.html.page.flowHistoryPage;
 import views.html.page.helpPage;
 import views.html.page.homePage;
@@ -80,17 +84,6 @@ import com.google.gson.*;
 
 
 public class Application extends Controller {
-  private static final Logger logger = Logger.getLogger(Application.class);
-  private static final long DAY = 24 * 60 * 60 * 1000;
-  private static final long FETCH_DELAY = 60 * 1000;
-
-  private static final int PAGE_LENGTH = 20;                  // Num of jobs in a search page
-  private static final int PAGE_BAR_LENGTH = 5;               // Num of pages shown in the page bar
-  private static final int REST_PAGE_LENGTH = 100;            // Num of jobs in a rest search page
-  private static final int JOB_HISTORY_LIMIT = 5000;          // Set to avoid memory error.
-  private static final int MAX_HISTORY_LIMIT = 15;            // Upper limit on the number of executions to display
-  private static final int STAGE_LIMIT = 25;                  // Upper limit on the number of stages to display
-
   // Form and Rest parameters
   public static final String APP_ID = "id";
   public static final String FLOW_DEF_ID = "flow-def-id";
@@ -107,7 +100,15 @@ public class Application extends Controller {
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
-
+  private static final Logger logger = Logger.getLogger(Application.class);
+  private static final long DAY = 24 * 60 * 60 * 1000;
+  private static final long FETCH_DELAY = 60 * 1000;
+  private static final int PAGE_LENGTH = 20;                  // Num of jobs in a search page
+  private static final int PAGE_BAR_LENGTH = 5;               // Num of pages shown in the page bar
+  private static final int REST_PAGE_LENGTH = 100;            // Num of jobs in a rest search page
+  private static final int JOB_HISTORY_LIMIT = 5000;          // Set to avoid memory error.
+  private static final int MAX_HISTORY_LIMIT = 15;            // Upper limit on the number of executions to display
+  private static final int STAGE_LIMIT = 25;                  // Upper limit on the number of stages to display
   private static long _lastFetch = 0;
   private static int _numJobsAnalyzed = 0;
   private static int _numJobsCritical = 0;
@@ -619,6 +620,23 @@ public class Application extends Controller {
   }
 
   /**
+   * Controls Exceptions
+   * @throws URISyntaxException
+   */
+
+  public static Result exceptions() throws URISyntaxException{
+    DynamicForm form = Form.form().bindFromRequest(request());
+    String url = form.get("flow-exec-url");
+    if (url == null || url.isEmpty()) {
+      return ok(exceptionsPage.render(null));
+    } else {
+      ExceptionFinder expGen = new ExceptionFinder(url);
+      HadoopException flowException = expGen.getExceptions();
+      return ok(exceptionsPage.render(views.html.results.exceptionsResults.render(flowException)));
+    }
+  }
+
+  /**
    * Applies a limit on the number of executions to be displayed after trying to maximize the correctness.
    *
    * Correctness:
@@ -680,7 +698,7 @@ public class Application extends Controller {
       page = ElephantContext.instance().getHeuristicToView().get(topic);
 
       // check if it is a metrics help
-      if(page == null) {
+      if (page == null) {
         page = getMetricsNameView().get(topic);
       }
 
@@ -692,13 +710,14 @@ public class Application extends Controller {
   }
 
   private static Map<String, Html> getMetricsNameView() {
-    Map<String,Html> metricsViewMap = new HashMap<String, Html>();
+    Map<String, Html> metricsViewMap = new HashMap<String, Html>();
     metricsViewMap.put(Metrics.RUNTIME.getText(), helpRuntime.render());
     metricsViewMap.put(Metrics.WAIT_TIME.getText(), helpWaittime.render());
     metricsViewMap.put(Metrics.USED_RESOURCES.getText(), helpUsedResources.render());
     metricsViewMap.put(Metrics.WASTED_RESOURCES.getText(), helpWastedResources.render());
     return metricsViewMap;
   }
+
   /**
    * Parse the string for time in long
    *
@@ -797,12 +816,6 @@ public class Application extends Controller {
     }
 
     return ok(Json.toJson(resMap));
-  }
-
-  static enum GroupBy {
-    JOB_EXECUTION_ID,
-    JOB_DEFINITION_ID,
-    FLOW_EXECUTION_ID
   }
 
   /**
@@ -1415,5 +1428,11 @@ public class Application extends Controller {
         .findList();
 
     return results;
+  }
+
+  static enum GroupBy {
+    JOB_EXECUTION_ID,
+    JOB_DEFINITION_ID,
+    FLOW_EXECUTION_ID
   }
 }
