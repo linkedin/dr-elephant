@@ -19,6 +19,7 @@ package rest;
 import com.fasterxml.jackson.databind.JsonNode;
 import common.DBTestUtil;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -323,6 +324,45 @@ public class RestAPITest {
         List<String> jobList = response.asJson().findValuesAsText("jobexecurl");
         assertTrue("Job exec url1 missing in list", jobList.contains(TEST_JOB_EXEC_ID1));
         assertTrue("Job exec url2 missing in list", jobList.contains(TEST_JOB_EXEC_ID2));
+      }
+    });
+  }
+
+  @Test
+  public void testRestUserResourceUsage() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
+            setQueryParameter("startTime", TEST_START_TIME1).
+            setQueryParameter("endTime", TEST_END_TIME1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> userResources = response.asJson().elements();
+        while(userResources.hasNext()) {
+          JsonNode userResourceUsage = userResources.next();
+          if(userResourceUsage.findValue("user").asText().equals("growth")) {
+            assertTrue("Wrong resourceusage for user growth", userResourceUsage.findValue("resourceUsed").asLong() == 100);
+            assertTrue("Wrong wastedResources for user growth", userResourceUsage.findValue("resourceWasted").asLong() == 30);
+          } else if(userResourceUsage.findValue("user").asText().equals("metrics")) {
+            assertTrue("Wrong resourceusage for user metrics", userResourceUsage.findValue("resourceUsed").asLong() == 200);
+            assertTrue("Wrong wastedResources for user metrics", userResourceUsage.findValue("resourceWasted").asLong() == 40);
+          } else {
+            assertTrue("Unexpected user" + userResourceUsage.findValue("user").asText(), false);
+          }
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestUserResourceUsageBadInput() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
+            setQueryParameter("startTime", TEST_START_TIME1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        assertTrue("Invalid input test failed" , response.getStatus() == 400);
       }
     });
   }

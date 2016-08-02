@@ -36,6 +36,7 @@ GET     /rest/flowgraphdata         controllers.Application.restFlowGraphData(id
 GET     /rest/jobgraphdata          controllers.Application.restJobGraphData(id: String)
 GET     /rest/jobmetricsgraphdata   controllers.Application.restJobMetricsGraphData(id: String)
 GET     /rest/flowmetricsgraphdata  controllers.Application.restFlowMetricsGraphData(id: String)
+GET     /rest/resourceusagedatabyuser     controllers.Application.restResourceUsageDataByUser(startTime: String, endTime: String)
 
 # Metrics calls
 GET     /ping                       controllers.MetricsController.ping()

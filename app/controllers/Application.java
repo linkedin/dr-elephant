@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.lang.Override;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -49,10 +52,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-
+import org.joda.time.DateTime;
+import play.api.Play;
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
+import play.db.ebean.Model;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -1332,6 +1337,32 @@ public class Application extends Controller {
     return ok(new Gson().toJson(datasets));
   }
 
+  public static Result restResourceUsageDataByUser(String startTime, String endTime) {
+    try {
+      JsonArray datasets = new JsonArray();
+      if(startTime.length() != endTime.length() ||
+          (startTime.length() != 10 && startTime.length() != 13)) {
+        return status(300);
+      }
+      SimpleDateFormat tf = null ;
+      if( startTime.length() == 10 ) {
+         tf = new SimpleDateFormat("yyyy-MM-dd");
+      }
+      else {
+        tf = new SimpleDateFormat("yyyy-MM-dd-HH");
+      }
+      Date start = tf.parse(startTime);
+      Date end = tf.parse(endTime);
+      Collection<AppResourceUsageData> result = getUserResourceUsage(start, end);
+
+      return ok(new Gson().toJson(result));
+    }
+    catch(ParseException ex) {
+      return status(300,"Invalid datetime format : " + ex.getMessage());
+    }
+  }
+
+
   /**
    * Rest data to plot flot history graph using time and resource metrics. While plotting the flow history
    * graph an ajax call is made to this to fetch the graph data.
@@ -1477,12 +1508,40 @@ public class Application extends Controller {
         .order()
         .desc(AppResult.TABLE.FINISH_TIME)
         .setMaxRows(JOB_HISTORY_LIMIT)
-        // The 2nd and 3rd table are not required for plotting the graph
-        //.fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
-        //.fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "."
-        //    + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .findList();
 
     return results;
+  }
+
+  private static class AppResourceUsageData {
+    String user;
+    long resourceUsed;
+    long resourceWasted;
+  }
+
+  /**
+   * Returns the list of AppResults after quering the FLOW_DEF_ID from the database
+   * @return The list of AppResults
+   */
+  private static Collection<AppResourceUsageData> getUserResourceUsage(Date start, Date end) {
+    long resourceUsed = 0;
+    Map<String, AppResourceUsageData> userResourceUsage = new HashMap<String, AppResourceUsageData>();
+    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
+    List<AppResult> results = AppResult.find.select("*")
+        .where()
+        .ge(AppResult.TABLE.START_TIME, start.getTime())
+        .le(AppResult.TABLE.START_TIME, end.getTime()).findList();
+
+    for (AppResult result : results) {
+      if (!userResourceUsage.containsKey(result.username)) {
+        AppResourceUsageData data = new AppResourceUsageData();
+        data.user = result.username;
+        userResourceUsage.put(result.username, data);
+      }
+      userResourceUsage.get(result.username).resourceUsed += result.resourceUsed;
+      userResourceUsage.get(result.username).resourceWasted += result.resourceWasted;
+    }
+
+    return userResourceUsage.values();
   }
 }
