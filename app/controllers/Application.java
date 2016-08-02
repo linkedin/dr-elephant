@@ -1351,10 +1351,8 @@ public class Application extends Controller {
       else {
         tf = new SimpleDateFormat("yyyy-MM-dd-HH");
       }
-
       Date start = tf.parse(startTime);
       Date end = tf.parse(endTime);
-
       Collection<AppResourceUsageData> result = getUserResourceUsage(start, end);
 
       return ok(new Gson().toJson(result));
@@ -1362,7 +1360,6 @@ public class Application extends Controller {
     catch(ParseException ex) {
       return status(300,"Invalid datetime format : " + ex.getMessage());
     }
-
   }
 
 
