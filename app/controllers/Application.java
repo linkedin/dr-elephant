@@ -1337,6 +1337,15 @@ public class Application extends Controller {
     return ok(new Gson().toJson(datasets));
   }
 
+  /**
+   *
+   * @param startTime - beginning of the time window
+   * @param endTime - end of the time window
+   * @return Json of resourceUsage data for each user for the given time window
+   *    eg. [{"user":"bmr","resourceUsed":168030208,"resourceWasted":27262750},
+   *        {"user":"payments","resourceUsed":18432,"resourceWasted":3447},
+   *        {"user":"myu","resourceUsed":558211072,"resourceWasted":81573818}]
+   */
   public static Result restResourceUsageDataByUser(String startTime, String endTime) {
     try {
       JsonArray datasets = new JsonArray();
@@ -1520,18 +1529,19 @@ public class Application extends Controller {
   }
 
   /**
-   * Returns the list of AppResults after quering the FLOW_DEF_ID from the database
-   * @return The list of AppResults
-   */
+   * Returns the list of users with their resourceUsed and resourceWasted Data for the given time range
+   * @return list of AppResourceUsageData
+   **/
   private static Collection<AppResourceUsageData> getUserResourceUsage(Date start, Date end) {
     long resourceUsed = 0;
     Map<String, AppResourceUsageData> userResourceUsage = new HashMap<String, AppResourceUsageData>();
-    // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
+    // Fetch all the appresults for the given time range.
     List<AppResult> results = AppResult.find.select("*")
         .where()
         .ge(AppResult.TABLE.START_TIME, start.getTime())
         .le(AppResult.TABLE.START_TIME, end.getTime()).findList();
 
+    // aggregate the resourceUsage data at the user level
     for (AppResult result : results) {
       if (!userResourceUsage.containsKey(result.username)) {
         AppResourceUsageData data = new AppResourceUsageData();
