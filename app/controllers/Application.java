@@ -1535,11 +1535,11 @@ public class Application extends Controller {
   private static Collection<AppResourceUsageData> getUserResourceUsage(Date start, Date end) {
     long resourceUsed = 0;
     Map<String, AppResourceUsageData> userResourceUsage = new HashMap<String, AppResourceUsageData>();
-    // Fetch all the appresults for the given time range.
+    // Fetch all the appresults for the given time range [startTime, endTime).
     List<AppResult> results = AppResult.find.select("*")
         .where()
         .ge(AppResult.TABLE.START_TIME, start.getTime())
-        .le(AppResult.TABLE.START_TIME, end.getTime()).findList();
+        .lt(AppResult.TABLE.START_TIME, end.getTime()).findList();
 
     // aggregate the resourceUsage data at the user level
     for (AppResult result : results) {
