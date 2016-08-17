@@ -15,16 +15,27 @@
  */
 
 package org.apache.spark;
+import com.linkedin.drelephant.math.Statistics;
+import org.apache.commons.io.FileUtils;
 
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
 import com.linkedin.drelephant.analysis.HadoopMetricsAggregator;
 import com.linkedin.drelephant.analysis.HadoopAggregatedData;
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData;
+import com.linkedin.drelephant.spark.data.SparkApplicationData;
+import com.linkedin.drelephant.spark.data.SparkExecutorData;
+import com.linkedin.drelephant.util.MemoryFormatUtils;
+import java.util.Iterator;
 
 
 public class SparkMetricsAggregator implements HadoopMetricsAggregator {
 
   private AggregatorConfigurationData _aggregatorConfigurationData;
+
+  private static final String SPARK_EXECUTOR_MEMORY = "spark.executor.memory";
+
+  private HadoopAggregatedData _hadoopAggregatedData = new HadoopAggregatedData();
+
 
   public SparkMetricsAggregator(AggregatorConfigurationData _aggregatorConfigurationData) {
     this._aggregatorConfigurationData = _aggregatorConfigurationData;
@@ -32,10 +43,36 @@ public class SparkMetricsAggregator implements HadoopMetricsAggregator {
 
   @Override
   public void aggregate(HadoopApplicationData data) {
+    long resourceUsed = 0;
+    long resourceWasted = 0;
+    SparkApplicationData applicationData = (SparkApplicationData) data;
+
+    long perExecutorMem =
+        MemoryFormatUtils.stringToBytes(applicationData.getEnvironmentData().getSparkProperty(SPARK_EXECUTOR_MEMORY, "0"));
+
+    Iterator<String> executorIds = applicationData.getExecutorData().getExecutors().iterator();
+    while(executorIds.hasNext()) {
+      String executorId = executorIds.next();
+      SparkExecutorData.ExecutorInfo executorInfo = applicationData.getExecutorData().getExecutorInfo(executorId);
+      // store the resourceUsed in MBSecs
+      resourceUsed += (executorInfo.duration / Statistics.SECOND_IN_MS) * (perExecutorMem / FileUtils.ONE_MB);
+      // maxMem is the maximum available storage memory
+      // memUsed is how much storage memory is used.
+      // any difference is wasted after a buffer of 50% is wasted
+      long excessMemory = (long) (executorInfo.maxMem - (executorInfo.memUsed * 1.5));
+      if( excessMemory > 0) {
+        resourceWasted += (executorInfo.duration / Statistics.SECOND_IN_MS) * (excessMemory / FileUtils.ONE_MB);
+      }
+    }
+
+    _hadoopAggregatedData.setResourceUsed(resourceUsed);
+    _hadoopAggregatedData.setResourceWasted(resourceWasted);
+    // TODO: to find a way to calculate the delay
+    _hadoopAggregatedData.setTotalDelay(0L);
   }
 
   @Override
   public HadoopAggregatedData getResult() {
-    return new HadoopAggregatedData();
+    return _hadoopAggregatedData;
   }
 }
