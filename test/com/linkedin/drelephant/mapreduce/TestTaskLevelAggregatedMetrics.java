@@ -52,8 +52,6 @@ public class TestTaskLevelAggregatedMetrics {
         taskData[1] = new MapReduceTaskData(counterData);
         TaskLevelAggregatedMetrics taskMetrics = new TaskLevelAggregatedMetrics(taskData, 4096L, 1463218501117L);
         Assert.assertEquals(taskMetrics.getDelay(), 1000000000L);
-        System.out.println(taskMetrics.getResourceUsed());
-        System.out.println(taskMetrics.getResourceWasted());
         Assert.assertEquals(taskMetrics.getResourceUsed(), 135168L);
         Assert.assertEquals(taskMetrics.getResourceWasted(), 66627L);
     }

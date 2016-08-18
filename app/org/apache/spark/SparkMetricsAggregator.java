@@ -26,9 +26,13 @@ import com.linkedin.drelephant.spark.data.SparkApplicationData;
 import com.linkedin.drelephant.spark.data.SparkExecutorData;
 import com.linkedin.drelephant.util.MemoryFormatUtils;
 import java.util.Iterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SparkMetricsAggregator implements HadoopMetricsAggregator {
+
+  private static final Logger logger = LoggerFactory.getLogger(SparkMetricsAggregator.class);
 
   private AggregatorConfigurationData _aggregatorConfigurationData;
 
@@ -51,6 +55,7 @@ public class SparkMetricsAggregator implements HadoopMetricsAggregator {
         MemoryFormatUtils.stringToBytes(applicationData.getEnvironmentData().getSparkProperty(SPARK_EXECUTOR_MEMORY, "0"));
 
     Iterator<String> executorIds = applicationData.getExecutorData().getExecutors().iterator();
+
     while(executorIds.hasNext()) {
       String executorId = executorIds.next();
       SparkExecutorData.ExecutorInfo executorInfo = applicationData.getExecutorData().getExecutorInfo(executorId);
