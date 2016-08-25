@@ -42,7 +42,7 @@ public class TestSparkAggregatedMetrics {
   public void TestNullExecutors() {
     ApplicationType appType = new ApplicationType("SPARK");
     AggregatorConfigurationData conf =
-        new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", appType);
+        new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", appType, null);
     SparkMetricsAggregator metrics = new SparkMetricsAggregator(conf);
 
     MockSparkApplicationData appData = new MockSparkApplicationData();
@@ -57,7 +57,7 @@ public class TestSparkAggregatedMetrics {
   public void TestValidExecutorsWithNoEnvironmentData() {
     ApplicationType appType = new ApplicationType("SPARK");
     AggregatorConfigurationData conf =
-        new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", appType);
+        new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", appType, null);
     SparkMetricsAggregator metrics = new SparkMetricsAggregator(conf);
 
     MockSparkApplicationData appData = new MockSparkApplicationData();
@@ -75,7 +75,7 @@ public class TestSparkAggregatedMetrics {
   public void TestValidExecutorsAndValidEnvironmentData() {
     ApplicationType appType = new ApplicationType("SPARK");
     AggregatorConfigurationData conf =
-        new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", appType);
+        new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", appType, null);
     SparkMetricsAggregator metrics = new SparkMetricsAggregator(conf);
 
     MockSparkApplicationData appData = new MockSparkApplicationData();

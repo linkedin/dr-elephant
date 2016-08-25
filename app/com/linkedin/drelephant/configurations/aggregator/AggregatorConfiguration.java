@@ -16,6 +16,8 @@
 
 package com.linkedin.drelephant.configurations.aggregator;
 
+import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+import com.linkedin.drelephant.util.Utils;
 import java.util.List;
 import org.apache.log4j.Logger;
 
@@ -86,8 +88,11 @@ public class AggregatorConfiguration {
           continue;
         }
         ApplicationType appType = new ApplicationType(appTypeStr);
+        // Check if parameters are defined for the heuristic
+        Map<String, String> paramsMap = Utils.getConfigurationParameters(aggregatorNode);
 
-        AggregatorConfigurationData aggregatorData = new AggregatorConfigurationData(className, appType);
+        AggregatorConfigurationData aggregatorData = new AggregatorConfigurationData(className, appType, paramsMap);
+
         _aggregatorsConfDataList.add(aggregatorData);
 
       }

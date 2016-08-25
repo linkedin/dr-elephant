@@ -17,16 +17,20 @@
 package com.linkedin.drelephant.configurations.aggregator;
 
 import com.linkedin.drelephant.analysis.ApplicationType;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class AggregatorConfigurationData {
 
   private final String _className;
   private final ApplicationType _appType;
+  private final Map<String, String> _paramMap;
 
-  public AggregatorConfigurationData(String className, ApplicationType appType) {
+  public AggregatorConfigurationData(String className, ApplicationType appType,  Map<String, String> paramMap) {
     _className = className;
     _appType = appType;
+    _paramMap = paramMap == null ? new HashMap<String, String>() : paramMap;
   }
 
   public String getClassName() {
@@ -35,5 +39,9 @@ public class AggregatorConfigurationData {
 
   public ApplicationType getAppType() {
     return _appType;
+  }
+
+  public Map<String, String> getParamMap() {
+    return _paramMap;
   }
 }

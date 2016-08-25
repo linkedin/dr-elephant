@@ -35,14 +35,18 @@ public class SparkMetricsAggregator implements HadoopMetricsAggregator {
   private static final Logger logger = LoggerFactory.getLogger(SparkMetricsAggregator.class);
 
   private AggregatorConfigurationData _aggregatorConfigurationData;
+  private double _storageMemWastageBuffer = 0.5;
 
   private static final String SPARK_EXECUTOR_MEMORY = "spark.executor.memory";
+  private static final String STORAGE_MEM_WASTAGE_BUFFER = "storage_mem_wastage_buffer";
 
   private HadoopAggregatedData _hadoopAggregatedData = new HadoopAggregatedData();
 
 
   public SparkMetricsAggregator(AggregatorConfigurationData _aggregatorConfigurationData) {
     this._aggregatorConfigurationData = _aggregatorConfigurationData;
+    _storageMemWastageBuffer = new Double(_aggregatorConfigurationData.getParamMap().getOrDefault(
+        STORAGE_MEM_WASTAGE_BUFFER, "0.5"));
   }
 
   @Override
@@ -64,7 +68,7 @@ public class SparkMetricsAggregator implements HadoopMetricsAggregator {
       // maxMem is the maximum available storage memory
       // memUsed is how much storage memory is used.
       // any difference is wasted after a buffer of 50% is wasted
-      long excessMemory = (long) (executorInfo.maxMem - (executorInfo.memUsed * 1.5));
+      long excessMemory = (long) (executorInfo.maxMem - (executorInfo.memUsed * (1.0 + _storageMemWastageBuffer)));
       if( excessMemory > 0) {
         resourceWasted += (executorInfo.duration / Statistics.SECOND_IN_MS) * (excessMemory / FileUtils.ONE_MB);
       }
