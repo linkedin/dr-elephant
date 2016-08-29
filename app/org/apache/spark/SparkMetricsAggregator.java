@@ -47,7 +47,7 @@ public class SparkMetricsAggregator implements HadoopMetricsAggregator {
     this._aggregatorConfigurationData = _aggregatorConfigurationData;
     String configValue = _aggregatorConfigurationData.getParamMap().get(STORAGE_MEM_WASTAGE_BUFFER);
     if(configValue != null) {
-      _storageMemWastageBuffer = new Double(configValue);
+      _storageMemWastageBuffer = Double.parseDouble(configValue);
     }
   }
 
