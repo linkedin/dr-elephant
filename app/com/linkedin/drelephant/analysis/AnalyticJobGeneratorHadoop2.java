@@ -36,6 +36,8 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import static com.avaje.ebean.Expr.like;
+
 
 /**
  * This class provides a list of analysis promises to be generated under Hadoop YARN environment
@@ -125,25 +127,29 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   public List<AnalyticJob> fetchCompletedAnalyticJobs(long from, long to)
       throws IOException, AuthenticationException {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
-    logger.info("Fetching all the completed applications");
 
     // Fetch all succeeded apps
     URL succeededAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
-            "/ws/v1/cluster/apps?finalStatus=SUCCEEDED&startedTimeBegin=%s&startedTimeEnd=%s",
+            "/ws/v1/cluster/apps?finalStatus=SUCCEEDED&finishedTimeBegin=%s&finishedTimeEnd=%s",
             String.valueOf(from), String.valueOf(to)));
-    logger.info("The succeeded apps URL is " + succeededAppsURL);
-    JsonNode successList = readApps(succeededAppsURL);
-    List<AnalyticJob> succeededApps = filterDuplicates(successList, from);
+    //logger.info("The succeeded apps URL is " + succeededAppsURL);
+    JsonNode successList = readApps(succeededAppsURL).path("apps").path("app");
+    List<AnalyticJob> succeededApps = filterDuplicates(successList);
     appList.addAll(succeededApps);
 
     // Fetch all failed apps
     URL failedAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
-            "/ws/v1/cluster/apps?finalStatus=FAILED&startedTimeBegin=%s&startedTimeEnd=%s",
+            "/ws/v1/cluster/apps?finalStatus=FAILED&finishedTimeBegin=%s&finishedTimeEnd=%s",
             String.valueOf(from), String.valueOf(to)));
-    logger.info("The failed apps URL is " + failedAppsURL);
-    JsonNode failList = readApps(failedAppsURL);
-    List<AnalyticJob> failedApps = filterDuplicates(failList, from);
+    //logger.info("The failed apps URL is " + failedAppsURL);
+    JsonNode failList = readApps(failedAppsURL).path("apps").path("app");
+    List<AnalyticJob> failedApps = filterDuplicates(failList);
     appList.addAll(failedApps);
+
+    // Append promises from the retry queue at the end of the list
+    while (!_retryQueue.isEmpty()) {
+      appList.add(_retryQueue.poll());
+    }
 
     logger.info("Fetched " + appList.size() + " completed applications.");
     return appList;
@@ -160,23 +166,18 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   public List<AnalyticJob> fetchUndefinedAnalyticJobs(long from, long to)
       throws IOException, AuthenticationException {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
-    logger.info("Fetching all the applications in undefined state");
+    //logger.info("Fetching all the applications in undefined state");
 
     // Fetch all apps in UNDEFINED state
     URL undefinedAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
         "/ws/v1/cluster/apps?finalStatus=UNDEFINED&startedTimeBegin=%s&startedTimeEnd=%s",
         String.valueOf(from), String.valueOf(to)));
-    logger.info("The undefined apps URL is " + undefinedAppsURL);
-    JsonNode undefinedList = readApps(undefinedAppsURL);
-    List<AnalyticJob> undefinedApps = filterDuplicates(undefinedList, from);
+    //logger.info("The undefined apps URL is " + undefinedAppsURL);
+    JsonNode undefinedList = readApps(undefinedAppsURL).path("apps").path("app");
+    List<AnalyticJob> undefinedApps = filterDuplicates(undefinedList);
     appList.addAll(undefinedApps);
 
-    // Append promises from the retry queue at the end of the list
-    while (!_retryQueue.isEmpty()) {
-      appList.add(_retryQueue.poll());
-    }
-
-    logger.info("Fetched " + appList.size() + " applications in undefined state.");
+    logger.info("Fetched " + appList.size() + " undefined applications.");
     return appList;
   }
 
@@ -221,18 +222,16 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
    */
   private JsonNode readApps(URL url) throws IOException, AuthenticationException {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
-    JsonNode rootNode = readJsonNode(url);
-    return rootNode.path("apps").path("app");
+    return readJsonNode(url);
   }
 
   /**
    * When called first time after launch, hit the DB and avoid duplicated analytic jobs that have been analyzed
    * before.
    * @param apps The list of apps in JsonNode
-   * @param lastTime The upper limit of the last fetch interval
    * @return The filtered list of analytic jobs
    */
-  private List<AnalyticJob> filterDuplicates(JsonNode apps, long lastTime) {
+  private List<AnalyticJob> filterDuplicates(JsonNode apps) {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
     for (JsonNode app : apps) {
       String appId = app.get("id").getValueAsText();
@@ -240,6 +239,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         String user = app.get("user").getValueAsText();
         String name = app.get("name").getValueAsText();
         String queueName = app.get("queue").getValueAsText();
+        String appState = app.get("state").getValueAsText();
         String finalStatus = app.get("finalStatus").getValueAsText();
         String trackingUrl = app.get("trackingUrl") != null? app.get("trackingUrl").getValueAsText() : null;
         long startTime = app.get("startedTime").getLongValue();
@@ -252,7 +252,8 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         if (type != null) {
           AnalyticJob analyticJob = new AnalyticJob();
           analyticJob.setAppId(appId).setAppType(type).setUser(user).setName(name).setQueueName(queueName)
-              .setTrackingUrl(trackingUrl).setStartTime(startTime).setFinishTime(finishTime).setFinalStatus(finalStatus);
+              .setTrackingUrl(trackingUrl).setStartTime(startTime).setFinishTime(finishTime).setJobStatus(appState)
+              .setFinalStatus(finalStatus);
 
           appList.add(analyticJob);
         }
@@ -270,22 +271,13 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   }
 
   /**
-   * Check if the application analysis has completed
-   * @param appId
-   * @return true, if database contains a record with status != SUCCEEDED and status != FAILED, false otherwise
-   */
-  private boolean isAppComplete(String appId) {
-    return !AppResult.find.select("id").where().eq(AppResult.TABLE.ID, appId)
-        .eq(AppResult.TABLE.STATUS, JobStatus.State.SUCCEEDED.name())
-        .eq(AppResult.TABLE.STATUS, JobStatus.State.FAILED.name()).findList().isEmpty();
-  }
-
-  /**
    * An application is analyzed if it has an entry in the database and is in succeeded or failed state
    * @param appId
    * @return
    */
   private boolean isAppAnalyzed(String appId) {
-    return AppResult.find.byId(appId) != null && isAppComplete(appId);
+    return !(AppResult.find.select(AppResult.TABLE.ID).where().eq(AppResult.TABLE.ID, appId).or(
+            like(AppResult.TABLE.STATUS, JobStatus.State.SUCCEEDED.name()),
+            like(AppResult.TABLE.STATUS, JobStatus.State.FAILED.name())).findList().isEmpty());
   }
 }

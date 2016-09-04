@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.Logger;
 
 
@@ -53,6 +54,14 @@ public class AnalyticJob implements Delayed {
   private long _finishTime;
   private long _severity;
   private long _expiryTime;
+  private long _analysisStartTime;
+
+  public enum _status {
+    ANY,
+    RUNNING,
+    FAILED,
+    SUCCEEDED
+  }
 
   public AnalyticJob setJobStatus(String jobStatus) {
     _jobStatus = jobStatus;
@@ -260,6 +269,10 @@ public class AnalyticJob implements Delayed {
     return this;
   }
 
+  public String getFinalStatus() {
+    return _finalStatus;
+  }
+
   /**
    * Updates the finalStatus of the job
    *
@@ -268,6 +281,14 @@ public class AnalyticJob implements Delayed {
   public AnalyticJob setFinalStatus(String finalStatus) {
     _finalStatus = finalStatus;
     return this;
+  }
+
+  public long getAnalysisStartTime() {
+    return _analysisStartTime;
+  }
+
+  public void setAnalysisStartTime(long analysisStartTime) {
+    _analysisStartTime = analysisStartTime;
   }
 
   /**
@@ -279,10 +300,9 @@ public class AnalyticJob implements Delayed {
    * @throws Exception if the analysis process encountered a problem.
    * @return the analysed AppResult
    */
-  public AppResult getAnalysis() throws Exception {
+  public AppResult getAnalysis(Job job) throws Exception {
     ElephantFetcher fetcher = ElephantContext.instance().getFetcherForApplicationType(getAppType());
-    HadoopApplicationData data = fetcher.fetchData(this);
-    this.setFinishTime(data.getFinishTime()).setJobStatus(data.getStatus());
+    HadoopApplicationData data = fetcher.fetchData(this, job);
 
     // Run all heuristics over the fetched data
     List<HeuristicResult> analysisResults = new ArrayList<HeuristicResult>();
@@ -291,6 +311,7 @@ public class AnalyticJob implements Delayed {
       logger.info("No Data Received for analytic job: " + getAppId());
       analysisResults.add(HeuristicResult.NO_DATA);
     } else {
+      this.setFinishTime(data.getFinishTime()).setJobStatus(data.getStatus());
       List<Heuristic> heuristics = ElephantContext.instance().getHeuristicsForApplicationType(getAppType());
       for (Heuristic heuristic : heuristics) {
         HeuristicResult result = heuristic.apply(data);

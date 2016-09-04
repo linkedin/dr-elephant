@@ -183,18 +183,6 @@ public class ElephantRunnerTest {
   }
 
   @Test
-  public void testDelayedEnqueue() {
-    ElephantRunner elephantRunner = new ElephantRunner();
-    DelayQueue jobQueue = new DelayQueue<AnalyticJob>();
-    Deencapsulation.invoke(elephantRunner, "delayedEnqueue", new AnalyticJob(), jobQueue);
-
-    assertEquals(1, jobQueue.size());
-
-    // null, because a job is available to take only after the expiry time.
-    assertEquals(null, jobQueue.poll());
-  }
-
-  @Test
   public void testGetLongFromConf() {
     Configuration conf = new Configuration();
     ElephantRunner elephantRunner = new ElephantRunner();

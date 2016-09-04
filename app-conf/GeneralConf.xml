@@ -30,7 +30,7 @@
   </property>
   <property>
     <name>drelephant.analysis.fetch.interval</name>
-    <value>3000</value>
+    <value>30000</value>
     <description>Interval between fetches (in millisec)</description>
   </property>
   <property>
@@ -40,7 +40,7 @@
   </property>
   <property>
     <name>drelephant.analysis.realtime.update.interval</name>
-    <value>3000</value>
+    <value>30000</value>
     <description>How frequently running jobs should be analysed. (in millisec)</description>
   </property>
 </configuration>

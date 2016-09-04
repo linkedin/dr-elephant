@@ -33,6 +33,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem
+import org.apache.hadoop.mapreduce.Job
 import org.apache.hadoop.security.authentication.client.{AuthenticatedURL, AuthenticationException}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
@@ -93,7 +94,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   /**
    * Returns the namenode address of the  active nameNode
-   * @param conf The Hadoop configuration
+    *
+    * @param conf The Hadoop configuration
    * @return The namenode address of the active namenode
    */
   def getNamenodeAddress(conf: Configuration): String = {
@@ -143,7 +145,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   /**
    * Checks if the namenode specified is active or not
-   * @param httpValue The namenode configuration http value
+    *
+    * @param httpValue The namenode configuration http value
    * @return True if the namenode is active, otherwise false
    */
   def checkActivation(httpValue: String): Boolean = {
@@ -158,7 +161,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   /**
    * Returns the jsonNode which is read from the url
-   * @param url The url of the server
+    *
+    * @param url The url of the server
    * @return The jsonNode parsed from the url
    */
   def readJsonNode(url: URL): JsonNode = {
@@ -185,11 +189,12 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     }
   }
 
-  def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
+  def fetchData(analyticJob: AnalyticJob, job: Job): SparkApplicationData = {
     val appId = analyticJob.getAppId()
-    _security.doAs[SparkDataCollection](new PrivilegedAction[SparkDataCollection] {
-      override def run(): SparkDataCollection = {
-        /* Most of Spark logs will be in directory structure: /LOG_DIR/[application_id].
+    if (analyticJob.getJobStatus == "SUCCEEDED" || analyticJob.getJobStatus == "FAILED") {
+      _security.doAs[SparkDataCollection](new PrivilegedAction[SparkDataCollection] {
+        override def run(): SparkDataCollection = {
+          /* Most of Spark logs will be in directory structure: /LOG_DIR/[application_id].
          *
          * Some logs (Spark 1.3+) are in /LOG_DIR/[application_id].snappy
          *
@@ -201,71 +206,74 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
          * In short, this fetcher only works with Spark <=1.2, and we should switch to JSON endpoints with Spark's
          * future release.
          */
-        val replayBus = new ReplayListenerBus()
-        val applicationEventListener = new ApplicationEventListener
-        val jobProgressListener = new JobProgressListener(new SparkConf())
-        val environmentListener = new EnvironmentListener
-        val storageStatusListener = new StorageStatusListener
-        val executorsListener = new ExecutorsListener(storageStatusListener)
-        val storageListener = new StorageListener(storageStatusListener)
+          val replayBus = new ReplayListenerBus()
+          val applicationEventListener = new ApplicationEventListener
+          val jobProgressListener = new JobProgressListener(new SparkConf())
+          val environmentListener = new EnvironmentListener
+          val storageStatusListener = new StorageStatusListener
+          val executorsListener = new ExecutorsListener(storageStatusListener)
+          val storageListener = new StorageListener(storageStatusListener)
 
-        // This is a customized listener that tracks peak used memory
-        // The original listener only tracks the current in use memory which is useless in offline scenario.
-        val storageStatusTrackingListener = new StorageStatusTrackingListener()
-        replayBus.addListener(storageStatusTrackingListener)
+          // This is a customized listener that tracks peak used memory
+          // The original listener only tracks the current in use memory which is useless in offline scenario.
+          val storageStatusTrackingListener = new StorageStatusTrackingListener()
+          replayBus.addListener(storageStatusTrackingListener)
 
-        val dataCollection = new SparkDataCollection(applicationEventListener = applicationEventListener,
-          jobProgressListener = jobProgressListener,
-          environmentListener = environmentListener,
-          storageStatusListener = storageStatusListener,
-          executorsListener = executorsListener,
-          storageListener = storageListener,
-          storageStatusTrackingListener = storageStatusTrackingListener)
+          val dataCollection = new SparkDataCollection(applicationEventListener = applicationEventListener,
+            jobProgressListener = jobProgressListener,
+            environmentListener = environmentListener,
+            storageStatusListener = storageStatusListener,
+            executorsListener = executorsListener,
+            storageListener = storageListener,
+            storageStatusTrackingListener = storageStatusTrackingListener)
 
-        replayBus.addListener(applicationEventListener)
-        replayBus.addListener(jobProgressListener)
-        replayBus.addListener(environmentListener)
-        replayBus.addListener(storageStatusListener)
-        replayBus.addListener(executorsListener)
-        replayBus.addListener(storageListener)
+          replayBus.addListener(applicationEventListener)
+          replayBus.addListener(jobProgressListener)
+          replayBus.addListener(environmentListener)
+          replayBus.addListener(storageStatusListener)
+          replayBus.addListener(executorsListener)
+          replayBus.addListener(storageListener)
 
-        val logPath = new Path(_logDir, appId)
-        val logInput: InputStream =
-          if (isLegacyLogDirectory(logPath)) {
-            if (!shouldThrottle(logPath)) {
-              openLegacyEventLog(logPath)
+          val logPath = new Path(_logDir, appId)
+          val logInput: InputStream =
+            if (isLegacyLogDirectory(logPath)) {
+              if (!shouldThrottle(logPath)) {
+                openLegacyEventLog(logPath)
+              } else {
+                null
+              }
             } else {
-              null
+              val logFilePath = new Path(logPath + "_1.snappy")
+              if (!shouldThrottle(logFilePath)) {
+                EventLoggingListener.openEventLog(logFilePath, fs)
+              } else {
+                null
+              }
             }
+
+          if (logInput == null) {
+            dataCollection.throttle()
+            // Since the data set is empty, we need to set the application id,
+            // so that we could detect this is Spark job type
+            dataCollection.getGeneralData().setApplicationId(appId)
+            dataCollection.getConf().setProperty("spark.app.id", appId)
+
+            logger.info("The event log of Spark application: " + appId + " is over the limit size of "
+              + defEventLogSizeInMb + " MB, the parsing process gets throttled.")
           } else {
-            val logFilePath = new Path(logPath + "_1.snappy")
-            if (!shouldThrottle(logFilePath)) {
-              EventLoggingListener.openEventLog(logFilePath, fs)
-            } else {
-              null
-            }
+            logger.info("Replaying Spark logs for application: " + appId)
+
+            replayBus.replay(logInput, logPath.toString(), false)
+
+            logger.info("Replay completed for application: " + appId)
           }
 
-        if (logInput == null) {
-          dataCollection.throttle()
-          // Since the data set is empty, we need to set the application id,
-          // so that we could detect this is Spark job type
-          dataCollection.getGeneralData().setApplicationId(appId)
-          dataCollection.getConf().setProperty("spark.app.id", appId)
-
-          logger.info("The event log of Spark application: " + appId + " is over the limit size of "
-              + defEventLogSizeInMb + " MB, the parsing process gets throttled.")
-        } else {
-          logger.info("Replaying Spark logs for application: " + appId)
-
-          replayBus.replay(logInput, logPath.toString(), false)
-
-          logger.info("Replay completed for application: " + appId)
+          dataCollection
         }
-
-        dataCollection
-      }
-    })
+      })
+    } else {
+      null
+    }
   }
 
   /**

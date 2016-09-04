@@ -17,7 +17,6 @@
 package com.linkedin.drelephant.mapreduce;
 
 import com.linkedin.drelephant.analysis.AnalyticJob;
-import com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
@@ -26,33 +25,28 @@ import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import javax.print.attribute.standard.JobState;
 import mockit.Deencapsulation;
-import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.Mocked;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.TIPStatus;
 import org.apache.hadoop.mapred.TaskID;
-import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobCounter;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskReport;
 import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -62,10 +56,11 @@ public class MapReduceFetcherHadoop2Test {
   public void testDiagnosticMatcher() {
     Assert.assertEquals("Task[\\s\\u00A0]+(.*)[\\s\\u00A0]+failed[\\s\\u00A0]+([0-9])[\\s\\u00A0]+times[\\s\\u00A0]+",
         ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time")
-            .pattern().toString());
+            .pattern()
+            .toString());
 
-    Assert.assertEquals(2, ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time")
-        .groupCount());
+    Assert.assertEquals(2,
+        ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time").groupCount());
   }
 
   @Test
@@ -78,7 +73,7 @@ public class MapReduceFetcherHadoop2Test {
       }
 
       @Mock
-      private MapReduceApplicationData fetchRunningJobsData(AnalyticJob analyticJob)
+      private MapReduceApplicationData fetchRunningJobsData(AnalyticJob analyticJob, Job job)
           throws IOException, AuthenticationException, InterruptedException {
         return new MapReduceApplicationData().setAppId("application_1234").setStatus("RUNNING");
       }
@@ -94,100 +89,26 @@ public class MapReduceFetcherHadoop2Test {
       AnalyticJob analyticJob = new AnalyticJob();
 
       analyticJob.setAppId("application_1234").setJobStatus("SUCCEEDED");
-      HadoopApplicationData mrAppData = fetcher.fetchData(analyticJob);
+      HadoopApplicationData mrAppData = fetcher.fetchData(analyticJob, null);
       assertEquals("COMPLETED", mrAppData.getStatus());
       assertEquals("application_1234", mrAppData.getAppId());
 
       analyticJob.setJobStatus("FAILED");
-      mrAppData = fetcher.fetchData(analyticJob);
+      mrAppData = fetcher.fetchData(analyticJob, null);
       assertEquals("COMPLETED", mrAppData.getStatus());
 
       analyticJob.setJobStatus("RUNNING");
-      mrAppData = fetcher.fetchData(analyticJob);
+      mrAppData = fetcher.fetchData(analyticJob, null);
       assertEquals("RUNNING", mrAppData.getStatus());
 
       try {
         analyticJob.setJobStatus("UNKNOWN");
-        fetcher.fetchData(analyticJob);
+        fetcher.fetchData(analyticJob, null);
         assertTrue(false);
       } catch (RuntimeException e) {
         assertTrue(true);
       }
-    } catch(Exception e) {
-      assertTrue(false);
-    }
-  }
-
-  @Test
-  public void testFetchCompletedJobsDataInUnknownState() {
-
-    new MockUp<MapReduceFetcherHadoop2.URLFactory>() {
-      @Mock
-      private void verifyURL(String url) throws IOException {
-        return;
-      }
-
-      @Mock
-      private URL getJobConfigURL(String jobId) throws MalformedURLException {
-        return new URL("http://sample");
-      }
-
-      @Mock
-      private URL getJobURL(String jobId) throws MalformedURLException {
-        return new URL("http://sample");
-      }
-    };
-
-    new MockUp<MapReduceFetcherHadoop2.JSONFactory>() {
-      @Mock
-      private Properties getProperties(URL url) throws IOException, AuthenticationException {
-        Properties jobConf = new Properties();
-        jobConf.put("key", "value");
-        return jobConf;
-      }
-
-      @Mock
-      private String getState(URL url) throws IOException, AuthenticationException {
-        return "UNKNOWN";
-      }
-
-      @Mock
-      private long getSubmitTime(URL url) throws IOException, AuthenticationException {
-        return 1000;
-      }
-
-      @Mock
-      private long getStartTime(URL url) throws IOException, AuthenticationException {
-        return 1010;
-      }
-
-      @Mock
-      private long getFinishTime(URL url) throws IOException, AuthenticationException {
-        return 2000;
-      }
-    };
-
-    new MockUp<ThreadContextMR2>() {
-      @Mock
-      public void updateAuthToken() {
-        return;
-      }
-    };
-
-    new MockUp<Cluster>() {
-      @Mock
-      public void $init(Configuration conf) {
-        return;
-      }
-    };
-
-    AnalyticJob analyticJob = new AnalyticJob();
-    analyticJob.setAppId("application_1234");
-    try {
-      ElephantFetcher fetcher = new MapReduceFetcherHadoop2(null);
-      MapReduceApplicationData mrAppData = Deencapsulation.invoke(fetcher, "fetchCompletedJobsData", analyticJob);
-      assertEquals("job_1234", mrAppData.getJobId());
-    } catch(IOException e) {
+    } catch (Exception e) {
       assertTrue(false);
     }
   }
@@ -197,67 +118,79 @@ public class MapReduceFetcherHadoop2Test {
 
     new MockUp<MapReduceFetcherHadoop2.URLFactory>() {
       @Mock
-      private void verifyURL(String url) throws IOException {
+      private void verifyURL(String url)
+          throws IOException {
         return;
       }
 
       @Mock
-      private URL getJobConfigURL(String jobId) throws MalformedURLException {
+      private URL getJobConfigURL(String jobId)
+          throws MalformedURLException {
         return new URL("http://sample");
       }
 
       @Mock
-      private URL getJobURL(String jobId) throws MalformedURLException {
+      private URL getJobURL(String jobId)
+          throws MalformedURLException {
         return new URL("http://sample");
       }
 
       @Mock
-      private URL getJobCounterURL(String jobId) throws MalformedURLException {
+      private URL getJobCounterURL(String jobId)
+          throws MalformedURLException {
         return new URL("http://sample");
       }
 
       @Mock
-      private URL getTaskListURL(String jobId) throws MalformedURLException {
+      private URL getTaskListURL(String jobId)
+          throws MalformedURLException {
         return new URL("http://sample");
       }
     };
 
     new MockUp<MapReduceFetcherHadoop2.JSONFactory>() {
       @Mock
-      private Properties getProperties(URL url) throws IOException, AuthenticationException {
+      private Properties getProperties(URL url)
+          throws IOException, AuthenticationException {
         Properties jobConf = new Properties();
         jobConf.put("key", "value");
         return jobConf;
       }
 
       @Mock
-      private String getState(URL url) throws IOException, AuthenticationException {
+      private String getState(URL url)
+          throws IOException, AuthenticationException {
         return "SUCCEEDED";
       }
 
       @Mock
-      private long getSubmitTime(URL url) throws IOException, AuthenticationException {
+      private long getSubmitTime(URL url)
+          throws IOException, AuthenticationException {
         return 1000;
       }
 
       @Mock
-      private long getStartTime(URL url) throws IOException, AuthenticationException {
+      private long getStartTime(URL url)
+          throws IOException, AuthenticationException {
         return 1010;
       }
 
       @Mock
-      private long getFinishTime(URL url) throws IOException, AuthenticationException {
+      private long getFinishTime(URL url)
+          throws IOException, AuthenticationException {
         return 2000;
       }
 
       @Mock
-      private MapReduceCounterData getJobCounter(URL url) throws IOException, AuthenticationException {
+      private MapReduceCounterData getJobCounter(URL url)
+          throws IOException, AuthenticationException {
         return new MapReduceCounterData();
       }
 
       @Mock
       private void getTaskDataAll(URL url, String jobId, List<MapReduceTaskData> mapperList,
-          List<MapReduceTaskData> reducerList) throws IOException, AuthenticationException {
+          List<MapReduceTaskData> reducerList)
+          throws IOException, AuthenticationException {
         return;
       }
     };
@@ -269,141 +202,29 @@ public class MapReduceFetcherHadoop2Test {
       }
     };
 
-    new MockUp<Cluster>() {
-      @Mock
-      public void $init(Configuration conf) {
-        return;
-      }
-    };
-
     AnalyticJob analyticJob = new AnalyticJob();
-    analyticJob.setAppId("application_1234");
+    analyticJob.setAppId("application_1234").setJobStatus("SUCCEEDED");
     try {
       ElephantFetcher fetcher = new MapReduceFetcherHadoop2(null);
       MapReduceApplicationData mrAppData = Deencapsulation.invoke(fetcher, "fetchCompletedJobsData", analyticJob);
       assertEquals("job_1234", mrAppData.getJobId());
       assertEquals("SUCCEEDED", mrAppData.getStatus());
-    } catch(IOException e) {
-      assertTrue(false);
-    }
-  }
-
-  @Test
-  public void testFetchCompletedJobsDataInFailedState() {
-
-    new MockUp<MapReduceFetcherHadoop2.URLFactory>() {
-      @Mock
-      private void verifyURL(String url) throws IOException {
-        return;
-      }
-
-      @Mock
-      private URL getJobConfigURL(String jobId) throws MalformedURLException {
-        return new URL("http://sample");
-      }
-
-      @Mock
-      private URL getJobURL(String jobId) throws MalformedURLException {
-        return new URL("http://sample");
-      }
-
-      @Mock
-      private URL getJobCounterURL(String jobId) throws MalformedURLException {
-        return new URL("http://sample");
-      }
-
-      @Mock
-      private URL getTaskListURL(String jobId) throws MalformedURLException {
-        return new URL("http://sample");
-      }
-    };
-
-    new MockUp<MapReduceFetcherHadoop2.JSONFactory>() {
-      @Mock
-      private Properties getProperties(URL url) throws IOException, AuthenticationException {
-        Properties jobConf = new Properties();
-        jobConf.put("key", "value");
-        return jobConf;
-      }
-
-      @Mock
-      private String getState(URL url) throws IOException, AuthenticationException {
-        return "FAILED";
-      }
-
-      @Mock
-      private long getSubmitTime(URL url) throws IOException, AuthenticationException {
-        return 1000;
-      }
-
-      @Mock
-      private long getStartTime(URL url) throws IOException, AuthenticationException {
-        return 1010;
-      }
-
-      @Mock
-      private long getFinishTime(URL url) throws IOException, AuthenticationException {
-        return 2000;
-      }
-
-      @Mock
-      private MapReduceCounterData getJobCounter(URL url) throws IOException, AuthenticationException {
-        return new MapReduceCounterData();
-      }
-
-      @Mock
-      private void getTaskDataAll(URL url, String jobId, List<MapReduceTaskData> mapperList,
-          List<MapReduceTaskData> reducerList) throws IOException, AuthenticationException {
-        return;
-      }
-
-      @Mock
-      private String getDiagnosticInfo(URL url) throws IOException, AuthenticationException {
-        return "";
-      }
-    };
-
-    new MockUp<ThreadContextMR2>() {
-      @Mock
-      public void updateAuthToken() {
-        return;
-      }
-    };
-
-    new MockUp<Cluster>() {
-      @Mock
-      public void $init(Configuration conf) {
-        return;
-      }
-    };
-
-    new MockUp<MapReduceFetcherHadoop2>() {
-      @Mock
-      private String parseException(String jobId, String diagnosticInfo) throws MalformedURLException, IOException,
-                                                                                AuthenticationException {
-        return "Diagnostic Info";
-      }
-    };
-
-    AnalyticJob analyticJob = new AnalyticJob();
-    analyticJob.setAppId("application_1234");
-    try {
-      ElephantFetcher fetcher = new MapReduceFetcherHadoop2(null);
-      MapReduceApplicationData mrAppData = Deencapsulation.invoke(fetcher, "fetchCompletedJobsData", analyticJob);
-      assertEquals("job_1234", mrAppData.getJobId());
-      assertEquals("FAILED", mrAppData.getStatus());
-      assertEquals("Diagnostic Info", mrAppData.getDiagnosticInfo());
-    } catch(IOException e) {
+      assertEquals(2000, mrAppData.getFinishTime());
+      assertEquals(1010, mrAppData.getStartTime());
+      assertEquals(1000, mrAppData.getSubmitTime());
+    } catch (IOException e) {
       assertTrue(false);
     }
   }
 
   @Test
   public void testGetMRTaskData() {
-    final TaskReport taskReport1 = new TaskReport(new TaskID(new JobID("job_1234", 0), TaskType.MAP, 0), 0, null, null,
-        TIPStatus.FAILED, 0, 0, null);
-    final TaskReport taskReport2 = new TaskReport(new TaskID(new JobID("job_1234", 0), TaskType.MAP, 0), 0, null, null,
-        TIPStatus.COMPLETE, 10000, 20000, null);
+    final TaskReport taskReport1 =
+        new TaskReport(new TaskID(new JobID("job_1234", 0), TaskType.MAP, 0), 0, null, null, TIPStatus.FAILED, 0, 0,
+            null);
+    final TaskReport taskReport2 =
+        new TaskReport(new TaskID(new JobID("job_1234", 0), TaskType.MAP, 0), 0, null, null, TIPStatus.COMPLETE, 10000,
+            20000, null);
 
     new MockUp<MapReduceFetcherHadoop2>() {
       @Mock
@@ -436,67 +257,13 @@ public class MapReduceFetcherHadoop2Test {
       assertEquals(10000, taskList.get(0).getStartTimeMs());
       assertEquals(20000, taskList.get(0).getFinishTimeMs());
       assertEquals("task_1234_1", taskList.get(0).getAttemptId());
-    } catch(IOException e) {
-      assertTrue(false);
-    }
-  }
-
-  @Test
-  public void testFetchRunningJobsDataWithNoJob() {
-
-    new MockUp<Cluster>() {
-      @Mock
-      public void $init(Configuration conf) throws IOException{
-        return;
-      }
-
-      @Mock
-      public Job getJob(JobID jobId) throws IOException, InterruptedException {
-        return null;
-      }
-    };
-
-    new MockUp<MapReduceFetcherHadoop2.URLFactory>() {
-      @Mock
-      private void verifyURL(String url)
-          throws IOException {
-        return;
-      }
-    };
-
-    new MockUp<JobID>() {
-      @Mock
-      public JobID forName(String str) throws IllegalArgumentException {
-        return null;
-      }
-    };
-
-    AnalyticJob analyticJob = new AnalyticJob();
-    analyticJob.setAppId("application_1234");
-    try {
-      ElephantFetcher fetcher = new MapReduceFetcherHadoop2(null);
-      assertEquals(null, Deencapsulation.invoke(fetcher, "fetchRunningJobsData", analyticJob));
-    } catch(IOException e) {
+    } catch (IOException e) {
       assertTrue(false);
     }
   }
 
   @Test
   public void testFetchRunningJobsData() {
-
-    new MockUp<Cluster>() {
-      @Mock
-      public void $init(Configuration conf) throws IOException{
-        return;
-      }
-
-      @Mock
-      public Job getJob(JobID jobId) throws IOException, InterruptedException {
-        Configuration conf = new Configuration();
-        conf.set("Test", "Value");
-        return new Job(conf);
-      }
-    };
 
     new MockUp<Job>() {
       @Mock
@@ -507,8 +274,9 @@ public class MapReduceFetcherHadoop2Test {
       }
 
       @Mock
-      public Counters getCounters() throws IOException {
-        return null;
+      public Counters getCounters()
+          throws IOException {
+        return new Counters();
       }
 
       @Mock
@@ -525,10 +293,11 @@ public class MapReduceFetcherHadoop2Test {
       }
     };
 
-    new MockUp<JobID>() {
+    new MockUp<MapReduceFetcherHadoop2.JSONFactory>() {
       @Mock
-      public JobID forName(String str) throws IllegalArgumentException {
-        return null;
+      private Properties getProperties(URL url)
+          throws IOException, AuthenticationException {
+        return new Properties();
       }
     };
 
@@ -543,12 +312,17 @@ public class MapReduceFetcherHadoop2Test {
     analyticJob.setAppId("application_1234").setJobStatus("RUNNING");
     try {
       ElephantFetcher fetcher = new MapReduceFetcherHadoop2(null);
-      MapReduceApplicationData mrAppData = Deencapsulation.invoke(fetcher, "fetchRunningJobsData", analyticJob);
+      MapReduceApplicationData mrAppData =
+          Deencapsulation.invoke(fetcher, "fetchRunningJobsData", analyticJob, Job.class);
+      assertNull(mrAppData);
+
+      mrAppData = Deencapsulation.invoke(fetcher, "fetchRunningJobsData", analyticJob, new Job());
+      assertNotNull(mrAppData);
       assertEquals("job_1234", mrAppData.getJobId());
       assertEquals("RUNNING", mrAppData.getStatus());
-      assertEquals(1000, mrAppData.getStartTime());
-      assertEquals("Value", mrAppData.getConf().getProperty("Test"));
-    } catch(IOException e) {
+      assertEquals(1000, mrAppData.getSubmitTime());
+      assertNotNull(mrAppData.getCounters());
+    } catch (IOException e) {
       assertTrue(false);
     }
   }

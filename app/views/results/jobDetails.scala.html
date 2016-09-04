@@ -31,9 +31,9 @@
         <div>
           <table class="list-group-item-text table-striped table-condensed">
             <tbody>
-              @if(result.status.equals("SUCCEEDED") || result.status.equals("FAILED")) {
+              @if(!result.trackingUrl.isEmpty) {
                 <tr>
-                  <td>Jobtracker:</td>
+                  <td>Tracking Url:</td>
                   <td><a href="@result.trackingUrl">@result.trackingUrl</a></td>
                 </tr>
               }

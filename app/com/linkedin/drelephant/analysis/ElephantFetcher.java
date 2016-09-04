@@ -16,6 +16,9 @@
 
 package com.linkedin.drelephant.analysis;
 
+import org.apache.hadoop.mapreduce.Job;
+
+
 /**
  * The interface to define common methods for each fetcher.
  *
@@ -24,12 +27,12 @@ package com.linkedin.drelephant.analysis;
 public interface ElephantFetcher<T extends HadoopApplicationData> {
 
   /**
-   * Given an application id, fetches the data object
+   * Given an application id and optionally a Job in case of running application, fetches the data object
    *
    * @param job The job being analysed
    * @return the fetched data
    * @throws Exception
    */
-  public T fetchData(AnalyticJob job)
+  public T fetchData(AnalyticJob analyticjob, Job job)
       throws Exception;
 }
