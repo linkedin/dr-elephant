@@ -86,7 +86,7 @@ public abstract class GenericGCHeuristic implements Heuristic<MapReduceApplicati
   @Override
   public HeuristicResult apply(MapReduceApplicationData data) {
 
-    if(!data.getSucceeded()) {
+    if(!data.getStatus().equals(MapReduceApplicationData.Status.SUCCEEDED.name())) {
       return null;
     }
 

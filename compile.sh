@@ -89,7 +89,13 @@ stop_script=${project_root}/scripts/stop.sh
 rm -rf ${project_root}/dist
 mkdir dist
 
+# Move the h2 evolutions files to default for testing
+mkdir -p conf/evolutions/default
+cp conf/evolutions/h2/*.sql ./conf/evolutions/default
+
 play_command $OPTS clean test compile dist
+
+rm conf/evolutions/default/*
 
 cd target/universal
 
@@ -106,6 +112,9 @@ sed -i.bak $'/declare -r app_classpath/s/.$/:`hadoop classpath`:${ELEPHANT_CONF_
 cp $start_script ${DIST_NAME}/bin/
 
 cp $stop_script ${DIST_NAME}/bin/
+
+# Copy the mysql evolution files to default
+cp ${DIST_NAME}/conf/evolutions/mysql/* ${DIST_NAME}/conf/evolutions/default
 
 zip -r ${DIST_NAME}.zip ${DIST_NAME}
 

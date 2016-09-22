@@ -17,9 +17,10 @@
 # general
 *~
 *.log
-tmp
-dump
 .history
+.DS_Store
+dump
+tmp
 /*.iml
 /out
 
@@ -50,3 +51,8 @@ RUNNING_PID
 
 
 *.jar
+
+
+
+# Project Evolutions
+conf/evolutions/default/*

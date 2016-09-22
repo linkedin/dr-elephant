@@ -16,8 +16,6 @@
 
 package com.linkedin.drelephant;
 
-import java.io.IOException;
-
 
 /**
  * The main class which starts Dr. Elephant
@@ -25,7 +23,7 @@ import java.io.IOException;
 public class DrElephant extends Thread {
   private ElephantRunner _elephant;
 
-  public DrElephant() throws IOException {
+  public DrElephant() {
     _elephant = new ElephantRunner();
   }
 

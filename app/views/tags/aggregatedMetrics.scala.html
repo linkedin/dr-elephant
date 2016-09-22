@@ -22,22 +22,33 @@
 *@
 @if(!result.jobType.equals("Spark") && result.resourceUsed != 0) {
   <p class="list-group-item-heading">
-<table>
-  <tr>
-<td class="metrics-dashboard hasTooltip" width="175px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/usedmemory.png")' class="metrics-icons" alt='used resources'/><!--</a>-->   @Utils.getDurationInGBHours(result.resourceUsed)  <div id="tooltip-div">
-  <span> The resources used by the job in GB Hours</span>
-</div></td>
-  <td class="metrics-dashboard hasTooltip" width="100px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/wastedmemory.png")' class="metrics-icons" alt='wasted resources'/><!--</a>-->    @(Utils.getPercentage(result.resourceWasted, result.resourceUsed))  <div id="tooltip-div">
-    <span> The percent of resources wasted</span>
-  </div></td>
-  <td class="metrics-dashboard hasTooltip" width="120px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=time">--><img src='@routes.Assets.at("images/runtime.png")' class="metrics-icons" alt='total runtime'/><!--</a>-->    @(Utils.getDurationBreakdown(result.finishTime - result.startTime))  <div id="tooltip-div">
-    <span> Total runtime of the job in HH:MM:SS</span>
-  </div></td>
-  <td class="metrics-dashboard hasTooltip" width="100px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=time">--><img src='@routes.Assets.at("images/waittime.png")' class="metrics-icons" alt='total wait time'/><!--</a>-->   @(Utils.getPercentage(result.totalDelay, result.finishTime - result.startTime))  <div id="tooltip-div">
-    <span> The percent of time job waited</span>
-  </div></td>
-  </tr>
-</table>
+    <table>
+      <tr>
+        <td class="metrics-dashboard hasTooltip" width="175px">
+          <img src='@routes.Assets.at("images/usedmemory.png")' class="metrics-icons" alt='used resources'/>  @Utils.getDurationInGBHours(result.resourceUsed)
+          <div id="tooltip-div">
+            <span> The resources used by the job in GB Hours</span>
+          </div>
+        </td>
+        <td class="metrics-dashboard hasTooltip" width="100px">
+          <img src='@routes.Assets.at("images/wastedmemory.png")' class="metrics-icons" alt='wasted resources'/>  @(Utils.getPercentage(result.resourceWasted, result.resourceUsed))
+          <div id="tooltip-div">
+            <span> The percentage of resources wasted</span>
+          </div>
+        </td>
+        <td class="metrics-dashboard hasTooltip" width="140px">
+          <img src='@routes.Assets.at("images/runtime.png")' class="metrics-icons" alt='total runtime'/>  @(Utils.getDurationBreakdown(result.finishTime - result.startTime))
+          <div id="tooltip-div">
+            <span> Total runtime of the job in HH:MM:SS</span>
+          </div></td>
+        <td class="metrics-dashboard hasTooltip" width="100px">
+          <img src='@routes.Assets.at("images/waittime.png")' class="metrics-icons" alt='total wait time'/>  @(Utils.getPercentage(result.totalDelay, result.finishTime - result.startTime))
+          <div id="tooltip-div">
+            <span> The percentage of time job waited</span>
+          </div>
+        </td>
+      </tr>
+   </table>
   </p>
 }
 

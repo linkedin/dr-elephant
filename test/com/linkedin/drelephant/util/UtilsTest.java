@@ -17,9 +17,13 @@
 package com.linkedin.drelephant.util;
 
 
+import com.linkedin.drelephant.analysis.AnalyticJob;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import java.util.Set;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -136,12 +140,12 @@ public class UtilsTest {
     long []numerators = {10,20,30,40,50};
     long []denominators = {100,200,100,52,70};
 
-    assertEquals("10.00 %", Utils.getPercentage(numerators[0],denominators[0]));
-    assertEquals("10.00 %", Utils.getPercentage(numerators[1],denominators[1]));
-    assertEquals("30.00 %", Utils.getPercentage(numerators[2],denominators[2]));
-    assertEquals("76.92 %", Utils.getPercentage(numerators[3],denominators[3]));
-    assertEquals("71.43 %", Utils.getPercentage(numerators[4],denominators[4]));
-    assertEquals("NaN", Utils.getPercentage(0,0));
+    assertEquals("10.00 %", Utils.getPercentage(numerators[0], denominators[0]));
+    assertEquals("10.00 %", Utils.getPercentage(numerators[1], denominators[1]));
+    assertEquals("30.00 %", Utils.getPercentage(numerators[2], denominators[2]));
+    assertEquals("76.92 %", Utils.getPercentage(numerators[3], denominators[3]));
+    assertEquals("71.43 %", Utils.getPercentage(numerators[4], denominators[4]));
+    assertEquals("NaN", Utils.getPercentage(0, 0));
   }
 
   @Test
@@ -154,7 +158,25 @@ public class UtilsTest {
     assertEquals("0.006 GB Hours", Utils.getDurationInGBHours(durations[2]));
     assertEquals("0.172 GB Hours", Utils.getDurationInGBHours(durations[3]));
     assertEquals("0 GB Hours", Utils.getDurationInGBHours(durations[4]));
-
   }
 
+  @Test
+  public void testGetIntersection() {
+    List<AnalyticJob> group1 = new ArrayList<AnalyticJob>();
+    group1.add(new AnalyticJob().setAppId("application_1"));
+
+    List<AnalyticJob> group2 = new ArrayList<AnalyticJob>();
+    group2.add(new AnalyticJob().setAppId("application_2"));
+
+    Set<AnalyticJob> commonEmpty1 = Utils.getIntersection(group1, null);
+    assertEquals(0, commonEmpty1.size());
+
+    Set<AnalyticJob> commonEmpty2 = Utils.getIntersection(group1, group2);
+    assertEquals(0, commonEmpty2.size());
+
+    group1.add(new AnalyticJob().setAppId("application_2"));
+
+    Set<AnalyticJob> commonNonEmpty = Utils.getIntersection(group1, group2);
+    assertEquals(1, commonNonEmpty.size());
+  }
 }

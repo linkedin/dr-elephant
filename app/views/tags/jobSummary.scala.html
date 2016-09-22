@@ -25,8 +25,8 @@
 
 @tags.jobHeader(result)
 <p>
-  @for(appHeuristicResult <- result.yarnAppHeuristicResults) {
-    <span class="label label-@appHeuristicResult.severity.getBootstrapColor">@appHeuristicResult.heuristicName</span>
-  }
+@for(appHeuristicResult <- result.yarnAppHeuristicResults) {
+  <span class="label label-@appHeuristicResult.severity.getBootstrapColor">@appHeuristicResult.heuristicName</span>
+}
 </p>
 @tags.aggregatedMetrics(result)

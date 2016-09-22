@@ -16,6 +16,8 @@
 
 package com.linkedin.drelephant.util;
 
+import com.google.common.collect.Sets;
+import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.math.Statistics;
 import java.io.IOException;
@@ -397,5 +399,27 @@ public final class Utils {
       }
     }
     return totalWaittime;
+  }
+
+  public static Set<AnalyticJob> getIntersection(List<AnalyticJob> undefinedJobs, List<AnalyticJob> completedJobs) {
+    if (undefinedJobs == null || completedJobs == null) {
+      return Collections.<AnalyticJob>emptySet();
+    }
+
+    final Set<AnalyticJob> group1 = new TreeSet<AnalyticJob>(new Comparator<AnalyticJob>() {
+      public int compare(final AnalyticJob o1, final AnalyticJob o2) {
+        return o1.getAppId().compareToIgnoreCase(o2.getAppId());
+      }
+    });
+    group1.addAll(undefinedJobs);
+
+    final Set<AnalyticJob> group2 = new TreeSet<AnalyticJob>(new Comparator<AnalyticJob>() {
+      public int compare(final AnalyticJob o1, final AnalyticJob o2) {
+        return o1.getAppId().compareToIgnoreCase(o2.getAppId());
+      }
+    });
+    group2.addAll(completedJobs);
+
+    return Sets.intersection(group1, group2);
   }
 }

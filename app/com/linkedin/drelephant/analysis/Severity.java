@@ -23,20 +23,23 @@ import com.avaje.ebean.annotation.EnumValue;
  * The severities that you can use
  */
 public enum Severity {
+  @EnumValue("5")
+  CRITICAL(5, "Critical", "danger"),
+
   @EnumValue("4")
-  CRITICAL(4, "Critical", "danger"),
+  SEVERE(4, "Severe", "severe"),
 
   @EnumValue("3")
-  SEVERE(3, "Severe", "severe"),
+  MODERATE(3, "Moderate", "warning"),
 
   @EnumValue("2")
-  MODERATE(2, "Moderate", "warning"),
+  LOW(2, "Low", "success"),
 
   @EnumValue("1")
-  LOW(1, "Low", "success"),
+  NONE(1, "None", "success"),
 
   @EnumValue("0")
-  NONE(0, "None", "success");
+  UNDEFINED(0, "Undefined", "undefined");
 
   private int _value;
   private String _text;

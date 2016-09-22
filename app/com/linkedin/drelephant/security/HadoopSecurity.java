@@ -38,34 +38,38 @@ public class HadoopSecurity {
   private String _keytabUser;
   private boolean _securityEnabled = false;
 
-  public HadoopSecurity() throws IOException {
-    Configuration conf = new Configuration();
-    UserGroupInformation.setConfiguration(conf);
+  public HadoopSecurity() {
+    UserGroupInformation.setConfiguration(new Configuration());
     _securityEnabled = UserGroupInformation.isSecurityEnabled();
-    if (_securityEnabled) {
-      logger.info("This cluster is Kerberos enabled.");
-      boolean login = true;
+  }
 
-      _keytabUser = Play.application().configuration().getString("keytab.user");
-      if (_keytabUser == null) {
-        logger.error("Keytab user not set. Please set keytab_user in the configuration file");
-        login = false;
-      }
+  public void login() throws IOException {
+    if (!_securityEnabled) {
+      logger.info("This cluster is not security enabled.");
+      return;
+    }
 
-      _keytabLocation = Play.application().configuration().getString("keytab.location");
-      if (_keytabLocation == null) {
-        logger.error("Keytab location not set. Please set keytab_location in the configuration file");
-        login = false;
-      } else if (!new File(_keytabLocation).exists()) {
-        logger.error("The keytab file at location [" + _keytabLocation + "] does not exist.");
-        login = false;
-      }
+    logger.info("This cluster is security enabled.");
+    boolean login = true;
 
-      if (!login) {
-        throw new IOException("Cannot login. This cluster is security enabled.");
-      }
+    _keytabUser = Play.application().configuration().getString("keytab.user");
+    if (_keytabUser == null) {
+      logger.error("Keytab user not set. Please set keytab_user in the configuration file");
+      login = false;
+    }
+    _keytabLocation = Play.application().configuration().getString("keytab.location");
+    if (_keytabLocation == null) {
+      logger.error("Keytab location not set. Please set keytab_location in the configuration file");
+      login = false;
+    } else if (!new File(_keytabLocation).exists()) {
+      logger.error("The keytab file at location [" + _keytabLocation + "] does not exist.");
+      login = false;
+    }
 
+    if (login) {
       checkLogin();
+    } else {
+      throw new IOException("Cannot login. This cluster is security enabled.");
     }
   }
 
@@ -75,7 +79,6 @@ public class HadoopSecurity {
   }
 
   public void checkLogin() throws IOException {
-
     if (_loginUser == null) {
       logger.info("No login user. Creating login user");
       logger.info("Logging with " + _keytabUser + " and " + _keytabLocation);

@@ -95,4 +95,22 @@ public class MockSparkApplicationData implements SparkApplicationData {
   public boolean isEmpty() {
     return getExecutorData().getExecutors().isEmpty();
   }
+
+  @Override
+  public String getStatus() {
+    //TODO
+    return null;
+  }
+
+  @Override
+  public long getStartTime() {
+    //TODO
+    return 0;
+  }
+
+  @Override
+  public long getFinishTime() {
+    //TODO
+    return 0;
+  }
 }

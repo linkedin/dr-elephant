@@ -30,10 +30,12 @@
   @if(results != null && results.nonEmpty) {
   <div class="list-group">
     @for(result <- results) {
-      <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
-         href="@routes.Application.search()?id=@result.id">
+      @if(result.resourceUsed != 0) {
+        <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
+        href="@routes.Application.search()?id=@result.id">
         @tags.jobSummary(result)
-      </a>
+        </a>
+      }
     }
   </div>
   }

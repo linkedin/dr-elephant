@@ -35,10 +35,12 @@
             <div class="list-group">Flow Execution URL: <a href=@pair.getUrl>@pair.getUrl</a>
               @if(jobs != null) {
                 @for(result <- jobs) {
-                  <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
-                  href="@routes.Application.search()?id=@result.id">
-                  @tags.jobSummary(result)
-                  </a>
+                  @if(result.resourceUsed != 0) {
+                    <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
+                    href="@routes.Application.search()?id=@result.id">
+                    @tags.jobSummary(result)
+                    </a>
+                  }
                 }
               }
               </div>

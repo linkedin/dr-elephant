@@ -31,10 +31,12 @@
         <div>
           <table class="list-group-item-text table-striped table-condensed">
             <tbody>
-              <tr>
-                <td>Jobtracker:</td>
-                <td><a href="@result.trackingUrl">@result.trackingUrl</a></td>
-              </tr>
+              @if(!result.trackingUrl.isEmpty) {
+                <tr>
+                  <td>Tracking Url:</td>
+                  <td><a href="@result.trackingUrl">@result.trackingUrl</a></td>
+                </tr>
+              }
               @if(!result.jobExecUrl.isEmpty){
                 <tr>
                   <td>Job execution:</td>

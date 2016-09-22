@@ -27,8 +27,8 @@ import org.apache.log4j.Logger;
 public class MapReduceMetricsAggregator implements HadoopMetricsAggregator {
 
   private static final Logger logger = Logger.getLogger(MapReduceMetricsAggregator.class);
-  private static final String MAP_CONTAINER_CONFIG = "mapreduce.map.memory.mb";
-  private static final String REDUCER_CONTAINER_CONFIG = "mapreduce.reduce.memory.mb";
+  private static final String MAP_CONTAINER_SIZE = "mapreduce.map.memory.mb";
+  private static final String REDUCER_CONTAINER_SIZE = "mapreduce.reduce.memory.mb";
   private static final String REDUCER_SLOW_START_CONFIG = "mapreduce.job.reduce.slowstart.completedmaps";
 
   private HadoopAggregatedData _hadoopAggregatedData = null;
@@ -80,10 +80,16 @@ public class MapReduceMetricsAggregator implements HadoopMetricsAggregator {
   }
 
   private long getMapContainerSize(HadoopApplicationData data) {
-    return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
+    if (data.getConf().getProperty(MAP_CONTAINER_SIZE) == null) {
+      return 0;
+    }
+    return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_SIZE));
   }
 
   private long getReducerContainerSize(HadoopApplicationData data) {
-    return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
+    if (data.getConf().getProperty(REDUCER_CONTAINER_SIZE) == null) {
+      return 0;
+    }
+    return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_SIZE));
   }
 }

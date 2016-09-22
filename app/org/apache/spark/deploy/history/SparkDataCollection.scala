@@ -210,6 +210,7 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
         jobInfo.numSkippedStages = data.numSkippedStages
         jobInfo.numSkippedTasks = data.numSkippedTasks
         jobInfo.numTasks = data.numTasks
+        jobInfo.status = data.status.name()
 
         jobInfo.startTime = data.submissionTime.getOrElse(0)
         jobInfo.endTime = data.completionTime.getOrElse(0)
@@ -283,6 +284,19 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
 
   override def getAppId: String = {
     getGeneralData().getApplicationId
+  }
+
+  override def getStatus: String = {
+    // TODO-1. Need to explore real time spark job analysis after adding new metrics.
+    "UNDEFINED"
+  }
+
+  override def getStartTime: Long = {
+    getGeneralData().getStartTime
+  }
+
+  override def getFinishTime: Long = {
+    getGeneralData().getEndTime
   }
 }
 

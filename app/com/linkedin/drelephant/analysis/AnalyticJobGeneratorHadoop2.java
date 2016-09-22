@@ -29,11 +29,14 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import models.AppResult;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+
+import static com.avaje.ebean.Expr.like;
 
 
 /**
@@ -47,9 +50,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final String RM_NODE_STATE_URL = "http://%s/ws/v1/cluster/info";
   private static Configuration configuration;
 
-  // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
-  private static final long FETCH_DELAY = 60000;
-
   // Generate a token update interval with a random deviation so that it does not update the token exactly at the same
   // time with other token updaters (e.g. ElephantFetchers).
   private static final long TOKEN_UPDATE_INTERVAL =
@@ -57,7 +57,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
   private String _resourceManagerAddress;
   private long _lastTime = 0;
-  private long _currentTime = 0;
   private long _tokenUpdatedTime = 0;
   private AuthenticatedURL.Token _token;
   private AuthenticatedURL _authenticatedURL;
@@ -71,8 +70,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
       if (resourceManagers != null) {
         logger.info("The list of RM IDs are " + resourceManagers);
         List<String> ids = Arrays.asList(resourceManagers.split(","));
-        _currentTime = System.currentTimeMillis();
-        updateAuthToken();
+        updateAuthToken(System.currentTimeMillis());
         try {
           for (String id : ids) {
             String resourceManager = configuration.get(RESOURCE_MANAGER_ADDRESS + "." + id);
@@ -101,9 +99,8 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
       _resourceManagerAddress = configuration.get(RESOURCE_MANAGER_ADDRESS);
     }
     if (_resourceManagerAddress == null) {
-      throw new RuntimeException(
-              "Cannot get YARN resource manager address from Hadoop Configuration property: [" + RESOURCE_MANAGER_ADDRESS
-                      + "].");
+      throw new RuntimeException("Cannot get YARN resource manager address from Hadoop Configuration property: ["
+          + RESOURCE_MANAGER_ADDRESS + "].");
     }
   }
 
@@ -114,6 +111,11 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     updateResourceManagerAddresses();
   }
 
+  @Override
+  public Configuration getConfiguration() {
+    return configuration;
+  }
+
   /**
    *  Fetch all the succeeded and failed applications/analytic jobs from the resource manager.
    *
@@ -122,32 +124,26 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
    * @throws AuthenticationException
    */
   @Override
-  public List<AnalyticJob> fetchAnalyticJobs()
+  public List<AnalyticJob> fetchCompletedAnalyticJobs(long from, long to)
       throws IOException, AuthenticationException {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
-
-    // There is a lag of job data from AM/NM to JobHistoryServer HDFS, we shouldn't use the current time, since there
-    // might be new jobs arriving after we fetch jobs. We provide one minute delay to address this lag.
-    _currentTime = System.currentTimeMillis() - FETCH_DELAY;
-    updateAuthToken();
-
-    logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)
-        + ", and current time: " + _currentTime);
 
     // Fetch all succeeded apps
     URL succeededAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
             "/ws/v1/cluster/apps?finalStatus=SUCCEEDED&finishedTimeBegin=%s&finishedTimeEnd=%s",
-            String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
-    logger.info("The succeeded apps URL is " + succeededAppsURL);
-    List<AnalyticJob> succeededApps = readApps(succeededAppsURL);
+            String.valueOf(from), String.valueOf(to)));
+    //logger.info("The succeeded apps URL is " + succeededAppsURL);
+    JsonNode successList = readApps(succeededAppsURL).path("apps").path("app");
+    List<AnalyticJob> succeededApps = filterDuplicates(successList);
     appList.addAll(succeededApps);
 
     // Fetch all failed apps
     URL failedAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
             "/ws/v1/cluster/apps?finalStatus=FAILED&finishedTimeBegin=%s&finishedTimeEnd=%s",
-            String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
-    List<AnalyticJob> failedApps = readApps(failedAppsURL);
-    logger.info("The failed apps URL is " + failedAppsURL);
+            String.valueOf(from), String.valueOf(to)));
+    //logger.info("The failed apps URL is " + failedAppsURL);
+    JsonNode failList = readApps(failedAppsURL).path("apps").path("app");
+    List<AnalyticJob> failedApps = filterDuplicates(failList);
     appList.addAll(failedApps);
 
     // Append promises from the retry queue at the end of the list
@@ -155,7 +151,33 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
       appList.add(_retryQueue.poll());
     }
 
-    _lastTime = _currentTime;
+    logger.info("Fetched " + appList.size() + " completed applications.");
+    return appList;
+  }
+
+  /**
+   *  Fetch all the undefined applications/analytic jobs from the resource manager.
+   *
+   * @return
+   * @throws IOException
+   * @throws AuthenticationException
+   */
+  @Override
+  public List<AnalyticJob> fetchUndefinedAnalyticJobs(long from, long to)
+      throws IOException, AuthenticationException {
+    List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
+    //logger.info("Fetching all the applications in undefined state");
+
+    // Fetch all apps in UNDEFINED state
+    URL undefinedAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
+        "/ws/v1/cluster/apps?finalStatus=UNDEFINED&startedTimeBegin=%s&startedTimeEnd=%s",
+        String.valueOf(from), String.valueOf(to)));
+    //logger.info("The undefined apps URL is " + undefinedAppsURL);
+    JsonNode undefinedList = readApps(undefinedAppsURL).path("apps").path("app");
+    List<AnalyticJob> undefinedApps = filterDuplicates(undefinedList);
+    appList.addAll(undefinedApps);
+
+    logger.info("Fetched " + appList.size() + " undefined applications.");
     return appList;
   }
 
@@ -167,12 +189,12 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   /**
    * Authenticate and update the token
    */
-  private void updateAuthToken() {
-    if (_currentTime - _tokenUpdatedTime > TOKEN_UPDATE_INTERVAL) {
+  public void updateAuthToken(long currentTime) {
+    if (currentTime - _tokenUpdatedTime > TOKEN_UPDATE_INTERVAL) {
       logger.info("AnalysisProvider updating its Authenticate Token...");
       _token = new AuthenticatedURL.Token();
       _authenticatedURL = new AuthenticatedURL();
-      _tokenUpdatedTime = _currentTime;
+      _tokenUpdatedTime = currentTime;
     }
   }
 
@@ -198,21 +220,27 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
    * @throws IOException
    * @throws AuthenticationException Problem authenticating to resource manager
    */
-  private List<AnalyticJob> readApps(URL url) throws IOException, AuthenticationException{
+  private JsonNode readApps(URL url) throws IOException, AuthenticationException {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
+    return readJsonNode(url);
+  }
 
-    JsonNode rootNode = readJsonNode(url);
-    JsonNode apps = rootNode.path("apps").path("app");
-
+  /**
+   * When called first time after launch, hit the DB and avoid duplicated analytic jobs that have been analyzed
+   * before.
+   * @param apps The list of apps in JsonNode
+   * @return The filtered list of analytic jobs
+   */
+  private List<AnalyticJob> filterDuplicates(JsonNode apps) {
+    List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
     for (JsonNode app : apps) {
       String appId = app.get("id").getValueAsText();
-
-      // When called first time after launch, hit the DB and avoid duplicated analytic jobs that have been analyzed
-      // before.
-      if (_lastTime > 0 || (_lastTime == 0 && AppResult.find.byId(appId) == null)) {
+      if (!isFirstFetch() || !isAppAnalyzed(appId)) {
         String user = app.get("user").getValueAsText();
         String name = app.get("name").getValueAsText();
         String queueName = app.get("queue").getValueAsText();
+        String appState = app.get("state").getValueAsText();
+        String finalStatus = app.get("finalStatus").getValueAsText();
         String trackingUrl = app.get("trackingUrl") != null? app.get("trackingUrl").getValueAsText() : null;
         long startTime = app.get("startedTime").getLongValue();
         long finishTime = app.get("finishedTime").getLongValue();
@@ -224,12 +252,32 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         if (type != null) {
           AnalyticJob analyticJob = new AnalyticJob();
           analyticJob.setAppId(appId).setAppType(type).setUser(user).setName(name).setQueueName(queueName)
-              .setTrackingUrl(trackingUrl).setStartTime(startTime).setFinishTime(finishTime);
+              .setTrackingUrl(trackingUrl).setStartTime(startTime).setFinishTime(finishTime).setJobStatus(appState)
+              .setFinalStatus(finalStatus);
 
           appList.add(analyticJob);
         }
       }
     }
     return appList;
+  }
+
+  /**
+   * Check if this is the first time Dr. Elephant is fetching after a restart.
+   * @return true, if first time after restart. false, otherwise
+   */
+  private boolean isFirstFetch() {
+    return _lastTime == 0;
+  }
+
+  /**
+   * An application is analyzed if it has an entry in the database and is in succeeded or failed state
+   * @param appId
+   * @return
+   */
+  private boolean isAppAnalyzed(String appId) {
+    return !(AppResult.find.select(AppResult.TABLE.ID).where().eq(AppResult.TABLE.ID, appId).or(
+            like(AppResult.TABLE.STATUS, JobStatus.State.SUCCEEDED.name()),
+            like(AppResult.TABLE.STATUS, JobStatus.State.FAILED.name())).findList().isEmpty());
   }
 }

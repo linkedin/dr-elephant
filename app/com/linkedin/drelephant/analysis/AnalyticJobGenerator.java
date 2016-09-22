@@ -43,13 +43,28 @@ public interface AnalyticJobGenerator {
   public void updateResourceManagerAddresses();
 
   /**
-   * Provides a list of AnalyticJobs that should be calculated
+   * Configures the resource manager addresses considering HA
+   */
+  public Configuration getConfiguration();
+
+  /**
+   * Provides a list of AnalyticJobs that have either SUCCEEDED or FAILED
    *
    * @return a list of AnalyticJobs
    * @throws IOException
    * @throws AuthenticationException
    */
-  public List<AnalyticJob> fetchAnalyticJobs()
+  public List<AnalyticJob> fetchCompletedAnalyticJobs(long from, long to)
+      throws IOException, AuthenticationException;
+
+  /**
+   * Provides a list of AnalyticJobs that are in UNDEFINED state
+   *
+   * @return a list of AnalyticJobs
+   * @throws IOException
+   * @throws AuthenticationException
+   */
+  public List<AnalyticJob> fetchUndefinedAnalyticJobs(long from, long to)
       throws IOException, AuthenticationException;
 
   /**
@@ -59,4 +74,9 @@ public interface AnalyticJobGenerator {
    * @param job The job to add
    */
   public void addIntoRetries(AnalyticJob job);
+
+  /**
+   * Authenticate and update the token
+   */
+  void updateAuthToken(long time);
 }

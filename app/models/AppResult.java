@@ -49,6 +49,7 @@ public class AppResult extends Model {
   public static final int SCHEDULER_LIMIT = 20;
   public static final int URL_LEN_LIMIT = 800;
   public static final int FLOW_EXEC_ID_LIMIT = 255;
+  public static final int STATUS_LIMIT = 10;
 
   // Note that the Table column constants are actually the java variable names defined in this model.
   // This is because ebean operations require the model variable names to be passed as strings.
@@ -78,6 +79,7 @@ public class AppResult extends Model {
     public static final String RESOURCE_USAGE = "resourceUsed";
     public static final String WASTED_RESOURCES = "resourceWasted";
     public static final String TOTAL_DELAY = "totalDelay";
+    public static final String STATUS = "status";
   }
 
   public static String getSearchFields() {
@@ -157,6 +159,9 @@ public class AppResult extends Model {
 
   @Column(nullable = true)
   public long totalDelay;
+
+  @Column(length = STATUS_LIMIT, nullable = false)
+  public String status;
 
   @JsonManagedReference
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppResult")

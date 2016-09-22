@@ -48,6 +48,13 @@ import java.util.TreeSet;
 
 import models.AppHeuristicResult;
 import models.AppResult;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Cluster;
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.TaskReport;
+import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
@@ -82,7 +89,7 @@ import com.google.gson.*;
 public class Application extends Controller {
   private static final Logger logger = Logger.getLogger(Application.class);
   private static final long DAY = 24 * 60 * 60 * 1000;
-  private static final long FETCH_DELAY = 60 * 1000;
+  private static final long FETCH_LAG = 60 * 1000;
 
   private static final int PAGE_LENGTH = 20;                  // Num of jobs in a search page
   private static final int PAGE_BAR_LENGTH = 5;               // Num of pages shown in the page bar
@@ -95,6 +102,7 @@ public class Application extends Controller {
   public static final String APP_ID = "id";
   public static final String FLOW_DEF_ID = "flow-def-id";
   public static final String FLOW_EXEC_ID = "flow-exec-id";
+  public static final String STATUS = "status";
   public static final String JOB_DEF_ID = "job-def-id";
   public static final String USERNAME = "username";
   public static final String SEVERITY = "severity";
@@ -123,7 +131,7 @@ public class Application extends Controller {
     long finishDate = now - DAY;
 
     // Update statistics only after FETCH_DELAY
-    if (now - _lastFetch > FETCH_DELAY) {
+    if (now - _lastFetch > FETCH_LAG) {
       _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
       _numJobsCritical = AppResult.find.where()
           .gt(AppResult.TABLE.FINISH_TIME, finishDate)
@@ -248,6 +256,10 @@ public class Application extends Controller {
     String username = form.get(USERNAME);
     username = username != null ? username.trim().toLowerCase() : null;
     searchParams.put(USERNAME, username);
+    String status = form.get(STATUS);
+    if (status != null && !status.equals("ANY")) {
+      searchParams.put(STATUS, status);
+    }
     searchParams.put(SEVERITY, form.get(SEVERITY));
     searchParams.put(JOB_TYPE, form.get(JOB_TYPE));
     searchParams.put(ANALYSIS, form.get(ANALYSIS));
@@ -280,6 +292,10 @@ public class Application extends Controller {
     String jobType = searchParams.get(JOB_TYPE);
     if (Utils.isSet(jobType)) {
       query = query.eq(AppResult.TABLE.JOB_TYPE, jobType);
+    }
+    String status = searchParams.get(STATUS);
+    if (Utils.isSet(status)) {
+      query = query.eq(AppResult.TABLE.STATUS, status);
     }
     String severity = searchParams.get(SEVERITY);
     if (Utils.isSet(severity)) {

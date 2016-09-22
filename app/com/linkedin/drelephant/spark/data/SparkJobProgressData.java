@@ -185,6 +185,7 @@ public class SparkJobProgressData {
     public long startTime;
     public long endTime;
     public final List<Integer> stageIds = new ArrayList<Integer>();
+    public String status;
 
     /* Tasks */
     public int numTasks = 0;

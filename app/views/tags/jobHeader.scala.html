@@ -16,6 +16,8 @@
 
 @(result: models.AppResult)
 
+@import com.linkedin.drelephant.analysis.Severity
+
 @*
 * The job header includes the following info,
 * The user who ran the job
@@ -27,9 +29,13 @@
 *@
 
 <p class="list-group-item-heading">
-  <div class="left"><h4 class="list-group-item-heading">[@result.username] [@result.jobType] @result.id</h4></div>
+  <div class="left"><h4 class="list-group-item-heading">[@result.username] [@result.jobType] @result.id </h4></div>
   <div id="time_@result.id" class="right"></div>
-  <div>@result.name</div>
+  @if(result.severity==Severity.UNDEFINED) {
+    <div>@result.name [Running...]</div>
+  } else {
+    <div>@result.name</div>
+  }
 </p>
 
 <script type="text/javascript">

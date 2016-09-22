@@ -21,17 +21,21 @@ import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.log4j.Logger;
 
 
 /**
  * This class wraps some basic meta data of a completed application run (notice that the information is generally the
  * same regardless of hadoop versions and application types), and then promises to return the analyzed result later.
+ * This class implements Delayed so that a running job can be added back to the Queue after a set delay.
  */
-public class AnalyticJob {
+public class AnalyticJob implements Delayed {
   private static final Logger logger = Logger.getLogger(AnalyticJob.class);
 
   private static final String UNKNOWN_JOB_TYPE = "Unknown";   // The default job type when the data matches nothing.
@@ -44,8 +48,37 @@ public class AnalyticJob {
   private String _queueName;
   private String _user;
   private String _trackingUrl;
+  private String _finalStatus;
+  private String _jobStatus;
   private long _startTime;
   private long _finishTime;
+  private long _severity;
+  private long _expiryTime;
+  private long _analysisStartTime;
+
+  public enum _status {
+    ANY,
+    RUNNING,
+    FAILED,
+    SUCCEEDED
+  }
+
+  public AnalyticJob setJobStatus(String jobStatus) {
+    _jobStatus = jobStatus;
+    return this;
+  }
+
+  public String getJobStatus() {
+    return _jobStatus;
+  }
+
+  public void updateExpiryTime(long expiry) {
+    _expiryTime = System.currentTimeMillis() + expiry;
+  }
+
+  public long getExpiryTime() {
+    return _expiryTime;
+  }
 
   /**
    * Returns the application type
@@ -144,6 +177,16 @@ public class AnalyticJob {
   }
 
   /**
+   * Sets the severity of the job.
+   *
+   * @return The analytic job
+   */
+  public AnalyticJob setSeverity(long severity) {
+    _severity = severity;
+    return this;
+  }
+
+  /**
    * Returns the application id
    *
    * @return The analytic job
@@ -189,6 +232,15 @@ public class AnalyticJob {
   }
 
   /**
+   * Returns the current severity of the job.
+   *
+   * @return The severity
+   */
+  public long getSeverity() {
+    return _severity;
+  }
+
+  /**
    * Returns the tracking url of the job
    *
    * @return The tracking url in resource manager
@@ -217,6 +269,28 @@ public class AnalyticJob {
     return this;
   }
 
+  public String getFinalStatus() {
+    return _finalStatus;
+  }
+
+  /**
+   * Updates the finalStatus of the job
+   *
+   * @param finalStatus The final status of the job
+   */
+  public AnalyticJob setFinalStatus(String finalStatus) {
+    _finalStatus = finalStatus;
+    return this;
+  }
+
+  public long getAnalysisStartTime() {
+    return _analysisStartTime;
+  }
+
+  public void setAnalysisStartTime(long analysisStartTime) {
+    _analysisStartTime = analysisStartTime;
+  }
+
   /**
    * Returns the analysed AppResult that could be directly serialized into DB.
    *
@@ -226,9 +300,9 @@ public class AnalyticJob {
    * @throws Exception if the analysis process encountered a problem.
    * @return the analysed AppResult
    */
-  public AppResult getAnalysis() throws Exception {
+  public AppResult getAnalysis(Job job) throws Exception {
     ElephantFetcher fetcher = ElephantContext.instance().getFetcherForApplicationType(getAppType());
-    HadoopApplicationData data = fetcher.fetchData(this);
+    HadoopApplicationData data = fetcher.fetchData(this, job);
 
     // Run all heuristics over the fetched data
     List<HeuristicResult> analysisResults = new ArrayList<HeuristicResult>();
@@ -237,6 +311,7 @@ public class AnalyticJob {
       logger.info("No Data Received for analytic job: " + getAppId());
       analysisResults.add(HeuristicResult.NO_DATA);
     } else {
+      this.setFinishTime(data.getFinishTime()).setJobStatus(data.getStatus());
       List<Heuristic> heuristics = ElephantContext.instance().getHeuristicsForApplicationType(getAppType());
       for (Heuristic heuristic : heuristics) {
         HeuristicResult result = heuristic.apply(data);
@@ -266,11 +341,12 @@ public class AnalyticJob {
     result.resourceUsed = hadoopAggregatedData.getResourceUsed();
     result.totalDelay = hadoopAggregatedData.getTotalDelay();
     result.resourceWasted = hadoopAggregatedData.getResourceWasted();
+    result.status = Utils.truncateField(getJobStatus(), AppResult.STATUS_LIMIT, getAppId());
 
     // Load App Heuristic information
     int jobScore = 0;
     result.yarnAppHeuristicResults = new ArrayList<AppHeuristicResult>();
-    Severity worstSeverity = Severity.NONE;
+    Severity worstSeverity = Severity.UNDEFINED;
     for (HeuristicResult heuristicResult : analysisResults) {
       AppHeuristicResult detail = new AppHeuristicResult();
       detail.heuristicClass = Utils.truncateField(heuristicResult.getHeuristicClassName(),
@@ -314,5 +390,26 @@ public class AnalyticJob {
    */
   public boolean retry() {
     return (_retries++) < _RETRY_LIMIT;
+  }
+
+  public int getRetries() {
+    return _retries;
+  }
+
+  @Override
+  public long getDelay(TimeUnit unit) {
+    long diff = _expiryTime - System.currentTimeMillis();
+    return unit.convert(diff, TimeUnit.MILLISECONDS);
+  }
+
+  @Override
+  public int compareTo(Delayed o) {
+    if (this._expiryTime < ((AnalyticJob) o)._expiryTime) {
+      return -1;
+    }
+    if (this._expiryTime > ((AnalyticJob) o)._expiryTime) {
+      return 1;
+    }
+    return 0;
   }
 }

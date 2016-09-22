@@ -103,7 +103,7 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<MapReduceApp
   @Override
   public HeuristicResult apply(MapReduceApplicationData data) {
 
-    if(!data.getSucceeded()) {
+    if(!data.getStatus().equals(MapReduceApplicationData.Status.SUCCEEDED.name())) {
       return null;
     }
 

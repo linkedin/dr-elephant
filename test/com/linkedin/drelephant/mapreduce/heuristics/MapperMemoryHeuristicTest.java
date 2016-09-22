@@ -83,7 +83,8 @@ public class MapperMemoryHeuristicTest extends TestCase {
       mappers[i] = new MapReduceTaskData(counter, new long[5]);
     }
 
-    MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);
+    MapReduceApplicationData data = new MapReduceApplicationData().setStatus(MapReduceApplicationData.Status.SUCCEEDED.name())
+            .setCounters(jobCounter).setMapperData(mappers);
     data.setJobConf(p);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();

@@ -72,7 +72,8 @@ public class ReducerGCHeuristicTest extends TestCase {
       reducers[i] = new MapReduceTaskData(counter, new long[]{runtimeMs, 0 , 0, 0, 0});
     }
 
-    MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);
+    MapReduceApplicationData data = new MapReduceApplicationData().setStatus(MapReduceApplicationData.Status.SUCCEEDED.name())
+            .setCounters(jobCounter).setReducerData(reducers);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();
   }

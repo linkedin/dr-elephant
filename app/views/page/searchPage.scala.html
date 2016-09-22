@@ -42,6 +42,17 @@
           <label for="form-username">User</label>
           <input type="text" class="form-control" id="form-username" name="username" placeholder="User">
         </div>
+        <div class="form-group">
+          <label for="form-status">Status</label>
+          <!--<input type="text" class="form-control" id="form-status" name="status" placeholder="Status">-->
+          <div class="form-group" style="padding-left:10px;">
+            <select class="form-control" id="form-status" name="status">
+            @for(status <- com.linkedin.drelephant.analysis.AnalyticJob._status.values()) {
+              <option value="@status.name()">@status.name()</option>
+            }
+            </select>
+          </div>
+        </div>
 
         <!--Job Type filter-->
         <div class="checkbox">
@@ -68,7 +79,7 @@
             @for(severity <- com.linkedin.drelephant.analysis.Severity.values()) {
               <option value="@severity.getValue">@severity.getText</option>
             }
-            </select>
+          </select>
         </div>
         <div class="form-group" style="padding-left:10px;">
           <select class="form-control" id="form-analysis" name="analysis">

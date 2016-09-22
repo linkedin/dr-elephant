@@ -51,4 +51,25 @@ public interface HadoopApplicationData {
    * @return true if the data holder is empty else false
    */
   public boolean isEmpty();
+
+  /**
+   * Returns the status of the app.
+   *
+   * @return status of the app
+   */
+  public String getStatus();
+
+  /**
+   * Returns the start time of the app.
+   *
+   * @return start time of the app
+   */
+  public long getStartTime();
+
+  /**
+   * Returns the finish time of the app.
+   *
+   * @return finish time of the app
+   */
+  public long getFinishTime();
 }

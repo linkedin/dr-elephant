@@ -32,8 +32,6 @@ import com.linkedin.drelephant.math.Statistics;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-
-
 /**
  * This heuristic deals with the efficiency of container size
  */
@@ -91,7 +89,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
   @Override
   public HeuristicResult apply(MapReduceApplicationData data) {
 
-    if(!data.getSucceeded()) {
+    if(!data.getStatus().equals(MapReduceApplicationData.Status.SUCCEEDED.name())) {
       return null;
     }
 
@@ -173,12 +171,11 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
 
 
   private Severity getContainerMemorySeverity(long taskMemMax) {
-    return Severity.getSeverityAscending(
-        taskMemMax, memoryLimits[0], memoryLimits[1], memoryLimits[2], memoryLimits[3]);
+    return Severity.getSeverityAscending(taskMemMax, memoryLimits[0], memoryLimits[1], memoryLimits[2], memoryLimits[3]);
   }
 
   private Severity getMemoryRatioSeverity(double ratio) {
-    return Severity.getSeverityDescending(
-        ratio, memRatioLimits[0], memRatioLimits[1], memRatioLimits[2], memRatioLimits[3]);
+    return Severity.getSeverityDescending(ratio, memRatioLimits[0], memRatioLimits[1], memRatioLimits[2],
+        memRatioLimits[3]);
   }
 }

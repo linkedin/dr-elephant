@@ -42,16 +42,15 @@ CREATE TABLE yarn_app_result (
   resource_used    BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The resources used by the job in MB Seconds',
   resource_wasted  BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The resources wasted by the job in MB Seconds',
   total_delay      BIGINT        UNSIGNED DEFAULT 0    COMMENT 'The total delay in starting of mappers and reducers',
-
   PRIMARY KEY (id)
 );
 
 create index yarn_app_result_i1 on yarn_app_result (finish_time);
 create index yarn_app_result_i2 on yarn_app_result (username,finish_time);
 create index yarn_app_result_i3 on yarn_app_result (job_type,username,finish_time);
-create index yarn_app_result_i4 on yarn_app_result (flow_exec_id);
-create index yarn_app_result_i5 on yarn_app_result (job_def_id);
-create index yarn_app_result_i6 on yarn_app_result (flow_def_id);
+create index yarn_app_result_i4 on yarn_app_result (flow_exec_id(100));
+create index yarn_app_result_i5 on yarn_app_result (job_def_id(100));
+create index yarn_app_result_i6 on yarn_app_result (flow_def_id(100));
 create index yarn_app_result_i7 on yarn_app_result (start_time);
 
 CREATE TABLE yarn_app_heuristic_result (

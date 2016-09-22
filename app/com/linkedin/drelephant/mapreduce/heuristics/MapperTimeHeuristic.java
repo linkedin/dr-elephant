@@ -95,7 +95,7 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
   @Override
   public HeuristicResult apply(MapReduceApplicationData data) {
 
-    if(!data.getSucceeded()) {
+    if(!data.getStatus().equals(MapReduceApplicationData.Status.SUCCEEDED.name())) {
       return null;
     }
 

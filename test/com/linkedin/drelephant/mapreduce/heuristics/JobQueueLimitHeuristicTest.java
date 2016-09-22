@@ -80,9 +80,8 @@ public class JobQueueLimitHeuristicTest extends TestCase {
     for (i = 0; i < NUM_TASKS / 3; i++) {
       reducers[i] = new MapReduceTaskData(dummyCounter, new long[] { runtimeMs, 0, 0 ,0, 0 });
     }
-    MapReduceApplicationData data =
-        new MapReduceApplicationData().setCounters(dummyCounter).setReducerData(reducers).setMapperData(mappers)
-            .setJobConf(jobConf);
+    MapReduceApplicationData data = new MapReduceApplicationData().setStatus(MapReduceApplicationData.Status.SUCCEEDED.name())
+            .setCounters(dummyCounter).setReducerData(reducers).setMapperData(mappers).setJobConf(jobConf);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();
   }

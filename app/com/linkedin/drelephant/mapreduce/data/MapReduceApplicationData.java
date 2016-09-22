@@ -18,6 +18,7 @@ package com.linkedin.drelephant.mapreduce.data;
 
 import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
+
 import java.util.Properties;
 
 
@@ -27,7 +28,19 @@ import java.util.Properties;
 public class MapReduceApplicationData implements HadoopApplicationData {
   private static final ApplicationType APPLICATION_TYPE = new ApplicationType("MAPREDUCE");
 
-  private boolean _succeeded = true;
+  //private boolean _succeeded = true;
+
+  /**
+   * All supported status of the Hadoop application
+   */
+  public static enum Status {
+    SUCCEEDED,
+    FAILED,
+    UNDEFINED;
+  }
+
+  private String status = Status.UNDEFINED.name();
+
   private String _diagnosticInfo = "";
   private String _appId = "";
   private String _jobId = "";
@@ -44,8 +57,8 @@ public class MapReduceApplicationData implements HadoopApplicationData {
   private Properties _jobConf;
   private boolean _isRetry = false;
 
-  public MapReduceApplicationData setSucceeded(boolean succeeded) {
-    this._succeeded = succeeded;
+  public MapReduceApplicationData setStatus(String status) {
+    this.status = status;
     return this;
   }
 
@@ -148,7 +161,7 @@ public class MapReduceApplicationData implements HadoopApplicationData {
 
   @Override
   public boolean isEmpty() {
-    return _succeeded && getMapperData().length == 0 && getReducerData().length == 0;
+    return status.equals(Status.SUCCEEDED) && getMapperData().length == 0 && getReducerData().length == 0;
   }
 
   public String getUsername() {
@@ -183,8 +196,8 @@ public class MapReduceApplicationData implements HadoopApplicationData {
     return _jobId;
   }
 
-  public boolean getSucceeded() {
-    return _succeeded;
+  public String getStatus() {
+    return status;
   }
 
   public String getDiagnosticInfo() {

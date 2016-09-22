@@ -30,7 +30,29 @@
   width: 100%;
 }​
 
-
+/* Settings for running jobs */
+a.list-group-item-undefined {
+  color: #428bca;
+}
+a.list-group-item-undefined .list-group-item-heading {
+  color: inherit;
+}
+a.list-group-item-undefined:hover,
+a.list-group-item-undefined:focus {
+  color: #428bca;
+  background-color: #93ddff;
+}
+a.list-group-item-undefined.active,
+a.list-group-item-undefined.active:hover,
+a.list-group-item-undefined.active:focus {
+  color: #fff;
+  background-color: #428bca;
+  border-color: #428bca;
+}
+.list-group-item-undefined {
+  background-color: #7fc9eb;
+  color: #428bca;
+}
 
 a.list-group-item-severe {
   color: #9a583e;

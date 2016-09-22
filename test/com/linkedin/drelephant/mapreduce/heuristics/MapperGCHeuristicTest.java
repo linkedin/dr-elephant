@@ -59,7 +59,6 @@ public class MapperGCHeuristicTest extends TestCase {
     assertEquals(Severity.NONE, analyzeJob(100000, 50000, 2000));
   }
 
-
   private Severity analyzeJob(long runtimeMs, long cpuMs, long gcMs) throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
     MapReduceTaskData[] mappers = new MapReduceTaskData[NUMTASKS];
@@ -73,7 +72,8 @@ public class MapperGCHeuristicTest extends TestCase {
       mappers[i] = new MapReduceTaskData(counter, new long[]{runtimeMs, 0 , 0, 0, 0});
     }
 
-    MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);
+    MapReduceApplicationData data = new MapReduceApplicationData()
+        .setStatus(MapReduceApplicationData.Status.SUCCEEDED.name()).setCounters(jobCounter).setMapperData(mappers);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();
   }

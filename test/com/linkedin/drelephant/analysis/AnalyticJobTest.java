@@ -55,8 +55,7 @@ public class AnalyticJobTest {
   MapReduceFetcherHadoop2 fetcher;
 
   @Test
-  public void testGetAnalysis()
-      throws Exception {
+  public void testGetAnalysis() throws Exception {
     try {
       // Setup analytic job
       final AnalyticJob analyticJob = new AnalyticJob().
@@ -93,9 +92,10 @@ public class AnalyticJobTest {
 
       // Setup application data
       final MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).
-          setMapperData(mappers).setReducerData(reducers).setJobConf(jobConf).setSucceeded(true).
-          setDiagnosticInfo("").setUsername(TEST_USERNAME).setUrl("").setJobName(TEST_JOB_NAME).
-          setStartTime(1462178412).setFinishTime(1462178403).setRetry(false).setAppId(TEST_JOB_ID1);
+          setMapperData(mappers).setReducerData(reducers).setJobConf(jobConf)
+          .setStatus(MapReduceApplicationData.Status.SUCCEEDED.name()).setDiagnosticInfo("").setUsername(TEST_USERNAME)
+          .setUrl("").setJobName(TEST_JOB_NAME).setStartTime(1462178412).setFinishTime(1462178403).setRetry(false)
+          .setAppId(TEST_JOB_ID1);
 
       // Setup heuristics
       final List<Heuristic> heuristics = loadHeuristics();
@@ -105,7 +105,7 @@ public class AnalyticJobTest {
 
       // Set expectations in JMockit
       new Expectations() {{
-        fetcher.fetchData(analyticJob);
+        fetcher.fetchData(analyticJob, null);
         result = data;
 
         elephantContext.getHeuristicsForApplicationType(analyticJob.getAppType());
@@ -116,7 +116,7 @@ public class AnalyticJobTest {
       }};
 
       // Call the method under test
-      AppResult result = analyticJob.getAnalysis();
+      AppResult result = analyticJob.getAnalysis(null);
 
       // Make assertions on result
       assertTrue("Result is null", result != null);

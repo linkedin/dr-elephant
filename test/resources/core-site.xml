@@ -18,7 +18,8 @@
 
 <configuration>
 
-  <!-- To below two properties are added to avoid the fake application from throwing RuntimeExceptions during tests -->
+  <!-- To below properties are added to avoid the fake application from throwing RuntimeExceptions during tests -->
+
   <property>
     <name>mapreduce.framework.name</name>
     <value>yarn</value>

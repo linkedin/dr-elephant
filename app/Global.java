@@ -21,7 +21,6 @@ import play.Application;
 import play.GlobalSettings;
 import play.Logger;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.logging.Level;
@@ -39,12 +38,8 @@ public class Global extends GlobalSettings {
 
     fixJavaKerberos();
 
-    try {
-      _drElephant = new DrElephant();
-      _drElephant.start();
-    } catch (IOException e) {
-      Logger.error("Application start failed...", e);
-    }
+    _drElephant = new DrElephant();
+    _drElephant.start();
   }
 
   public void onStop(Application app) {
