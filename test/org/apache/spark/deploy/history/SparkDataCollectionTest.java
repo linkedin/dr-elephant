@@ -46,7 +46,7 @@ public class SparkDataCollectionTest {
         replayBus.addListener(jobProgressListener);
 
         SparkDataCollection dataCollection = new SparkDataCollection(null, jobProgressListener,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         InputStream in = new BufferedInputStream(
                 SparkDataCollectionTest.class.getClassLoader().getResourceAsStream(event_log_dir + "event_log_1"));

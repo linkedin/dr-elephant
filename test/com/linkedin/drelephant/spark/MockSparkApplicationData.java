@@ -67,6 +67,11 @@ public class MockSparkApplicationData implements SparkApplicationData {
   }
 
   @Override
+  public SparkExecutorData getExecutorTrackingData() {
+    return _sparkExecutorData;
+  }
+
+  @Override
   public SparkJobProgressData getJobProgressData() {
     return _sparkJobProgressData;
   }

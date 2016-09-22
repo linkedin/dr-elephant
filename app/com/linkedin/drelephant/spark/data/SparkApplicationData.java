@@ -32,6 +32,8 @@ public interface SparkApplicationData extends HadoopApplicationData {
 
   public SparkExecutorData getExecutorData();
 
+  public SparkExecutorData getExecutorTrackingData();
+
   public SparkJobProgressData getJobProgressData();
 
   public SparkStorageData getStorageData();

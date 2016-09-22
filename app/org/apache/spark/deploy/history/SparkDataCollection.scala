@@ -21,19 +21,20 @@ import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.spark.data._
 import SparkExecutorData.ExecutorInfo
 import SparkJobProgressData.JobInfo
-import org.apache.spark.scheduler.{StageInfo, ApplicationEventListener}
-import org.apache.spark.storage.{StorageStatusTrackingListener, StorageStatus, RDDInfo, StorageStatusListener}
+import org.apache.spark.scheduler.{ApplicationEventListener, StageInfo}
+import org.apache.spark.storage.{RDDInfo, StorageStatus, StorageStatusListener, StorageStatusTrackingListener}
 import org.apache.spark.ui.env.EnvironmentListener
 import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.util.collection.OpenHashSet
-
 import java.util.{Set => JSet}
 import java.util.{HashSet => JHashSet}
 import java.util.{List => JList}
 import java.util.{ArrayList => JArrayList}
 import java.util.Properties
+
+import com.linkedin.drelephant.spark.listener.ExecutorsTrackingListener
 
 import scala.collection.mutable
 
@@ -52,11 +53,13 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
                           environmentListener: EnvironmentListener,
                           executorsListener: ExecutorsListener,
                           storageListener: StorageListener,
-                          storageStatusTrackingListener: StorageStatusTrackingListener) extends SparkApplicationData {
+                          storageStatusTrackingListener: StorageStatusTrackingListener,
+                          executorsTrackingListener: ExecutorsTrackingListener) extends SparkApplicationData {
   private var _applicationData: SparkGeneralData = null;
   private var _jobProgressData: SparkJobProgressData = null;
   private var _environmentData: SparkEnvironmentData = null;
   private var _executorData: SparkExecutorData = null;
+  private var _executorTrackingData: SparkExecutorData = null;
   private var _storageData: SparkStorageData = null;
   private var _isThrottled: Boolean = false;
 
@@ -190,6 +193,46 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
       }
     }
     _executorData
+  }
+
+  override def getExecutorTrackingData(): SparkExecutorData = {
+    if (_executorTrackingData == null) {
+      _executorTrackingData = new SparkExecutorData()
+
+      val applicationFinishTime = getGeneralData().getEndTime
+
+      executorsTrackingListener.executorIdToData.foreach { case (execId, lifeData) =>
+        val info = new ExecutorInfo()
+
+        // TODO: Combine block manager events with executor events because they are in same context
+        //val status = executorsListener.storageStatusList(statusId)
+
+        info.execId = execId
+        //info.execId = status.blockManagerId.executorId
+        //info.hostPort = status.blockManagerId.hostPort
+        //info.rddBlocks = status.numBlocks
+
+        // Use a customized listener to fetch the peak memory used, the data contained in status are
+        // the current used memory that is not useful in offline settings.
+        //info.memUsed = storageStatusTrackingListener.executorIdToMaxUsedMem.getOrElse(info.execId, 0L)
+        //info.maxMem = status.maxMem
+        //info.diskUsed = status.diskUsed
+        info.activeTasks = executorsListener.executorToTasksActive.getOrElse(info.execId, 0)
+        info.failedTasks = executorsListener.executorToTasksFailed.getOrElse(info.execId, 0)
+        info.completedTasks = executorsListener.executorToTasksComplete.getOrElse(info.execId, 0)
+        info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
+        info.duration = executorsListener.executorToDuration.getOrElse(info.execId, 0L)
+        info.inputBytes = executorsListener.executorToInputBytes.getOrElse(info.execId, 0L)
+        info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
+        info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
+
+        info.startTime = lifeData.startTime
+        info.finishTime = lifeData.finishTime.getOrElse(applicationFinishTime)
+
+        _executorTrackingData.setExecutorInfo(info.execId, info)
+      }
+    }
+    _executorTrackingData
   }
 
   override def getJobProgressData(): SparkJobProgressData = {
