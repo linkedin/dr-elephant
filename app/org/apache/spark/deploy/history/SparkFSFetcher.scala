@@ -17,27 +17,28 @@
 package org.apache.spark.deploy.history
 
 
-import java.net.{HttpURLConnection, URL, URI}
+import java.net.{HttpURLConnection, URI, URL}
 import java.security.PrivilegedAction
-import java.io.{IOException, BufferedInputStream, InputStream}
+import java.io.{BufferedInputStream, IOException, InputStream}
 import java.{io, util}
 import java.util.ArrayList
 import javax.ws.rs.core.UriBuilder
+
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.security.HadoopSecurity
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
-import com.linkedin.drelephant.analysis.{ApplicationType, AnalyticJob, ElephantFetcher}
+import com.linkedin.drelephant.analysis.{AnalyticJob, ApplicationType, ElephantFetcher}
+import com.linkedin.drelephant.spark.listener.ExecutorsTrackingListener
 import org.apache.commons.io.FileUtils
-
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem
 import org.apache.hadoop.security.authentication.client.{AuthenticatedURL, AuthenticationException}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.scheduler.{EventLoggingListener, ReplayListenerBus, ApplicationEventListener}
-import org.apache.spark.storage.{StorageStatusTrackingListener, StorageStatusListener}
+import org.apache.spark.scheduler.{ApplicationEventListener, EventLoggingListener, ReplayListenerBus}
+import org.apache.spark.storage.{StorageStatusListener, StorageStatusTrackingListener}
 import org.apache.spark.ui.env.EnvironmentListener
 import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
@@ -213,13 +214,20 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
         val storageStatusTrackingListener = new StorageStatusTrackingListener()
         replayBus.addListener(storageStatusTrackingListener)
 
+        // This is a customized listener that tracks all tracks all existed executors during the entire application runtime
+        // The original listener only tracks the last live listeners which is not completed, because some executors
+        // was killed when ideal in YARN executor-dynamic-allocation mode.
+        val executorsTrackingListener = new ExecutorsTrackingListener(storageStatusListener)
+        replayBus.addListener(executorsTrackingListener)
+
         val dataCollection = new SparkDataCollection(applicationEventListener = applicationEventListener,
           jobProgressListener = jobProgressListener,
           environmentListener = environmentListener,
           storageStatusListener = storageStatusListener,
           executorsListener = executorsListener,
           storageListener = storageListener,
-          storageStatusTrackingListener = storageStatusTrackingListener)
+          storageStatusTrackingListener = storageStatusTrackingListener,
+          executorsTrackingListener = executorsTrackingListener)
 
         replayBus.addListener(applicationEventListener)
         replayBus.addListener(jobProgressListener)
