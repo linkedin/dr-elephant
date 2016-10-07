@@ -1,0 +1,7 @@
+{{!-- The user tabs. Tabs can be added and deleted --}}
+{{user-tabs deleteTab="deleteTab" setTab="changeTab" addTab="addTab" usernames=model.usernames}}
+{{#if loading}}
+  {{loading-panel message="loading applications... "}}
+{{else}}
+  {{application-list applications=model.applications}}
+{{/if}}

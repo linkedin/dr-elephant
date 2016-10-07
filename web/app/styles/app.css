@@ -1,0 +1,607 @@
+.list-group-item {
+  border-radius: 0 !important;
+  padding: 10px 10px 10px 10px;
+  border: 0px;
+}
+
+/** navigation bar **/
+.navbar-default {
+  background-color: #ffffff;
+  border-color: #e8e8e8;
+}
+.navbar-default .navbar-brand {
+  color: #6a7478;
+}
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+  color: #0084bf;
+}
+.navbar-default .navbar-text {
+  color: #6a7478;
+}
+.navbar-default .navbar-nav > li > a {
+  color: #6a7478;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #0084bf;
+}
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #0084bf;
+  background-color: #e8e8e8;
+}
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+  color: #0084bf;
+  background-color: #e8e8e8;
+}
+.navbar-default .navbar-toggle {
+  border-color: #e8e8e8;
+}
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+  background-color: #e8e8e8;
+}
+
+/** Navigation extension **/
+
+.nav-extension {
+  background-color: #0084BF;
+  height: 120px;
+  border: none;
+  margin-top: -20px;
+  padding: 0px;
+  z-index: -1;
+  position: absolute;
+  width: 100%;
+}
+
+/**
+Dashboard header
+*/
+.dashboard-header {
+  color: #707577;
+  font-family: 'Shift', sans-serif;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+
+/**
+ Style for the user tabs
+ **/
+.nav-tab {
+  padding: 16px 16px 8px;
+  margin: 0 16px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  justify-content: center;
+  position: relative;
+}
+
+.single-tab {
+  height: 40px;
+}
+
+/**
+Add shadow to any box
+**/
+
+.shadow {
+  box-shadow: 0 1px 8px -2px rgb(82, 82, 82);
+}
+
+.box {
+  position: relative;
+  border: none;
+}
+
+.borderless td, .borderless th {
+  border: none;
+  border-top:0px;
+}
+
+/** Dashboard menu **/
+.menu-workflow {
+  width: 100%;
+}
+
+.wf-button {
+  background-color:white; /* Green */
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 500;
+  border: #0084BF 1px solid;
+  color: #0084BF;
+}
+
+.wf-button:hover {
+  background-color: #008cc9;
+  color: white;
+}
+
+
+.menu-workflow > .active {
+  background-color: #008cc9;
+  color: white;
+  opacity: 0.7;
+  border: 1px #008cc9 solid;
+  box-shadow: none;
+}
+
+
+/**
+jobs severity
+**/
+
+.horizontal-list {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+.horizontal-list li {
+  float: left;
+}
+
+.scnd-font-color {
+  color: #9099b7;
+}
+
+/** severity text **/
+
+.severity-horizontal-list li {
+  width: 75px;
+  border: none;
+  text-align: center;
+}
+.severity-text {
+  margin: 0;
+  padding: 0px 0 5px;
+  font-size: 12px;
+}
+
+.severity-count {
+  margin: 0;
+  padding: 0 0 0px 0px;
+  font-size: 20px;
+}
+
+
+.severity-Severe {
+  color: #E4804E;
+}
+
+.severity-Critical {
+
+  color: #D9534F;
+}
+
+.severity-Moderate {
+  color: #F0AD4E;
+}
+
+.severity-Low {
+  color: #5CB85C;
+}
+
+.severity-None {
+  color: #5CB85C;
+}
+
+.app-header{
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  margin-left: 10px;
+  width: 100%;
+  margin-bottom: 5px;
+
+}
+
+.horizontal-line {
+  margin: 0px;
+  padding: 0px;
+}
+
+.job-severity-block {
+  padding-bottom: 5px;
+}
+
+.aggregated-metrics-block {
+  font-size: 13px;
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  padding-left: 10px;
+}
+
+.date-header {
+  color: #797e80;
+  font-family: 'Shift', sans-serif;
+  font-size: 12px;
+  padding-left: 10px;
+}
+
+/**
+speech bubble
+**/
+.bubble
+{
+  position: relative;
+  width: 100%;
+  height: 150px;
+  background: #FFFFFF;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  border: #0084BF solid 1px;
+  padding-left: 50px;
+  margin-top: 30px;
+  padding-top: 8px;
+}
+
+.bubble:after
+{
+  content: '';
+  position: absolute;
+  border-style: solid;
+  border-width: 14px 25px 14px 0;
+  border-color: transparent #FFFFFF;
+  display: block;
+  width: 0;
+  z-index: 1;
+  left: -25px;
+  top: 55px;
+}
+
+.bubble:before
+{
+  content: '';
+  position: absolute;
+  border-style: solid;
+  border-width: 14px 25px 14px 0;
+  border-color: transparent #0084BF;
+  display: block;
+  width: 0;
+  z-index: 0;
+  left: -26px;
+  top: 55px;
+}
+
+.app-summary-table {
+  width: 100%;
+}
+
+.severity-side-blob-generic {
+  height:100%; width: 4px;
+}
+
+.severity-side-blob-success{
+  background: #5CB85C;
+}
+.severity-side-blob-warning {
+  background: #F0AD4E;
+}
+
+.severity-side-blob-severe {
+  background: #E4804E;
+}
+
+.severity-side-blob-danger{
+  background: #D9534F;
+}
+.user {
+  padding-right: 15px;
+  text-align: right;
+  width: 250px;
+}
+
+.heading {
+  font-size: 16px;
+}
+
+.logo {
+  width: 50px;
+  padding-left: 30px;
+}
+
+.heuristics-block {
+  padding-top: 10px;
+  padding-bottom: 15px;
+  padding-left: 10px;
+}
+
+.heuristics-label-generic {
+
+  background-color:white;
+  padding-top: 3px;
+  padding-right: 5px;
+  padding-left: 5px;
+  margin-right: 7px;
+  margin-bottom: 2px;
+  padding-bottom: 3px;
+  text-align: center;
+  display: inline-block;
+  font-size: 11px;
+  float: left;
+  border-radius: 3px;
+  font-family: sans-serif;
+
+}
+
+.heuristics-label-severe {
+  border: #E4804E 1px solid;
+  color: #E4804E;
+
+}
+
+.heuristics-label-success {
+  border: #5CB85C 1px solid;
+  color: #5CB85C;
+}
+.heuristics-label-warning {
+  border: #F0AD4E 1px solid;
+  color: #F0AD4E;
+}
+
+.heuristics-label-danger {
+  border: #D9534F 1px solid;
+  color: #D9534F;
+}
+
+.severity-None {
+  color: #5CB85C;
+}
+
+.details-container {
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  background: white;
+  margin: 10px 0px 10px 0px;
+  padding: 10px 15px 10px 25px;
+}
+
+.info {
+  margin-top: 10px;
+}
+
+.info td, tr {
+  height: 20px;
+  margin: 7px;
+  padding: 7px;
+  max-width:100%;
+}
+
+.summary-list-container {
+  background:white; margin-top: 30px; padding-top: 3px; border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.summary-list-header {
+  margin: 10px 0px 10px 25px; color: #5e6365;  font-size: 18px;
+}
+
+
+/**
+search **/
+
+.dropdown.dropdown-lg .dropdown-menu {
+  margin-top: -1px;
+  padding: 6px 20px;
+}
+.input-group-btn .btn-group {
+  display: flex !important;
+}
+
+.form-horizontal .form-group {
+  margin-left: 0;
+  margin-right: 0;
+}
+.form-group .form-control:last-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+@media screen and (min-width: 300px) {
+  #adv-search {
+    width: 300px;
+    margin: 0 auto;
+  }
+  .dropdown.dropdown-lg {
+    position: static !important;
+  }
+  .dropdown.dropdown-lg .dropdown-menu {
+    min-width: 300px;
+  }
+}
+
+.search-row {
+  height: 100%;
+}
+
+.search-table {
+  width: 100%;
+}
+
+.search-table td {
+  padding-right: 20px;
+  padding-left: 20px;
+  max-height: 100px;
+}
+
+
+/** breadcrumb **/
+.bread-crumb {
+  display: inline-block;
+  overflow: hidden;
+  background: #0084BF;
+  margin-top: 10px;
+
+}
+
+.bread-crumb a {
+  text-decoration: none;
+  outline: none;
+  display: block;
+  float: left;
+  font-size: 12px;
+  line-height: 36px;
+  color: white;
+  padding: 0 10px 0 30px;
+  background: #666;
+  background: linear-gradient(#666, #333);
+  position: relative;
+}
+
+/*since the first link does not have a triangle before it we can reduce the left padding to make it look consistent with other links*/
+.bread-crumb a:first-child {
+  padding-left: 10px;
+  border-radius: 5px 0 0 5px; /*to match with the parent's radius*/
+}
+
+.bread-crumb a:last-child {
+  border-radius: 0 5px 5px 0; /*this was to prevent glitches on hover*/
+  padding-right: 20px;
+
+}
+
+/*hover/active styles*/
+.bread-crumb a.active, .bread-crumb a:hover{
+  background: #333;
+  background: linear-gradient(#333, #000);
+}
+.bread-crumb a.active:after, .bread-crumb a:hover:after {
+  background: #333;
+  background: linear-gradient(135deg, #333, #000);
+}
+
+/*adding the arrows for the breadcrumbs using rotated pseudo elements*/
+.bread-crumb a:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -18px; /*half of square's length*/
+  width: 36px;
+  height: 36px;
+  transform: scale(0.707) rotate(45deg);
+  /*we need to prevent the arrows from getting buried under the next link*/
+  z-index: 1;
+  /*background same as links but the gradient will be rotated to compensate with the transform applied*/
+  background: #666;
+  background: linear-gradient(135deg, #666, #333);
+  /*stylish arrow design using box shadow*/
+  box-shadow:
+  2px -2px 0 2px rgba(0, 132, 191, 1),
+  3px -3px 0 2px rgba(255, 255, 255, 0.1);
+  /*
+        5px - for rounded arrows and
+        50px - to prevent hover glitches on the border created using shadows*/
+  border-radius: 0 5px 0 50px;
+}
+/*we dont need an arrow after the last link*/
+.bread-crumb a:last-child:after {
+  content: none;
+}
+
+/*we will use the :before element to show numbers*/
+.bread-crumb a:before {
+  border-radius: 100%;
+  height: 20px;
+  line-height: 20px;
+  position: absolute;
+  top: 0;
+  background: #444;
+  background: linear-gradient(#444, #222);
+  font-weight: bold;
+}
+
+
+.flat a, .flat a:after {
+  background: white;
+  color: #5e6365;
+  transition: all 0.5s;
+}
+.flat a:before {
+  background: white;
+  box-shadow: 0 0 0 1px #ccc;
+}
+.flat a:hover, .flat a.active,
+.flat a:hover:after, .flat a.active:after{
+  background: #0084bf;
+  color: white;
+
+}
+
+.history-options {
+  width: 100%;
+  margin: 10px 0px 0px 10px;
+}
+
+.history-option {
+  float: left;
+}
+
+.input-user-li {
+  height: 40px;
+  height: 100%;
+  border-radius: 3px;
+  margin-left: 5px;
+  border: 1px solid #dfdfdf;
+  background: white;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.input-user {
+  height: 40px;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+  border: none;
+  padding-left: 20px;
+  width: 100px;
+}
+
+.input-user-button {
+  height: 38px;
+  border: none;
+  color: #0084BF;
+  width: 30px;
+  margin-right: 5px;
+  margin-left: 5px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  background: white;
+  margin-bottom: 1px;
+}
+.heuristic-item:hover {
+  background: grey;
+}
+
+
+.v-separator
+{
+  content: "";
+  display: inline-block;
+  width: 0px;
+  height: 100px;
+  border-right: 1px solid #fafafa;
+  border-left: 1px solid #b4b4b4;
+  padding: 0;
+}
+
+.heuristic-detail-table {
+  width: 100%; margin: 10px 20px 10px 20px;
+}
+
+.heuristic-detail-table td {
+  width: 50%;
+}

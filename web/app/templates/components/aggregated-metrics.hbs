@@ -1,0 +1,12 @@
+<div>
+    <p class="list-group-item-heading">
+    <table>
+        <tr>
+            <td class="metrics-dashboard hasTooltip" width="175px"><img src='assets/images/usedmemory.png' class="metrics-icons" alt='used resources'/>  {{getResourceInGBHours application.resourceused}}</td>
+            <td class="metrics-dashboard hasTooltip" width="100px"><img src='assets/images/wastedmemory.png' class="metrics-icons" alt='wasted resources'/>  {{getPercentage application.resourcewasted application.resourceused}}</td>
+            <td class="metrics-dashboard hasTooltip" width="120px"><img src='assets/images/runtime.png' class="metrics-icons" alt='total runtime'/>  {{getDurationBreakdown application.runtime}}</td>
+            <td class="metrics-dashboard hasTooltip" width="100px"><img src='assets/images/waittime.png' class="metrics-icons" alt='total wait time'/>  {{getPercentage application.waittime application.runtime}}</td>
+        </tr>
+    </table>
+    </p>
+</div>

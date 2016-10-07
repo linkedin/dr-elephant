@@ -1,0 +1,8 @@
+{{!-- The user tabs. Tabs can be added and deleted --}}
+{{user-tabs deleteTab="deleteTab" setTab="changeTab" addTab="addTab" usernames=model.usernames}}
+{{!-- The list of flows of the user --}}
+{{#if loading}}
+  {{loading-panel message="loading flows..."}}
+{{else}}
+  {{flow-list workflows=model.workflows}}
+{{/if}}
