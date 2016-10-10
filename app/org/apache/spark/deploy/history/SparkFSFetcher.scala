@@ -187,85 +187,87 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
   def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     val appId = analyticJob.getAppId()
     _security.doAs[SparkDataCollection](new PrivilegedAction[SparkDataCollection] {
-      override def run(): SparkDataCollection = {
-        /* Most of Spark logs will be in directory structure: /LOG_DIR/[application_id].
-         *
-         * Some logs (Spark 1.3+) are in /LOG_DIR/[application_id].snappy
-         *
-         * Currently we won't be able to parse them even we manually set up the codec. There is problem
-         * in JsonProtocol#sparkEventFromJson that it does not handle unmatched SparkListenerEvent, which means
-         * it is only backward compatible but not forward. And switching the dependency to Spark 1.3 will raise more
-         * problems due to the fact that we are touching the internal codes.
-         *
-         * In short, this fetcher only works with Spark <=1.2, and we should switch to JSON endpoints with Spark's
-         * future release.
-         */
-        val replayBus = new ReplayListenerBus()
-        val applicationEventListener = new ApplicationEventListener
-        val jobProgressListener = new JobProgressListener(new SparkConf())
-        val environmentListener = new EnvironmentListener
-        val storageStatusListener = new StorageStatusListener
-        val executorsListener = new ExecutorsListener(storageStatusListener)
-        val storageListener = new StorageListener(storageStatusListener)
-
-        // This is a customized listener that tracks peak used memory
-        // The original listener only tracks the current in use memory which is useless in offline scenario.
-        val storageStatusTrackingListener = new StorageStatusTrackingListener()
-        replayBus.addListener(storageStatusTrackingListener)
-
-        val dataCollection = new SparkDataCollection(applicationEventListener = applicationEventListener,
-          jobProgressListener = jobProgressListener,
-          environmentListener = environmentListener,
-          storageStatusListener = storageStatusListener,
-          executorsListener = executorsListener,
-          storageListener = storageListener,
-          storageStatusTrackingListener = storageStatusTrackingListener)
-
-        replayBus.addListener(applicationEventListener)
-        replayBus.addListener(jobProgressListener)
-        replayBus.addListener(environmentListener)
-        replayBus.addListener(storageStatusListener)
-        replayBus.addListener(executorsListener)
-        replayBus.addListener(storageListener)
-
-        val logPath = new Path(_logDir, appId)
-        val logInput: InputStream =
-          if (isLegacyLogDirectory(logPath)) {
-            if (!shouldThrottle(logPath)) {
-              openLegacyEventLog(logPath)
-            } else {
-              null
-            }
-          } else {
-            val sparkLogExt = Option(fetcherConfData.getParamMap.get(SPARK_LOG_EXT)).getOrElse(defSparkLogExt)
-            val logFilePath = new Path(logPath + sparkLogExt)
-            if (!shouldThrottle(logFilePath)) {
-              EventLoggingListener.openEventLog(logFilePath, fs)
-            } else {
-              null
-            }
-          }
-
-        if (logInput == null) {
-          dataCollection.throttle()
-          // Since the data set is empty, we need to set the application id,
-          // so that we could detect this is Spark job type
-          dataCollection.getGeneralData().setApplicationId(appId)
-          dataCollection.getConf().setProperty("spark.app.id", appId)
-
-          logger.info("The event log of Spark application: " + appId + " is over the limit size of "
-              + confEventLogSizeInMb + " MB, the parsing process gets throttled.")
-        } else {
-          logger.info("Replaying Spark logs for application: " + appId)
-
-          replayBus.replay(logInput, logPath.toString(), false)
-
-          logger.info("Replay completed for application: " + appId)
-        }
-
-        dataCollection
-      }
+      override def run(): SparkDataCollection = doFetchData(appId)
     })
+  }
+
+  private def doFetchData(appId: String): SparkDataCollection = {
+    /* Most of Spark logs will be in directory structure: /LOG_DIR/[application_id].
+     *
+     * Some logs (Spark 1.3+) are in /LOG_DIR/[application_id].snappy
+     *
+     * Currently we won't be able to parse them even we manually set up the codec. There is problem
+     * in JsonProtocol#sparkEventFromJson that it does not handle unmatched SparkListenerEvent, which means
+     * it is only backward compatible but not forward. And switching the dependency to Spark 1.3 will raise more
+     * problems due to the fact that we are touching the internal codes.
+     *
+     * In short, this fetcher only works with Spark <=1.2, and we should switch to JSON endpoints with Spark's
+     * future release.
+     */
+    val replayBus = new ReplayListenerBus()
+    val applicationEventListener = new ApplicationEventListener
+    val jobProgressListener = new JobProgressListener(new SparkConf())
+    val environmentListener = new EnvironmentListener
+    val storageStatusListener = new StorageStatusListener
+    val executorsListener = new ExecutorsListener(storageStatusListener)
+    val storageListener = new StorageListener(storageStatusListener)
+
+    // This is a customized listener that tracks peak used memory
+    // The original listener only tracks the current in use memory which is useless in offline scenario.
+    val storageStatusTrackingListener = new StorageStatusTrackingListener()
+    replayBus.addListener(storageStatusTrackingListener)
+
+    val dataCollection = new SparkDataCollection(applicationEventListener = applicationEventListener,
+      jobProgressListener = jobProgressListener,
+      environmentListener = environmentListener,
+      storageStatusListener = storageStatusListener,
+      executorsListener = executorsListener,
+      storageListener = storageListener,
+      storageStatusTrackingListener = storageStatusTrackingListener)
+
+    replayBus.addListener(applicationEventListener)
+    replayBus.addListener(jobProgressListener)
+    replayBus.addListener(environmentListener)
+    replayBus.addListener(storageStatusListener)
+    replayBus.addListener(executorsListener)
+    replayBus.addListener(storageListener)
+
+    val logPath = new Path(_logDir, appId)
+    val logInput: InputStream =
+      if (isLegacyLogDirectory(logPath)) {
+        if (!shouldThrottle(logPath)) {
+          openLegacyEventLog(logPath)
+        } else {
+          null
+        }
+      } else {
+        val sparkLogExt = Option(fetcherConfData.getParamMap.get(SPARK_LOG_EXT)).getOrElse(defSparkLogExt)
+        val logFilePath = new Path(logPath + sparkLogExt)
+        if (!shouldThrottle(logFilePath)) {
+          EventLoggingListener.openEventLog(logFilePath, fs)
+        } else {
+          null
+        }
+      }
+
+    if (logInput == null) {
+      dataCollection.throttle()
+      // Since the data set is empty, we need to set the application id,
+      // so that we could detect this is Spark job type
+      dataCollection.getGeneralData().setApplicationId(appId)
+      dataCollection.getConf().setProperty("spark.app.id", appId)
+
+      logger.info("The event log of Spark application: " + appId + " is over the limit size of "
+        + confEventLogSizeInMb + " MB, the parsing process gets throttled.")
+    } else {
+      logger.info("Replaying Spark logs for application: " + appId)
+
+      replayBus.replay(logInput, logPath.toString(), false)
+
+      logger.info("Replay completed for application: " + appId)
+    }
+
+    dataCollection
   }
 
   /**
