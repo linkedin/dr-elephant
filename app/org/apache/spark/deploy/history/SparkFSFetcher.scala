@@ -16,63 +16,55 @@
 
 package org.apache.spark.deploy.history
 
-
-import java.net.{HttpURLConnection, URL, URI}
+import java.io.{BufferedInputStream, InputStream}
+import java.net.{HttpURLConnection, URI, URL}
 import java.security.PrivilegedAction
-import java.io.{IOException, BufferedInputStream, InputStream}
-import java.{io, util}
-import java.util.ArrayList
-import javax.ws.rs.core.UriBuilder
+
+import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.security.HadoopSecurity
 import com.linkedin.drelephant.spark.data.SparkApplicationData
-import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
-import com.linkedin.drelephant.analysis.{ApplicationType, AnalyticJob, ElephantFetcher}
+import com.linkedin.drelephant.util.Utils
 import org.apache.commons.io.FileUtils
-
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.hdfs.web.WebHdfsFileSystem
-import org.apache.hadoop.security.authentication.client.{AuthenticatedURL, AuthenticationException}
+import org.apache.hadoop.security.authentication.client.AuthenticatedURL
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.scheduler.{EventLoggingListener, ReplayListenerBus, ApplicationEventListener}
-import org.apache.spark.storage.{StorageStatusTrackingListener, StorageStatusListener}
+import org.apache.spark.io.CompressionCodec
+import org.apache.spark.scheduler.{ApplicationEventListener, EventLoggingListener, ReplayListenerBus}
+import org.apache.spark.storage.{StorageStatusListener, StorageStatusTrackingListener}
 import org.apache.spark.ui.env.EnvironmentListener
 import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
-import org.apache.spark.io.CompressionCodec
 import org.codehaus.jackson.JsonNode
 import org.codehaus.jackson.map.ObjectMapper
-
-import scala.collection.mutable.ArrayBuffer
 
 
 /**
  * A wrapper that replays Spark event history from files and then fill proper data objects.
  */
 class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends ElephantFetcher[SparkApplicationData] {
-
   import SparkFSFetcher._
 
   val NAME_SERVICES = "dfs.nameservices";
   val DFS_HA_NAMENODES = "dfs.ha.namenodes";
   val DFS_NAMENODE_HTTP_ADDRESS = "dfs.namenode.http-address";
 
-  var confEventLogSizeInMb = defEventLogSizeInMb
-  if (fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD) != null) {
-    val logLimitSize = Utils.getParam(fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD), 1)
-    if (logLimitSize != null) {
-      confEventLogSizeInMb = logLimitSize(0)
-    }
-  }
-  logger.info("The event log limit of Spark application is set to " + confEventLogSizeInMb + " MB")
+  val eventLogSizeLimitMb =
+    Option(fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD))
+      .flatMap { x => Option(Utils.getParam(x, 1)) }
+      .map { _(0) }
+      .getOrElse(DEFAULT_EVENT_LOG_SIZE_LIMIT_MB)
+  logger.info("The event log limit of Spark application is set to " + eventLogSizeLimitMb + " MB")
 
-  var confEventLogDir = fetcherConfData.getParamMap.get(LOG_DIR_XML_FIELD)
-  if (confEventLogDir == null || confEventLogDir.isEmpty) {
-    confEventLogDir = defEventLogDir
-  }
+  val confEventLogDir =
+    Option(fetcherConfData.getParamMap.get(LOG_DIR_XML_FIELD))
+      .filterNot(StringUtils.isBlank)
+      .getOrElse(DEFAULT_EVENT_LOG_DIR)
   logger.info("The event log directory of Spark application is set to " + confEventLogDir)
 
   private val _sparkConf = new SparkConf()
@@ -208,7 +200,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       dataCollection.getConf().setProperty("spark.app.id", appId)
 
       logger.info("The event log of Spark application: " + appId + " is over the limit size of "
-        + confEventLogSizeInMb + " MB, the parsing process gets throttled.")
+        + eventLogSizeLimitMb + " MB, the parsing process gets throttled.")
     } else {
       logger.info("Replaying Spark logs for application: " + appId)
 
@@ -274,11 +266,11 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * @return If the event log parsing should be throttled
    */
   private def shouldThrottle(eventLogPath: Path): Boolean = {
-    fs.getFileStatus(eventLogPath).getLen() > (confEventLogSizeInMb * FileUtils.ONE_MB)
+    fs.getFileStatus(eventLogPath).getLen() > (eventLogSizeLimitMb * FileUtils.ONE_MB)
   }
 
   def getEventLogSize(): Double = {
-    confEventLogSizeInMb
+    eventLogSizeLimitMb
   }
 
   def getEventLogDir(): String = {
@@ -290,8 +282,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 private object SparkFSFetcher {
   private val logger = Logger.getLogger(SparkFSFetcher.getClass)
 
-  var defEventLogDir = "/system/spark-history"
-  var defEventLogSizeInMb = 100d; // 100MB
+  val DEFAULT_EVENT_LOG_DIR = "/system/spark-history"
+  val DEFAULT_EVENT_LOG_SIZE_LIMIT_MB = 100d; // 100MB
   val DEFAULT_SPARK_LOG_SUFFIX = "_1.snappy"
 
   val LOG_SIZE_XML_FIELD = "event_log_size_limit_in_mb"
