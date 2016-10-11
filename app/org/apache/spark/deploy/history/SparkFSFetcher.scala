@@ -194,17 +194,11 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
   private def doFetchData(appId: String): SparkDataCollection = {
     val dataCollection = new SparkDataCollection()
 
-    val (logPath, isLegacy) = {
-      val basePath = new Path(_logDir, appId)
-      val isLegacy = isLegacyLogDirectory(basePath)
-      val logPath = if (isLegacy) {
-        basePath
-      } else {
-        val sparkLogExt = Option(fetcherConfData.getParamMap.get(SPARK_LOG_EXT)).getOrElse(defSparkLogExt)
-        new Path(basePath + sparkLogExt)
-      }
-      (logPath, isLegacy)
-    }
+    val (logPath, usingDefaultEventLog) =
+      Option(defaultEventLogPathForApp(appId))
+        .filter(fs.exists)
+        .map((_, true))
+        .getOrElse((legacyEventLogPathForApp(appId), false))
 
     if (shouldThrottle(logPath)) {
       dataCollection.throttle()
@@ -218,7 +212,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     } else {
       logger.info("Replaying Spark logs for application: " + appId)
 
-      val in = if (isLegacy) openLegacyEventLog(logPath) else openEventLog(logPath)
+      val in = if (usingDefaultEventLog) openDefaultEventLog(logPath) else openLegacyEventLog(logPath)
       dataCollection.load(in, logPath.toString())
       in.close()
 
@@ -228,13 +222,12 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     dataCollection
   }
 
-  /**
-   * Checks if the log path stores the legacy event log. (Spark <= 1.2 store an event log in a directory)
-   *
-   * @param entry The path to check
-   * @return true if it is legacy log path, else false
-   */
-  private def isLegacyLogDirectory(entry: Path): Boolean = fs.exists(entry) && fs.getFileStatus(entry).isDirectory()
+  private def defaultEventLogPathForApp(appId: String): Path =
+    new Path(_logDir, appId + fetcherConfData.getParamMap.getOrDefault(SPARK_LOG_SUFFIX_KEY, DEFAULT_SPARK_LOG_SUFFIX))
+
+  private def legacyEventLogPathForApp(appId: String): Path = new Path(_logDir, appId)
+
+  private def openDefaultEventLog(path: Path): InputStream = EventLoggingListener.openEventLog(path, fs)
 
   /**
    * Opens a legacy log path
@@ -272,8 +265,6 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     codec.map(_.compressedInputStream(in)).getOrElse(in)
   }
 
-  private def openEventLog(path: Path): InputStream = EventLoggingListener.openEventLog(path, fs)
-
   /**
    * Checks if the log parser should be throttled when the file is too large.
    * Note: the current Spark's implementation of ReplayListenerBus will take more than 80 minutes to read a compressed
@@ -301,7 +292,7 @@ private object SparkFSFetcher {
 
   var defEventLogDir = "/system/spark-history"
   var defEventLogSizeInMb = 100d; // 100MB
-  var defSparkLogExt = "_1.snappy"
+  val DEFAULT_SPARK_LOG_SUFFIX = "_1.snappy"
 
   val LOG_SIZE_XML_FIELD = "event_log_size_limit_in_mb"
   val LOG_DIR_XML_FIELD = "event_log_dir"
@@ -312,5 +303,5 @@ private object SparkFSFetcher {
 
   // Param map property names that allow users to configer various aspects of the fetcher
   val NAMENODE_ADDRESSES = "namenode_addresses"
-  val SPARK_LOG_EXT = "spark_log_ext"
+  val SPARK_LOG_SUFFIX_KEY = "spark_log_ext"
 }
