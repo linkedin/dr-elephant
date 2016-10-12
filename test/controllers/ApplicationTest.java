@@ -38,12 +38,13 @@ public class ApplicationTest {
 
   @Test
   public void testRenderHomePage() {
-    Content html = homePage.render(5, 2, 3, searchResults.render("Latest analysis", null));
+    Content html = homePage.render(5, 1717, 2, 3, searchResults.render("Latest analysis", null));
     assertEquals("text/html", html.contentType());
     assertTrue(html.body().contains("Hello there, I've been busy!"));
-    assertTrue(html.body().contains("I looked through <b>5</b> jobs today."));
-    assertTrue(html.body().contains("About <b>2</b> of them could use some tuning."));
-    assertTrue(html.body().contains("About <b>3</b> of them need some serious attention!"));
+    assertTrue(html.body().contains("I've looked at <b>5</b> jobs that finished in the last 24 hours."));
+    assertTrue(html.body().contains("Of those, about <b>2</b> could use some tuning (severe)<"));
+    assertTrue(html.body().contains("and <b>3</b> need some serious attention (critical)."));
+    assertTrue(html.body().contains("I have <b>1,717</b> processed jobs in my database."));
   }
 
   @Test

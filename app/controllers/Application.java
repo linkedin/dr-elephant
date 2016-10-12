@@ -26,13 +26,7 @@ import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.util.Utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.Override;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.ParseException;
-import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.ArrayList;
@@ -48,16 +42,13 @@ import java.util.TreeSet;
 import models.AppHeuristicResult;
 import models.AppResult;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import play.api.Play;
+
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
-import play.db.ebean.Model;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -116,7 +107,8 @@ public class Application extends Controller {
   private static final String SEARCH_MATCHES_PARTIAL_CONF = "drelephant.application.search.match.partial";
 
   private static long _lastFetch = 0;
-  private static int _numJobsAnalyzed = 0;
+  private static int _numJobsAnalyzedLastDay = 0;
+  private static int _numJobsAnalyzedAllTime = 0;
   private static int _numJobsCritical = 0;
   private static int _numJobsSevere = 0;
 
@@ -131,7 +123,11 @@ public class Application extends Controller {
 
     // Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsAnalyzedLastDay = AppResult.find.where()
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .findRowCount();
+      _numJobsAnalyzedAllTime = AppResult.find.where()
+          .findRowCount();
       _numJobsCritical = AppResult.find.where()
           .gt(AppResult.TABLE.FINISH_TIME, finishDate)
           .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
@@ -153,8 +149,8 @@ public class Application extends Controller {
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
         .findList();
 
-    return ok(homePage.render(_numJobsAnalyzed, _numJobsSevere, _numJobsCritical,
-        searchResults.render("Latest analysis", results)));
+    return ok(homePage.render(_numJobsAnalyzedLastDay, _numJobsAnalyzedAllTime, _numJobsSevere,
+            _numJobsCritical, searchResults.render("Latest analysis", results)));
   }
 
   /**

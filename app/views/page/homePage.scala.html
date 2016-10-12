@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(numJobsAnalyzed: Int, numJobsSevere: Int, numJobsCritical: Int)(results: Html)
+@(numJobsAnalyzedLastDay: Int, numJobsAnalyzedAllTime: Int, numJobsSevere: Int, numJobsCritical: Int)(results: Html)
 
 @*
 * The layout of the homepage of Dr. Elephant or the dashboard
@@ -26,12 +26,13 @@
 *@
 
 @main("Dr. Elephant", "dashboard") {
-  <div class="jumbotron">
-    <h2>Hello there, I've been busy!</h2>
-    <p>I looked through <b>@numJobsAnalyzed</b> jobs today.<br>
-      About <b>@numJobsSevere</b> of them could use some tuning.<br>
-      About <b>@numJobsCritical</b> of them need some serious attention!
-    </p>
-  </div>
-  @results
+<div class="jumbotron">
+  <h2>Hello there, I've been busy!</h2>
+  <p>I've looked at <b>@("%,d".format(numJobsAnalyzedLastDay))</b> jobs that finished in the last 24 hours.<br>
+    Of those, about <b>@("%,d".format(numJobsSevere))</b> could use some tuning (severe)<br>
+    and <b>@("%,d".format(numJobsCritical))</b> need some serious attention (critical).<br>
+    I have <b>@("%,d".format(numJobsAnalyzedAllTime))</b> processed jobs in my database.
+  </p>
+</div>
+@results
 }
