@@ -18,13 +18,13 @@ class HadoopUtilsTest extends FunSpec with Matchers with MockitoSugar {
       it("returns true for active name nodes") {
         val hadoopUtils =
           newFakeHadoopUtilsForNameNode(Map(("nn1.grid.example.com", ("nn1-ha1.grid.example.com", "active"))))
-        hadoopUtils.isActiveNamenode("nn1.grid.example.com") should be(true)
+        hadoopUtils.isActiveNameNode("nn1.grid.example.com") should be(true)
       }
 
       it("returns false for standby name nodes") {
         val hadoopUtils =
           newFakeHadoopUtilsForNameNode(Map(("nn1.grid.example.com", ("nn1-ha1.grid.example.com", "standby"))))
-        hadoopUtils.isActiveNamenode("nn1.grid.example.com") should be(false)
+        hadoopUtils.isActiveNameNode("nn1.grid.example.com") should be(false)
       }
     }
   }

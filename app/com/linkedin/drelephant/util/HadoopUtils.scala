@@ -24,7 +24,7 @@ trait HadoopUtils {
               .map {
               _.split(",").flatMap { namenode => Option(conf.get(s"${DFS_NAMENODE_HTTP_ADDRESS_KEY}.${nameService}.${namenode}")) }
             }
-              .flatMap { _.find(isActiveNamenode) }
+              .flatMap { _.find(isActiveNameNode) }
 
           if (namenodeAddress.isDefined) {
             logger.info(s"Active namenode for ${nameService}: ${namenodeAddress}")
@@ -45,13 +45,15 @@ trait HadoopUtils {
     }
   }
 
-  def isActiveNamenode(hostAndPort: String): Boolean = {
+  def httpNameNodeAddress(conf: Configuration): Option[String] = Option(conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY))
+
+  def isActiveNameNode(hostAndPort: String): Boolean = {
     val url = new URL(s"http://${hostAndPort}/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus")
     val conn = newAuthenticatedConnection(url)
     try {
       val in = conn.getInputStream()
       try {
-        isActiveNamenode(in)
+        isActiveNameNode(in)
       } finally {
         in.close()
       }
@@ -60,7 +62,7 @@ trait HadoopUtils {
     }
   }
 
-  def isActiveNamenode(in: InputStream): Boolean =
+  def isActiveNameNode(in: InputStream): Boolean =
     new ObjectMapper().readTree(in).path("beans").get(0).path("State").textValue() == "active"
 
   def newAuthenticatedConnection(url: URL): HttpURLConnection = {

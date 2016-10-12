@@ -32,7 +32,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.spark.deploy.history.DummySparkFSFetcher;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -202,7 +201,7 @@ public class SparkFsFetcherTest {
 
   // checks the namenode address from the hadoopconf
   @Test
-  public void testGetNamenodeAddressFromHadoopConf() {
+  public void testNameNodeAddressFromHadoopConf() {
 
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document2.getDocumentElement());
 
@@ -218,13 +217,13 @@ public class SparkFsFetcherTest {
       };
 
     Configuration conf = new Configuration();
-    String nameNode = fetcher.getNamenodeAddress(conf);
+    String nameNode = fetcher.nameNodeAddress(conf).get();
     assertEquals(nameNode,"sample-ha2.grid.example.com:50070");
   }
 
   // checks the namenode address from fetcherConf
   @Test
-  public void testGetNamenodeAddressFromFetcherConf() {
+  public void testNameNodeAddressFromFetcherConf() {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
 
     final HadoopUtils hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
@@ -241,7 +240,7 @@ public class SparkFsFetcherTest {
       };
 
     Configuration conf = new Configuration();
-    String nameNode = fetcher.getNamenodeAddress(conf);
+    String nameNode = fetcher.nameNodeAddress(conf).get();
     assertEquals(nameNode,"sample-ha4.grid.example.com:50070");
   }
 }

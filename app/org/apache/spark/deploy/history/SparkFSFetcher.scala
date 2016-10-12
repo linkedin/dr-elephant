@@ -71,110 +71,24 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    */
   private lazy val _logDir: String = {
     val conf = new Configuration()
-    val nodeAddress = getNamenodeAddress(conf);
-    val hdfsAddress = if (nodeAddress == null) "" else "webhdfs://" + nodeAddress
-
+    val hdfsAddress = nameNodeAddress(conf).map { address => s"webhdfs://${address}" }.getOrElse("")
     val uri = new URI(_sparkConf.get("spark.eventLog.dir", confEventLogDir))
-    val logDir = hdfsAddress + uri.getPath
+    val logDir = s"${hdfsAddress}${uri.getPath}"
     logger.info("Looking for spark logs at logDir: " + logDir)
     logDir
   }
 
   protected lazy val hadoopUtils: HadoopUtils = HadoopUtils
 
-  def configuredNamenodeAddress: Option[String] = {
-    val namenodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY))
-    println(namenodeAddresses)
-    namenodeAddresses.flatMap { _.split(",").find(hadoopUtils.isActiveNamenode) }
+  def fetcherConfiguredNameNodeAddress: Option[String] = {
+    val nameNodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY))
+    nameNodeAddresses.flatMap { _.split(",").find(hadoopUtils.isActiveNameNode) }
   }
 
-  /**
-   * Returns the address of the active namenode
-   * @param conf The Hadoop configuration
-   * @return The address of the active namenode
-   */
-  def getNamenodeAddress(conf: Configuration): String = {
-
-    // check if the fetcherconf has namenode addresses. There can be multiple addresses and
-    // we need to check the active namenode address. If a value is specified in the fetcherconf
-    // then the value obtained from hadoop configuration won't be used.
-    // if (fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY) != null) {
-    //   val nameNodes: Array[String] = fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY).split(",");
-    //   println(nameNodes.toSeq)
-    //   for (nameNode <- nameNodes) {
-    //     if (checkActivation(nameNode)) {
-    //       return nameNode;
-    //     }
-    //   }
-    // }
-
-    val o = configuredNamenodeAddress
-    if (o.isDefined)
-      return o.get
-
-    // // if we couldn't find the namenode address in fetcherconf, try to find it in hadoop configuration.
-    // var isHAEnabled: Boolean = false;
-    // if (conf.get(DFS_NAMESERVICES_KEY) != null) {
-    //   isHAEnabled = true;
-    // }
-
-    // // check if HA is enabled
-    // if (isHAEnabled) {
-    //   // There can be multiple nameservices separated by ',' in case of HDFS federation. It is not supported right now.
-    //   if (conf.get(DFS_NAMESERVICES_KEY).split(",").length > 1) {
-    //     logger.info("Multiple name services found. HDFS federation is not supported right now.")
-    //     return null;
-    //   }
-    //   val nameService: String = conf.get(DFS_NAMESERVICES_KEY);
-    //   val nameNodeIdentifier: String = conf.get(DFS_HA_NAMENODES_KEY + "." + nameService);
-    //   if (nameNodeIdentifier != null) {
-    //     // there can be multiple namenode identifiers separated by ','
-    //     for (nameNodeIdentifierValue <- nameNodeIdentifier.split(",")) {
-    //       val httpValue = conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY + "." + nameService + "." + nameNodeIdentifierValue);
-    //       if (httpValue != null && checkActivation(httpValue)) {
-    //         logger.info("Active namenode : " + httpValue);
-    //         return httpValue;
-    //       }
-    //     }
-    //   }
-    // }
-
-    val p = hadoopUtils.haNamenodeAddress(conf)
-    if (p.isDefined)
-      return p.get
-
-    // if HA is disabled, return the namenode http-address.
-    return conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY);
-  }
-
-  /**
-   * Checks if the namenode specified is active or not
-   * @param httpValue The namenode configuration http value
-   * @return True if the namenode is active, otherwise false
-   */
-  def checkActivation(httpValue: String): Boolean = {
-    val url: URL = new URL("http://" + httpValue + "/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus");
-    val rootNode: JsonNode = readJsonNode(url);
-    val status: String = rootNode.path("beans").get(0).path("State").getValueAsText();
-    if (status.equals("active")) {
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Returns the jsonNode which is read from the url
-   * @param url The url of the server
-   * @return The jsonNode parsed from the url
-   */
-  def readJsonNode(url: URL): JsonNode = {
-    val _token: AuthenticatedURL.Token = new AuthenticatedURL.Token();
-    val _authenticatedURL: AuthenticatedURL = new AuthenticatedURL();
-    val _objectMapper: ObjectMapper = new ObjectMapper();
-    val conn: HttpURLConnection = _authenticatedURL.openConnection(url, _token)
-    return _objectMapper.readTree(conn.getInputStream)
-  }
-
+  def nameNodeAddress(conf: Configuration): Option[String] =
+    fetcherConfiguredNameNodeAddress
+      .orElse(hadoopUtils.haNamenodeAddress(conf))
+      .orElse(hadoopUtils.httpNameNodeAddress(conf));
 
   private val _security = new HadoopSecurity()
 
@@ -310,8 +224,4 @@ private object SparkFSFetcher {
   // Param map property names that allow users to configer various aspects of the fetcher
   val NAMENODE_ADDRESSES_KEY = "namenode_addresses"
   val SPARK_LOG_SUFFIX_KEY = "spark_log_ext"
-
-  val DFS_NAMESERVICES_KEY = "dfs.nameservices"
-  val DFS_HA_NAMENODES_KEY = "dfs.ha.namenodes"
-  val DFS_NAMENODE_HTTP_ADDRESS_KEY = "dfs.namenode.http-address"
 }
