@@ -15,34 +15,36 @@ trait HadoopUtils {
 
   def logger: Logger
 
-  def haNamenodeAddress(conf: Configuration): Option[String] = {
-    Option(conf.get(DFS_NAMESERVICES_KEY)).flatMap {
-      _.split(",") match {
-        case Array(nameService) => {
-          val namenodeAddress =
-            Option(conf.get(s"${DFS_HA_NAMENODES_KEY}.${nameService}"))
-              .map {
-              _.split(",").flatMap { namenode => Option(conf.get(s"${DFS_NAMENODE_HTTP_ADDRESS_KEY}.${nameService}.${namenode}")) }
-            }
-              .flatMap { _.find(isActiveNameNode) }
+  def findHaNameNodeAddress(conf: Configuration): Option[String] = {
 
-          if (namenodeAddress.isDefined) {
-            logger.info(s"Active namenode for ${nameService}: ${namenodeAddress}")
-          } else {
-            logger.info(s"No active namenode for ${nameService}.")
-          }
-          namenodeAddress
+    def findNameNodeAddressInNameServices(nameServices: Array[String]): Option[String] = nameServices match {
+      case Array(nameService) => {
+        val ids = Option(conf.get(s"${DFS_HA_NAMENODES_KEY}.${nameService}")).map { _.split(",") }
+        val namenodeAddress = ids.flatMap { findNameNodeAddressInNameService(nameService, _) }
+        if (namenodeAddress.isDefined) {
+          logger.info(s"Active namenode for ${nameService}: ${namenodeAddress}")
+        } else {
+          logger.info(s"No active namenode for ${nameService}.")
         }
-        case Array() => {
-          logger.info("No name services found.")
-          None
-        }
-        case _ => {
-          logger.info("Multiple name services found. HDFS federation is not supported right now.")
-          None
-        }
+        namenodeAddress
+      }
+      case Array() => {
+        logger.info("No name services found.")
+        None
+      }
+      case _ => {
+        logger.info("Multiple name services found. HDFS federation is not supported right now.")
+        None
       }
     }
+
+    def findNameNodeAddressInNameService(nameService: String, nameNodeIds: Array[String]): Option[String] =
+      nameNodeIds
+        .flatMap { id => Option(conf.get(s"${DFS_NAMENODE_HTTP_ADDRESS_KEY}.${nameService}.${id}")) }
+        .find(isActiveNameNode)
+
+    val nameServices = Option(conf.get(DFS_NAMESERVICES_KEY)).map { _.split(",") }
+    nameServices.flatMap(findNameNodeAddressInNameServices)
   }
 
   def httpNameNodeAddress(conf: Configuration): Option[String] = Option(conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY))

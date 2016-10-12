@@ -78,17 +78,17 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     logDir
   }
 
-  protected lazy val hadoopUtils: HadoopUtils = HadoopUtils
+  def nameNodeAddress(conf: Configuration): Option[String] =
+    findFetcherConfiguredNameNodeAddress
+      .orElse(hadoopUtils.findHaNameNodeAddress(conf))
+      .orElse(hadoopUtils.httpNameNodeAddress(conf));
 
-  def fetcherConfiguredNameNodeAddress: Option[String] = {
-    val nameNodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY))
-    nameNodeAddresses.flatMap { _.split(",").find(hadoopUtils.isActiveNameNode) }
+  def findFetcherConfiguredNameNodeAddress: Option[String] = {
+    val nameNodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY)).map { _.split(",") }
+    nameNodeAddresses.flatMap { _.find(hadoopUtils.isActiveNameNode) }
   }
 
-  def nameNodeAddress(conf: Configuration): Option[String] =
-    fetcherConfiguredNameNodeAddress
-      .orElse(hadoopUtils.haNamenodeAddress(conf))
-      .orElse(hadoopUtils.httpNameNodeAddress(conf));
+  protected lazy val hadoopUtils: HadoopUtils = HadoopUtils
 
   private val _security = new HadoopSecurity()
 
