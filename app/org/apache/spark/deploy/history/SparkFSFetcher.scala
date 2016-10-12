@@ -50,10 +50,6 @@ import org.codehaus.jackson.map.ObjectMapper
 class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends ElephantFetcher[SparkApplicationData] {
   import SparkFSFetcher._
 
-  val NAME_SERVICES = "dfs.nameservices";
-  val DFS_HA_NAMENODES = "dfs.ha.namenodes";
-  val DFS_NAMENODE_HTTP_ADDRESS = "dfs.namenode.http-address";
-
   val eventLogSizeLimitMb =
     Option(fetcherConfData.getParamMap.get(LOG_SIZE_XML_FIELD))
       .flatMap { x => Option(Utils.getParam(x, 1)) }
@@ -83,18 +79,22 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     logDir
   }
 
+  def configuredNamenodeAddress: Option[String] =
+    Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY)).flatMap { _.split(",").find(checkActivation) }
+
+
   /**
-   * Returns the namenode address of the  active nameNode
+   * Returns the address of the active namenode
    * @param conf The Hadoop configuration
-   * @return The namenode address of the active namenode
+   * @return The address of the active namenode
    */
   def getNamenodeAddress(conf: Configuration): String = {
 
     // check if the fetcherconf has namenode addresses. There can be multiple addresses and
     // we need to check the active namenode address. If a value is specified in the fetcherconf
     // then the value obtained from hadoop configuration won't be used.
-    if (fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES) != null) {
-      val nameNodes: Array[String] = fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES).split(",");
+    if (fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY) != null) {
+      val nameNodes: Array[String] = fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY).split(",");
       for (nameNode <- nameNodes) {
         if (checkActivation(nameNode)) {
           return nameNode;
@@ -104,23 +104,23 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
     // if we couldn't find the namenode address in fetcherconf, try to find it in hadoop configuration.
     var isHAEnabled: Boolean = false;
-    if (conf.get(NAME_SERVICES) != null) {
+    if (conf.get(DFS_NAMESERVICES_KEY) != null) {
       isHAEnabled = true;
     }
 
     // check if HA is enabled
     if (isHAEnabled) {
       // There can be multiple nameservices separated by ',' in case of HDFS federation. It is not supported right now.
-      if (conf.get(NAME_SERVICES).split(",").length > 1) {
+      if (conf.get(DFS_NAMESERVICES_KEY).split(",").length > 1) {
         logger.info("Multiple name services found. HDFS federation is not supported right now.")
         return null;
       }
-      val nameService: String = conf.get(NAME_SERVICES);
-      val nameNodeIdentifier: String = conf.get(DFS_HA_NAMENODES + "." + nameService);
+      val nameService: String = conf.get(DFS_NAMESERVICES_KEY);
+      val nameNodeIdentifier: String = conf.get(DFS_HA_NAMENODES_KEY + "." + nameService);
       if (nameNodeIdentifier != null) {
         // there can be multiple namenode identifiers separated by ','
         for (nameNodeIdentifierValue <- nameNodeIdentifier.split(",")) {
-          val httpValue = conf.get(DFS_NAMENODE_HTTP_ADDRESS + "." + nameService + "." + nameNodeIdentifierValue);
+          val httpValue = conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY + "." + nameService + "." + nameNodeIdentifierValue);
           if (httpValue != null && checkActivation(httpValue)) {
             logger.info("Active namenode : " + httpValue);
             return httpValue;
@@ -130,7 +130,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     }
 
     // if HA is disabled, return the namenode http-address.
-    return conf.get(DFS_NAMENODE_HTTP_ADDRESS);
+    return conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY);
   }
 
   /**
@@ -294,6 +294,10 @@ private object SparkFSFetcher {
   val COMPRESSION_CODEC_PREFIX = EventLoggingListener.COMPRESSION_CODEC_KEY + "_"
 
   // Param map property names that allow users to configer various aspects of the fetcher
-  val NAMENODE_ADDRESSES = "namenode_addresses"
+  val NAMENODE_ADDRESSES_KEY = "namenode_addresses"
   val SPARK_LOG_SUFFIX_KEY = "spark_log_ext"
+
+  val DFS_NAMESERVICES_KEY = "dfs.nameservices"
+  val DFS_HA_NAMENODES_KEY = "dfs.ha.namenodes"
+  val DFS_NAMENODE_HTTP_ADDRESS_KEY = "dfs.namenode.http-address"
 }

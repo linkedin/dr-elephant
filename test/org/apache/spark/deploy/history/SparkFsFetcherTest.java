@@ -16,24 +16,26 @@
 
 package org.apache.spark.deploy.history;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
-import org.apache.hadoop.fs.Path;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-import org.apache.spark.deploy.history.DummySparkFSFetcher;
-
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-
 import org.apache.hadoop.conf.Configuration;
-
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.deploy.history.DummySparkFSFetcher;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import static org.junit.Assert.assertEquals;
 
 public class SparkFsFetcherTest {
@@ -216,4 +218,3 @@ public class SparkFsFetcherTest {
     assertEquals(nameNode,"sample-ha4.grid.company.com:50070");
   }
 }
-
