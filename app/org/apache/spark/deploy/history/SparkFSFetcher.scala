@@ -64,44 +64,26 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       .getOrElse(DEFAULT_EVENT_LOG_DIR)
   logger.info("The event log directory of Spark application is set to " + confEventLogDir)
 
-  private val _sparkConf = new SparkConf()
+  private lazy val _hadoopUtils: HadoopUtils = HadoopUtils
 
-  /* Lazy loading for the log directory is very important. Hadoop Configuration() takes time to load itself to reflect
-   * properties in the configuration files. Triggering it too early will sometimes make the configuration object empty.
-   */
+  private lazy val _fs: FileSystem = {
+    val filesystem = new WebHdfsFileSystem()
+    filesystem.initialize(new URI(_logDir), new Configuration())
+    filesystem
+  }
+
+  private lazy val _sparkConf = new SparkConf()
+
+  private lazy val _security = new HadoopSecurity()
+
   private lazy val _logDir: String = {
     val conf = new Configuration()
-    val hdfsAddress = nameNodeAddress(conf).map { address => s"webhdfs://${address}" }.getOrElse("")
+    val hdfsAddress =
+      nameNodeAddress(fetcherConfData, conf, _hadoopUtils).map { address => s"webhdfs://${address}" }.getOrElse("")
     val uri = new URI(_sparkConf.get("spark.eventLog.dir", confEventLogDir))
     val logDir = s"${hdfsAddress}${uri.getPath}"
     logger.info("Looking for spark logs at logDir: " + logDir)
     logDir
-  }
-
-  def nameNodeAddress(conf: Configuration): Option[String] =
-    findFetcherConfiguredNameNodeAddress
-      .orElse(hadoopUtils.findHaNameNodeAddress(conf))
-      .orElse(hadoopUtils.httpNameNodeAddress(conf));
-
-  def findFetcherConfiguredNameNodeAddress: Option[String] = {
-    val nameNodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY)).map { _.split(",") }
-    nameNodeAddresses.flatMap { _.find(hadoopUtils.isActiveNameNode) }
-  }
-
-  protected lazy val hadoopUtils: HadoopUtils = HadoopUtils
-
-  private val _security = new HadoopSecurity()
-
-  private def fs: FileSystem = {
-
-    // For test purpose, if no host presented, use the local file system.
-    if (new URI(_logDir).getHost == null) {
-      FileSystem.getLocal(new Configuration())
-    } else {
-      val filesystem = new WebHdfsFileSystem()
-      filesystem.initialize(new URI(_logDir), new Configuration())
-      filesystem
-    }
   }
 
   def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
@@ -116,7 +98,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
     val (logPath, usingDefaultEventLog) =
       Option(defaultEventLogPathForApp(appId))
-        .filter(fs.exists)
+        .filter(_fs.exists)
         .map((_, true))
         .getOrElse((legacyEventLogPathForApp(appId), false))
 
@@ -147,7 +129,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   private def legacyEventLogPathForApp(appId: String): Path = new Path(_logDir, appId)
 
-  private def openDefaultEventLog(path: Path): InputStream = EventLoggingListener.openEventLog(path, fs)
+  private def openDefaultEventLog(path: Path): InputStream = EventLoggingListener.openEventLog(path, _fs)
 
   /**
    * Opens a legacy log path
@@ -156,7 +138,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * @return an InputStream
    */
   private def openLegacyEventLog(dir: Path): InputStream = {
-    val children = fs.listStatus(dir)
+    val children = _fs.listStatus(dir)
     var eventLogPath: Path = null
     var codecName: Option[String] = None
 
@@ -181,7 +163,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
         throw new IllegalArgumentException(s"Unknown compression codec $codecName.")
     }
 
-    val in = new BufferedInputStream(fs.open(eventLogPath))
+    val in = new BufferedInputStream(_fs.open(eventLogPath))
     codec.map(_.compressedInputStream(in)).getOrElse(in)
   }
 
@@ -193,9 +175,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * @param eventLogPath The event log path
    * @return If the event log parsing should be throttled
    */
-  private def shouldThrottle(eventLogPath: Path): Boolean = {
-    fs.getFileStatus(eventLogPath).getLen() > (eventLogSizeLimitMb * FileUtils.ONE_MB)
-  }
+  private def shouldThrottle(eventLogPath: Path): Boolean =
+    _fs.getFileStatus(eventLogPath).getLen() > (eventLogSizeLimitMb * FileUtils.ONE_MB)
 
   def getEventLogSize(): Double = {
     eventLogSizeLimitMb
@@ -207,7 +188,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
 }
 
-private object SparkFSFetcher {
+object SparkFSFetcher {
   private val logger = Logger.getLogger(SparkFSFetcher.getClass)
 
   val DEFAULT_EVENT_LOG_DIR = "/system/spark-history"
@@ -224,4 +205,21 @@ private object SparkFSFetcher {
   // Param map property names that allow users to configer various aspects of the fetcher
   val NAMENODE_ADDRESSES_KEY = "namenode_addresses"
   val SPARK_LOG_SUFFIX_KEY = "spark_log_ext"
+
+  def nameNodeAddress(
+    fetcherConfData: FetcherConfigurationData,
+    conf: Configuration,
+    hadoopUtils: HadoopUtils
+  ): Option[String] =
+    findFetcherConfiguredNameNodeAddress(fetcherConfData, hadoopUtils)
+      .orElse(hadoopUtils.findHaNameNodeAddress(conf))
+      .orElse(hadoopUtils.httpNameNodeAddress(conf));
+
+  def findFetcherConfiguredNameNodeAddress(
+    fetcherConfData: FetcherConfigurationData,
+    hadoopUtils: HadoopUtils
+  ): Option[String] = {
+    val nameNodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY)).map { _.split(",") }
+    nameNodeAddresses.flatMap { _.find(hadoopUtils.isActiveNameNode) }
+  }
 }
