@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
+import com.linkedin.drelephant.util.HadoopUtils;
+import com.linkedin.drelephant.util.HadoopUtilsTest;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import javax.xml.parsers.DocumentBuilder;
@@ -201,20 +203,45 @@ public class SparkFsFetcherTest {
   // checks the namenode address from the hadoopconf
   @Test
   public void testGetNamenodeAddressFromHadoopConf() {
+
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document2.getDocumentElement());
-    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0));
+
+    final HadoopUtils hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+      new scala.Tuple2("sample-ha1.grid.example.com", new scala.Tuple2("sample-ha1.grid.example.com", "standby")),
+      new scala.Tuple2("sample-ha2.grid.example.com", new scala.Tuple2("sample-ha2.grid.example.com", "active")));
+    SparkFSFetcher fetcher =
+      new SparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0)) {
+        @Override
+        public HadoopUtils hadoopUtils() {
+          return hadoopUtils;
+        }
+      };
+
     Configuration conf = new Configuration();
     String nameNode = fetcher.getNamenodeAddress(conf);
-    assertEquals(nameNode,"sample-ha2.grid.company.com:50070");
+    assertEquals(nameNode,"sample-ha2.grid.example.com:50070");
   }
 
   // checks the namenode address from fetcherConf
   @Test
   public void testGetNamenodeAddressFromFetcherConf() {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
-    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0));
+
+    final HadoopUtils hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+      new scala.Tuple2("sample-ha1.grid.example.com", new scala.Tuple2("sample-ha1.grid.example.com", "standby")),
+      new scala.Tuple2("sample-ha2.grid.example.com", new scala.Tuple2("sample-ha2.grid.example.com", "active")),
+      new scala.Tuple2("sample-ha3.grid.example.com", new scala.Tuple2("sample-ha3.grid.example.com", "standby")),
+      new scala.Tuple2("sample-ha4.grid.example.com", new scala.Tuple2("sample-ha4.grid.example.com", "active")));
+    SparkFSFetcher fetcher =
+      new SparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0)) {
+        @Override
+        public HadoopUtils hadoopUtils() {
+          return hadoopUtils;
+        }
+      };
+
     Configuration conf = new Configuration();
     String nameNode = fetcher.getNamenodeAddress(conf);
-    assertEquals(nameNode,"sample-ha4.grid.company.com:50070");
+    assertEquals(nameNode,"sample-ha4.grid.example.com:50070");
   }
 }

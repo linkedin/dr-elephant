@@ -16,6 +16,7 @@
 
 package org.apache.spark.deploy.history
 
+import com.linkedin.drelephant.util.HadoopUtils
 import java.io.{BufferedInputStream, InputStream}
 import java.net.{HttpURLConnection, URI, URL}
 import java.security.PrivilegedAction
@@ -79,9 +80,13 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     logDir
   }
 
-  def configuredNamenodeAddress: Option[String] =
-    Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY)).flatMap { _.split(",").find(checkActivation) }
+  protected lazy val hadoopUtils: HadoopUtils = HadoopUtils
 
+  def configuredNamenodeAddress: Option[String] = {
+    val namenodeAddresses = Option(fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY))
+    println(namenodeAddresses)
+    namenodeAddresses.flatMap { _.split(",").find(hadoopUtils.isActiveNamenode) }
+  }
 
   /**
    * Returns the address of the active namenode
@@ -93,41 +98,50 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     // check if the fetcherconf has namenode addresses. There can be multiple addresses and
     // we need to check the active namenode address. If a value is specified in the fetcherconf
     // then the value obtained from hadoop configuration won't be used.
-    if (fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY) != null) {
-      val nameNodes: Array[String] = fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY).split(",");
-      for (nameNode <- nameNodes) {
-        if (checkActivation(nameNode)) {
-          return nameNode;
-        }
-      }
-    }
+    // if (fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY) != null) {
+    //   val nameNodes: Array[String] = fetcherConfData.getParamMap.get(NAMENODE_ADDRESSES_KEY).split(",");
+    //   println(nameNodes.toSeq)
+    //   for (nameNode <- nameNodes) {
+    //     if (checkActivation(nameNode)) {
+    //       return nameNode;
+    //     }
+    //   }
+    // }
 
-    // if we couldn't find the namenode address in fetcherconf, try to find it in hadoop configuration.
-    var isHAEnabled: Boolean = false;
-    if (conf.get(DFS_NAMESERVICES_KEY) != null) {
-      isHAEnabled = true;
-    }
+    val o = configuredNamenodeAddress
+    if (o.isDefined)
+      return o.get
 
-    // check if HA is enabled
-    if (isHAEnabled) {
-      // There can be multiple nameservices separated by ',' in case of HDFS federation. It is not supported right now.
-      if (conf.get(DFS_NAMESERVICES_KEY).split(",").length > 1) {
-        logger.info("Multiple name services found. HDFS federation is not supported right now.")
-        return null;
-      }
-      val nameService: String = conf.get(DFS_NAMESERVICES_KEY);
-      val nameNodeIdentifier: String = conf.get(DFS_HA_NAMENODES_KEY + "." + nameService);
-      if (nameNodeIdentifier != null) {
-        // there can be multiple namenode identifiers separated by ','
-        for (nameNodeIdentifierValue <- nameNodeIdentifier.split(",")) {
-          val httpValue = conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY + "." + nameService + "." + nameNodeIdentifierValue);
-          if (httpValue != null && checkActivation(httpValue)) {
-            logger.info("Active namenode : " + httpValue);
-            return httpValue;
-          }
-        }
-      }
-    }
+    // // if we couldn't find the namenode address in fetcherconf, try to find it in hadoop configuration.
+    // var isHAEnabled: Boolean = false;
+    // if (conf.get(DFS_NAMESERVICES_KEY) != null) {
+    //   isHAEnabled = true;
+    // }
+
+    // // check if HA is enabled
+    // if (isHAEnabled) {
+    //   // There can be multiple nameservices separated by ',' in case of HDFS federation. It is not supported right now.
+    //   if (conf.get(DFS_NAMESERVICES_KEY).split(",").length > 1) {
+    //     logger.info("Multiple name services found. HDFS federation is not supported right now.")
+    //     return null;
+    //   }
+    //   val nameService: String = conf.get(DFS_NAMESERVICES_KEY);
+    //   val nameNodeIdentifier: String = conf.get(DFS_HA_NAMENODES_KEY + "." + nameService);
+    //   if (nameNodeIdentifier != null) {
+    //     // there can be multiple namenode identifiers separated by ','
+    //     for (nameNodeIdentifierValue <- nameNodeIdentifier.split(",")) {
+    //       val httpValue = conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY + "." + nameService + "." + nameNodeIdentifierValue);
+    //       if (httpValue != null && checkActivation(httpValue)) {
+    //         logger.info("Active namenode : " + httpValue);
+    //         return httpValue;
+    //       }
+    //     }
+    //   }
+    // }
+
+    val p = hadoopUtils.haNamenodeAddress(conf)
+    if (p.isDefined)
+      return p.get
 
     // if HA is disabled, return the namenode http-address.
     return conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY);

@@ -20,10 +20,12 @@ trait HadoopUtils {
       _.split(",") match {
         case Array(nameService) => {
           val namenodeAddress =
-            Option(conf.get(s"${DFS_HA_NAMENODES_KEY}.${nameService}")).map {
+            Option(conf.get(s"${DFS_HA_NAMENODES_KEY}.${nameService}"))
+              .map {
               _.split(",").flatMap { namenode => Option(conf.get(s"${DFS_NAMENODE_HTTP_ADDRESS_KEY}.${nameService}.${namenode}")) }
             }
               .flatMap { _.find(isActiveNamenode) }
+
           if (namenodeAddress.isDefined) {
             logger.info(s"Active namenode for ${nameService}: ${namenodeAddress}")
           } else {

@@ -11,36 +11,52 @@ import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 
 class HadoopUtilsTest extends FunSpec with Matchers with MockitoSugar {
+  import HadoopUtilsTest._
 
   describe("HadoopUtils") {
     describe(".isActiveNameNode") {
       it("returns true for active name nodes") {
-        val hadoopUtils = newFakeHadoopUtilsForNameNode("nn1.example.com", "active")
-        hadoopUtils.isActiveNamenode("nn1.example.com") should be(true)
+        val hadoopUtils =
+          newFakeHadoopUtilsForNameNode(Map(("nn1.grid.example.com", ("nn1-ha1.grid.example.com", "active"))))
+        hadoopUtils.isActiveNamenode("nn1.grid.example.com") should be(true)
       }
 
       it("returns false for standby name nodes") {
-        val hadoopUtils = newFakeHadoopUtilsForNameNode("nn1.example.com", "standby")
-        hadoopUtils.isActiveNamenode("nn1.example.com") should be(false)
+        val hadoopUtils =
+          newFakeHadoopUtilsForNameNode(Map(("nn1.grid.example.com", ("nn1-ha1.grid.example.com", "standby"))))
+        hadoopUtils.isActiveNamenode("nn1.grid.example.com") should be(false)
       }
     }
   }
+}
 
-  def newFakeHadoopUtilsForNameNode(host: String, state: String): HadoopUtils = new HadoopUtils {
-    override lazy val logger = mock[Logger]
+object HadoopUtilsTest extends MockitoSugar {
+  import scala.annotation.varargs
 
-    override def newAuthenticatedConnection(url: URL): HttpURLConnection = {
-      val conn = mock[HttpURLConnection]
-      if (url.getHost == host) {
-        val jsonNode = newFakeNameNodeStatus(host, state)
-        val bytes = jsonNode.toString.getBytes("UTF-8")
-        Mockito.when(conn.getInputStream()).thenReturn(new ByteArrayInputStream(bytes))
-      } else {
-        Mockito.when(conn.getInputStream()).thenThrow(new IOException())
+  @varargs
+  def newFakeHadoopUtilsForNameNode(nameNodeHostsAndStatesByJmxHost: (String, (String, String))*): HadoopUtils =
+    newFakeHadoopUtilsForNameNode(nameNodeHostsAndStatesByJmxHost.toMap)
+
+  def newFakeHadoopUtilsForNameNode(nameNodeHostsAndStatesByJmxHost: Map[String, (String, String)]): HadoopUtils =
+    new HadoopUtils {
+      override lazy val logger = mock[Logger]
+
+      override def newAuthenticatedConnection(url: URL): HttpURLConnection = {
+        val conn = mock[HttpURLConnection]
+        val jmxHost = url.getHost
+        nameNodeHostsAndStatesByJmxHost.get(jmxHost) match {
+          case Some((host, state)) => {
+            val jsonNode = newFakeNameNodeStatus(host, state)
+            val bytes = jsonNode.toString.getBytes("UTF-8")
+            Mockito.when(conn.getInputStream()).thenReturn(new ByteArrayInputStream(bytes))
+          }
+          case None => {
+            Mockito.when(conn.getInputStream()).thenThrow(new IOException())
+          }
+        }
+        conn
       }
-      conn
     }
-  }
 
   def newFakeNameNodeStatus(host: String, state: String): JsonNode = {
     val jsonNodeFactory = JsonNodeFactory.instance;
