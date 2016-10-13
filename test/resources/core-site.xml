@@ -49,4 +49,8 @@
     <value>sample-ha2.grid.example.com:50070</value>
   </property>
 
+  <property>
+    <name>dfs.namenode.http-address</name>
+    <value>sample.grid.example.com:50070</value>
+  </property>
 </configuration>

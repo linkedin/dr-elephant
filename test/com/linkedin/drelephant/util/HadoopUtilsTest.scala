@@ -21,6 +21,7 @@ import java.net.{HttpURLConnection, URL}
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
 import org.mockito.Mockito
 import org.scalatest.{Matchers, FunSpec}
@@ -30,6 +31,43 @@ class HadoopUtilsTest extends FunSpec with Matchers with MockitoSugar {
   import HadoopUtilsTest._
 
   describe("HadoopUtils") {
+    describe(".findHaNameNodeAddress") {
+      it("returns the first active HA name node it can find") {
+        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
+          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
+        )
+        // This conf comes from /test/resources/core-site.xml.
+        val conf = new Configuration()
+        val haNameNodeAddress = hadoopUtils.findHaNameNodeAddress(conf)
+        haNameNodeAddress should be(Some("sample-ha2.grid.example.com:50070"))
+      }
+
+      it("returns no HA name node if one isn't configured") {
+        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
+          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
+        )
+        // This conf is blank.
+        val conf = new Configuration(false)
+        val haNameNodeAddress = hadoopUtils.findHaNameNodeAddress(conf)
+        haNameNodeAddress should be(None)
+      }
+    }
+
+    describe(".httpNameNodeAddress") {
+      it("returns the default name node") {
+        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
+          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
+        )
+        // This conf comes from /test/resources/core-site.xml.
+        val conf = new Configuration()
+        val haNameNodeAddress = hadoopUtils.httpNameNodeAddress(conf)
+        haNameNodeAddress should be(Some("sample.grid.example.com:50070"))
+      }
+    }
+
     describe(".isActiveNameNode") {
       it("returns true for active name nodes") {
         val hadoopUtils =
