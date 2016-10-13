@@ -16,10 +16,14 @@
 
 package org.apache.spark.deploy.history
 
+import java.nio.file.{Files, StandardCopyOption}
+
+import com.linkedin.drelephant.analysis.AnalyticJob
 import com.linkedin.drelephant.configurations.fetcher.{FetcherConfiguration, FetcherConfigurationData}
 import com.linkedin.drelephant.util.HadoopUtilsTest
 import javax.xml.parsers.DocumentBuilderFactory
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.scalatest.{FunSpec, Matchers}
 import org.w3c.dom.Document
 
@@ -95,7 +99,30 @@ class SparkFsFetcherTest extends FunSpec with Matchers {
         val nameNode = SparkFSFetcher.nameNodeAddress(fetcherConfigurationData, conf, hadoopUtils)
         nameNode should be(Some("sample.grid.example.com:50070"))
       }
+    }
 
+    describe(".fetchData") {
+      it("returns the data collected from the Spark event log for the given analytic job") {
+        val in = getClass.getClassLoader.getResourceAsStream("spark_event_logs/event_log_1")
+        val tempPath = Files.createTempFile("event_log_1", "")
+        Files.copy(in, tempPath, StandardCopyOption.REPLACE_EXISTING)
+        in.close()
+
+        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest7.xml")
+        val fetcher = new SparkFSFetcher(fetcherConfigurationData) {
+          override protected lazy val _fs = FileSystem.getLocal(new Configuration())
+
+          override protected def doAsPrivilegedAction[T](action: () => T): T = action()
+
+          override protected def eventLogContext(appId: String): SparkFSFetcher.EventLogContext =
+            SparkFSFetcher.EventLogContext(new Path(tempPath.toString), usingDefaultEventLog = true)
+        }
+        val analyticJob = new AnalyticJob().setAppId("foo")
+
+        val dataCollection = fetcher.fetchData(analyticJob)
+        val jobProgressData = Option(dataCollection.getJobProgressData())
+        jobProgressData should not be None
+      }
     }
   }
 }

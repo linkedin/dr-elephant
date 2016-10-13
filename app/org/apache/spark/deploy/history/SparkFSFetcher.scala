@@ -64,9 +64,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       .getOrElse(DEFAULT_EVENT_LOG_DIR)
   logger.info("The event log directory of Spark application is set to " + eventLogDir)
 
-  private lazy val _hadoopUtils: HadoopUtils = HadoopUtils
+  protected lazy val _hadoopUtils: HadoopUtils = HadoopUtils
 
-  private lazy val _fs: FileSystem = {
+  protected lazy val _fs: FileSystem = {
     val filesystem = new WebHdfsFileSystem()
     filesystem.initialize(new URI(_logDir), new Configuration())
     filesystem
@@ -88,19 +88,16 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     val appId = analyticJob.getAppId()
-    _security.doAs[SparkDataCollection](new PrivilegedAction[SparkDataCollection] {
-      override def run(): SparkDataCollection = doFetchData(appId)
-    })
+    doAsPrivilegedAction { () => doFetchData(appId) }
   }
 
-  private def doFetchData(appId: String): SparkDataCollection = {
+  protected def doAsPrivilegedAction[T](action: () => T): T =
+    _security.doAs[T](new PrivilegedAction[T] { override def run(): T = action() })
+
+  protected def doFetchData(appId: String): SparkDataCollection = {
     val dataCollection = new SparkDataCollection()
 
-    val (logPath, usingDefaultEventLog) =
-      Option(defaultEventLogPathForApp(appId))
-        .filter(_fs.exists)
-        .map((_, true))
-        .getOrElse((legacyEventLogPathForApp(appId), false))
+    val EventLogContext(logPath, usingDefaultEventLog) = eventLogContext(appId)
 
     if (shouldThrottle(logPath)) {
       dataCollection.throttle()
@@ -123,6 +120,12 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
     dataCollection
   }
+
+  protected def eventLogContext(appId: String): EventLogContext =
+    Option(defaultEventLogPathForApp(appId))
+      .filter(_fs.exists)
+      .map(EventLogContext(_, true))
+      .getOrElse(EventLogContext(legacyEventLogPathForApp(appId), false))
 
   private def defaultEventLogPathForApp(appId: String): Path =
     new Path(_logDir, appId + fetcherConfData.getParamMap.getOrDefault(SPARK_LOG_SUFFIX_KEY, DEFAULT_SPARK_LOG_SUFFIX))
@@ -181,6 +184,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
 object SparkFSFetcher {
   private val logger = Logger.getLogger(SparkFSFetcher.getClass)
+
+  case class EventLogContext(logPath: Path, usingDefaultEventLog: Boolean)
 
   val DEFAULT_EVENT_LOG_DIR = "/system/spark-history"
   val DEFAULT_EVENT_LOG_SIZE_LIMIT_MB = 100d; // 100MB
