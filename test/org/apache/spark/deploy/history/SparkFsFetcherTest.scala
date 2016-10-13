@@ -48,20 +48,9 @@ class SparkFsFetcherTest extends FunSpec with Matchers {
     }
 
     describe(".nameNodeAddress") {
-      it("returns the Hadoop-configured name node address by default") {
-        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest6.xml")
-        val conf = new Configuration()
-        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
-          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
-          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
-        )
-        val nameNode = SparkFSFetcher.nameNodeAddress(fetcherConfigurationData, conf, hadoopUtils)
-        nameNode should be(Some("sample-ha2.grid.example.com:50070"))
-      }
-
-      it("returns the fetcher configuration name node address when supplied") {
+      it("returns the first fetcher configuration's name node that is provided and active") {
         val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest8.xml")
-        val conf = new Configuration()
+        val conf = HadoopUtilsTest.newConfiguration(loadDefaults = true)
         val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
           ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
           ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active")),
@@ -71,6 +60,42 @@ class SparkFsFetcherTest extends FunSpec with Matchers {
         val nameNode = SparkFSFetcher.nameNodeAddress(fetcherConfigurationData, conf, hadoopUtils)
         nameNode should be(Some("sample-ha4.grid.example.com:50070"))
       }
+
+      it("returns the first active Hadoop configuration's HA name node if the fetcher configuration provides no active") {
+        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest8.xml")
+        val conf = HadoopUtilsTest.newConfiguration(loadDefaults = true)
+        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
+          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active")),
+          ("sample-ha3.grid.example.com", ("sample-ha3.grid.example.com", "standby")),
+          ("sample-ha4.grid.example.com", ("sample-ha4.grid.example.com", "standby"))
+        )
+        val nameNode = SparkFSFetcher.nameNodeAddress(fetcherConfigurationData, conf, hadoopUtils)
+        nameNode should be(Some("sample-ha2.grid.example.com:50070"))
+      }
+
+      it("returns the first active Hadoop configuration's HA name node if the fetcher configuration provides nothing") {
+        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest6.xml")
+        val conf = HadoopUtilsTest.newConfiguration(loadDefaults = true)
+        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
+          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
+        )
+        val nameNode = SparkFSFetcher.nameNodeAddress(fetcherConfigurationData, conf, hadoopUtils)
+        nameNode should be(Some("sample-ha2.grid.example.com:50070"))
+      }
+
+      it("returns the Hadoop configuration's default name node as a last resort") {
+        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest6.xml")
+        val conf = HadoopUtilsTest.newConfiguration(loadDefaults = true)
+        val hadoopUtils = HadoopUtilsTest.newFakeHadoopUtilsForNameNode(
+          ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
+          ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "standby"))
+        )
+        val nameNode = SparkFSFetcher.nameNodeAddress(fetcherConfigurationData, conf, hadoopUtils)
+        nameNode should be(Some("sample.grid.example.com:50070"))
+      }
+
     }
   }
 }

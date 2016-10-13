@@ -37,8 +37,7 @@ class HadoopUtilsTest extends FunSpec with Matchers with MockitoSugar {
           ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
           ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
         )
-        // This conf comes from /test/resources/core-site.xml.
-        val conf = new Configuration()
+        val conf = newConfiguration(loadDefaults = true)
         val haNameNodeAddress = hadoopUtils.findHaNameNodeAddress(conf)
         haNameNodeAddress should be(Some("sample-ha2.grid.example.com:50070"))
       }
@@ -48,8 +47,7 @@ class HadoopUtilsTest extends FunSpec with Matchers with MockitoSugar {
           ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
           ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
         )
-        // This conf is blank.
-        val conf = new Configuration(false)
+        val conf = newConfiguration(loadDefaults = false)
         val haNameNodeAddress = hadoopUtils.findHaNameNodeAddress(conf)
         haNameNodeAddress should be(None)
       }
@@ -61,8 +59,7 @@ class HadoopUtilsTest extends FunSpec with Matchers with MockitoSugar {
           ("sample-ha1.grid.example.com", ("sample-ha1.grid.example.com", "standby")),
           ("sample-ha2.grid.example.com", ("sample-ha2.grid.example.com", "active"))
         )
-        // This conf comes from /test/resources/core-site.xml.
-        val conf = new Configuration()
+        val conf = newConfiguration(loadDefaults = true)
         val haNameNodeAddress = hadoopUtils.httpNameNodeAddress(conf)
         haNameNodeAddress should be(Some("sample.grid.example.com:50070"))
       }
@@ -129,4 +126,10 @@ object HadoopUtilsTest extends MockitoSugar {
 
     jsonNodeFactory.objectNode().set("beans", beansJsonNode)
   }
+
+  /**
+    * Returns a Hadoop Configuration using /test/resources/core-site.xml if loadDefaults is true; otherwise, it returns a
+    * blank Hadoop Configuration.
+    */
+  def newConfiguration(loadDefaults: Boolean): Configuration = new Configuration(loadDefaults)
 }
