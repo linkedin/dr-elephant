@@ -29,7 +29,7 @@ trait HadoopUtils {
   val DFS_HA_NAMENODES_KEY = "dfs.ha.namenodes"
   val DFS_NAMENODE_HTTP_ADDRESS_KEY = "dfs.namenode.http-address"
 
-  def logger: Logger
+  protected def logger: Logger
 
   def findHaNameNodeAddress(conf: Configuration): Option[String] = {
 
@@ -80,10 +80,10 @@ trait HadoopUtils {
     }
   }
 
-  def isActiveNameNode(in: InputStream): Boolean =
+  protected def isActiveNameNode(in: InputStream): Boolean =
     new ObjectMapper().readTree(in).path("beans").get(0).path("State").textValue() == "active"
 
-  def newAuthenticatedConnection(url: URL): HttpURLConnection = {
+  protected def newAuthenticatedConnection(url: URL): HttpURLConnection = {
     val token = new AuthenticatedURL.Token()
     val authenticatedURL = new AuthenticatedURL()
     authenticatedURL.openConnection(url, token)
@@ -91,5 +91,5 @@ trait HadoopUtils {
 }
 
 object HadoopUtils extends HadoopUtils {
-  override lazy val logger = Logger.getLogger(classOf[HadoopUtils])
+  override protected lazy val logger = Logger.getLogger(classOf[HadoopUtils])
 }
