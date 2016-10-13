@@ -79,125 +79,58 @@ public class SparkFsFetcherTest {
     }
   }
 
-  /**
-   * Test for verifying the configured event log directory and log size
-   *
-   * <params>
-   *   <event_log_size_limit_in_mb>50</event_log_size_limit_in_mb>
-   *   <event_log_dir>/custom/configured</event_log_dir>
-   * </params>
-   */
-  @Test
-  public void testSparkFetcherConfig() {
-    FetcherConfiguration fetcherConf = new FetcherConfiguration(document1.getDocumentElement());
-    assertEquals(fetcherConf.getFetchersConfigurationData().size(), 1);
-    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getAppType().getName(), spark);
-
-    Class<?> fetcherClass = null;
-    FetcherConfigurationData data = fetcherConf.getFetchersConfigurationData().get(0);
-    try {
-      fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(data.getClassName());
-      Object sparkFetcherInstance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
-      if (!(sparkFetcherInstance instanceof ElephantFetcher)) {
-        throw new IllegalArgumentException(
-                "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
-      }
-
-      // Check if the configurations are picked up correctly
-      assertEquals(confEventLogSize, ((SparkFSFetcher) sparkFetcherInstance).getEventLogSize(), 0);
-      assertEquals(confEventLogDir, ((SparkFSFetcher) sparkFetcherInstance).getEventLogDir());
-
-    } catch (InstantiationException e) {
-      throw new RuntimeException("Could not instantiate class " + data.getClassName(), e);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException("Could not find class " + data.getClassName(), e);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
-    } catch (NoSuchMethodException e) {
-      throw new RuntimeException("Could not find constructor for class " + data.getClassName(), e);
-    }
+  private static Document parseDocument(String resourcePath) throws Exception {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    return builder.parse(SparkFsFetcherTest.class.getClassLoader().getResourceAsStream(resourcePath));
   }
 
-  /**
-   * Test for verifying unspecified log directory and log size configs
-   *
-   * <params>
-   * </params>
-   */
   @Test
-  public void testSparkFetcherUnspecifiedConfig() {
-    FetcherConfiguration fetcherConf = new FetcherConfiguration(document3.getDocumentElement());
+  public void testSparkFetcherConfig() throws Exception {
+    Document document = parseDocument("configurations/fetcher/FetcherConfTest5.xml");
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document.getDocumentElement());
     assertEquals(fetcherConf.getFetchersConfigurationData().size(), 1);
     assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getAppType().getName(), spark);
 
-    Class<?> fetcherClass = null;
-    FetcherConfigurationData data = fetcherConf.getFetchersConfigurationData().get(0);
-    try {
-      fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(data.getClassName());
-      Object sparkFetcherInstance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
-      if (!(sparkFetcherInstance instanceof ElephantFetcher)) {
-        throw new IllegalArgumentException(
-                "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
-      }
+    FetcherConfigurationData fetcherConfData = fetcherConf.getFetchersConfigurationData().get(0);
+    Class<?> fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(fetcherConfData.getClassName());
+    SparkFSFetcher fetcher =
+      (SparkFSFetcher) fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(fetcherConfData);
 
-      // Check if the default values are used
-      assertEquals(defEventLogSize, ((SparkFSFetcher) sparkFetcherInstance).getEventLogSize(), 0);
-      assertEquals(defEventLogDir, ((SparkFSFetcher) sparkFetcherInstance).getEventLogDir());
-
-    } catch (InstantiationException e) {
-      throw new RuntimeException("Could not instantiate class " + data.getClassName(), e);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException("Could not find class " + data.getClassName(), e);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
-    } catch (NoSuchMethodException e) {
-      throw new RuntimeException("Could not find constructor for class " + data.getClassName(), e);
-    }
+    assertEquals(50, fetcher.eventLogSizeLimitMb(), 0);
+    assertEquals("/custom/configured", fetcher.eventLogDir());
   }
 
-  /**
-   * Test for verifying empty log directory and log size configs
-   *
-   * <params>
-   *   <event_log_size_limit_in_mb></event_log_size_limit_in_mb>
-   *   <event_log_dir>/system/spark-history</event_log_dir>
-   * </params>
-   */
   @Test
-  public void testSparkFetcherEmptyConfig() {
-    FetcherConfiguration fetcherConf = new FetcherConfiguration(document2.getDocumentElement());
+  public void testSparkFetcherUnspecifiedConfig() throws Exception {
+    Document document = parseDocument("configurations/fetcher/FetcherConfTest7.xml");
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document.getDocumentElement());
     assertEquals(fetcherConf.getFetchersConfigurationData().size(), 1);
     assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getAppType().getName(), spark);
 
-    Class<?> fetcherClass = null;
-    FetcherConfigurationData data = fetcherConf.getFetchersConfigurationData().get(0);
-    try {
-      fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(data.getClassName());
-      Object sparkFetcherInstance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
-      if (!(sparkFetcherInstance instanceof ElephantFetcher)) {
-        throw new IllegalArgumentException(
-                "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
-      }
+    FetcherConfigurationData fetcherConfData = fetcherConf.getFetchersConfigurationData().get(0);
+    Class<?> fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(fetcherConfData.getClassName());
+    SparkFSFetcher fetcher =
+      (SparkFSFetcher) fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(fetcherConfData);
 
-      // Check if the default values are used
-      assertEquals(defEventLogSize, ((SparkFSFetcher) sparkFetcherInstance).getEventLogSize(), 0);
-      assertEquals(defEventLogDir, ((SparkFSFetcher) sparkFetcherInstance).getEventLogDir());
+    assertEquals(SparkFSFetcher.DEFAULT_EVENT_LOG_SIZE_LIMIT_MB(), fetcher.eventLogSizeLimitMb(), 0);
+    assertEquals(SparkFSFetcher.DEFAULT_EVENT_LOG_DIR(), fetcher.eventLogDir());
+  }
 
-    } catch (InstantiationException e) {
-      throw new RuntimeException("Could not instantiate class " + data.getClassName(), e);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException("Could not find class " + data.getClassName(), e);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
-    } catch (NoSuchMethodException e) {
-      throw new RuntimeException("Could not find constructor for class " + data.getClassName(), e);
-    }
+  @Test
+  public void testSparkFetcherEmptyConfig() throws Exception {
+    Document document = parseDocument("configurations/fetcher/FetcherConfTest6.xml");
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document.getDocumentElement());
+    assertEquals(fetcherConf.getFetchersConfigurationData().size(), 1);
+    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getAppType().getName(), spark);
+
+    FetcherConfigurationData fetcherConfData = fetcherConf.getFetchersConfigurationData().get(0);
+    Class<?> fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(fetcherConfData.getClassName());
+    SparkFSFetcher fetcher =
+      (SparkFSFetcher) fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(fetcherConfData);
+
+    assertEquals(SparkFSFetcher.DEFAULT_EVENT_LOG_SIZE_LIMIT_MB(), fetcher.eventLogSizeLimitMb(), 0);
+    assertEquals(SparkFSFetcher.DEFAULT_EVENT_LOG_DIR(), fetcher.eventLogDir());
   }
 
   @Test
