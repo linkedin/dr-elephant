@@ -1,10 +1,14 @@
 import Ember from 'ember';
 
 export default Ember.Controller.extend({
+  showInputBox: false,
   actions: {
 
-    /** add a new tab and click on it once the rendering is complete **/
-    addTab: function(user) {
+    /**
+     * This action adds a new tab and clicks on it once the tab is added and rendered
+     * @params user The user to be added as a tab
+     */
+    addTab(user) {
       this.users.addToUsername(user);
       this.users.setActiveUser(user);
       this.set('model.usernames',this.users.getUsernames());
@@ -13,8 +17,11 @@ export default Ember.Controller.extend({
       });
     },
 
-    /** delete tab and go to `all` tab if deleted tab is the current tab.**/
-    deleteTab: function(tabname) {
+    /**
+     * This action deletes the tab from the list and clicks on the `all` tab
+     * @params tabname the tab to delete
+     */
+    deleteTab(tabname) {
       this.users.deleteUsername(tabname);
       this.set('model.usernames',this.users.getUsernames());
       if(this.users.getActiveUser()===tabname) {

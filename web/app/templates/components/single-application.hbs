@@ -9,13 +9,14 @@
                   <tr>
                       <td class="heading" id="app_summary_id">
                         {{#if (eq application.jobname null)}}
-                            {{application.id}}
-                          {{else}}
-                            {{application.jobname}} <span class="glyphicon glyphicon-chevron-right"></span> {{application.id}}
-                          {{/if}}
+                          {{application.id}}
+                        {{else}}
+                          {{application.jobname}} <span class="glyphicon glyphicon-chevron-right"></span> {{application.id}}
+                        {{/if}}
 
                       </td>
-                      <td class="user" id="app_summary_user"><span class="glyphicon glyphicon-user"></span>  {{application.username}}</td>
+                      <td class="user" id="app_summary_user"><span
+                              class="glyphicon glyphicon-user"></span>  {{application.username}}</td>
                   </tr>
               </table>
 
@@ -28,11 +29,13 @@
                   </tr>
 
                   <tr>
-                      <td class="heuristics-block" id="app_summary_heuristics_summary">{{heuristics-summary heuristics=application.heuristicsummary}}</td>
+                      <td class="heuristics-block"
+                          id="app_summary_heuristics_summary">{{heuristics-summary heuristics=application.heuristicsummary}}</td>
                   </tr>
 
                   <tr>
-                      <td class="aggregated-metrics-block" id="app_summary_aggregated_metrics">{{aggregated-metrics application=application}}</td>
+                      <td class="aggregated-metrics-block"
+                          id="app_summary_aggregated_metrics">{{aggregated-metrics application=application}}</td>
                   </tr>
                   </tbody>
               </table>

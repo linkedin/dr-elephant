@@ -1,0 +1,3 @@
+body {
+  background: #E7E9EC !important; /* Adding !important forces the browser to overwrite the default style applied by Bootstrap */
+}

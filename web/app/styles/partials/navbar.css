@@ -1,0 +1,64 @@
+/** navigation bar **/
+
+.navbar-default {
+  background-color: #ffffff;
+  border-color: #e8e8e8;
+}
+
+.navbar-default .navbar-brand {
+  color: #6a7478;
+}
+
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+  color: #0084bf;
+}
+
+.navbar-default .navbar-text {
+  color: #6a7478;
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: #6a7478;
+}
+
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #0084bf;
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #0084bf;
+  background-color: #e8e8e8;
+}
+
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+  color: #0084bf;
+  background-color: #e8e8e8;
+}
+
+.navbar-default .navbar-toggle {
+  border-color: #e8e8e8;
+}
+
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+  background-color: #e8e8e8;
+}
+
+/** Navigation extension **/
+
+.nav-extension {
+  background-color: #0084BF;
+  height: 120px;
+  border: none;
+  margin-top: -20px;
+  padding: 0px;
+  z-index: -1;
+  position: absolute;
+  width: 100%;
+}

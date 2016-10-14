@@ -1,7 +1,7 @@
 <ul class="severity-horizontal-list horizontal-list">
   {{#each job.tasksseverity as |severity|}}
       <li>
-          <p class="severity-count" style="color:{{getBootstrapSeverityCode severity.severity}}">{{severity.count}}</p>
+          <p class="severity-count">{{severity.count}}</p>
           <p class="scnd-font-color severity-text severity-{{severity.severity}}">{{severity.severity}}</p>
       </li>
   {{/each}}

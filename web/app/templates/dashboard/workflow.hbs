@@ -1,5 +1,6 @@
 {{!-- The user tabs. Tabs can be added and deleted --}}
-{{user-tabs deleteTab="deleteTab" setTab="changeTab" addTab="addTab" usernames=model.usernames}}
+{{user-tabs deleteTab=(action "deleteTab") setTab=(action "changeTab") addTab=(action "addTab") usernames=model.usernames showInputBox=showInputBox}}
+
 {{!-- The list of flows of the user --}}
 {{#if loading}}
   {{loading-panel message="loading flows..."}}
