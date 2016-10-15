@@ -17,11 +17,8 @@
 package com.linkedin.drelephant.util;
 
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
-import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
-import com.linkedin.drelephant.schedulers.AirflowScheduler;
-import com.linkedin.drelephant.schedulers.AzkabanScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
 import com.linkedin.drelephant.spark.data.SparkApplicationData;
 
@@ -90,7 +87,7 @@ public class InfoExtractor {
         } catch (IllegalAccessException e) {
           throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
         } catch (RuntimeException e) {
-          throw new RuntimeException(data.getClassName() + " is not a valid Fetcher class.", e);
+          throw new RuntimeException(data.getClassName() + " is not a valid Scheduler class.", e);
         } catch (InvocationTargetException e) {
           throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
         } catch (NoSuchMethodException e) {

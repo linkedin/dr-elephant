@@ -111,7 +111,7 @@ public final class Utils {
     Map<String, String> options = new HashMap<String, String>();
     String[] tokens = str.trim().split("\\s");
     for (String token : tokens) {
-      if (token.isEmpty()) {
+      if (token.isEmpty() || token.startsWith("-X")) {
         continue;
       }
       if (!token.startsWith("-D")) {

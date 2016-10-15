@@ -27,6 +27,7 @@ object Dependencies {
   lazy val jacksonMapperAslVersion = "1.7.3"
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
+  lazy val oozieClientVersion = "4.2.0"
 
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
@@ -71,6 +72,9 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % Test,
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
+    "org.apache.oozie" % "oozie-client" % oozieClientVersion excludeAll(
+      ExclusionRule(organization = "org.apache.hadoop")
+    ),
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
     "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
     "org.mockito" % "mockito-core" % "1.10.19",
