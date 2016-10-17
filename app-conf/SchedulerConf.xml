@@ -30,4 +30,22 @@
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
     </scheduler>
 
+    <scheduler>
+        <name>oozie</name>
+        <classname>com.linkedin.drelephant.schedulers.OozieScheduler</classname>
+        <params>
+            <!-- URL of oozie host -->
+            <oozie_api_url>http://localhost:11000/oozie</oozie_api_url>
+
+            <!-- ### Non mandatory properties ###
+
+            <oozie_job_url_template></oozie_job_url_template>
+            <oozie_job_exec_url_template></oozie_job_exec_url_template>
+            <oozie_workflow_url_template></oozie_workflow_url_template>
+            <oozie_workflow_exec_url_template></oozie_workflow_exec_url_template>
+            -->
+        </params>
+    </scheduler>
+
+
 </schedulers>

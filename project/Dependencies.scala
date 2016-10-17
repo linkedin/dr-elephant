@@ -70,16 +70,15 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-common" % hadoopVersion % Test,
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % "compileonly",
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % Test,
-    "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.apache.oozie" % "oozie-client" % oozieClientVersion excludeAll(
       ExclusionRule(organization = "org.apache.hadoop")
     ),
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
     "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
-    "org.mockito" % "mockito-core" % "1.10.19",
+    "org.mockito" % "mockito-core" % "1.10.19" exclude ("org.hamcrest", "hamcrest-core"),
     "org.jmockit" % "jmockit" % "1.23" % Test
-  ) :+ sparkExclusion 
+  ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
   dependencies ++= requiredDep

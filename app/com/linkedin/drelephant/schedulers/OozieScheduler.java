@@ -56,10 +56,13 @@ public class OozieScheduler implements Scheduler {
   private String workflowExecUrlTemplate;
 
   public OozieScheduler(String appId, Properties properties, SchedulerConfigurationData schedulerConfData) {
+    this(appId, properties, schedulerConfData, null);
+  }
+  public OozieScheduler(String appId, Properties properties, SchedulerConfigurationData schedulerConfData, OozieClient oozieClient) {
     schedulerName = schedulerConfData.getSchedulerName();
 
     if (properties != null && properties.getProperty(OOZIE_ACTION_ID) != null) {
-      oozieClient = makeOozieClient(schedulerConfData);
+      this.oozieClient = oozieClient == null ? makeOozieClient(schedulerConfData) : oozieClient;
       jobDefUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_JOB_DEF_URL_TEMPLATE);
       jobExecUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_JOB_EXEC_URL_TEMPLATE);
       workflowDefUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_WORKFLOW_DEF_URL_TEMPLATE);
@@ -135,9 +138,9 @@ public class OozieScheduler implements Scheduler {
   @Override
   public String getJobDefUrl() {
     if (jobDefUrlTemplate != null) {
-      logger.warn("Missing " + OOZIE_JOB_DEF_URL_TEMPLATE + " param for Oozie Scheduler");
       return Utils.formatStringOrNull(jobDefUrlTemplate, jobName);
     } else {
+      logger.warn("Missing " + OOZIE_JOB_DEF_URL_TEMPLATE + " param for Oozie Scheduler");
       return jobName;
     }
   }
@@ -145,9 +148,9 @@ public class OozieScheduler implements Scheduler {
   @Override
   public String getJobExecUrl() {
     if (jobExecUrlTemplate != null) {
-      logger.warn("Missing " + OOZIE_JOB_EXEC_URL_TEMPLATE + " param for Oozie Scheduler");
       return Utils.formatStringOrNull(jobExecUrlTemplate, jobExecId);
     } else {
+      logger.warn("Missing " + OOZIE_JOB_EXEC_URL_TEMPLATE + " param for Oozie Scheduler");
       return jobExecId;
     }
   }
@@ -155,9 +158,9 @@ public class OozieScheduler implements Scheduler {
   @Override
   public String getFlowDefUrl() {
     if (workflowDefUrlTemplate != null) {
-      logger.warn("Missing " + OOZIE_WORKFLOW_DEF_URL_TEMPLATE + " param for Oozie Scheduler");
       return Utils.formatStringOrNull(workflowDefUrlTemplate, workflowName);
     } else {
+      logger.warn("Missing " + OOZIE_WORKFLOW_DEF_URL_TEMPLATE + " param for Oozie Scheduler");
       return workflowName;
     }
   }
@@ -165,9 +168,9 @@ public class OozieScheduler implements Scheduler {
   @Override
   public String getFlowExecUrl() {
     if (workflowExecUrlTemplate != null) {
-      logger.warn("Missing " + OOZIE_WORKFLOW_EXEC_URL_TEMPLATE + " param for Oozie Scheduler");
       return Utils.formatStringOrNull(workflowExecUrlTemplate, workflowExecId);
     } else {
+      logger.warn("Missing " + OOZIE_WORKFLOW_EXEC_URL_TEMPLATE + " param for Oozie Scheduler");
       return workflowExecId;
     }
   }
