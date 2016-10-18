@@ -1,0 +1,19 @@
+<ul id="myTab" class="nav nav-tabs" role="tablist">
+
+    <li id="all" class="active"><a class="single-tab" role="tab"
+                                   data-toggle="tab" {{action (action setTab null)}}><label>All</label></a></li>
+
+  {{#each usernames as |username|}}
+      <li><a role="tab" class="single-tab" {{action (action setTab username)}}
+             data-toggle="tab" id="{{username}}">{{single-tab name=username deleteTab=(action deleteTab)}}</a></li>
+  {{/each}}
+
+
+    <li class="input-user-li">
+      {{#if showInputBox}}
+        {{input id="user-input" action=addTab action="resetInput" placeholder="Add user" class="input-user" valueBinding="newUser" value=""  autofocus="true"}}
+      {{/if}}
+        <button {{action 'showInput'}} class="glyphicon glyphicon-plus input-user-button"></button>
+    </li>
+
+</ul>

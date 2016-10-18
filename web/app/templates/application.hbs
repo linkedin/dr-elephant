@@ -1,0 +1,34 @@
+
+
+<div class="navbar-default navbar-inverse navbar-static-top" role="navigation">
+    <div class="container">
+
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+          {{#link-to "dashboard.workflow" class="navbar-brand"}}
+              Dr Elephant
+          {{/link-to}}
+        </div>
+
+        <div class="navbar-collapse collapse" style="float: left">
+            <ul class="nav navbar-nav">
+                <li>{{#link-to "dashboard.workflow" class="active"}}Dashboard{{/link-to}}</li>
+                <li><a href="../newjobhistory">JobHistory</a></li>
+                <li><a href="../newflowhistory">FlowHistory</a></li>
+                <li><a href="../heuristic-help">Help</a></li>
+            </ul>
+        </div>
+
+        <div>
+          {{search-panel}}
+        </div>
+    </div>
+</div>
+
+{{outlet}}

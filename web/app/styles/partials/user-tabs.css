@@ -1,0 +1,56 @@
+/** input user **/
+
+.input-user-li {
+  height: 40px;
+  height: 100%;
+  border-radius: 3px;
+  margin-left: 5px;
+  border: 1px solid #dfdfdf;
+  background: white;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.input-user {
+  height: 40px;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+  border: none;
+  padding-left: 20px;
+  width: 100px;
+}
+
+.input-user-button {
+  height: 38px;
+  border: none;
+  color: #0084BF;
+  width: 30px;
+  margin-right: 5px;
+  margin-left: 5px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  background: white;
+  margin-bottom: 1px;
+}
+
+/**
+ Style for the user tabs
+ **/
+.nav-tab {
+  padding: 16px 16px 8px;
+  margin: 0 16px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  justify-content: center;
+  position: relative;
+}
+
+.single-tab {
+  height: 40px;
+}

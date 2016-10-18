@@ -1,0 +1,38 @@
+<table class="app-summary-table box shadow ">
+    <tr>
+        <td class="severity-side-blob-generic severity-side-blob-{{getBootstrapSeverityCode job.severity}}">
+        </td>
+        <td>
+          {{#link-to "job" (query-params jobid=job.id) class="list-group-item"}}
+
+              <table class="app-header">
+                  <tr>
+                      <td id = "job_name" class="heading">
+                        {{job.jobname}}
+                      </td>
+                      <td class="user" id="job_summary_username"><span class="glyphicon glyphicon-user"></span>  {{job.username}}</td>
+                  </tr>
+              </table>
+
+              <table class="borderless">
+                  <tbody>
+                  <tr>
+                      <td class="date-header" id="job_summary_finishtime">
+                        {{getDate job.finishtime}}
+                      </td>
+                  </tr>
+
+                  <tr>
+                      <td class="job-severity-block" id="job_summary_task_severity">{{tasks-severity job=job}}</td>
+                  </tr>
+
+                  <tr>
+                      <td class="aggregated-metrics-block"
+                          id="job_summary_aggregated_metrics">{{aggregated-metrics application=job}}</td>
+                  </tr>
+                  </tbody>
+              </table>
+          {{/link-to}}
+        </td>
+    </tr>
+</table>

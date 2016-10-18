@@ -1,0 +1,46 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@(title: String)(content: Html)
+@import com.linkedin.drelephant.analysis.Metrics;
+
+@main("Dr. Elephant", "help") {
+    @tags.column(3) {
+        @tags.panel(){ Topics } {
+            <div class="list-group-item-heading">METRICS</div>
+            <a href="@routes.Application.oldHelp()?topic=@Metrics.USED_RESOURCES.getText()">Used Resources</a><br>
+            <a href="@routes.Application.oldHelp()?topic=@Metrics.WASTED_RESOURCES.getText()">Wasted Resources</a><br>
+            <a href="@routes.Application.oldHelp()?topic=@Metrics.RUNTIME.getText()">Run Time</a><br>
+            <a href="@routes.Application.oldHelp()?topic=@Metrics.WAIT_TIME.getText()">Wait Time</a><br>
+            </br>
+            @for((appTypeName, heuristicList) <- com.linkedin.drelephant.ElephantContext.instance().getAllHeuristicNames()) {
+                <div class="list-group-item-heading">@appTypeName</div>
+                @for(heuristic <-heuristicList) {
+                  <a href="@routes.Application.oldHelp()?topic=@helper.urlEncode(heuristic)">@heuristic</a><br>
+                }
+                </br>
+            }
+
+            <a href="@routes.Application.oldHelp()?topic=@helper.urlEncode(com.linkedin.drelephant.analysis.HeuristicResult.NO_DATA.getHeuristicName)">@com.linkedin.drelephant.analysis.HeuristicResult.NO_DATA.getHeuristicName</a><br>
+        }
+    }
+    @tags.column(9) {
+        @tags.panel(){ @title } {
+            @if(content == null){Please select a topic}
+            @content
+        }
+    }
+}

@@ -157,17 +157,16 @@ function plotter(graphData, jobDefList) {
 
   // Add the tooltip
   var tooltipWidth = 260;
-  tooltip.append("foreignObject")
-      .attr("width", tooltipWidth + "px")
-      .append("xhtml:body")
-      .attr("id", "graph_tooltip")
-      .style("background", "rgba(30, 30, 30, 0.9)")
-      .style("font-size", "12px")
-      .style("color", "rgb(204, 204, 204)")
-      .style("text-align", "center")
-      .style("border-radius", "5px")
-      .style("padding", "5px")
-      .style("border", "1.5px solid black");
+    tooltip.append("foreignObject")
+        .attr("width", tooltipWidth + "px")
+        .append("xhtml:body")
+        .attr("id", "graph_tooltip")
+        .style("font-size", "12px")
+        .attr("class","graphColor")
+        .style("text-align", "center")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("border", "1.5px solid black");
 
   var bisectExec = d3.bisector(function(d) { return d.flowtime; }).left;
 

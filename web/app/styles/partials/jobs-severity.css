@@ -1,0 +1,41 @@
+/**
+jobs severity
+**/
+
+.horizontal-list {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.horizontal-list li {
+  float: left;
+}
+
+.scnd-font-color {
+  color: #9099b7;
+}
+
+/** severity text **/
+
+.severity-horizontal-list li {
+  width: 75px;
+  border: none;
+  text-align: center;
+}
+
+.severity-text {
+  margin: 0;
+  padding: 0px 0 5px;
+  font-size: 12px;
+}
+
+.severity-count {
+  margin: 0;
+  padding: 0 0 0px 0px;
+  font-size: 20px;
+}
+
+.job-severity-block {
+  padding-bottom: 5px;
+}

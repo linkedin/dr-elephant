@@ -98,7 +98,7 @@
         <table width="100%">
           <tr>
             <td>@tags.aggregatedMetrics(result)</td>
-            <td align="right"><a href="@routes.Application.help()?topic=Used Resources">[Explain]</a></td>
+            <td align="right"><a href="@routes.Application.oldHelp()?topic=Used Resources">[Explain]</a></td>
           </tr>
         </table>
       </div>
@@ -115,7 +115,7 @@
             <thead><tr>
               <th colspan="2">
                 Severity: @yarnAppHeuristicResult.severity.getText
-                @if(yarnAppHeuristicResult.severity.getValue > 1){ <a href="@routes.Application.help()?topic=@helper.urlEncode(yarnAppHeuristicResult.heuristicName)">[Explain]</a> }
+                @if(yarnAppHeuristicResult.severity.getValue > 1){ <a href="@routes.Application.oldHelp()?topic=@helper.urlEncode(yarnAppHeuristicResult.heuristicName)">[Explain]</a> }
               </th>
             </tr></thead>
             <tbody>

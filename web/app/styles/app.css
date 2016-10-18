@@ -1,0 +1,149 @@
+@import 'partials/application.css';
+@import 'partials/navbar.css';
+@import 'partials/dashboard-header.css';
+@import 'partials/jobs-severity.css';
+@import 'partials/aggregated-metrics.css';
+@import 'partials/breadcrumbs.css';
+@import 'partials/user-tabs.css';
+@import 'partials/application-menu.css';
+@import 'partials/heuristics-summary.css';
+@import 'partials/search.css';
+@import 'partials/heuristic-detail.css';
+
+.list-group-item {
+  border-radius: 0 !important;
+  padding: 10px 10px 10px 10px;
+  border: 0px;
+}
+
+.shadow {
+  box-shadow: 0 1px 8px -2px rgb(82, 82, 82);
+}
+
+.box {
+  position: relative;
+  border: none;
+}
+
+.borderless td, .borderless th {
+  border: none;
+  border-top: 0px;
+}
+
+.severity-Severe {
+  color: #E4804E !important;
+}
+
+.severity-Critical {
+  color: #D9534F !important;
+}
+
+.severity-Moderate {
+  color: #F0AD4E !important;
+}
+
+.severity-Low {
+  color: #5CB85C !important;
+}
+
+.severity-None {
+  color: #5CB85C !important;
+}
+
+.app-header {
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  margin-left: 10px;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.horizontal-line {
+  margin: 0px;
+  padding: 0px;
+}
+
+.date-header {
+  color: #797e80;
+  font-family: 'Shift', sans-serif;
+  font-size: 12px;
+  padding-left: 10px;
+}
+
+.app-summary-table {
+  width: 100%;
+}
+
+.severity-side-blob-generic {
+  height: 100%;
+  width: 4px;
+}
+
+.severity-side-blob-success {
+  background: #5CB85C;
+}
+
+.severity-side-blob-warning {
+  background: #F0AD4E;
+}
+
+.severity-side-blob-severe {
+  background: #E4804E;
+}
+
+.severity-side-blob-danger {
+  background: #D9534F;
+}
+
+.user {
+  padding-right: 15px;
+  text-align: right;
+  width: 250px;
+}
+
+.heading {
+  font-size: 16px;
+}
+
+.severity-None {
+  color: #5CB85C;
+}
+
+.details-container {
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  background: white;
+  margin: 10px 0px 10px 0px;
+  padding: 10px 15px 10px 25px;
+}
+
+.info {
+  margin-top: 10px;
+}
+
+.info td, tr {
+  height: 20px;
+  margin: 7px;
+  padding: 7px;
+  max-width: 100%;
+}
+
+.summary-list-container {
+  background: white;
+  margin-top: 30px;
+  padding-top: 3px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.summary-list-header {
+  margin: 10px 0px 10px 25px;
+  color: #5e6365;
+  font-size: 18px;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+
