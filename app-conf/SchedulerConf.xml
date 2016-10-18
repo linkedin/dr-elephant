@@ -38,7 +38,7 @@
             <oozie_api_url>http://localhost:11000/oozie</oozie_api_url>
 
             <!-- ### Non mandatory properties ###
-
+            <oozie_auth_option>KERBEROS/SIMPLE</oozie_auth_option>
             <oozie_job_url_template></oozie_job_url_template>
             <oozie_job_exec_url_template></oozie_job_exec_url_template>
             <oozie_workflow_url_template></oozie_workflow_url_template>

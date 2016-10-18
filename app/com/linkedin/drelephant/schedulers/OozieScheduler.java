@@ -21,6 +21,7 @@ import com.linkedin.drelephant.util.Utils;
 
 import java.util.Properties;
 import org.apache.log4j.Logger;
+import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.WorkflowJob;
@@ -33,14 +34,15 @@ public class OozieScheduler implements Scheduler {
 
   private static final Logger logger = Logger.getLogger(OozieScheduler.class);
 
-  public static final String OOZIE_JOB_ID = "oozie.job.id";
-  public static final String OOZIE_ACTION_ID = "oozie.action.id";
+  private static final String OOZIE_JOB_ID = "oozie.job.id";
+  private static final String OOZIE_ACTION_ID = "oozie.action.id";
 
-  public static final String OOZIE_API_URL = "oozie_api_url";
-  public static final String OOZIE_JOB_DEF_URL_TEMPLATE = "oozie_job_url_template";
-  public static final String OOZIE_JOB_EXEC_URL_TEMPLATE = "oozie_job_exec_url_template";
-  public static final String OOZIE_WORKFLOW_DEF_URL_TEMPLATE = "oozie_workflow_url_template";
-  public static final String OOZIE_WORKFLOW_EXEC_URL_TEMPLATE = "oozie_workflow_exec_url_template";
+  private static final String OOZIE_API_URL = "oozie_api_url";
+  private static final String OOZIE_AUTH_OPTION = "oozie_auth_option";
+  private static final String OOZIE_JOB_DEF_URL_TEMPLATE = "oozie_job_url_template";
+  private static final String OOZIE_JOB_EXEC_URL_TEMPLATE = "oozie_job_exec_url_template";
+  private static final String OOZIE_WORKFLOW_DEF_URL_TEMPLATE = "oozie_workflow_url_template";
+  private static final String OOZIE_WORKFLOW_EXEC_URL_TEMPLATE = "oozie_workflow_exec_url_template";
 
   private String schedulerName;
   private String jobName;
@@ -58,20 +60,21 @@ public class OozieScheduler implements Scheduler {
   public OozieScheduler(String appId, Properties properties, SchedulerConfigurationData schedulerConfData) {
     this(appId, properties, schedulerConfData, null);
   }
+
   public OozieScheduler(String appId, Properties properties, SchedulerConfigurationData schedulerConfData, OozieClient oozieClient) {
     schedulerName = schedulerConfData.getSchedulerName();
 
     if (properties != null && properties.getProperty(OOZIE_ACTION_ID) != null) {
-      this.oozieClient = oozieClient == null ? makeOozieClient(schedulerConfData) : oozieClient;
+      this.oozieClient = oozieClient == null ? makeOozieClient(schedulerConfData) : oozieClient ;
       jobDefUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_JOB_DEF_URL_TEMPLATE);
       jobExecUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_JOB_EXEC_URL_TEMPLATE);
       workflowDefUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_WORKFLOW_DEF_URL_TEMPLATE);
       workflowExecUrlTemplate = schedulerConfData.getParamMap().get(OOZIE_WORKFLOW_EXEC_URL_TEMPLATE);
 
       loadInfo(appId, properties);
-    } else {
-      // Use default value of data type
     }
+
+    // Use default value of data type
   }
 
   private void loadInfo(String appId, Properties properties) {
@@ -97,12 +100,12 @@ public class OozieScheduler implements Scheduler {
 
   private OozieClient makeOozieClient(SchedulerConfigurationData schedulerConfData) {
     String oozieApiUrl = schedulerConfData.getParamMap().get(OOZIE_API_URL);
-
+    String authOption = schedulerConfData.getParamMap().get(OOZIE_AUTH_OPTION);
     if (oozieApiUrl == null) {
       throw new RuntimeException("Missing " + OOZIE_API_URL + " param for Oozie Scheduler");
     }
 
-    return new OozieClient(oozieApiUrl);
+    return new AuthOozieClient(oozieApiUrl, authOption);
   }
 
   @Override
