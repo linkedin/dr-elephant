@@ -1,0 +1,38 @@
+<table class="app-summary-table box shadow">
+    <tr>
+        <td class="severity-side-blob-generic severity-side-blob-{{getBootstrapSeverityCode flow.severity}}">
+        </td>
+        <td>
+          {{#link-to "workflow" (query-params workflowid=flow.id) class="list-group-item list-group-item-control"}}
+              <table class="app-header">
+                  <tr>
+                      <td class="heading" id="flow_summary_id">
+                        {{flow.id}}
+                      </td>
+                      <td class="user" id="flow_summary_username"><span class="glyphicon glyphicon-user"></span>  {{flow.username}}</td>
+                  </tr>
+              </table>
+
+              <table class="borderless">
+                  <tbody>
+                  <tr>
+                      <td class="date-header" id="flow_summary_finishtime">
+                        {{getDate flow.finishtime}}
+                      </td>
+                  </tr>
+                  <tr>
+                      <td class="job-severity-block"
+                          id="flow_summary_jobs_severity">{{jobs-severity jobsseverity=flow.jobsseverity}}</td>
+                  </tr>
+                  <tr>
+                      <td class="aggregated-metrics-block"
+                          id="flow_summary_aggregated_metrics">{{aggregated-metrics application=flow}}</td>
+                  </tr>
+                  </tbody>
+              </table>
+          {{/link-to}}
+        </td>
+    </tr>
+</table>
+
+

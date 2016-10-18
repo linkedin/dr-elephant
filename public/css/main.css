@@ -219,3 +219,9 @@ body {
 }
 
 
+.graphColor {
+  color: white;
+  background: rgba(30, 30, 30, 0.9) !important;
+}
+
+

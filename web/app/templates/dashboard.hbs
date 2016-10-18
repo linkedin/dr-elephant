@@ -1,0 +1,37 @@
+<div class="nav-extension"></div>
+
+<div class="container" role="main">
+
+    <table class="dashboard-header">
+        <tr>
+
+            <td class="logo">
+                <img src='assets/images/logo.png'>
+
+            </td>
+            <td>
+                <div class="bubble">
+                    <h3>Hello there, I've been busy!</h3>
+
+                    <p>I looked through <span class="bold">150</span> jobs today.<br>
+                        About <span class="bold">70</span> of them could use some tuning.<br>
+                        About <span class="bold">40</span> of them need some serious attention!
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="menu-workflow">
+      {{#link-to "dashboard.workflow" class="btn wf-button" role="tab" data-toggle="tab"}}Workflow{{/link-to}}
+      {{#link-to "dashboard.job" class="btn wf-button" role="tab" data-toggle="tab"}} Job{{/link-to}}
+      {{#link-to "dashboard.app" class="btn wf-button" role="tab" data-toggle="tab" }}Application{{/link-to}}
+    </div>
+
+</div>
+<br/>
+
+<div class="container">
+    <!-- Each sub template will go here -->
+  {{outlet defaultUser="defaultUser"}}
+</div>

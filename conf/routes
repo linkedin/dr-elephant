@@ -20,11 +20,17 @@
 
 # Application calls
 GET        /                                    controllers.Application.dashboard()
-GET        /help                                controllers.Application.help()
+GET        /help                                controllers.Application.oldHelp()
 GET        /search                              controllers.Application.search()
 GET        /compare                             controllers.Application.compare()
-GET        /flowhistory                         controllers.Application.flowHistory()
-GET        /jobhistory                          controllers.Application.jobHistory()
+GET        /flowhistory                         controllers.Application.oldFlowHistory()
+GET        /jobhistory                          controllers.Application.oldJobHistory()
+
+# Routes for new user interface
+
+GET        /newflowhistory                      controllers.Application.flowHistory()
+GET        /newjobhistory                       controllers.Application.jobHistory()
+GET        /newhelp                             controllers.Application.help()
 
 # Rest calls
 GET        /rest/job                            controllers.Application.restAppResult(id: String)

@@ -1,0 +1,28 @@
+/** Dashboard menu **/
+.menu-workflow {
+  width: 100%;
+}
+
+.wf-button {
+  background-color: white; /* Green */
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 500;
+  border: #0084BF 1px solid;
+  color: #0084BF;
+}
+
+.wf-button:hover {
+  background-color: #008cc9;
+  color: white;
+}
+
+.menu-workflow > .active {
+  background-color: #008cc9;
+  color: white;
+  opacity: 0.7;
+  border: 1px #008cc9 solid;
+  box-shadow: none;
+}

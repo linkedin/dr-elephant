@@ -1,0 +1,23 @@
+.aggregated-metrics-block {
+  font-size: 13px;
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  padding-left: 10px;
+}
+
+.usedmemory-td {
+  width: 175px;
+}
+
+.wastedmemory-td {
+  width: 100px
+}
+
+.runtime-td {
+  width: 120px;
+}
+
+.waittime-td {
+  width: 100px;
+}
+

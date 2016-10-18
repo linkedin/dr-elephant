@@ -13,49 +13,51 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-
 @(flowDefId: String, graphType: String, results: Html)
 
-@main("Dr. Elephant - Flow History", "flowhistory") {
+@newmain("Dr. Elephant - Flow History", "flowhistory") {
 
   <!-- The Search panel-->
-  @tags.column(12) {
-    @tags.panel(){ Flow History } {
-      <form id="flow-history-form" role="form" method="get" action="@routes.Application.flowHistory()">
-        <div class="form-group">
-          <label for="form-flow-def-idurl">Flow Definition URL/ID</label>
-          <input type="text" class="form-control" id="form-flow-def-id" name="flow-def-id" placeholder="Flow Definition URL/ID" value=@flowDefId>
-        </div>
-        <label for="graphType">Filter</label>
-        <select class="form-control" name="select-graph-type" id="graphType">
+  <div class="box shadow details-container history-top">
 
-          @if(graphType=="resources") {
-            <option value="resources" selected>Resources</option>
-          } else {
-            <option value="resources">Resources</option>
-          }
+    <h4>Flow History</h4>
+    <hr class="horizontal-line">
+    <br/>
+    <form class="box" id="flow-history-form" role="form" method="get" action="@routes.Application.flowHistory()">
+      <div class="form-group">
+        <label for="form-flow-def-idurl" >Flow Definition URL/ID</label>
+        <input type="text" class="form-control" id="form-flow-def-id" name="flow-def-id" placeholder="Flow Definition URL/ID" value=@flowDefId>
+      </div>
+      <label for="graphType">Filter</label>
+      <table>
+        <tr>
+          <td>
+            <select onchange="this.form.submit()" class="form-control graph-select" name="select-graph-type" id="graphType" >
 
-          @if(graphType=="time") {
-            <option value="time" selected>Time</option>
-          } else {
-            <option value="time">Time</option>
-          }
+              @if(graphType == "resources") {
+                <option value="resources" selected>Resources</option>
+              } else {
+                <option value="resources">Resources</option>
+              }
 
-          @if(graphType=="heuristics") {
-            <option value="heuristics" selected>Heuristics</option>
-          } else {
-            <option value="heuristics">Heuristics</option>
-          }
+              @if(graphType == "time") {
+                <option value="time" selected>Time</option>
+              } else {
+                <option value="time">Time</option>
+              }
 
-        </select>
-        <br>
-        <button type="submit" class="btn btn-default">Search</button>
-      </form>
-    }
-  }
-
-  @tags.column(12) {
-    @results
-  }
-
+              @if(graphType == "heuristics") {
+                <option value="heuristics" selected>Heuristics</option>
+              } else {
+                <option value="heuristics">Heuristics</option>
+              }
+            </select></td>
+          <td>
+            <button type="submit" class="btn wf-button">Search</button>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+  @results
 }

@@ -26,13 +26,7 @@ import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.util.Utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.Override;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.ParseException;
-import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.ArrayList;
@@ -48,16 +42,12 @@ import java.util.TreeSet;
 import models.AppHeuristicResult;
 import models.AppResult;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import play.api.Play;
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
-import play.db.ebean.Model;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -73,12 +63,22 @@ import views.html.page.jobHistoryPage;
 import views.html.page.searchPage;
 import views.html.results.compareResults;
 import views.html.results.flowDetails;
-import views.html.results.flowHistoryResults;
+import views.html.results.oldFlowHistoryResults;
 import views.html.results.jobDetails;
+import views.html.results.oldJobHistoryResults;
+import views.html.results.oldFlowMetricsHistoryResults;
+import views.html.results.oldJobMetricsHistoryResults;
+import views.html.results.searchResults;
+
+import views.html.page.oldFlowHistoryPage;
+import views.html.page.oldJobHistoryPage;
 import views.html.results.jobHistoryResults;
+import views.html.results.flowHistoryResults;
 import views.html.results.flowMetricsHistoryResults;
 import views.html.results.jobMetricsHistoryResults;
-import views.html.results.searchResults;
+import views.html.page.helpPage;
+import views.html.page.oldHelpPage;
+
 import com.google.gson.*;
 
 
@@ -111,6 +111,8 @@ public class Application extends Controller {
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
+
+  private enum Version {OLD,NEW};
 
   // Configuration properties
   private static final String SEARCH_MATCHES_PARTIAL_CONF = "drelephant.application.search.match.partial";
@@ -486,9 +488,26 @@ public class Application extends Controller {
   }
 
   /**
-   * Controls the flow history. Displays max MAX_HISTORY_LIMIT executions
+   * Returns the new version of flow history
    */
   public static Result flowHistory() {
+    return getFlowHistory(Version.NEW);
+  }
+
+  /**
+   * Returns the old version of flow history
+   */
+  public static Result oldFlowHistory() {
+    return getFlowHistory(Version.OLD);
+  }
+
+  /**
+   * Returns the flowHistory based on the version provided
+   *
+   * @param version Can be either new or old
+   * @return The flowhistory page based on the version provided
+   */
+  private static Result getFlowHistory(Version version) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String partialFlowDefId = form.get(FLOW_DEF_ID);
     partialFlowDefId = (partialFlowDefId != null) ? partialFlowDefId.trim() : null;
@@ -503,8 +522,15 @@ public class Application extends Controller {
     }
 
     if (!Utils.isSet(partialFlowDefId)) {
-      return ok(flowHistoryPage.render(partialFlowDefId, graphType, flowHistoryResults.render(null, null, null, null)));
+      if (version.equals(Version.NEW)) {
+        return ok(flowHistoryPage
+            .render(partialFlowDefId, graphType, flowHistoryResults.render(null, null, null, null)));
+      } else {
+        return ok(
+            oldFlowHistoryPage.render(partialFlowDefId, graphType, oldFlowHistoryResults.render(null, null, null, null)));
+      }
     }
+
     IdUrlPair flowDefPair = bestSchedulerInfoMatchGivenPartialId(partialFlowDefId, AppResult.TABLE.FLOW_DEF_ID);
 
     List<AppResult> results;
@@ -545,8 +571,9 @@ public class Application extends Controller {
       }
     }
 
-    Map<IdUrlPair, List<AppResult>> flowExecIdToJobsMap =
-        ControllerUtil.limitHistoryResults(ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.FLOW_EXECUTION_ID), results.size(), MAX_HISTORY_LIMIT);
+    Map<IdUrlPair, List<AppResult>> flowExecIdToJobsMap = ControllerUtil
+        .limitHistoryResults(ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.FLOW_EXECUTION_ID),
+            results.size(), MAX_HISTORY_LIMIT);
 
     // Compute flow execution data
     List<AppResult> filteredResults = new ArrayList<AppResult>();     // All jobs starting from latest execution
@@ -569,32 +596,63 @@ public class Application extends Controller {
     // Calculate unique list of jobs (job def url) to maintain order across executions. List will contain job def urls
     // from latest execution first followed by any other extra job def url that may appear in previous executions.
     Map<IdUrlPair, String> idPairToJobNameMap = new HashMap<IdUrlPair, String>();
-    Map<IdUrlPair, List<AppResult>> filteredMap = ControllerUtil.groupJobs(filteredResults, ControllerUtil.GroupBy.JOB_DEFINITION_ID);
+    Map<IdUrlPair, List<AppResult>> filteredMap =
+        ControllerUtil.groupJobs(filteredResults, ControllerUtil.GroupBy.JOB_DEFINITION_ID);
     for (Map.Entry<IdUrlPair, List<AppResult>> entry : filteredMap.entrySet()) {
       idPairToJobNameMap.put(entry.getKey(), filteredMap.get(entry.getKey()).get(0).jobName);
     }
 
-    if (graphType.equals("heuristics")) {
-      return ok(flowHistoryPage.render(flowDefPair.getId(), graphType,
-          flowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
-    } else if (graphType.equals("resources") || graphType.equals("time")) {
-      if (hasSparkJob) {
-        return notFound("Cannot plot graph for " + graphType + " since it contains a spark job. " + graphType
-            + " graphs are not supported for spark right now");
-      } else {
+    if (version.equals(Version.NEW)) {
+      if (graphType.equals("heuristics")) {
         return ok(flowHistoryPage.render(flowDefPair.getId(), graphType,
-            flowMetricsHistoryResults.render(flowDefPair, graphType, executionMap, idPairToJobNameMap,
-                flowExecTimeList)));
+            flowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
+      } else if (graphType.equals("resources") || graphType.equals("time")) {
+        if (hasSparkJob) {
+          return notFound("Cannot plot graph for " + graphType + " since it contains a spark job. " + graphType
+              + " graphs are not supported for spark right now");
+        } else {
+          return ok(flowHistoryPage.render(flowDefPair.getId(), graphType, flowMetricsHistoryResults
+              .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
+        }
+      }
+    } else {
+      if (graphType.equals("heuristics")) {
+        return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType,
+            oldFlowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
+      } else if (graphType.equals("resources") || graphType.equals("time")) {
+        if (hasSparkJob) {
+          return notFound("Cannot plot graph for " + graphType + " since it contains a spark job. " + graphType
+              + " graphs are not supported for spark right now");
+        } else {
+          return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType, oldFlowMetricsHistoryResults
+                  .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
+        }
       }
     }
-
     return notFound("Unable to find graph type: " + graphType);
   }
 
   /**
-   * Controls Job History. Displays at max MAX_HISTORY_LIMIT executions
+   * Controls Job History. Displays at max MAX_HISTORY_LIMIT executions. Old version of the job history
+   */
+  public static Result oldJobHistory() {
+    return getJobHistory(Version.OLD);
+  }
+
+  /**
+   * Controls Job History. Displays at max MAX_HISTORY_LIMIT executions. New version of the job history
    */
   public static Result jobHistory() {
+    return getJobHistory(Version.NEW);
+  }
+
+  /**
+   * Returns the job history. Returns at max MAX_HISTORY_LIMIT executions.
+   *
+   * @param version The version of job history to return
+   * @return The job history page based on the version.
+   */
+  private static Result getJobHistory(Version version) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String partialJobDefId = form.get(JOB_DEF_ID);
     partialJobDefId = (partialJobDefId != null) ? partialJobDefId.trim() : null;
@@ -608,7 +666,12 @@ public class Application extends Controller {
     }
 
     if (!Utils.isSet(partialJobDefId)) {
-      return ok(jobHistoryPage.render(partialJobDefId, graphType, jobHistoryResults.render(null, null, -1, null)));
+      if (version.equals(Version.NEW)) {
+        return ok(
+            jobHistoryPage.render(partialJobDefId, graphType, jobHistoryResults.render(null, null, -1, null)));
+      } else {
+        return ok(oldJobHistoryPage.render(partialJobDefId, graphType, oldJobHistoryResults.render(null, null, -1, null)));
+      }
     }
     IdUrlPair jobDefPair = bestSchedulerInfoMatchGivenPartialId(partialJobDefId, AppResult.TABLE.JOB_DEF_ID);
 
@@ -634,8 +697,7 @@ public class Application extends Controller {
           .desc(AppResult.TABLE.FINISH_TIME)
           .setMaxRows(JOB_HISTORY_LIMIT)
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
-          .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS,
-              "*")
+          .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
           .findList();
     }
 
@@ -648,8 +710,9 @@ public class Application extends Controller {
     if (results.size() == 0) {
       return notFound("Unable to find record for job def id: " + jobDefPair.getId());
     }
-    Map<IdUrlPair, List<AppResult>> flowExecIdToJobsMap =
-        ControllerUtil.limitHistoryResults(ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.FLOW_EXECUTION_ID), results.size(), MAX_HISTORY_LIMIT);
+    Map<IdUrlPair, List<AppResult>> flowExecIdToJobsMap = ControllerUtil
+        .limitHistoryResults(ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.FLOW_EXECUTION_ID),
+            results.size(), MAX_HISTORY_LIMIT);
 
     // Compute job execution data
     List<Long> flowExecTimeList = new ArrayList<Long>();
@@ -675,27 +738,41 @@ public class Application extends Controller {
     if (maxStages > STAGE_LIMIT) {
       maxStages = STAGE_LIMIT;
     }
-
-    if (graphType.equals("heuristics")) {
-      return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
-          jobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
-    } else if (graphType.equals("resources") || graphType.equals("time")) {
-      if (hasSparkJob) {
-        return notFound("Resource and time graph are not supported for spark right now");
-      } else {
+    if (version.equals(Version.NEW)) {
+      if (graphType.equals("heuristics")) {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
-            jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+            jobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+      } else if (graphType.equals("resources") || graphType.equals("time")) {
+        if (hasSparkJob) {
+          return notFound("Resource and time graph are not supported for spark right now");
+        } else {
+          return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
+              jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+        }
+      }
+    } else {
+      if (graphType.equals("heuristics")) {
+        return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
+            oldJobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+      } else if (graphType.equals("resources") || graphType.equals("time")) {
+        if (hasSparkJob) {
+          return notFound("Resource and time graph are not supported for spark right now");
+        } else {
+          return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
+              oldJobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+        }
       }
     }
-
     return notFound("Unable to find graph type: " + graphType);
   }
 
-
   /**
-   * Controls the Help Page
+   * Returns the help based on the version
+   *
+   * @param version The version for which help page has to be returned
+   * @return The help page based on the version
    */
-  public static Result help() {
+  private static Result getHelp(Version version) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String topic = form.get("topic");
     Html page = null;
@@ -705,7 +782,7 @@ public class Application extends Controller {
       page = ElephantContext.instance().getHeuristicToView().get(topic);
 
       // check if it is a metrics help
-      if(page == null) {
+      if (page == null) {
         page = getMetricsNameView().get(topic);
       }
 
@@ -713,8 +790,27 @@ public class Application extends Controller {
         title = topic;
       }
     }
-    return ok(helpPage.render(title, page));
+
+    if (version.equals(Version.NEW)) {
+      return ok(helpPage.render(title, page));
+    }
+    return ok(oldHelpPage.render(title, page));
   }
+
+  /**
+   * Controls the new Help Page
+   */
+  public static Result oldHelp() {
+    return getHelp(Version.OLD);
+  }
+
+  /**
+   * Controls the old Help Page
+   */
+  public static Result help() {
+    return getHelp(Version.NEW);
+  }
+
 
   private static Map<String, Html> getMetricsNameView() {
     Map<String,Html> metricsViewMap = new HashMap<String, Html>();

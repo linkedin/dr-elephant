@@ -1,0 +1,47 @@
+.dropdown.dropdown-lg .dropdown-menu {
+  margin-top: -1px;
+  padding: 6px 20px;
+}
+
+.input-group-btn .btn-group {
+  display: flex !important;
+}
+
+.form-horizontal .form-group {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.form-group .form-control:last-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+@media screen and (min-width: 300px) {
+  #adv-search {
+    width: 300px;
+    margin: 0 auto;
+  }
+
+  .dropdown.dropdown-lg {
+    position: static !important;
+  }
+
+  .dropdown.dropdown-lg .dropdown-menu {
+    min-width: 300px;
+  }
+}
+
+.search-row {
+  height: 100%;
+}
+
+.search-table {
+  width: 100%;
+}
+
+.search-table td {
+  padding-right: 20px;
+  padding-left: 20px;
+  max-height: 100px;
+}
