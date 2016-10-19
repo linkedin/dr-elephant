@@ -82,10 +82,10 @@ public class MapperDataSkewHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < numSmallTasks; i++) {
-      mappers[i] = new MapReduceTaskData(smallCounter, new long[3]);
+      mappers[i] = new MapReduceTaskData(smallCounter, new long[5]);
     }
     for (; i < numSmallTasks + numLargeTasks; i++) {
-      mappers[i] = new MapReduceTaskData(largeCounter, new long[3]);
+      mappers[i] = new MapReduceTaskData(largeCounter, new long[5]);
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);

@@ -1,0 +1,65 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@import com.linkedin.drelephant.analysis.Metrics;
+
+<p>
+    This shows the amount of resources wasted by your job in GB Hours.
+</p>
+<h4>Calculation</h4>
+<p>
+	To calculate the resources wasted, we calculate the following: </br>
+<ul>
+<li>The minimum memory wasted by the tasks (Map and Reduce)</li>
+<li>The runtime of the tasks (Map and Reduce)</li>
+</ul>
+</br>
+The minimum memory wasted by a task is equal to the difference between the container size and maximum task memory(peak memory) among all tasks.</br>
+</br>
+The resources wasted by the task is then the minimum memory wasted by the task multiplied by the duration of the task. </br>
+</br>
+The total resource wasted by the job then will be equal to the sum of wasted resources of all the tasks.
+</br>
+
+Let us define the following for each task: </br>
+</br>
+
+<i>peak_memory_used</i> := The upper bound on the memory used by the task. </br>
+<i>runtime</i> := The run time of the task. </br>
+
+</br>
+
+The <i>peak_memory_used</i> for any task is calculated by finding out the maximum of physical memory(<i>max_physical_memory</i>) used by all the tasks
+and the virtual memory(<i>virtual_memory</i>) used by the task. </br>
+
+Since <i>peak_memory_used</i> for each task is upper bounded by <i>max_physical_memory</i>, we can say for each task: </br>
+</br>
+
+<i>peak_memory_used</i> = Max(<i>max_physical_memory</i>, <i>virtual_memory</i>/2.1)</br>
+Where 2.1 is the cluster memory factor.
+</br>
+</br>
+The minimum memory wasted by each task can then be calculated as: </br>
+</br>
+<i>wasted_memory</i> = <i>Container_size</i> - <i>peak_memory_used</i> </br>
+</br>
+The minimum resource wasted by each task can then be calculated as: </br>
+</br>
+<i>wasted_resource</i> = <i>wasted_memory</i> * <i>runtime</i> </br>
+</br>
+</p>
+
+<p>We are still working on this metric. Any feedback is welcomed!</p>

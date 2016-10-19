@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import org.apache.commons.io.FileUtils;
 
 
 /**
@@ -31,6 +32,10 @@ public final class Statistics {
 
   public static final long SECOND_IN_MS = 1000L;
   public static final long MINUTE_IN_MS = 60L * SECOND_IN_MS;
+  public static final long HOUR_IN_MS = 60L * MINUTE_IN_MS;
+
+  public static long MINUTE = 60L;
+  public static long HOUR = 60*MINUTE;
 
   private Statistics() {
   }
@@ -71,6 +76,39 @@ public final class Statistics {
 
     return result;
   }
+
+  /**
+   * The percentile method returns the least value from the given list which has at least given percentile.
+   * @param values The list of values to find the percentile from
+   * @param percentile The percentile
+   * @return The least value from the list with at least the given percentile
+   */
+  public static long percentile(List<Long> values, int percentile) {
+
+    if (values.size() == 0) {
+      throw new IllegalArgumentException("Percentile of empty list is not defined.");
+    }
+
+    if (percentile > 100 || percentile < 0) {
+      throw new IllegalArgumentException("Percentile has to be between 0-100");
+    }
+
+    if (percentile == 0) {
+      return 0;
+    }
+
+    Collections.sort(values);
+    int position = (int) Math.ceil(values.size() * percentile / 100);
+
+    // should never happen.
+    if (position == 0) {
+      return values.get(position);
+    }
+
+    // position is always one greater than index. Return value at the proper index
+    return values.get(position - 1);
+  }
+
 
   public static long[][] findTwoGroups(long[] values) {
     return findTwoGroupsRecursive(values, average(values), 2);

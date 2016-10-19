@@ -17,6 +17,8 @@
 package com.linkedin.drelephant.math;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -82,5 +84,25 @@ public class StatisticsTest {
     assertEquals("1 sec", Statistics.readableTimespan(1000));
     assertEquals("1 min", Statistics.readableTimespan(60000));
     assertEquals("1 hr", Statistics.readableTimespan(3600000));
+  }
+
+  @Test
+  public void testPercentile() {
+    List<Long> finishTimes = new ArrayList<Long>();
+    for(int i=1;i<=10;i++) {
+      finishTimes.add((long)i*10);
+    }
+    assertEquals(100, Statistics.percentile(finishTimes,100));
+    assertEquals(50, Statistics.percentile(finishTimes,50));
+    assertEquals(0, Statistics.percentile(finishTimes,0));
+    assertEquals(10, Statistics.percentile(finishTimes,10));
+    assertEquals(10, Statistics.percentile(finishTimes,4));
+
+    List<Long> finishTimeSingle = new ArrayList<Long>();
+    finishTimeSingle.add(10L);
+    assertEquals(10,Statistics.percentile(finishTimeSingle,100));
+    assertEquals(0, Statistics.percentile(finishTimeSingle,0));
+    assertEquals(10,Statistics.percentile(finishTimeSingle, 10));
+    assertEquals(10,Statistics.percentile(finishTimeSingle, 50));
   }
 }

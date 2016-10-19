@@ -75,7 +75,7 @@ public class MapperSpillHeuristicTest extends TestCase {
     counter.set(MapReduceCounterData.CounterName.MAP_OUTPUT_RECORDS, mapRecords);
 
     for (int i=0; i < numTasks; i++) {
-      mappers[i] = new MapReduceTaskData(counter, new long[4]);
+      mappers[i] = new MapReduceTaskData(counter, new long[5]);
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);

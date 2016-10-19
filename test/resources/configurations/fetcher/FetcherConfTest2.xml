@@ -18,7 +18,7 @@
 <fetchers>
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
-    <classname>com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2</classname>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
   </fetcher>
   <fetcher>
     <applicationtype>spark</applicationtype>

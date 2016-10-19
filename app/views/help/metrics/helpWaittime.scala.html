@@ -1,0 +1,57 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@import com.linkedin.drelephant.analysis.Metrics;
+
+<p>
+    The waittime is the total time spent by the job in the waiting state.
+</p>
+
+<h4>Calculation</h4>
+For each task, let us define the following: </br> </br>
+<i>ideal_start_time</i> := The ideal time when all the tasks should have started </br>
+<i>finish_time</i> := The time when the task finished </br>
+<i>task_runtime</i> := The runtime of the task </br>
+
+<h5> Map tasks</h5>
+For map tasks, we have </br> </br>
+<i>ideal_start_time</i> := The job submission time </br> </br>
+We will find the mapper task with the longest runtime ( <i>task_runtime_max</i>) and the task which finished last ( <i>finish_time_last</i> ) </br>
+The total wait time of the job due to mapper tasks would be: </br>
+</br>
+<i>mapper_wait_time</i> = <i>finish_time_last</i> - ( <i>ideal_start_time</i> + <i>task_runtime_max</i>) </br>
+
+<h5> Reduce tasks</h5>
+For reducer tasks, we have </br> </br>
+<i>ideal_start_time</i> := This is computed by looking at the reducer slow start percentage (mapreduce.job.reduce.slowstart.completedmaps) and finding the finish time
+of the map task after which first reducer should have started</br>
+We will find the reducer task with the longest runtime ( <i>task_runtime_max</i>) and the task which finished last ( <i>finish_time_last</i> ) </br> </br>
+The total wait time of the job due to reducer tasks would be: </br>
+<i>reducer_wait_time</i> = <i>finish_time_last</i> - ( <i>ideal_start_time</i> + <i>task_runtime_max</i>) </br>
+
+
+<h4> Explanation</h4>
+<p>
+        If the job didn't have to wait in the cluster than the total execution time for all the mappers would have been upper bounded by
+    execution time of the longest running mapper. Hence any more time taken by all the mappers to complete is the wait time of mappers that we are computing here. </br>
+
+    Similar logic goes for the computation of reducer wait time. </br> </br>
+    Total wait time of the job would be = <i>mapper_wait_time</i> + <i>reducer_wait_time</i> </br>
+</p>
+
+<p> We are still working on this metric so any feed back is welcomed!</p>
+
+

@@ -60,14 +60,29 @@
                 </tr>
               }
               @if(!result.jobDefId.isEmpty){
-                <tr>
-                  <td><a href="/jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)">Job History</a></td>
-                </tr>
+                @if(result.jobType.equals("Spark")) {
+                  <tr>
+                    <td><a href="/jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)&select-graph-type=heuristics">
+                      Job History</a></td>
+                  </tr>
+                } else {
+                  <tr>
+                    <td><a href="/jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)&select-graph-type=resources">
+                      Job History</a></td>
+                  </tr>
+                }
               }
               @if(!result.jobDefId.isEmpty){
-                <tr>
-                  <td><a href="/flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)">Flow&nbsp;History</a></td>
-                </tr>
+                @if(result.jobType.equals("Spark")) {
+                  <tr>
+                    <td><a href="/flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)&select-graph-type=heuristics">Flow&nbsp;History</a></td>
+                  </tr>
+                } else {
+                  <tr>
+                    <td><a href="/flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)">Flow&nbsp;History</a></td>
+                  </tr>
+
+                }
               }
             </tbody>
           </table>
@@ -79,7 +94,17 @@
           }
         </div>
       </p>
+      <div float="left">
+        <table width="100%">
+          <tr>
+            <td>@tags.aggregatedMetrics(result)</td>
+            <td align="right"><a href="@routes.Application.oldHelp()?topic=Used Resources">[Explain]</a></td>
+          </tr>
+        </table>
+      </div>
     </div>
+    </div>
+
 
     <!--A detailed heuristic info-->
     <div class="list-group">
@@ -90,7 +115,7 @@
             <thead><tr>
               <th colspan="2">
                 Severity: @yarnAppHeuristicResult.severity.getText
-                @if(yarnAppHeuristicResult.severity.getValue > 1){ <a href="@routes.Application.help()?topic=@helper.urlEncode(yarnAppHeuristicResult.heuristicName)">[Explain]</a> }
+                @if(yarnAppHeuristicResult.severity.getValue > 1){ <a href="@routes.Application.oldHelp()?topic=@helper.urlEncode(yarnAppHeuristicResult.heuristicName)">[Explain]</a> }
               </th>
             </tr></thead>
             <tbody>

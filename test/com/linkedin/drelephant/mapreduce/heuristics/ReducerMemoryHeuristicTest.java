@@ -79,7 +79,7 @@ public class ReducerMemoryHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
-      reducers[i] = new MapReduceTaskData(counter, new long[3]);
+      reducers[i] = new MapReduceTaskData(counter, new long[5]);
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);

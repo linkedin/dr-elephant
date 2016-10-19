@@ -81,10 +81,10 @@ public class ReducerDataSkewHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < numSmallTasks; i++) {
-      reducers[i] = new MapReduceTaskData(smallCounter, new long[3]);
+      reducers[i] = new MapReduceTaskData(smallCounter, new long[5]);
     }
     for (; i < numSmallTasks + numLargeTasks; i++) {
-      reducers[i] = new MapReduceTaskData(largeCounter, new long[3]);
+      reducers[i] = new MapReduceTaskData(largeCounter, new long[5]);
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);

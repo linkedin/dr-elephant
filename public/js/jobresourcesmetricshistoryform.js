@@ -14,22 +14,14 @@
  * the License.
  */
 
-package com.linkedin.drelephant.mapreduce;
+$(document).ready(function(){
 
-import org.junit.Assert;
-import org.junit.Test;
+    /* Plot graph for data obtained from ajax call */
+    $.getJSON('/rest/jobmetricsgraphdata?id=' + queryString()['job-def-id'], function(data) {
+        updateExecTimezone(data);
+        plotter(data, []);
+    });
 
+    loadTableTooltips();
+});
 
-public class MapReduceFetcherHadoop2Test {
-
-  @Test
-  public void testDiagnosticMatcher() {
-    Assert.assertEquals("Task[\\s\\u00A0]+(.*)[\\s\\u00A0]+failed[\\s\\u00A0]+([0-9])[\\s\\u00A0]+times[\\s\\u00A0]+",
-        ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time")
-            .pattern().toString());
-
-    Assert.assertEquals(2, ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time")
-        .groupCount());
-  }
-
-}

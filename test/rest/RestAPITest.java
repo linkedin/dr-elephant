@@ -18,10 +18,14 @@ package rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import common.DBTestUtil;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -286,6 +290,524 @@ public class RestAPITest {
         assertTrue("Job id 2 missing in list", jobList.contains(TEST_JOB_ID2));
       }
     });
+  }
+
+  /**
+   * <p>
+   *   Rest API - Provides data for plotting the job history graph for time and resources
+   * </p>
+   */
+  public void testrestJobMetricsGraphData() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_JOB_METRICS_GRAPH_DATA_PATH).
+            setQueryParameter("id", TEST_JOB_DEF_ID1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        List<String> jobList = response.asJson().findValuesAsText("stageid");
+        assertTrue("Job id 1 missing in list", jobList.contains(TEST_JOB_ID1));
+        assertTrue("Job id 2 missing in list", jobList.contains(TEST_JOB_ID2));
+      }
+    });
+  }
+
+  /**
+   * <p>
+   * Rest API  - Provides data for plotting the flow history graph for time and resources
+   * </p>
+   */
+  @Test
+  public void testrestFlowMetricsGraphData() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_FLOW_METRICS_GRAPH_DATA_PATH).
+            setQueryParameter("id", TEST_FLOW_DEF_ID1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        List<String> jobList = response.asJson().findValuesAsText("jobexecurl");
+        assertTrue("Job exec url1 missing in list", jobList.contains(TEST_JOB_EXEC_ID1));
+        assertTrue("Job exec url2 missing in list", jobList.contains(TEST_JOB_EXEC_ID2));
+      }
+    });
+  }
+
+  @Test
+  public void testRestUserResourceUsage() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
+            setQueryParameter("startTime", TEST_START_TIME1).
+            setQueryParameter("endTime", TEST_END_TIME1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> userResources = response.asJson().elements();
+        while (userResources.hasNext()) {
+          JsonNode userResourceUsage = userResources.next();
+          if (userResourceUsage.findValue("user").asText().equals("growth")) {
+            assertTrue("Wrong resourceusage for user growth",
+                userResourceUsage.findValue("resourceUsed").asLong() == 100);
+            assertTrue("Wrong wastedResources for user growth",
+                userResourceUsage.findValue("resourceWasted").asLong() == 30);
+          } else if (userResourceUsage.findValue("user").asText().equals("metrics")) {
+            assertTrue("Wrong resourceusage for user metrics",
+                userResourceUsage.findValue("resourceUsed").asLong() == 200);
+            assertTrue("Wrong wastedResources for user metrics",
+                userResourceUsage.findValue("resourceWasted").asLong() == 40);
+          } else {
+            assertTrue("Unexpected user" + userResourceUsage.findValue("user").asText(), false);
+          }
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestUserResourceUsageBadInput() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
+            setQueryParameter("startTime", TEST_START_TIME1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        assertTrue("Invalid input test failed", response.getStatus() == 400);
+      }
+    });
+  }
+
+  @Test
+  public void testRestWorkflowForuser() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_WORKFLOW_SUMMARIES_PATH).
+            setQueryParameter("username", TEST_USERNAME).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> workflowSummaries = response.asJson().elements();
+        while (workflowSummaries.hasNext()) {
+          JsonNode workflowSummary = workflowSummaries.next();
+          Iterator<JsonNode> workflowObjects = workflowSummary.elements();
+          while (workflowObjects.hasNext()) {
+            JsonNode node = workflowObjects.next();
+            Assert.assertEquals(node.findValue("username").asText(), "growth");
+            Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+            Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+            Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+            Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+            Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+            Assert.assertEquals(node.findValue("severity").asText(), "None");
+            Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+
+            Iterator<JsonNode> jobs = node.findValue("jobsseverity").elements();
+            while (jobs.hasNext()) {
+              JsonNode job = jobs.next();
+              Assert.assertEquals(job.findValue("severity").asText(), "None");
+              Assert.assertEquals(job.findValue("count").asInt(), 1);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestJobForUser() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_JOB_SUMMARIES_PATH).
+            setQueryParameter("username", TEST_USERNAME).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> jobSummaries = response.asJson().elements();
+        while (jobSummaries.hasNext()) {
+          JsonNode jobSummary = jobSummaries.next();
+          Iterator<JsonNode> jobObjects = jobSummary.elements();
+          while (jobObjects.hasNext()) {
+            JsonNode node = jobObjects.next();
+            Assert.assertEquals(node.findValue("username").asText(), "growth");
+            Assert.assertEquals(node.findValue("jobname").asText(), "overwriter-reminder2");
+            Assert.assertEquals(node.findValue("jobtype").asText(), "HadoopJava");
+            Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+            Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+            Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+            Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+            Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+            Assert.assertEquals(node.findValue("severity").asText(), "None");
+            Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+
+            Iterator<JsonNode> tasks = node.findValue("tasksseverity").elements();
+            while (tasks.hasNext()) {
+              JsonNode job = tasks.next();
+              Assert.assertEquals(job.findValue("severity").asText(), "None");
+              Assert.assertEquals(job.findValue("count").asInt(), 1);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestApplicationForUser() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_APPLICATION_SUMMARIES_PATH).
+            setQueryParameter("username", TEST_USERNAME).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> taskSummaries = response.asJson().elements();
+        while (taskSummaries.hasNext()) {
+          JsonNode taskSummary = taskSummaries.next();
+          Iterator<JsonNode> jobObjects = taskSummary.elements();
+          while (jobObjects.hasNext()) {
+            JsonNode node = jobObjects.next();
+            Assert.assertEquals(node.findValue("username").asText(), "growth");
+            Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+            Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+            Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+            Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+            Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+            Assert.assertEquals(node.findValue("severity").asText(), "None");
+            Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+
+            Iterator<JsonNode> heuristicsSummary = node.findValue("heuristicsummary").elements();
+
+            HashMap<String, String> expectedHeuristics = new LinkedHashMap<String, String>();
+            expectedHeuristics.put("Mapper Data Skew", "None");
+            expectedHeuristics.put("Mapper GC", "None");
+            expectedHeuristics.put("Mapper Time", "None");
+            expectedHeuristics.put("Mapper Speed", "None");
+            expectedHeuristics.put("Mapper Spill", "None");
+            expectedHeuristics.put("Mapper Memory", "None");
+            expectedHeuristics.put("Reducer Data Skew", "None");
+            expectedHeuristics.put("Reducer Time", "None");
+            expectedHeuristics.put("Reducer GC", "None");
+            expectedHeuristics.put("Reducer Memory", "None");
+            expectedHeuristics.put("Shuffle & Sort", "None");
+
+            Iterator<String> keyIterator = expectedHeuristics.keySet().iterator();
+            while (heuristicsSummary.hasNext() && keyIterator.hasNext()) {
+              JsonNode job = heuristicsSummary.next();
+              String key = keyIterator.next().toString();
+              Assert.assertEquals(key, job.findValue("name").asText());
+              Assert.assertEquals(expectedHeuristics.get(key), job.findValue("severity").asText());
+            }
+          }
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestWorkflowFromId() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_WORKFLOWS_PATH).
+            setQueryParameter("workflowid", TEST_FLOW_EXEC_ID1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> workflows = response.asJson().elements();
+        while (workflows.hasNext()) {
+          JsonNode node = workflows.next();
+          Assert.assertEquals(node.findValue("username").asText(), "growth");
+          Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+          Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+          Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+          Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+          Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+          Assert.assertEquals(node.findValue("severity").asText(), "None");
+          Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestWorkflowFromIdIsEmpty() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_WORKFLOWS_PATH).
+            setQueryParameter("workflowid", "this_is_a_random_id").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        JsonNode workflows = response.asJson();
+        Assert.assertEquals(workflows.get("username"), null);
+        Assert.assertEquals(workflows.get("starttime"), null);
+        Assert.assertEquals(workflows.get("finishtime"), null);
+        Assert.assertEquals(workflows.get("waittime"), null);
+        Assert.assertEquals(workflows.get("resourceused"), null);
+        Assert.assertEquals(workflows.get("resourcewasted"), null);
+        Assert.assertEquals(workflows.get("severity"), null);
+        Assert.assertEquals(workflows.get("queue"), null);
+      }
+    });
+  }
+
+  @Test
+  public void testRestJobFromId() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_JOBS_PATH).
+            setQueryParameter("jobid", TEST_JOB_EXEC_ID1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> jobs = response.asJson().elements();
+        while (jobs.hasNext()) {
+          JsonNode node = jobs.next();
+          Assert.assertEquals(node.findValue("username").asText(), "growth");
+          Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+          Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+          Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+          Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+          Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+          Assert.assertEquals(node.findValue("severity").asText(), "None");
+          Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testRestJobFromIdIsEmpty() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_JOBS_PATH).
+            setQueryParameter("jobid", "this_is_a_random_job_id").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        JsonNode jobs = response.asJson();
+        Assert.assertEquals(jobs.get("username"), null);
+        Assert.assertEquals(jobs.get("starttime"), null);
+        Assert.assertEquals(jobs.get("finishtime"), null);
+        Assert.assertEquals(jobs.get("waittime"), null);
+        Assert.assertEquals(jobs.get("resourceused"), null);
+        Assert.assertEquals(jobs.get("resourcewasted"), null);
+        Assert.assertEquals(jobs.get("severity"), null);
+        Assert.assertEquals(jobs.get("queue"), null);
+      }
+    });
+  }
+
+  @Test
+  public void testApplicationFromId() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_APPLICATIONS_PATH).
+            setQueryParameter("applicationid", TEST_JOB_ID1).
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> applications = response.asJson().elements();
+        while (applications.hasNext()) {
+          JsonNode node = applications.next();
+          Assert.assertEquals(node.findValue("username").asText(), "growth");
+          Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+          Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+          Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+          Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+          Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+          Assert.assertEquals(node.findValue("severity").asText(), "None");
+          Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+          Assert.assertEquals(node.findValue("trackingurl").asText(),
+              "http://elephant.linkedin.com:19888/jobhistory/job/job_1458194917883_1453361");
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testApplicationFromIdIsEmpty() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_APPLICATIONS_PATH).
+            setQueryParameter("applicationid", "random_id").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        JsonNode applications = response.asJson();
+        Assert.assertEquals(applications.get("username"), null);
+        Assert.assertEquals(applications.get("starttime"), null);
+        Assert.assertEquals(applications.get("finishtime"), null);
+        Assert.assertEquals(applications.get("waittime"), null);
+        Assert.assertEquals(applications.get("resourceused"), null);
+        Assert.assertEquals(applications.get("resourcewasted"), null);
+        Assert.assertEquals(applications.get("severity"), null);
+        Assert.assertEquals(applications.get("queue"), null);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchDataParamUserQueue() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("queue-name", "misc_default").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        testRestSearchGeneric(searchNode);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchDataParamTypeUser() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("job-type", "HadoopJava").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        testRestSearchGeneric(searchNode);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchDataParamTimeUser() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("finishTimeBegin", "1460980723925")
+            .setQueryParameter("finishTimeEnd", "1460980723928").
+                get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        testRestSearchGeneric(searchNode);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchOffsetNegative() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("offset", "-1").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        testRestSearchGeneric(searchNode);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchLimitNegative() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("limit", "-1").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        JsonNode searchNode = response.asJson();
+        Assert.assertTrue(searchNode.asText().toString().isEmpty());
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchOffsetZero() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("offset", "0").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        testRestSearchGeneric(searchNode);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchLimitZero() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("limit", "0").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        JsonNode searchNode = response.asJson();
+        Assert.assertTrue(searchNode.asText().toString().isEmpty());
+      }
+    });
+  }
+
+  @Test
+  public void tstRestSearchLimitOutOfLimit() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("limit", "1000").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        testRestSearchGeneric(searchNode);
+      }
+    });
+  }
+
+  @Test
+  public void testRestSearchOffsetOutofLimit() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateTestData();
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+            setQueryParameter("username", "growth").setQueryParameter("offset", "100").
+            get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        Iterator<JsonNode> searchNode = response.asJson().elements();
+        while (searchNode.hasNext()) {
+          JsonNode node = searchNode.next();
+          JsonNode summaries = node.get("summaries");
+          Assert.assertTrue(summaries.asText().toString().isEmpty());
+        }
+      }
+    });
+  }
+
+  private void testRestSearchGeneric(Iterator<JsonNode> searchNode) {
+    while (searchNode.hasNext()) {
+      JsonNode search = searchNode.next();
+      Assert.assertEquals(search.findValue("start").asInt(), 0);
+      Assert.assertEquals(search.findValue("end").asInt(), 1);
+      Assert.assertEquals(search.findValue("total").asInt(), 1);
+      Assert.assertTrue(!search.findValue("summaries").isNull());
+      Iterator<JsonNode> iterator = search.findValue("summaries").elements();
+
+      while (iterator.hasNext()) {
+        JsonNode node = iterator.next();
+        Assert.assertEquals(node.findValue("username").asText(), "growth");
+        Assert.assertEquals(node.findValue("starttime").asLong(), 1460980616502L);
+        Assert.assertEquals(node.findValue("finishtime").asLong(), 1460980723925L);
+        Assert.assertEquals(node.findValue("waittime").asLong(), 20);
+        Assert.assertEquals(node.findValue("resourceused").asLong(), 100);
+        Assert.assertEquals(node.findValue("resourcewasted").asLong(), 30);
+        Assert.assertEquals(node.findValue("severity").asText(), "None");
+        Assert.assertEquals(node.findValue("queue").asText(), "misc_default");
+
+        Iterator<JsonNode> heuristicsSummary = node.findValue("heuristicsummary").elements();
+        HashMap<String, String> expectedHeuristics = new LinkedHashMap<String, String>();
+        expectedHeuristics.put("Mapper Data Skew", "None");
+        expectedHeuristics.put("Mapper GC", "None");
+        expectedHeuristics.put("Mapper Time", "None");
+        expectedHeuristics.put("Mapper Speed", "None");
+        expectedHeuristics.put("Mapper Spill", "None");
+        expectedHeuristics.put("Mapper Memory", "None");
+        expectedHeuristics.put("Reducer Data Skew", "None");
+        expectedHeuristics.put("Reducer Time", "None");
+        expectedHeuristics.put("Reducer GC", "None");
+        expectedHeuristics.put("Reducer Memory", "None");
+        expectedHeuristics.put("Shuffle & Sort", "None");
+
+        Iterator<String> keyIterator = expectedHeuristics.keySet().iterator();
+        while (heuristicsSummary.hasNext() && keyIterator.hasNext()) {
+          JsonNode job = heuristicsSummary.next();
+          String key = keyIterator.next().toString();
+          Assert.assertEquals(key, job.findValue("name").asText());
+          Assert.assertEquals(expectedHeuristics.get(key), job.findValue("severity").asText());
+        }
+      }
+    }
   }
 
   private void populateTestData() {

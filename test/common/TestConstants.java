@@ -46,6 +46,8 @@ public class TestConstants {
   public static final String TEST_JOB_DEF_ID1 =
       "https://elephant.linkedin.com:8443/manager?project=b2-confirm-email-reminder&flow=reminder&job=overwriter-reminder2";
 
+  public static final String TEST_START_TIME1 = "2016-04-18";
+  public static final String TEST_END_TIME1 = "2016-04-19";
   // DB connection strings
   public static final String DB_DEFAULT_DRIVER_KEY = "db.default.driver";
   public static final String DB_DEFAULT_DRIVER_VALUE = "org.h2.Driver";
@@ -64,8 +66,19 @@ public class TestConstants {
   public static final String REST_COMPARE_PATH = "/rest/compare";
   public static final String REST_FLOW_GRAPH_DATA_PATH = "/rest/flowgraphdata";
   public static final String REST_JOB_GRAPH_DATA_PATH = "/rest/jobgraphdata";
-
+  public static final String REST_JOB_METRICS_GRAPH_DATA_PATH = "/rest/jobmetricsgraphdata";
+  public static final String REST_FLOW_METRICS_GRAPH_DATA_PATH = "/rest/flowmetricsgraphdata";
+  public static final String REST_USER_RESOURCE_USAGE_PATH = "/rest/resourceusagedatabyuser";
   public static final String DEFAULT_ENCODING = "UTF-8";
+
+  //Paths to the UI rest end points
+  public static final String REST_WORKFLOW_SUMMARIES_PATH = "/rest/workflow-summaries";
+  public static final String REST_JOB_SUMMARIES_PATH = "/rest/job-summaries";
+  public static final String REST_APPLICATION_SUMMARIES_PATH = "/rest/application-summaries";
+  public static final String REST_WORKFLOWS_PATH = "/rest/workflows";
+  public static final String REST_JOBS_PATH = "/rest/jobs";
+  public static final String REST_APPLICATIONS_PATH = "/rest/applications";
+  public static final String REST_SEARCH_RESULTS = "/rest/search-results";
 
   // Sample mapreduce constants
   public static final String FILENAME_JOBCOUNTER = "mrdata/sampleJobCounter.properties";

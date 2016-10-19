@@ -1,0 +1,42 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@(result: models.AppResult)
+@import com.linkedin.drelephant.util.Utils;
+
+@if(result.resourceUsed != 0) {
+  <p class="list-group-item-heading">
+<table>
+  <tr>
+<td class="metrics-dashboard hasTooltip" width="175px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/usedmemory.png")' class="metrics-icons" alt='used resources'/><!--</a>-->   @Utils.getDurationInGBHours(result.resourceUsed)  <div id="tooltip-div">
+  <span> The resources used by the job in GB Hours</span>
+</div></td>
+  <td class="metrics-dashboard hasTooltip" width="100px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/wastedmemory.png")' class="metrics-icons" alt='wasted resources'/><!--</a>-->    @(Utils.getPercentage(result.resourceWasted, result.resourceUsed))  <div id="tooltip-div">
+    <span> The percent of resources wasted</span>
+  </div></td>
+  <td class="metrics-dashboard hasTooltip" width="120px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=time">--><img src='@routes.Assets.at("images/runtime.png")' class="metrics-icons" alt='total runtime'/><!--</a>-->    @(Utils.getDurationBreakdown(result.finishTime - result.startTime))  <div id="tooltip-div">
+    <span> Total runtime of the job in HH:MM:SS</span>
+  </div></td>
+  @if(!result.jobType.equals("Spark")) {
+    <td class="metrics-dashboard hasTooltip" width="100px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=time">--><img src='@routes.Assets.at("images/waittime.png")' class="metrics-icons" alt='total wait time'/><!--</a>-->   @(Utils.getPercentage(result.totalDelay, result.finishTime - result.startTime))  <div id="tooltip-div">
+      <span> The percent of time job waited</span>
+    </div></td>
+  }
+  </tr>
+</table>
+  </p>
+}
+

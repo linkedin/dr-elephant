@@ -70,7 +70,7 @@ public class MapperGCHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
-      mappers[i] = new MapReduceTaskData(counter, new long[]{runtimeMs, 0 , 0});
+      mappers[i] = new MapReduceTaskData(counter, new long[]{runtimeMs, 0 , 0, 0, 0});
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);

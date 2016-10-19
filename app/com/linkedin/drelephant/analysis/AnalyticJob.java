@@ -20,7 +20,6 @@ import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
@@ -250,6 +249,10 @@ public class AnalyticJob {
     JobType jobType = ElephantContext.instance().matchJobType(data);
     String jobTypeName = jobType == null ? UNKNOWN_JOB_TYPE : jobType.getName();
 
+    HadoopMetricsAggregator hadoopMetricsAggregator = ElephantContext.instance().getAggregatorForApplicationType(getAppType());
+    hadoopMetricsAggregator.aggregate(data);
+    HadoopAggregatedData hadoopAggregatedData = hadoopMetricsAggregator.getResult();
+
     // Load app information
     AppResult result = new AppResult();
     result.id = Utils.truncateField(getAppId(), AppResult.ID_LIMIT, getAppId());
@@ -260,6 +263,9 @@ public class AnalyticJob {
     result.finishTime = getFinishTime();
     result.name = Utils.truncateField(getName(), AppResult.APP_NAME_LIMIT, getAppId());
     result.jobType = Utils.truncateField(jobTypeName, AppResult.JOBTYPE_LIMIT, getAppId());
+    result.resourceUsed = hadoopAggregatedData.getResourceUsed();
+    result.totalDelay = hadoopAggregatedData.getTotalDelay();
+    result.resourceWasted = hadoopAggregatedData.getResourceWasted();
 
     // Load App Heuristic information
     int jobScore = 0;

@@ -17,6 +17,6 @@
 
 <fetchers>
   <fetcher>
-    <classname>com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2</classname>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
   </fetcher>
 </fetchers>

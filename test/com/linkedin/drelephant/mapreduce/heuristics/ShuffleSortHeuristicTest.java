@@ -97,7 +97,7 @@ public class ShuffleSortHeuristicTest extends TestCase {
     int i = 0;
     for (; i < NUMTASKS; i++) {
       reducers[i] = new MapReduceTaskData(dummyCounter,
-        new long[] { shuffleTimeMs + sortTimeMs + reduceTimeMs, shuffleTimeMs, sortTimeMs });
+        new long[] { shuffleTimeMs + sortTimeMs + reduceTimeMs, shuffleTimeMs, sortTimeMs, 0, 0});
     }
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(dummyCounter).setReducerData(reducers);
     HeuristicResult result = _heuristic.apply(data);

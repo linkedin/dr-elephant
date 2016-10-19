@@ -17,6 +17,8 @@
 package com.linkedin.drelephant.configurations.heuristic;
 
 import com.linkedin.drelephant.analysis.ApplicationType;
+import com.linkedin.drelephant.util.Utils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,10 +55,10 @@ public class HeuristicConfiguration {
       Node node = nodes.item(i);
       if (node.getNodeType() == Node.ELEMENT_NODE) {
         n++;
-        Element heuristicNode = (Element) node;
+        Element heuristicElem = (Element) node;
 
         String className;
-        Node classNameNode = heuristicNode.getElementsByTagName("classname").item(0);
+        Node classNameNode = heuristicElem.getElementsByTagName("classname").item(0);
         if (classNameNode == null) {
           throw new RuntimeException("No tag 'classname' in heuristic " + n);
         }
@@ -66,7 +68,7 @@ public class HeuristicConfiguration {
         }
 
         String heuristicName;
-        Node heuristicNameNode = heuristicNode.getElementsByTagName("heuristicname").item(0);
+        Node heuristicNameNode = heuristicElem.getElementsByTagName("heuristicname").item(0);
         if (heuristicNameNode == null) {
           throw new RuntimeException("No tag 'heuristicname' in heuristic " + n + " classname " + className);
         }
@@ -76,7 +78,7 @@ public class HeuristicConfiguration {
         }
 
         String viewName;
-        Node viewNameNode = heuristicNode.getElementsByTagName("viewname").item(0);
+        Node viewNameNode = heuristicElem.getElementsByTagName("viewname").item(0);
         if (viewNameNode == null) {
           throw new RuntimeException("No tag 'viewname' in heuristic " + n + " classname " + className);
         }
@@ -85,7 +87,7 @@ public class HeuristicConfiguration {
           throw new RuntimeException("Empty tag 'viewname' in heuristic " + n + " classname " + className);
         }
 
-        Node appTypeNode = heuristicNode.getElementsByTagName("applicationtype").item(0);
+        Node appTypeNode = heuristicElem.getElementsByTagName("applicationtype").item(0);
         if (appTypeNode == null) {
           throw new RuntimeException(
               "No tag or invalid tag 'applicationtype' in heuristic " + n + " classname " + className);
@@ -99,17 +101,7 @@ public class HeuristicConfiguration {
         ApplicationType appType = new ApplicationType(appTypeStr);
 
         // Check if parameters are defined for the heuristic
-        Map<String, String> paramsMap = new HashMap<String, String>();
-        Node paramsNode = heuristicNode.getElementsByTagName("params").item(0);
-        if (paramsNode != null) {
-          NodeList paramsList = paramsNode.getChildNodes();
-          for (int j = 0; j < paramsList.getLength(); j++) {
-            Node paramNode = paramsList.item(j);
-            if (paramNode != null && !paramsMap.containsKey(paramNode.getNodeName())) {
-              paramsMap.put(paramNode.getNodeName(), paramNode.getTextContent());
-            }
-          }
-        }
+        Map<String, String> paramsMap = Utils.getConfigurationParameters(heuristicElem);
 
         HeuristicConfigurationData heuristicData = new HeuristicConfigurationData(heuristicName, className, viewName,
             appType, paramsMap);

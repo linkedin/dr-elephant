@@ -28,6 +28,8 @@ public class MapReduceTaskData {
   private long _totalTimeMs = 0;
   private long _shuffleTimeMs = 0;
   private long _sortTimeMs = 0;
+  private long _startTimeMs = 0;
+  private long _finishTimeMs = 0;
   private boolean _sampled = false;
 
   public MapReduceTaskData(MapReduceCounterData counterHolder, long[] time) {
@@ -35,6 +37,8 @@ public class MapReduceTaskData {
     this._totalTimeMs = time[0];
     this._shuffleTimeMs = time[1];
     this._sortTimeMs = time[2];
+    this._startTimeMs = time[3];
+    this._finishTimeMs = time[4];
     this._sampled = true;
   }
 
@@ -56,6 +60,8 @@ public class MapReduceTaskData {
     this._totalTimeMs = time[0];
     this._shuffleTimeMs = time[1];
     this._sortTimeMs = time[2];
+    this._startTimeMs = time[3];
+    this._finishTimeMs = time[4];
     this._sampled = true;
   }
 
@@ -77,6 +83,14 @@ public class MapReduceTaskData {
 
   public long getSortTimeMs() {
     return _sortTimeMs;
+  }
+
+  public long getStartTimeMs() {
+    return _startTimeMs;
+  }
+
+  public long getFinishTimeMs() {
+    return _finishTimeMs;
   }
 
   public boolean isSampled() {

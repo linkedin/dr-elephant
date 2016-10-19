@@ -69,7 +69,7 @@ public class ReducerGCHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
-      reducers[i] = new MapReduceTaskData(counter, new long[]{runtimeMs, 0 , 0});
+      reducers[i] = new MapReduceTaskData(counter, new long[]{runtimeMs, 0 , 0, 0, 0});
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);

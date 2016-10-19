@@ -84,7 +84,7 @@ public class ReducerTimeHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < numTasks; i++) {
-      reducers[i] = new MapReduceTaskData(dummyCounter, new long[] { runtimeMs, 0, 0 });
+      reducers[i] = new MapReduceTaskData(dummyCounter, new long[] { runtimeMs, 0, 0, 0, 0 });
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(dummyCounter).setReducerData(reducers);

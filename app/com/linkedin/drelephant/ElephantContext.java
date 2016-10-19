@@ -21,14 +21,18 @@ import com.google.common.collect.Sets;
 import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
+import com.linkedin.drelephant.analysis.HadoopMetricsAggregator;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.JobType;
+import com.linkedin.drelephant.configurations.aggregator.AggregatorConfiguration;
+import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfiguration;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 import com.linkedin.drelephant.configurations.jobtype.JobTypeConfiguration;
+import com.linkedin.drelephant.mapreduce.MapReduceMetricsAggregator;
 import com.linkedin.drelephant.util.Utils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -39,8 +43,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+import org.apache.spark.SparkMetricsAggregator;
 import org.w3c.dom.Document;
 import play.api.Play;
 import play.api.templates.Html;
@@ -56,16 +63,21 @@ public class ElephantContext {
   private static final Logger logger = Logger.getLogger(ElephantContext.class);
   private static ElephantContext INSTANCE;
 
+  private static final String AGGREGATORS_CONF = "AggregatorConf.xml";
   private static final String FETCHERS_CONF = "FetcherConf.xml";
   private static final String HEURISTICS_CONF = "HeuristicConf.xml";
   private static final String JOB_TYPES_CONF = "JobTypeConf.xml";
+  private static final String GENERAL_CONF = "GeneralConf.xml";
 
   private final Map<String, List<String>> _heuristicGroupedNames = new HashMap<String, List<String>>();
   private List<HeuristicConfigurationData> _heuristicsConfData;
   private List<FetcherConfigurationData> _fetchersConfData;
+  private Configuration _generalConf;
+  private List<AggregatorConfigurationData> _aggregatorConfData;
 
   private final Map<String, ApplicationType> _nameToType = new HashMap<String, ApplicationType>();
   private final Map<ApplicationType, List<Heuristic>> _typeToHeuristics = new HashMap<ApplicationType, List<Heuristic>>();
+  private final Map<ApplicationType, HadoopMetricsAggregator> _typeToAggregator = new HashMap<ApplicationType, HadoopMetricsAggregator>();
   private final Map<ApplicationType, ElephantFetcher> _typeToFetcher = new HashMap<ApplicationType, ElephantFetcher>();
   private final Map<String, Html> _heuristicToView = new HashMap<String, Html>();
   private Map<ApplicationType, List<JobType>> _appTypeToJobTypes = new HashMap<ApplicationType, List<JobType>>();
@@ -87,15 +99,54 @@ public class ElephantContext {
   }
 
   private void loadConfiguration() {
+    loadAggregators();
     loadFetchers();
     loadHeuristics();
     loadJobTypes();
+
+    loadGeneralConf();
 
     // It is important to configure supported types in the LAST step so that we could have information from all
     // configurable components.
     configureSupportedApplicationTypes();
   }
 
+
+  private void loadAggregators() {
+    Document document = Utils.loadXMLDoc(AGGREGATORS_CONF);
+
+    _aggregatorConfData = new AggregatorConfiguration(document.getDocumentElement()).getAggregatorsConfigurationData();
+    for (AggregatorConfigurationData data : _aggregatorConfData) {
+      try {
+        Class<?> aggregatorClass = Play.current().classloader().loadClass(data.getClassName());
+        Object instance = aggregatorClass.getConstructor(AggregatorConfigurationData.class).newInstance(data);
+        if (!(instance instanceof HadoopMetricsAggregator)) {
+          throw new IllegalArgumentException(
+              "Class " + aggregatorClass.getName() + " is not an implementation of " + HadoopMetricsAggregator.class.getName());
+        }
+
+        ApplicationType type = data.getAppType();
+        if (_typeToAggregator.get(type) == null) {
+          _typeToAggregator.put(type, (HadoopMetricsAggregator) instance);
+        }
+
+        logger.info("Load Aggregator : " + data.getClassName());
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException("Could not find class " + data.getClassName(), e);
+      } catch (InstantiationException e) {
+        throw new RuntimeException("Could not instantiate class " + data.getClassName(), e);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
+      } catch (RuntimeException e) {
+        throw new RuntimeException(data.getClassName() + " is not a valid Aggregator class.", e);
+      } catch (InvocationTargetException e) {
+        throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
+      } catch (NoSuchMethodException e) {
+        throw new RuntimeException("Could not find constructor for class " + data.getClassName(), e);
+      }
+    }
+
+  }
   /**
    * Load all the fetchers configured in FetcherConf.xml
    */
@@ -216,7 +267,9 @@ public class ElephantContext {
   private void configureSupportedApplicationTypes() {
     Set<ApplicationType> supportedTypes = Sets.intersection(_typeToFetcher.keySet(), _typeToHeuristics.keySet());
     supportedTypes = Sets.intersection(supportedTypes, _appTypeToJobTypes.keySet());
+    supportedTypes = Sets.intersection(supportedTypes, _typeToAggregator.keySet());
 
+    _typeToAggregator.keySet().retainAll(supportedTypes);
     _typeToFetcher.keySet().retainAll(supportedTypes);
     _typeToHeuristics.keySet().retainAll(supportedTypes);
     _appTypeToJobTypes.keySet().retainAll(supportedTypes);
@@ -245,6 +298,16 @@ public class ElephantContext {
     Document document = Utils.loadXMLDoc(JOB_TYPES_CONF);
     JobTypeConfiguration conf = new JobTypeConfiguration(document.getDocumentElement());
     _appTypeToJobTypes = conf.getAppTypeToJobTypeList();
+  }
+
+  /**
+   * Load in the GeneralConf.xml file as a configuration object for other objects to access
+   */
+  private void loadGeneralConf() {
+    logger.info("Loading configuration file " + GENERAL_CONF);
+
+    _generalConf = new Configuration();
+    _generalConf.addResource(this.getClass().getClassLoader().getResourceAsStream(GENERAL_CONF));
   }
 
   /**
@@ -300,6 +363,10 @@ public class ElephantContext {
     return _typeToFetcher.get(type);
   }
 
+  public HadoopMetricsAggregator getAggregatorForApplicationType(ApplicationType type) {
+    return _typeToAggregator.get(type);
+  }
+
   /**
    * Get the application type given a type name.
    *
@@ -307,6 +374,15 @@ public class ElephantContext {
    */
   public ApplicationType getApplicationTypeForName(String typeName) {
     return _nameToType.get(typeName.toUpperCase());
+  }
+
+  /**
+   * Get the general configuration object.
+   *
+   * @return the genral configuration object.
+   */
+  public Configuration getGeneralConf() {
+    return _generalConf;
   }
 
   /**

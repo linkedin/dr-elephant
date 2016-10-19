@@ -16,7 +16,7 @@
 
 package com.linkedin.drelephant.schedulers;
 
-import com.linkedin.drelephant.util.Utils;
+import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 
@@ -28,13 +28,13 @@ public class AzkabanScheduler implements Scheduler {
 
   private static final Logger logger = Logger.getLogger(AzkabanScheduler.class);
 
-  public static final String SCHEDULER_NAME = "azkaban";
   public static final String AZKABAN_WORKFLOW_URL = "azkaban.link.workflow.url";
   public static final String AZKABAN_JOB_URL = "azkaban.link.job.url";
   public static final String AZKABAN_EXECUTION_URL = "azkaban.link.execution.url";
   public static final String AZKABAN_ATTEMPT_URL = "azkaban.link.attempt.url";
   public static final String AZKABAN_JOB_NAME = "azkaban.job.id";
 
+  private String schedulerName;
   private String jobDefId;
   private String jobExecId;
   private String flowDefId;
@@ -49,7 +49,8 @@ public class AzkabanScheduler implements Scheduler {
   private int workflowDepth;
 
 
-  public AzkabanScheduler(String appId, Properties properties) {
+  public AzkabanScheduler(String appId, Properties properties, SchedulerConfigurationData schedulerConfData) {
+    schedulerName = schedulerConfData.getSchedulerName();
     if (properties != null) {
       loadInfo(appId, properties);
     } else {
@@ -76,7 +77,12 @@ public class AzkabanScheduler implements Scheduler {
 
   @Override
   public String getSchedulerName() {
-    return SCHEDULER_NAME;
+    return schedulerName;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return jobDefId == null || jobExecId == null || flowDefId == null || flowExecId == null;
   }
 
   @Override

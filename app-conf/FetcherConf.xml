@@ -25,14 +25,37 @@
 
 
     # Specify the implementation class
-    <classname>com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2</classname>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
   </fetcher>
 -->
 <fetchers>
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
-    <classname>com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2</classname>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
+    <params>
+      <sampling_enabled>false</sampling_enabled>
+    </params>
   </fetcher>
+  <!--
+    This is an experimental replacement for the MapReduceFetcherHadoop2 that attempts to burn
+    through queues of jobs faster by pulling data directly from HDFS rather than going through
+    the job history server.
+
+    Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
+    files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
+    is 1024MB. To increase this, e.g. to 2048MB, run this before start.sh:
+      export OPTS="-mem 2048"
+  -->
+  <!--
+  <fetcher>
+    <applicationtype>mapreduce</applicationtype>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
+    <params>
+      <sampling_enabled>false</sampling_enabled>
+      <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
+    </params>
+  </fetcher>
+  -->
   <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>org.apache.spark.deploy.history.SparkFSFetcher</classname>
@@ -40,6 +63,7 @@
     <params>
       <event_log_size_limit_in_mb>100</event_log_size_limit_in_mb>
       <event_log_dir>/system/spark-history</event_log_dir>
+      <spark_log_ext>_1.snappy</spark_log_ext>
 
       #the values specified in namenode_addresses will be used for obtaining spark logs. The cluster configuration will be ignored.
       <namenode_addresses>address1,address2</namenode_addresses>

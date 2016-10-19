@@ -18,7 +18,7 @@ package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
-import com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2;
+import com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceCounterData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
@@ -70,7 +70,7 @@ public class AnalyticJobTest {
       setCounterData(jobCounter, filePath);
 
       // Setup mapper data
-      long[][] mapperTasksTime = {{2563, 0, 0}, {2562, 0, 0}, {2567, 0, 0}};
+      long[][] mapperTasksTime = {{2563, 0, 0, 0, 0}, {2562, 0, 0, 0, 0}, {2567, 0, 0, 0, 0}};
       MapReduceTaskData[] mappers = new MapReduceTaskData[3];
       for (int i = 1; i <= mappers.length; i++) {
         MapReduceCounterData taskCounter = new MapReduceCounterData();
@@ -79,7 +79,7 @@ public class AnalyticJobTest {
       }
 
       // Setup reducer data
-      long[][] reducerTasksTime = {{1870, 1665, 14}};
+      long[][] reducerTasksTime = {{1870, 1665, 14, 0, 0}};
       MapReduceTaskData[] reducers = new MapReduceTaskData[1];
       for (int i = 1; i <= reducers.length; i++) {
         MapReduceCounterData taskCounter = new MapReduceCounterData();

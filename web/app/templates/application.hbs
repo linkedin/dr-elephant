@@ -1,0 +1,50 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div class="navbar-default navbar-inverse navbar-static-top" role="navigation">
+    <div class="container">
+
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+          {{#link-to "dashboard.workflow" class="navbar-brand"}}
+              Dr Elephant
+          {{/link-to}}
+        </div>
+
+        <div class="navbar-collapse collapse" style="float: left">
+            <ul class="nav navbar-nav">
+                <li>{{#link-to "dashboard.workflow" class="active"}}Dashboard{{/link-to}}</li>
+                <li><a href="../newjobhistory">JobHistory</a></li>
+                <li><a href="../newflowhistory">FlowHistory</a></li>
+                <li><a href="../heuristic-help">Help</a></li>
+            </ul>
+        </div>
+
+        <div>
+          {{search-panel}}
+        </div>
+    </div>
+</div>
+
+{{outlet}}

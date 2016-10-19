@@ -84,6 +84,7 @@ cd ${project_root}
 
 start_script=${project_root}/scripts/start.sh
 stop_script=${project_root}/scripts/stop.sh
+app_conf=${project_root}/app-conf
 
 # Echo the value of pwd in the script so that it is clear what is being removed.
 rm -rf ${project_root}/dist
@@ -106,6 +107,8 @@ sed -i.bak $'/declare -r app_classpath/s/.$/:`hadoop classpath`:${ELEPHANT_CONF_
 cp $start_script ${DIST_NAME}/bin/
 
 cp $stop_script ${DIST_NAME}/bin/
+
+cp -r $app_conf ${DIST_NAME}
 
 zip -r ${DIST_NAME}.zip ${DIST_NAME}
 

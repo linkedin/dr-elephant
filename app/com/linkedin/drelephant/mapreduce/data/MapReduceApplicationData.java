@@ -34,8 +34,10 @@ public class MapReduceApplicationData implements HadoopApplicationData {
   private String _username = "";
   private String _url = "";
   private String _jobName = "";
+  private long _submitTime = 0;
   private long _startTime = 0;
   private long _finishTime = 0;
+
   private MapReduceCounterData _counterHolder;
   private MapReduceTaskData[] _mapperData;
   private MapReduceTaskData[] _reducerData;
@@ -74,6 +76,11 @@ public class MapReduceApplicationData implements HadoopApplicationData {
 
   public MapReduceApplicationData setUsername(String username) {
     this._username = username;
+    return this;
+  }
+
+  public MapReduceApplicationData setSubmitTime(long submitTime) {
+    this._submitTime = submitTime;
     return this;
   }
 
@@ -146,6 +153,10 @@ public class MapReduceApplicationData implements HadoopApplicationData {
 
   public String getUsername() {
     return _username;
+  }
+
+  public long getSubmitTime() {
+    return _submitTime;
   }
 
   public long getStartTime() {

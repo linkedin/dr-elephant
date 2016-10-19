@@ -14,12 +14,12 @@
 * the License.
 *@
 
-@(execurl: String, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]])
+@(flowExecPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]])
 
 @*
 * Displays all the mr jobs belonging to a flow grouped by job exec url
 *
-* @param execurl The Flow execution URL
+* @param flowExecPair The flow execution pair
 * @param results A map from job Exec URL to all the MR jobs.
 *@
 
@@ -27,7 +27,7 @@
 
   <div class="panel-heading">
     <h3 class="panel-title">
-      Flow Execution URL: <a href=@execurl>@execurl</a>
+      Flow Execution URL: <a href=@flowExecPair.getUrl>@flowExecPair.getId</a>
     </h3>
   </div>
 

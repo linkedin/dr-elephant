@@ -115,7 +115,7 @@ public class FetcherConfigurationTest {
   public void testParseFetcherConf4() {
     expectedEx.expect(RuntimeException.class);
     expectedEx.expectMessage("No tag or invalid tag 'applicationtype' in fetcher 1"
-            + " classname com.linkedin.drelephant.mapreduce.MapReduceFetcherHadoop2");
+            + " classname com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2");
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
   }
 

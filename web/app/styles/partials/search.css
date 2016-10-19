@@ -1,0 +1,63 @@
+/*
+ * Copyright 2016 LinkedIn Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+.dropdown.dropdown-lg .dropdown-menu {
+  margin-top: -1px;
+  padding: 6px 20px;
+}
+
+.input-group-btn .btn-group {
+  display: flex !important;
+}
+
+.form-horizontal .form-group {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.form-group .form-control:last-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+@media screen and (min-width: 300px) {
+  #adv-search {
+    width: 300px;
+    margin: 0 auto;
+  }
+
+  .dropdown.dropdown-lg {
+    position: static !important;
+  }
+
+  .dropdown.dropdown-lg .dropdown-menu {
+    min-width: 300px;
+  }
+}
+
+.search-row {
+  height: 100%;
+}
+
+.search-table {
+  width: 100%;
+}
+
+.search-table td {
+  padding-right: 20px;
+  padding-left: 20px;
+  max-height: 100px;
+}
