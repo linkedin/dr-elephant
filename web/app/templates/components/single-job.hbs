@@ -26,7 +26,11 @@
               <table class="app-header">
                   <tr>
                       <td id = "job_name" class="heading">
-                        {{job.jobname}}
+                          {{#if (not-empty job.jobname)}}
+                              <span>{{job.jobtype}}</span>: {{job.jobname}}
+                          {{else}}
+                              <span>{{job.jobtype}}</span>: {{job.id}}
+                          {{/if}}
                       </td>
                       <td class="user" id="job_summary_username"><span class="glyphicon glyphicon-user"></span>  {{job.username}}</td>
                   </tr>
@@ -41,7 +45,7 @@
                   </tr>
 
                   <tr>
-                      <td class="job-severity-block" id="job_summary_task_severity">{{tasks-severity job=job}}</td>
+                      <td class="job-severity-block" id="job_summary_task_severity">{{tasks-severity tasksseverity=job.tasksseverity}}</td>
                   </tr>
 
                   <tr>

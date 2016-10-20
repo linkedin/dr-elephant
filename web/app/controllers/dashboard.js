@@ -18,6 +18,7 @@ import Ember from 'ember';
 
 export default Ember.Controller.extend({
   showInputBox: false,
+  notifications: Ember.inject.service('notification-messages'),
   actions: {
 
     /**
@@ -25,6 +26,13 @@ export default Ember.Controller.extend({
      * @params user The user to be added as a tab
      */
     addTab(user) {
+
+      if(user===null || user==="") {
+        this.get('notifications').error('The user cannot be empty', {
+          autoClear: true
+        });
+        return;
+      }
       this.users.addToUsername(user);
       this.users.setActiveUser(user);
       this.set('model.usernames',this.users.getUsernames());

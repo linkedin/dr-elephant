@@ -18,6 +18,10 @@ var EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
 module.exports = function (defaults) {
   var app = new EmberApp(defaults, {
+    storeConfigInMeta: false,
+    SRI: {
+      enabled: false
+    },
     fingerprint: {
       enabled: false
     },
@@ -26,7 +30,7 @@ module.exports = function (defaults) {
         css: {
           'app': '/assets/dr-elephant.css'
         },
-        js: '/assets/dr-elephant.js',
+        js: '/assets/dr-elephant.js'
 
       },
       vendor: {

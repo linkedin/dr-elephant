@@ -26,7 +26,10 @@ module.exports = function(environment) {
       FEATURES: {}
     },
 
-    APP: {}
+    APP: {},
+    'ember-cli-notifications': {
+      icons: 'bootstrap'
+    }
   };
 
   if (environment === 'development') {

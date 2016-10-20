@@ -16,6 +16,7 @@
 
 import DS from 'ember-data';
 
+import Scheduler from 'dr-elephant/utils/scheduler';
 export default DS.Model.extend({
     username: DS.attr("string"),
     starttime: DS.attr("date"),
@@ -29,5 +30,10 @@ export default DS.Model.extend({
     flowdefid: DS.attr("string"),
     jobssummaries: DS.attr(),
     jobsseverity: DS.attr(),
-    queue: DS.attr("string")
+    queue: DS.attr("string"),
+    scheduler: DS.attr("string"),
+    flowname: Ember.computed('flowdefid', 'flowexecid', 'scheduler', function () {
+        var scheduler = new Scheduler();
+        return scheduler.getFlowName(this.get('flowexecid'), this.get('flowdefid'), this.get('scheduler'));
+    })
 });

@@ -14,19 +14,11 @@
  * the License.
  */
 
-import Ember from 'ember';
+import DS from 'ember-data';
 
-/**
- * Checks if a given string is empty
- * @param params
- * @returns {boolean}
- */
-export function notEmpty(params) {
-  let [id] = params;
-  if(id=="" || id==null) {
-    return false;
-  }
-  return true;
-}
-
-export default Ember.Helper.helper(notEmpty);
+export default DS.Model.extend({
+    start: DS.attr(),
+    end: DS.attr(),
+    total: DS.attr(),
+    summaries: DS.attr()
+});

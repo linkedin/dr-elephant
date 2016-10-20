@@ -26,10 +26,10 @@
               <table class="app-header">
                   <tr>
                       <td class="heading" id="app_summary_id">
-                        {{#if (eq application.jobname null)}}
-                          {{application.id}}
+                        {{#if (not-empty application.jobname)}}
+                            {{application.jobname}} <span class="glyphicon glyphicon-chevron-right"></span> {{application.id}}
                         {{else}}
-                          {{application.jobname}} <span class="glyphicon glyphicon-chevron-right"></span> {{application.id}}
+                            {{application.id}}
                         {{/if}}
 
                       </td>

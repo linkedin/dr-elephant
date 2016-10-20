@@ -26,6 +26,7 @@
 @import 'partials/search.css';
 @import 'partials/heuristic-detail.css';
 @import 'partials/loading-panel.css';
+@import 'partials/search-panel.css';
 
 .list-group-item {
   border-radius: 0 !important;
@@ -161,6 +162,14 @@
 
 .bold {
   font-weight: bold;
+}
+
+.search-box {
+  color: #5e6365;
+  font-family: 'Shift', sans-serif;
+  background: white;
+  margin: 30px 0px 10px 0px;
+  padding: 10px 15px 10px 25px;
 }
 
 

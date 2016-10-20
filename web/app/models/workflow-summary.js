@@ -15,6 +15,7 @@
  */
 
 import DS from 'ember-data';
+import Scheduler from 'dr-elephant/utils/scheduler';
 
 export default DS.Model.extend({
   username: DS.attr("string"),
@@ -26,5 +27,12 @@ export default DS.Model.extend({
   resourcewasted: DS.attr("string"),
   severity: DS.attr("string"),
   jobsseverity: DS.attr(),
-  queue: DS.attr("string")
+  queue: DS.attr("string"),
+  scheduler: DS.attr("string"),
+  flowdefid: DS.attr("string"),
+  flowexecid: DS.attr("string"),
+  flowname: Ember.computed('flowdefid', 'flowexecid', 'scheduler', function () {
+      var scheduler = new Scheduler();
+      return scheduler.getFlowName(this.get('flowexecid'), this.get('flowdefid'), this.get('scheduler'));
+  })
 });

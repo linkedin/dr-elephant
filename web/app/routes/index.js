@@ -16,17 +16,8 @@
 
 import Ember from 'ember';
 
-/**
- * Checks if a given string is empty
- * @param params
- * @returns {boolean}
- */
-export function notEmpty(params) {
-  let [id] = params;
-  if(id=="" || id==null) {
-    return false;
-  }
-  return true;
-}
-
-export default Ember.Helper.helper(notEmpty);
+export default Ember.Route.extend({
+    beforeModel() {
+        this.transitionTo('dashboard.workflow');
+    }
+});

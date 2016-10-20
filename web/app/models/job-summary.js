@@ -27,5 +27,5 @@ export default DS.Model.extend({
   resourceused: DS.attr("string"),
   resourcewasted: DS.attr("string"),
   severity: DS.attr("string"),
-  tasksseverity: DS.attr(),
+  tasksseverity: DS.attr()
 });

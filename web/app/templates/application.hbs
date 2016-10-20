@@ -15,6 +15,7 @@
  the License.
 
 --}}
+{{notification-container}}
 
 <div class="navbar-default navbar-inverse navbar-static-top" role="navigation">
     <div class="container">
@@ -37,13 +38,18 @@
                 <li>{{#link-to "dashboard.workflow" class="active"}}Dashboard{{/link-to}}</li>
                 <li><a href="../newjobhistory">JobHistory</a></li>
                 <li><a href="../newflowhistory">FlowHistory</a></li>
-                <li><a href="../heuristic-help">Help</a></li>
+                <li><a href="../newhelp">Help</a></li>
             </ul>
         </div>
 
-        <div>
-          {{search-panel}}
+        <div class="col-sm-3 col-md-3">
+            <div class="navbar-form">
+                <div>
+                    {{search-panel}}
+                </div>
+            </div>
         </div>
+
     </div>
 </div>
 

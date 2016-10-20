@@ -17,7 +17,11 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
-  beforeModel() {
+  afterModel() {
     this.transitionTo('dashboard.workflow');
+  },
+  model(){
+    this.dashboardSummary = this.store.queryRecord('dashboard-summary',{});
+    return this.dashboardSummary;
   }
 });

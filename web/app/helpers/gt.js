@@ -16,17 +16,9 @@
 
 import Ember from 'ember';
 
-/**
- * Checks if a given string is empty
- * @param params
- * @returns {boolean}
- */
-export function notEmpty(params) {
-  let [id] = params;
-  if(id=="" || id==null) {
-    return false;
-  }
-  return true;
+export function gt(params) {
+  let[first,second] = params;
+  return first>second;
 }
 
-export default Ember.Helper.helper(notEmpty);
+export default Ember.Helper.helper(gt);
