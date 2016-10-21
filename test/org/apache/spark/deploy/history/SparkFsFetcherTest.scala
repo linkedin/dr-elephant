@@ -16,7 +16,7 @@
 
 package org.apache.spark.deploy.history
 
-import java.nio.file.{Files, StandardCopyOption}
+import java.io.{BufferedInputStream, BufferedOutputStream, File, FileOutputStream}
 
 import com.linkedin.drelephant.analysis.AnalyticJob
 import com.linkedin.drelephant.configurations.fetcher.{FetcherConfiguration, FetcherConfigurationData}
@@ -24,7 +24,6 @@ import com.linkedin.drelephant.util.HadoopUtilsTest
 import javax.xml.parsers.DocumentBuilderFactory
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.mockito.Mockito
 import org.mockito.BDDMockito
 import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.mock.MockitoSugar
@@ -106,10 +105,7 @@ class SparkFsFetcherTest extends FunSpec with Matchers with MockitoSugar {
 
     describe(".fetchData") {
       it("returns the data collected from the Spark event log for the given analytic job") {
-        val in = getClass.getClassLoader.getResourceAsStream("spark_event_logs/event_log_1")
-        val tempPath = Files.createTempFile("event_log_1", "")
-        Files.copy(in, tempPath, StandardCopyOption.REPLACE_EXISTING)
-        in.close()
+        val tempFile = copyResourceToTempFile("spark_event_logs/event_log_1")
 
         val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest7.xml")
         val fetcher = new SparkFSFetcher(fetcherConfigurationData) {
@@ -118,7 +114,7 @@ class SparkFsFetcherTest extends FunSpec with Matchers with MockitoSugar {
           override protected def doAsPrivilegedAction[T](action: () => T): T = action()
 
           override private[history] def eventLogContext(appId: String): SparkFSFetcher.EventLogContext =
-            SparkFSFetcher.EventLogContext(new Path(tempPath.toString), usingDefaultEventLog = true)
+            SparkFSFetcher.EventLogContext(new Path(tempFile.getPath), usingDefaultEventLog = true)
         }
         val analyticJob = new AnalyticJob().setAppId("foo")
 
@@ -183,5 +179,26 @@ object SparkFsFetcherTest {
     val factory = DocumentBuilderFactory.newInstance()
     val builder = factory.newDocumentBuilder()
     builder.parse(getClass.getClassLoader.getResourceAsStream(resourcePath))
+  }
+
+  def copyResourceToTempFile(resourcePath: String): File = {
+    // Unfortunately we can't use java.nio to do any of this, since we want to preserve compatibility with Java 6.
+    val in = new BufferedInputStream(getClass.getClassLoader.getResourceAsStream(resourcePath))
+    val tempPath = File.createTempFile("temp", "")
+    val out = new BufferedOutputStream(new FileOutputStream(tempPath))
+    val buf = new Array[Byte](4096)
+    var done = false
+    var bytesRead = 0
+    while (!done) {
+      bytesRead = in.read(buf)
+      if (bytesRead < 0) {
+        done = true
+      } else {
+        out.write(buf, 0, bytesRead)
+      }
+    }
+    out.close()
+    in.close()
+    tempPath
   }
 }
