@@ -74,8 +74,9 @@ object Dependencies {
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
     "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
     "org.mockito" % "mockito-core" % "1.10.19",
-    "org.jmockit" % "jmockit" % "1.23" % Test
-  ) :+ sparkExclusion 
+    "org.jmockit" % "jmockit" % "1.23" % Test,
+    "org.scalatest" %% "scalatest" % "2.2.6" % Test
+  ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
   dependencies ++= requiredDep
