@@ -24,10 +24,13 @@ import com.linkedin.drelephant.util.HadoopUtilsTest
 import javax.xml.parsers.DocumentBuilderFactory
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.mockito.Mockito
+import org.mockito.BDDMockito
 import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.mock.MockitoSugar
 import org.w3c.dom.Document
 
-class SparkFsFetcherTest extends FunSpec with Matchers {
+class SparkFsFetcherTest extends FunSpec with Matchers with MockitoSugar {
   import SparkFsFetcherTest._
 
   describe("SparkFsFetcher") {
@@ -114,7 +117,7 @@ class SparkFsFetcherTest extends FunSpec with Matchers {
 
           override protected def doAsPrivilegedAction[T](action: () => T): T = action()
 
-          override protected def eventLogContext(appId: String): SparkFSFetcher.EventLogContext =
+          override private[history] def eventLogContext(appId: String): SparkFSFetcher.EventLogContext =
             SparkFSFetcher.EventLogContext(new Path(tempPath.toString), usingDefaultEventLog = true)
         }
         val analyticJob = new AnalyticJob().setAppId("foo")
@@ -122,6 +125,42 @@ class SparkFsFetcherTest extends FunSpec with Matchers {
         val dataCollection = fetcher.fetchData(analyticJob)
         val jobProgressData = Option(dataCollection.getJobProgressData())
         jobProgressData should not be None
+      }
+    }
+
+    describe(".eventLogContext") {
+      it("returns the default log path and true when the log path exists") {
+        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest7.xml")
+        val fetcher = new SparkFSFetcher(fetcherConfigurationData) {
+          override protected lazy val _logDir = "/logs"
+
+          override protected lazy val _fs = {
+            val fs = mock[FileSystem]
+            BDDMockito.given(fs.exists(new Path(_logDir, "foo_1.snappy"))).willReturn(true)
+            fs
+          }
+
+          override protected def doAsPrivilegedAction[T](action: () => T): T = action()
+        }
+
+        fetcher.eventLogContext("foo") should be(SparkFSFetcher.EventLogContext(new Path("/logs/foo_1.snappy"), true))
+      }
+
+      it("returns the legacy log path and false when the default log path doesn't exist") {
+        val fetcherConfigurationData = newFetcherConfigurationData("configurations/fetcher/FetcherConfTest7.xml")
+        val fetcher = new SparkFSFetcher(fetcherConfigurationData) {
+          override protected lazy val _logDir = "/logs"
+
+          override protected lazy val _fs = {
+            val fs = mock[FileSystem]
+            BDDMockito.given(fs.exists(new Path(_logDir, "foo_1.snappy"))).willReturn(false)
+            fs
+          }
+
+          override protected def doAsPrivilegedAction[T](action: () => T): T = action()
+        }
+
+        fetcher.eventLogContext("foo") should be(SparkFSFetcher.EventLogContext(new Path("/logs/foo"), false))
       }
     }
   }

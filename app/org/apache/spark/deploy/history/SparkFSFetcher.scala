@@ -66,17 +66,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
   protected lazy val _hadoopUtils: HadoopUtils = HadoopUtils
 
-  protected lazy val _fs: FileSystem = {
-    val filesystem = new WebHdfsFileSystem()
-    filesystem.initialize(new URI(_logDir), new Configuration())
-    filesystem
-  }
+  protected lazy val _sparkConf = new SparkConf()
 
-  private lazy val _sparkConf = new SparkConf()
-
-  private lazy val _security = new HadoopSecurity()
-
-  private lazy val _logDir: String = {
+  protected lazy val _logDir: String = {
     val conf = new Configuration()
     val hdfsAddress =
       nameNodeAddress(fetcherConfData, conf, _hadoopUtils).map { address => s"webhdfs://${address}" }.getOrElse("")
@@ -85,6 +77,14 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     logger.info("Looking for spark logs at logDir: " + logDir)
     logDir
   }
+
+  protected lazy val _fs: FileSystem = {
+    val filesystem = new WebHdfsFileSystem()
+    filesystem.initialize(new URI(_logDir), new Configuration())
+    filesystem
+  }
+
+  private lazy val _security = new HadoopSecurity()
 
   def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     val appId = analyticJob.getAppId()
@@ -121,14 +121,16 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     dataCollection
   }
 
-  protected def eventLogContext(appId: String): EventLogContext =
+  private[history] def eventLogContext(appId: String): EventLogContext =
     Option(defaultEventLogPathForApp(appId))
       .filter(_fs.exists)
       .map(EventLogContext(_, true))
       .getOrElse(EventLogContext(legacyEventLogPathForApp(appId), false))
 
-  private def defaultEventLogPathForApp(appId: String): Path =
-    new Path(_logDir, appId + fetcherConfData.getParamMap.getOrDefault(SPARK_LOG_SUFFIX_KEY, DEFAULT_SPARK_LOG_SUFFIX))
+  private def defaultEventLogPathForApp(appId: String): Path = {
+    val suffix = Option(fetcherConfData.getParamMap.get(SPARK_LOG_SUFFIX_KEY)).getOrElse(DEFAULT_SPARK_LOG_SUFFIX)
+    new Path(_logDir, s"${appId}${suffix}")
+  }
 
   private def legacyEventLogPathForApp(appId: String): Path = new Path(_logDir, appId)
 
