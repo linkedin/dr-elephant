@@ -27,7 +27,7 @@
     </div>
 
     <div class="shadow details-container box">
-        <h4>{{model.jobname}}</h4>
+        <h4>{{model.jobdisplayname}}</h4>
         <hr class="horizontal-line"/>
         <table class="info borderless">
 
@@ -46,11 +46,11 @@
                 <td id="job_type">{{model.jobtype}}</td>
             </tr>
             <tr>
-                <td>Start time:</td>
+                <td>Start time</td>
                 <td id="job_start_time">{{model.starttime}}</td>
             </tr>
             <tr>
-                <td>End time:</td>
+                <td>End time</td>
                 <td id="job_end_time">{{model.finishtime}}</td>
             </tr>
             </tbody>
@@ -58,7 +58,7 @@
         <table class="info borderless">
             <tr>
                 <td><a id="job_flow_history" class="btn"
-                       href="/newflowhistory?flow-def-id={{urlEncode model.flowdefid}}&select-graph-type=heuristics"><span
+                       href="/newflowhistory?flow-def-id={{urlEncode model.flowdefid}}&select-graph-type=resources"><span
                         class="glyphicon glyphicon-stats"></span> FlowHistory</a></td>
                 <td><a id="job_flow_def_id" class="btn" href={{model.flowdefid}}><span
                         class="glyphicon glyphicon-info-sign"></span> Flow
@@ -69,7 +69,7 @@
             </tr>
             <tr>
                 <td><a id="job_job_history" class="btn"
-                       href="/newjobhistory?job-def-id={{urlEncode model.jobdefid}}&select-graph-type=heuristics"><span
+                       href="/newjobhistory?job-def-id={{urlEncode model.jobdefid}}&select-graph-type=resources"><span
                         class="glyphicon glyphicon-stats"></span> JobHistory</a></td>
                 <td><a id="job_job_def_id" class="btn" href="{{model.jobdefid}}"><span
                         class="glyphicon glyphicon-info-sign"></span> Job
@@ -84,7 +84,7 @@
 
             <tr>
                 <td id="job_task_severity">
-                    {{tasks-severity job=model}}
+                    {{tasks-severity tasksseverity=model.tasksseverity}}
                 </td>
             </tr>
             <tr>

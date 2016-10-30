@@ -15,6 +15,7 @@
  */
 
 import DS from 'ember-data';
+import Scheduler from 'dr-elephant/utils/scheduler';
 
 export default DS.Model.extend({
   jobname: DS.attr("string"),
@@ -27,5 +28,16 @@ export default DS.Model.extend({
   resourceused: DS.attr("string"),
   resourcewasted: DS.attr("string"),
   severity: DS.attr("string"),
-  tasksseverity: DS.attr()
+  jobdefid: DS.attr("string"),
+  jobexecid: DS.attr("string"),
+  tasksseverity: DS.attr(),
+  scheduler: DS.attr("string"),
+  jobdisplayname: Ember.computed('jobname', 'jobdefid', 'jobexecid', 'scheduler', function () {
+    var jobname = this.get('jobname');
+    if(jobname!=null && jobname!="") {
+      return jobname;
+    }
+    var scheduler = new Scheduler();
+    return scheduler.getJobDisplayName(this.get('jobexecid'), this.get('jobdefid'), this.get('scheduler'));
+  })
 });

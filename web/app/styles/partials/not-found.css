@@ -14,21 +14,8 @@
  * the License.
  */
 
-import Ember from 'ember';
-
-export default Ember.Route.extend({
-  beforeModel: function (transition) {
-    this.jobid = transition.queryParams.jobid;
-  },
-  model(){
-    this.jobs = this.store.queryRecord('job', {jobid: this.get("jobid")});
-    return this.jobs;
-  },
-  actions: {
-    error(error, transition) {
-      if (error.errors[0].status == 404) {
-        return this.transitionTo('not-found', { queryParams: {'previous': window.location.href}});
-      }
-    }
-  }
-});
+.not-found-container {
+  margin-left: 100px;
+  margin-top: 100px;
+  margin-bottom: 100px;
+}

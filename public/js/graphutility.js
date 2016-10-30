@@ -33,7 +33,7 @@ function plotter(graphData, jobDefList) {
   /////////// DEFINE THE GRAPH ATTRIBUTES /////////////
 
   // Define the Margins for the GRAPH Dimensions
-  var MARGINS = {top: 50, right: 50, bottom: 50, left: 50},
+  var MARGINS = {top: 50, right: 50, bottom: 100, left: 50},
       WIDTH = graphContainer.style("width").replace("px", ""),
       HEIGHT = graphContainer.style("height").replace("px", ""),
       GRAPH_WIDTH = WIDTH - MARGINS.left - MARGINS.right,
@@ -97,7 +97,10 @@ function plotter(graphData, jobDefList) {
       .attr("transform", "translate(0," + (HEIGHT - MARGINS.bottom) + ")")
       .call(xAxis)
       .selectAll("text")
-      .attr("y", "10px");                                          // Space between axis line and tick names
+      .style("text-anchor","end")
+      .attr("dx", "-.8em")
+      .attr("dy", ".15em")
+      .attr("transform","rotate(-65)");
 
   // Add the y-axis
   graphContainer.append("svg:g")

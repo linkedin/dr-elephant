@@ -34,6 +34,13 @@ export default Ember.Controller.extend({
   offset: null,
   limit: null,
 
+  /** values for parameters **/
+  usernameValue: null,
+  queueNameValue: null,
+  severityValue: null,
+  analysisValue: null,
+  jobTypeValue: null,
+
   /** values binded to form inputs **/
   finishTimeBeginValue: null,
   finishTimeEndValue: null,
@@ -87,28 +94,14 @@ export default Ember.Controller.extend({
   }),
 
   /**
-   * Watches the finishTimeBeginValue. We need to set finishTimeBegin this way to make datepicker work
-   */
-  watchFinishTimeBeginValue: Ember.observer('finishTimeBeginValue', function () {
-    this.set("finishTimeBegin", this.get("finishTimeBeginValue"));
-  }),
-
-  /**
-   * Watches the finishTimeEndValue. We need to set finishTimeEnd this way to make datepicker work
-   */
-  watchFinishTimeEndValue: Ember.observer('finishTimeEndValue', function () {
-    this.set("finishTimeEnd", this.get("finishTimeEndValue"));
-  }),
-
-  /**
    * Watches the isJobTypeChecked boolean flag. This flag is true when the checkbox for jobtype is ticked.
    * We need to tie the jobType with the value of the jobtype selection input whenever the checkbox is checked.
    */
   watchJobCheck: Ember.observer('isJobTypeChecked', function () {
     if (!this.get("isJobTypeChecked")) {
-      this.set("jobType", null);
+      this.set("jobTypeValue", null);
     } else {
-      this.set("jobType",
+      this.set("jobTypeValue",
           this.get("model.searchOptions.jobcategory").get('firstObject').jobtypes.get('firstObject').name);
     }
   }),
@@ -118,8 +111,6 @@ export default Ember.Controller.extend({
    * We need to tie the finishTimeBegin and finishTimeEnd  with the value of the jobtype selection input whenever the checkbox is checked.
    */
   watchFinishTimeCheck: Ember.observer('isFinishDateChecked', function () {
-    this.set("finishTimeBegin", null);
-    this.set("finishTimeEnd", null);
     this.set("finishTimeBeginValue", null);
     this.set("finishTimeEndValue", null);
   }),
@@ -128,12 +119,12 @@ export default Ember.Controller.extend({
    * Watches the isSeverityChecked boolean flag. This flag is true when the checkbox for Severity is ticked.
    * We need to tie the severity and analysis with the value of the severity and analysis selection input whenever the checkbox is checked.
    */
-  watchSeverityCheck: Ember.observer('isSeverityCheched', function () {
+  watchSeverityCheck: Ember.observer('isSeverityChecked', function () {
     if (!this.get("isSeverityChecked")) {
-      this.set("analysis", null);
-      this.set("severity", null);
+      this.set("analysisValue", null);
+      this.set("severityValue", null);
     } else {
-      this.set("severity", this.get("model.searchOptions.severities").get('firstObject').value);
+      this.set("severityValue", this.get("model.searchOptions.severities").get('firstObject').value);
     }
   }),
 
@@ -147,13 +138,13 @@ export default Ember.Controller.extend({
      */
 
     selectHeuristic(heuristic) {
-      this.set("analysis", heuristic);
+      this.set("analysisValue", heuristic);
     },
     selectSeverity(severity) {
-      this.set("severity", severity);
+      this.set("severityValue", severity);
     },
     selectJobType(jobType) {
-      this.set("jobType", jobType);
+      this.set("jobTypeValue", jobType);
     },
 
     /**
@@ -163,6 +154,13 @@ export default Ember.Controller.extend({
       var _this = this;
       this.set("offset", this.get("entriesPerPage") * (page - 1));
       this.set("limit", this.get("entriesPerPage"));
+      this.set("finishTimeBegin", this.get("finishTimeBeginValue"));
+      this.set("finishTimeEnd", this.get("finishTimeEndValue"));
+      this.set("severity", this.get("severityValue"));
+      this.set("jobType", this.get("jobTypeValue"));
+      this.set("username", this.get("usernameValue"));
+      this.set("queueName", this.get("queueNameValue"));
+      this.set("analysis", this.get("analysisValue"));
       var newsummaries = this.store.queryRecord('search-result', {
         'username': this.username,
         'queue-name': this.queueName,

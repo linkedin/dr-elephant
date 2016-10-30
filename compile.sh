@@ -89,8 +89,10 @@ if hash npm 2>/dev/null; then
   echo "############################################################################"
   echo "npm installation found, we'll compile with the new user interface"
   echo "############################################################################"
+  set -x
   sleep 3
-  ember_resources_dir=${project_root}/public/assets/ember
+  ember_assets=${project_root}/public/assets
+  ember_resources_dir=${ember_assets}/ember
   ember_web_directory=${project_root}/web
 
   # cd to the ember directory
@@ -105,6 +107,7 @@ if hash npm 2>/dev/null; then
   cp dist/assets/dr-elephant.js ${ember_resources_dir}/
   cp dist/assets/vendor.js ${ember_resources_dir}/
   cp dist/assets/vendor.css ${ember_resources_dir}/
+  cp -r dist/fonts ${ember_assets}/
   cd ${project_root}
 else
   echo "############################################################################"
@@ -113,7 +116,6 @@ else
   sleep 3
 fi
 
-set -x
 trap "exit" SIGINT SIGTERM
 
 start_script=${project_root}/scripts/start.sh

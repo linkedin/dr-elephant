@@ -17,11 +17,25 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
+
+    notifications: Ember.inject.service('notification-messages'),
     beforeModel: function(transition){
         this.workflowid = transition.queryParams.workflowid;
     },
     model(){
         this.workflows = this.store.queryRecord('workflow',{workflowid: this.get("workflowid")});
         return this.workflows;
+    },
+    actions: {
+        error(error, transition) {
+            if (error.errors[0].status == 404) {
+                return this.transitionTo('not-found', { queryParams: {'previous': window.location.href}});
+            } else {
+                this.get('notifications').error('Uh-oh! Something went wrong..', {
+                    autoClear: true
+                });
+                return;
+            }
+        }
     }
 });
