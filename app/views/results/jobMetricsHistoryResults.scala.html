@@ -122,9 +122,9 @@
                       <table class="table table-bordered history-table-metrics-table">
                         <tbody>
                           <tr>
-                            <td class="used-resource-block hasTooltip">@(Utils.getDurationInGBHours(jobs(i - 1).resourceUsed).split("GB")(0))
+                            <td class="used-resource-block hasTooltip">@(Utils.getResourceInGBHours(jobs(i - 1).resourceUsed).split("GB")(0))
                             </td>
-                            <td class="wasted-resource-block hasTooltip">@(Utils.getDurationInGBHours(jobs(i - 1).resourceWasted).split("GB")(0))
+                            <td class="wasted-resource-block hasTooltip">@(Utils.getResourceInGBHours(jobs(i - 1).resourceWasted).split("GB")(0))
                             </td>
                             <td class="run-time-block hasTooltip">@(Utils.getDurationBreakdown(jobs(i - 1).finishTime - jobs(i - 1).startTime).split("Hours")(0))
                             </td>
