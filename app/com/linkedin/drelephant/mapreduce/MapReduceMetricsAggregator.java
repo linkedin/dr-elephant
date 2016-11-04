@@ -21,6 +21,7 @@ import com.linkedin.drelephant.analysis.HadoopMetricsAggregator;
 import com.linkedin.drelephant.analysis.HadoopAggregatedData;
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 
@@ -30,6 +31,7 @@ public class MapReduceMetricsAggregator implements HadoopMetricsAggregator {
   private static final String MAP_CONTAINER_CONFIG = "mapreduce.map.memory.mb";
   private static final String REDUCER_CONTAINER_CONFIG = "mapreduce.reduce.memory.mb";
   private static final String REDUCER_SLOW_START_CONFIG = "mapreduce.job.reduce.slowstart.completedmaps";
+  private static final long CONTAINER_MEMORY_DEFAULT_BYTES = 2048L * FileUtils.ONE_MB;
 
   private HadoopAggregatedData _hadoopAggregatedData = null;
   private TaskLevelAggregatedMetrics mapTasks;
@@ -80,10 +82,18 @@ public class MapReduceMetricsAggregator implements HadoopMetricsAggregator {
   }
 
   private long getMapContainerSize(HadoopApplicationData data) {
-    return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
+    try {
+      return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
+    } catch ( NumberFormatException ex) {
+      return CONTAINER_MEMORY_DEFAULT_BYTES;
+    }
   }
 
   private long getReducerContainerSize(HadoopApplicationData data) {
-    return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
+    try {
+      return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
+    } catch ( NumberFormatException ex) {
+      return CONTAINER_MEMORY_DEFAULT_BYTES;
+    }
   }
 }
