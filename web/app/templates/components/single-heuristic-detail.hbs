@@ -1,0 +1,45 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div>
+    <a href="../newhelp?topic={{urlEncode yarnappheuristicresult.name}}" class="list-group-item shadow">
+        <div>
+            <table class="app-summary-table">
+                <tr>
+                    <td>
+
+                        <table class="list-group-item-text heuristic-detail-table" style="color: {{getColorForSeverity yarnappheuristicresult.severity}}">
+                            <thead><tr>
+                                <th colspan="2"><h4 class="list-group-item-heading severity-{{yarnappheuristicresult.severity}}">{{yarnappheuristicresult.name}}</h4><small>Severity: {{yarnappheuristicresult.severity}}</small></th></tr>
+                            <tr>
+                            </tr></thead>
+                            <tbody>
+                            {{#each yarnappheuristicresult.details as |yarnappheuristicresultdetail|}}
+                                <tr>
+                                    <td>{{yarnappheuristicresultdetail.name}}</td>
+                                    <td>{{yarnappheuristicresultdetail.value}}</td>
+                                </tr>
+                            {{/each}}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </a>
+</div>

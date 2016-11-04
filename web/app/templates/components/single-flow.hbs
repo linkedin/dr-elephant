@@ -1,0 +1,56 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<table class="app-summary-table box shadow">
+    <tr>
+        <td class="severity-side-blob-generic severity-side-blob-{{getBootstrapSeverityCode flow.severity}}">
+        </td>
+        <td>
+          {{#link-to "workflow" (query-params workflowid=flow.id) class="list-group-item list-group-item-control"}}
+              <table class="app-header">
+                  <tr>
+                      <td class="heading" id="flow_summary_id">
+                        {{flow.flowname}}
+                      </td>
+                      <td class="user" id="flow_summary_username"><span class="glyphicon glyphicon-user"></span>  {{flow.username}}</td>
+                  </tr>
+              </table>
+
+              <table class="borderless">
+                  <tbody>
+                  <tr>
+                      <td class="date-header" id="flow_summary_finishtime">
+                        {{getDate flow.finishtime}}
+                      </td>
+                  </tr>
+                  <tr>
+                      <td class="job-severity-block"
+                          id="flow_summary_jobs_severity">{{jobs-severity jobsseverity=flow.jobsseverity}}</td>
+                  </tr>
+                  <tr>
+                      <td class="aggregated-metrics-block"
+                          id="flow_summary_aggregated_metrics">{{aggregated-metrics application=flow}}</td>
+                  </tr>
+                  </tbody>
+              </table>
+          {{/link-to}}
+        </td>
+    </tr>
+</table>
+
+

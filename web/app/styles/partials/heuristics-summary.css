@@ -1,0 +1,57 @@
+/*
+ * Copyright 2016 LinkedIn Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+.heuristics-block {
+  padding-top: 10px;
+  padding-bottom: 15px;
+  padding-left: 10px;
+}
+
+.heuristics-label-generic {
+  background-color: white;
+  padding-top: 3px;
+  padding-right: 5px;
+  padding-left: 5px;
+  margin-right: 7px;
+  margin-bottom: 2px;
+  padding-bottom: 3px;
+  text-align: center;
+  display: inline-block;
+  font-size: 11px;
+  float: left;
+  border-radius: 3px;
+  font-family: sans-serif;
+}
+
+.heuristics-label-severe {
+  border: #E4804E 1px solid;
+  color: #E4804E;
+}
+
+.heuristics-label-success {
+  border: #5CB85C 1px solid;
+  color: #5CB85C;
+}
+
+.heuristics-label-warning {
+  border: #F0AD4E 1px solid;
+  color: #F0AD4E;
+}
+
+.heuristics-label-danger {
+  border: #D9534F 1px solid;
+  color: #D9534F;
+}

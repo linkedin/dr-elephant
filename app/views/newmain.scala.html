@@ -1,0 +1,93 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+@(title: String, page: String)(content: Html)
+@import java.lang.Boolean; var analytics = false
+@(analytics = play.Play.application().configuration().getBoolean("enable.analytics", false))
+
+@*
+* The base layout of Dr. Elephant
+*
+* This includes the nav bar at the top and other supporting stylesheets
+*@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@title</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>
+    <script src='@routes.Assets.at("assets/jquery/jquery-1.9.0.min.js")' type="text/javascript"></script>
+
+    <link rel='stylesheet' href='@routes.Assets.at("assets/bootstrap/css/bootstrap.min.css")'>
+    <link rel='stylesheet' href='@routes.Assets.at("css/main.css")'>
+    <link rel='stylesheet' href='@routes.Assets.at("css/application.css")'>
+    <link rel='stylesheet' href='@routes.Assets.at("assets/bootstrap-datepicker/css/datepicker.css")'>
+    <style type="text/css">
+    body { background : #E7E9EC !important ; } /* Adding !important forces the browser to overwrite the default style applied by Bootstrap */
+    </style>
+
+  </head>
+
+  <body role="document">
+      <!-- Fixed navbar -->
+    <div class="navbar-default navbar-inverse navbar-static-top" role="navigation">
+      <div class="container">
+
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="new">Dr Elephant</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="new" class="active">Dashboard</a></li>
+            <li><a href="newjobhistory">JobHistory</a></li>
+            <li><a href="newflowhistory">FlowHistory</a></li>
+            <li><a href="newhelp">Help</a></li>
+          </ul>
+
+
+        </div>
+
+      </div>
+    </div>
+
+    <div class="nav-extension"></div>
+    <div class="container" role="main">
+
+    @content
+
+    </div>
+
+      <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="@routes.Assets.at("assets/bootstrap/js/bootstrap.min.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("assets/bootstrap-datepicker/js/bootstrap-datepicker.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("assets/jquery/jquery.deserialize.min.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("js/searchform.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("assets/d3/d3.min.js")" type="text/javascript"></script>
+    @if(analytics) {
+      <script src="@routes.Assets.at("assets/analytics/track.js")" type="text/javascript"></script>
+    }
+  </body>
+</html>

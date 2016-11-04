@@ -71,6 +71,15 @@ public class TestConstants {
   public static final String REST_USER_RESOURCE_USAGE_PATH = "/rest/resourceusagedatabyuser";
   public static final String DEFAULT_ENCODING = "UTF-8";
 
+  //Paths to the UI rest end points
+  public static final String REST_WORKFLOW_SUMMARIES_PATH = "/rest/workflow-summaries";
+  public static final String REST_JOB_SUMMARIES_PATH = "/rest/job-summaries";
+  public static final String REST_APPLICATION_SUMMARIES_PATH = "/rest/application-summaries";
+  public static final String REST_WORKFLOWS_PATH = "/rest/workflows";
+  public static final String REST_JOBS_PATH = "/rest/jobs";
+  public static final String REST_APPLICATIONS_PATH = "/rest/applications";
+  public static final String REST_SEARCH_RESULTS = "/rest/search-results";
+
   // Sample mapreduce constants
   public static final String FILENAME_JOBCOUNTER = "mrdata/sampleJobCounter.properties";
   public static final String FILENAME_MAPPERTASK = "mrdata/mapperTaskCounter$.properties";
