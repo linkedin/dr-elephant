@@ -1517,8 +1517,8 @@ public class Application extends Controller {
 
   private static class AppResourceUsageData {
     String user;
-    long resourceUsed;
-    long resourceWasted;
+    double resourceUsed;
+    double resourceWasted;
   }
 
   /**
@@ -1541,8 +1541,8 @@ public class Application extends Controller {
         data.user = result.username;
         userResourceUsage.put(result.username, data);
       }
-      userResourceUsage.get(result.username).resourceUsed += result.resourceUsed;
-      userResourceUsage.get(result.username).resourceWasted += result.resourceWasted;
+      userResourceUsage.get(result.username).resourceUsed += Utils.MBSecondsToGBHours(result.resourceUsed);
+      userResourceUsage.get(result.username).resourceWasted += Utils.MBSecondsToGBHours(result.resourceWasted);
     }
 
     return userResourceUsage.values();

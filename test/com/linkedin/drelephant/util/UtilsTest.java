@@ -197,11 +197,11 @@ public class UtilsTest {
 
     long []durations = {10000, 213234343, 23424, 635322, 213};
 
-    assertEquals("0.003 GB Hours", Utils.getDurationInGBHours(durations[0]));
-    assertEquals("57.844 GB Hours", Utils.getDurationInGBHours(durations[1]));
-    assertEquals("0.006 GB Hours", Utils.getDurationInGBHours(durations[2]));
-    assertEquals("0.172 GB Hours", Utils.getDurationInGBHours(durations[3]));
-    assertEquals("0 GB Hours", Utils.getDurationInGBHours(durations[4]));
+    assertEquals("0.003 GB Hours", Utils.getResourceInGBHours(durations[0]));
+    assertEquals("57.844 GB Hours", Utils.getResourceInGBHours(durations[1]));
+    assertEquals("0.006 GB Hours", Utils.getResourceInGBHours(durations[2]));
+    assertEquals("0.172 GB Hours", Utils.getResourceInGBHours(durations[3]));
+    assertEquals("0 GB Hours", Utils.getResourceInGBHours(durations[4]));
 
   }
 
