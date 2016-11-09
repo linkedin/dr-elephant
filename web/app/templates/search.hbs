@@ -154,8 +154,12 @@
     {{!-- show application list --}}
     {{#unless (eq model.summaries.total 0)}}
     <div class="shadow summary-list-container">
-        <div class="summary-list-header">Jobs</div>
-        {{application-list applications=model.summaries.summaries}}
+        <div class="summary-list-header">Applications</div>
+        {{#if loading}}
+          {{loading-panel message="searching..."}}
+        {{else}}
+          {{application-list applications=model.summaries.summaries}}
+        {{/if}}
     </div>
     {{/unless}}
 

@@ -23,7 +23,7 @@ import Ember from 'ember';
  */
 export function getPercentage(params) {
   let [arg1, arg2] = params;
-  if(arg2===0) {
+  if(Number(arg2)===0) {
     return "0%";
   }
 

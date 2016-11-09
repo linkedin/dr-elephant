@@ -19,6 +19,7 @@ import moment from 'moment';
 
 export default Ember.Controller.extend({
   notifications: Ember.inject.service('notification-messages'),
+  loading: false,
 
   queryParams: ['username', 'queueName', 'jobType', 'severity', 'analysis', 'finishTimeBegin', 'finishTimeEnd',
     'offset', 'limit'],
@@ -151,6 +152,7 @@ export default Ember.Controller.extend({
      * loads the page
      */
     loadPage (page) {
+      this.set("loading", true);
       var _this = this;
       this.set("offset", this.get("entriesPerPage") * (page - 1));
       this.set("limit", this.get("entriesPerPage"));
@@ -178,7 +180,8 @@ export default Ember.Controller.extend({
        * update model after fetching the searched data
        */
       newsummaries.then(() => {
-        _this.set("model.summaries", newsummaries)
+        _this.set("model.summaries", newsummaries);
+        _this.set("loading", false);
       });
     },
 
