@@ -20,7 +20,7 @@
         <applicationtype>spark</applicationtype>
         <classname>org.apache.spark.deploy.history.SparkFSFetcher</classname>
         <params>
-            <namenode_addresses>sample-ha3.grid.company.com:50070,sample-ha4.grid.company.com:50070</namenode_addresses>
+            <namenode_addresses>sample-ha3.grid.example.com:50070,sample-ha4.grid.example.com:50070</namenode_addresses>
         </params>
     </fetcher>
 </fetchers>

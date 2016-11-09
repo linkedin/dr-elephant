@@ -41,13 +41,16 @@
 
   <property>
     <name>dfs.namenode.http-address.sample.ha1</name>
-    <value>sample-ha1.grid.company.com:50070</value>
+    <value>sample-ha1.grid.example.com:50070</value>
   </property>
 
   <property>
     <name>dfs.namenode.http-address.sample.ha2</name>
-    <value>sample-ha2.grid.company.com:50070</value>
+    <value>sample-ha2.grid.example.com:50070</value>
   </property>
 
+  <property>
+    <name>dfs.namenode.http-address</name>
+    <value>sample.grid.example.com:50070</value>
+  </property>
 </configuration>
-

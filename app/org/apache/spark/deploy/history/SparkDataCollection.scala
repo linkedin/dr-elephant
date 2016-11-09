@@ -16,27 +16,24 @@
 
 package org.apache.spark.deploy.history
 
+import java.io.InputStream
+import java.util.{Set => JSet, Properties, List => JList, HashSet => JHashSet, ArrayList => JArrayList}
+
+import scala.collection.mutable
 
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.spark.data._
-import SparkExecutorData.ExecutorInfo
-import SparkJobProgressData.JobInfo
-import org.apache.spark.scheduler.{StageInfo, ApplicationEventListener}
-import org.apache.spark.storage.{StorageStatusTrackingListener, StorageStatus, RDDInfo, StorageStatusListener}
+import com.linkedin.drelephant.spark.data.SparkExecutorData.ExecutorInfo
+import com.linkedin.drelephant.spark.data.SparkJobProgressData.JobInfo
+
+import org.apache.spark.SparkConf
+import org.apache.spark.scheduler.{ApplicationEventListener, ReplayListenerBus, StageInfo}
+import org.apache.spark.storage.{RDDInfo, StorageStatus, StorageStatusListener, StorageStatusTrackingListener}
 import org.apache.spark.ui.env.EnvironmentListener
 import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.util.collection.OpenHashSet
-
-import java.util.{Set => JSet}
-import java.util.{HashSet => JHashSet}
-import java.util.{List => JList}
-import java.util.{ArrayList => JArrayList}
-import java.util.Properties
-
-import scala.collection.mutable
-
 
 /**
  * This class wraps the logic of collecting the data in SparkEventListeners into the
@@ -46,22 +43,26 @@ import scala.collection.mutable
  * This has to live in Spark's scope because ApplicationEventListener is in private[spark] scope. And it is problematic
  * to compile if written in Java.
  */
-class SparkDataCollection(applicationEventListener: ApplicationEventListener,
-                          jobProgressListener: JobProgressListener,
-                          storageStatusListener: StorageStatusListener,
-                          environmentListener: EnvironmentListener,
-                          executorsListener: ExecutorsListener,
-                          storageListener: StorageListener,
-                          storageStatusTrackingListener: StorageStatusTrackingListener) extends SparkApplicationData {
+class SparkDataCollection extends SparkApplicationData {
+  import SparkDataCollection._
+
+  lazy val applicationEventListener = new ApplicationEventListener()
+  lazy val jobProgressListener = new JobProgressListener(new SparkConf())
+  lazy val environmentListener = new EnvironmentListener()
+  lazy val storageStatusListener = new StorageStatusListener()
+  lazy val executorsListener = new ExecutorsListener(storageStatusListener)
+  lazy val storageListener = new StorageListener(storageStatusListener)
+
+  // This is a customized listener that tracks peak used memory
+  // The original listener only tracks the current in use memory which is useless in offline scenario.
+  lazy val storageStatusTrackingListener = new StorageStatusTrackingListener()
+
   private var _applicationData: SparkGeneralData = null;
   private var _jobProgressData: SparkJobProgressData = null;
   private var _environmentData: SparkEnvironmentData = null;
   private var _executorData: SparkExecutorData = null;
   private var _storageData: SparkStorageData = null;
   private var _isThrottled: Boolean = false;
-
-  import SparkDataCollection._
-
 
   def throttle(): Unit = {
     _isThrottled = true
@@ -283,6 +284,18 @@ class SparkDataCollection(applicationEventListener: ApplicationEventListener,
 
   override def getAppId: String = {
     getGeneralData().getApplicationId
+  }
+
+  def load(in: InputStream, sourceName: String): Unit = {
+    val replayBus = new ReplayListenerBus()
+    replayBus.addListener(applicationEventListener)
+    replayBus.addListener(jobProgressListener)
+    replayBus.addListener(environmentListener)
+    replayBus.addListener(storageStatusListener)
+    replayBus.addListener(executorsListener)
+    replayBus.addListener(storageListener)
+    replayBus.addListener(storageStatusTrackingListener)
+    replayBus.replay(in, sourceName, maybeTruncated = false)
   }
 }
 
