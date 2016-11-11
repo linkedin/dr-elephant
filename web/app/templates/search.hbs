@@ -1,0 +1,171 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div class="nav-extension"></div>
+
+<div class="container" role="main">
+
+    <div class="shadow box search-box">
+        <form id="search-form" {{action 'search' on="submit"}}>
+
+            <table class="search-table">
+                <tr>
+                    <td>
+                        <label>User</label>{{input type="text" class="form-control" id="form-username" name="username" placeholder="username" value=usernameValue}}
+                    </td>
+                    <td>
+                        <label>Queue</label>{{input type="text" class="form-control" id="form-queue-name" name="queueName" placeholder="Queue" value=queueNameValue}}
+                    </td>
+                    <td>
+                        <div class="checkbox">
+                            <label>{{input type="checkbox" name="isAdmin" checked=isJobTypeChecked }}
+                                Job Type</label>
+                        </div>
+                        <div class="form-group">
+                            {{#if isJobTypeChecked }}
+                                <select class="form-control" id="form-job-type" name="job-type"
+                                        onChange={{action 'selectJobType' value="target.value"}}>
+                                    {{#each model.searchOptions.jobcategory as |jobcategory|}}
+                                    {{!-- each job type should have a separate group such as Spark, Map-Reduce --}}
+                                        <optgroup label={{jobcategory.name}}>
+                                            {{#each jobcategory.jobtypes as |jobtype|}}
+                                                <option value={{jobtype.name}} selected={{eq jobtype.name jobType}}>{{jobtype.name}}</option>
+                                            {{/each}}
+                                        </optgroup>
+                                    {{/each}}
+                                </select>
+                            {{else}}
+                                <select disabled class="form-control" id="form-job-type" name="job-type"
+                                        onChange={{action 'selectJobType' value=null}}>
+                                    {{#each model.searchOptions.jobcategory as |jobcategory|}}
+                                        <optgroup label={{jobcategory.name}}>
+                                            {{#each jobcategory.jobtypes as |jobtype|}}
+                                                <option value={{jobtype.name}} selected={{eq jobtype.name jobType}}>{{jobtype.name}}</option>
+                                            {{/each}}
+                                        </optgroup>
+                                    {{/each}}
+                                </select>
+                            {{/if}}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="checkbox">
+                            <label>{{input  type="checkbox" name="isSeverityChecked" checked=isSeverityChecked}}
+                                Severity</label>
+                        </div>
+                        <div class="form-group">
+                            {{#if isSeverityChecked}}
+                                <select class="form-control" id="form-severity" name="severity"
+                                        onChange={{action 'selectSeverity' value="target.value"}}>
+                                    {{#each model.searchOptions.severities as |severityVal|}}
+                                        <option value={{severityVal.value}} selected={{eq severityVal.name severity}}>{{severityVal.name}}</option>
+                                    {{/each}}
+                                </select>
+                            {{else}}
+                                <select disabled class="form-control" id="form-severity" name="severity"
+                                        onChange={{action 'selectSeverity' value=null}}>
+                                    {{#each model.searchOptions.severities as |severityVal|}}
+                                        <option value={{severityVal.value}} selected={{eq severityVal.name severity}}>{{severityVal.name}}</option>
+                                    {{/each}}
+                                </select>
+                            {{/if}}
+
+
+                        </div>
+                        <div class="form-group">
+                            {{#if isSeverityChecked}}
+                                <select class="form-control" id="form-analysis" name="analysis"
+                                        onChange={{action 'selectHeuristic' value="target.value"}}>
+                                    <option value="">All Analysis</option>
+                                    {{#each model.searchOptions.jobcategory as |jobcategory|}}
+                                        <optgroup label={{jobcategory.name}}>
+                                            {{#each jobcategory.heuristics as |heuristic|}}
+                                                <option value={{heuristic.name}} selected={{eq heuristic.name analysis}}>{{heuristic.name}}</option>
+                                            {{/each}}
+                                        </optgroup>
+                                    {{/each}}
+                                </select>
+                            {{else}}
+                                <select disabled class="form-control" id="form-analysis" name="analysis"
+                                        onChange={{action 'selectHeuristic' value=null}}>
+                                    <option value="">All Analysis</option>
+                                    {{#each model.searchOptions.jobcategory as |jobcategory|}}
+                                        <optgroup label={{jobcategory.name}}>
+                                            {{#each jobcategory.heuristics as |heuristic|}}
+                                                <option value={{heuristic.name}} selected={{eq heuristic.name analysis}}>{{heuristic.name}}</option>
+                                            {{/each}}
+                                        </optgroup>
+                                    {{/each}}
+                                </select>
+                            {{/if}}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkbox">
+                            <label>{{input type="checkbox" name="finishTime" checked=isFinishDateChecked}}
+                                Finish Time</label>
+                        </div>
+                        {{#if isFinishDateChecked}}
+
+                            <div class="form-group">
+                                {{bootstrap-datepicker  value=finishTimeBeginValue utc=true class="form-control" placeholder="From: mm/dd/yyyy" autoclose=true}}
+                            </div>
+                            <div class="form-group">
+                                {{bootstrap-datepicker  value=finishTimeEndValue utc=true class="form-control" placeholder="To: mm/dd/yyyy" autoclose=true}}
+                            </div>
+                        {{else}}
+                            <div class="form-group">
+                                {{input type="text" class="form-control" id="form-finished-time-begin-date" name="finished-time-begin-date" placeholder="From: mm/dd/yyyy" readonly="readonly" value=finishTimeBegin }}
+                            </div>
+                            <div class="form-group">
+                                {{input type="text" class="form-control" id="form-finished-time-end-date" name="finished-time-end-date" placeholder="To: mm/dd/yyyy" readonly="readonly" value=finishTimeEnd}}
+                            </div>
+                        {{/if}}
+                    </td>
+                    <td>
+                        <button class="btn btn-default" id="submit-button" action="search">Search</button>
+                    </td>
+                </tr>
+                <tr>
+                </tr>
+            </table>
+            <div>
+            </div>
+        </form>
+    </div>
+
+    {{!-- show application list --}}
+    {{#unless (eq model.summaries.total 0)}}
+    <div class="shadow summary-list-container">
+        <div class="summary-list-header">Applications</div>
+        {{#if loading}}
+          {{loading-panel message="searching..."}}
+        {{else}}
+          {{application-list applications=model.summaries.summaries}}
+        {{/if}}
+    </div>
+    {{/unless}}
+
+{{!-- show pagination --}}
+    {{#if shouldShowPaging}}
+        {{paging-panel paging=paging loadPage=(action 'loadPage')}}
+    {{/if}}
+</div>
+

@@ -1,11 +1,45 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
 <div>
     <p class="list-group-item-heading">
     <table>
         <tr>
-            <td class="hasTooltip usedmemory-td"><img src='assets/images/usedmemory.png' class="metrics-icons" alt='used resources'/>  {{getResourceInGBHours application.resourceused}}</td>
-            <td class="hasTooltip wastedmemory-td"><img src='assets/images/wastedmemory.png' class="metrics-icons" alt='wasted resources'/>  {{getPercentage application.resourcewasted application.resourceused}}</td>
-            <td class="hasTooltip runtime-td"><img src='assets/images/runtime.png' class="metrics-icons" alt='total runtime'/>  {{getDurationBreakdown application.runtime}}</td>
-            <td class="hasTooltip waittime-td"><img src='assets/images/waittime.png' class="metrics-icons" alt='total wait time'/>  {{getPercentage application.waittime application.runtime}}</td>
+            <td class="hasTooltip usedmemory-td"><img src='assets/images/usedmemory.png' class="metrics-icons" alt='used resources'/>  {{getResourceInGBHours application.resourceused}}
+              {{#tooltip-on-element}}
+               Resources used (GB Hours)
+              {{/tooltip-on-element}}
+            </td>
+            <td class="hasTooltip wastedmemory-td"><img src='assets/images/wastedmemory.png' class="metrics-icons" alt='wasted resources'/>  {{getPercentage application.resourcewasted application.resourceused}}
+              {{#tooltip-on-element}}
+                Resources wasted (%)
+              {{/tooltip-on-element}}
+            </td>
+            <td class="hasTooltip runtime-td"><img src='assets/images/runtime.png' class="metrics-icons" alt='total runtime'/>  {{getDurationBreakdown application.runtime}}
+              {{#tooltip-on-element}}
+                Duration (HH:MM:SS)
+              {{/tooltip-on-element}}
+            </td>
+            <td class="hasTooltip waittime-td"><img src='assets/images/waittime.png' class="metrics-icons" alt='total wait time'/>  {{getPercentage application.waittime application.runtime}}
+              {{#tooltip-on-element}}
+                Delay (%)
+              {{/tooltip-on-element}}
+            </td>
         </tr>
     </table>
     </p>

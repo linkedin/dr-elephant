@@ -265,16 +265,25 @@ public final class Utils {
   /**
    * Convert a value in MBSeconds to GBHours
    * @param MBSeconds The value to convert
+   * @return A double of the value in GB Hours unit
+   */
+  public static double MBSecondsToGBHours(long MBSeconds) {
+    double GBseconds = (double) MBSeconds / (double) FileUtils.ONE_KB;
+    double GBHours = GBseconds / Statistics.HOUR;
+    return GBHours;
+  }
+  /**
+   * Convert a value in MBSeconds to GBHours
+   * @param MBSeconds The value to convert
    * @return A string of form a.xyz GB Hours
    */
-  public static String getDurationInGBHours(long MBSeconds) {
+  public static String getResourceInGBHours(long MBSeconds) {
 
     if (MBSeconds == 0) {
       return "0 GB Hours";
     }
-    double GBseconds = (double) MBSeconds / (double) FileUtils.ONE_KB;
-    double GBHours = GBseconds / Statistics.HOUR;
 
+    double GBHours = MBSecondsToGBHours(MBSeconds);
     if ((long) (GBHours * 1000) == 0) {
       return "0 GB Hours";
     }

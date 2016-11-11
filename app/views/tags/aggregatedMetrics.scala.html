@@ -21,7 +21,7 @@
   <p class="list-group-item-heading">
 <table>
   <tr>
-<td class="metrics-dashboard hasTooltip" width="175px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/usedmemory.png")' class="metrics-icons" alt='used resources'/><!--</a>-->   @Utils.getDurationInGBHours(result.resourceUsed)  <div id="tooltip-div">
+<td class="metrics-dashboard hasTooltip" width="175px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/usedmemory.png")' class="metrics-icons" alt='used resources'/><!--</a>-->   @Utils.getResourceInGBHours(result.resourceUsed)  <div id="tooltip-div">
   <span> The resources used by the job in GB Hours</span>
 </div></td>
   <td class="metrics-dashboard hasTooltip" width="100px"><!--<a href="/jobhistory?job-def-id=@**@helper.urlEncode(result.jobDefId)&select-graph-type=resources">--><img src='@routes.Assets.at("images/wastedmemory.png")' class="metrics-icons" alt='wasted resources'/><!--</a>-->    @(Utils.getPercentage(result.resourceWasted, result.resourceUsed))  <div id="tooltip-div">

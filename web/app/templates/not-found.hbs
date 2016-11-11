@@ -1,0 +1,41 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div class="nav-extension"></div>
+<div class="container" role="main">
+  <div class="search-box shadow">
+    <div class="not-found-container">
+      <div class="row">
+        <div class="col-md-2"> <img src='assets/images/logo.png'></div>
+        <div class="col-md-8"> <div>
+          <h1>Oops!</h1>
+          <h3>I can't seem to find what you are looking for.</h3>
+
+
+          <h4>You can go {{#link-to "dashboard.workflow" class="active"}}home{{/link-to}} or {{#link-to "search"}}search{{/link-to}} something.</h4>
+
+          {{#if (notEmpty previous)}}
+            <h4><a href="{{previous}}">Try again</a> </h4>
+          {{/if}}
+        </div></div>
+      </div>
+
+
+    </div>
+  </div>
+  </div>

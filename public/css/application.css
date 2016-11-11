@@ -17,6 +17,7 @@
 .navbar-default {
   background-color: #ffffff;
   border-color: #e8e8e8;
+  font-family: sans-serif;
 }
 
 .navbar-default .navbar-brand {
@@ -210,4 +211,8 @@
 
 .tooltip-text-heuristics {
   color: black;
+}
+
+.graph-padding {
+  padding-left: 25px;
 }
