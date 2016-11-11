@@ -183,6 +183,20 @@ public class OozieScheduler implements Scheduler {
         return new AuthOozieClient(oozieApiUrl, authOption);
     }
 
+    private String getUrl(String idUrl, String id, String urlTemplate, String propertyName) {
+        String url;
+        if (urlTemplate != null) {
+            url = Utils.formatStringOrNull(urlTemplate, id);
+        } else if (idUrl != null) {
+            url = idUrl;
+        } else {
+            logger.warn("Missing " + propertyName + " param for Oozie Scheduler");
+            url = id;
+        }
+
+        return url;
+    }
+
     @Override
     public String getSchedulerName() {
         return schedulerName;
@@ -211,20 +225,6 @@ public class OozieScheduler implements Scheduler {
     @Override
     public String getFlowExecId() {
         return Utils.formatStringOrNull("%s", flowExecId);
-    }
-
-    private String getUrl(String idUrl, String id, String urlTemplate, String propertyName) {
-        String url;
-        if (urlTemplate != null) {
-            url = Utils.formatStringOrNull(urlTemplate, id);
-        } else if (idUrl != null) {
-            url = idUrl;
-        } else {
-            logger.warn("Missing " + propertyName + " param for Oozie Scheduler");
-            url = id;
-        }
-
-        return url;
     }
 
     @Override
