@@ -76,11 +76,47 @@ OPTS+=" -Dhadoopversion=$HADOOP_VERSION"
 OPTS+=" -Dsparkversion=$SPARK_VERSION"
 OPTS+=" $PLAY_OPTS"
 
-set -x
-trap "exit" SIGINT SIGTERM
 
 project_root=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd ${project_root}
+
+cd ${project_root}
+
+
+#if npm is installed, install bower,ember-cli and other components for new UI
+
+if hash npm 2>/dev/null; then
+  echo "############################################################################"
+  echo "npm installation found, we'll compile with the new user interface"
+  echo "############################################################################"
+  set -x
+  sleep 3
+  ember_assets=${project_root}/public/assets
+  ember_resources_dir=${ember_assets}/ember
+  ember_web_directory=${project_root}/web
+
+  # cd to the ember directory
+  cd ${ember_web_directory}
+
+  npm install
+  node_modules/bower/bin/bower install
+  node_modules/ember-cli/bin/ember build --prod
+  rm -r ${ember_resources_dir} 2> /dev/null
+  mkdir ${ember_resources_dir}
+  cp dist/assets/dr-elephant.css ${ember_resources_dir}/
+  cp dist/assets/dr-elephant.js ${ember_resources_dir}/
+  cp dist/assets/vendor.js ${ember_resources_dir}/
+  cp dist/assets/vendor.css ${ember_resources_dir}/
+  cp -r dist/fonts ${ember_assets}/
+  cd ${project_root}
+else
+  echo "############################################################################"
+  echo "npm installation not found. Please install npm in order to compile with new user interface"
+  echo "############################################################################"
+  sleep 3
+fi
+
+trap "exit" SIGINT SIGTERM
 
 start_script=${project_root}/scripts/start.sh
 stop_script=${project_root}/scripts/stop.sh

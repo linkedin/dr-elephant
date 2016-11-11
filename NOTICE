@@ -70,6 +70,18 @@ License: The MIT License (https://github.com/mockito/mockito/blob/master/LICENSE
 This product includes/uses Metrics (http://metrics.dropwizard.io/)
 Copyright 2010-2014, Coda Hale, Yammer Inc.. Created using Sphinx 1.4.1.
 License: Apache 2.0 (https://github.com/dropwizard/metrics/blob/master/LICENSE)
+
+This product includes/uses ember-cli (https://ember-cli.com/)
+Copyright (c) 2013-2016 Stefan Penner, Robert Jackson and ember-cli contributors
+License: The MIT License (MIT) (https://github.com/ember-cli/ember-cli/blob/master/LICENSE)
+
+This product includes/uses bower (https://bower.io/)
+Copyright (c) 2016 Twitter and other contributors (https://github.com/bower/bower/blob/master/LICENSE)
+
+This product includes/uses broccoli-asset-rev
+Copyright (c) 2014 Rick Harrison
+The MIT License (MIT) (https://github.com/rickharrison/broccoli-asset-rev/blob/master/LICENSE)
+
 ------------------------------------------------------------------------------
 Attribution for JavaScript Libraries
 ------------------------------------------------------------------------------
@@ -93,6 +105,10 @@ License: Apache 2.0
 D3.js (http://d3js.org)
 Copyright (c) 2010-2016, Michael Bostock
 License: BSD 3-Clause (https://github.com/mbostock/d3/blob/master/LICENSE)
+
+ember.js ( http://emberjs.com/)
+Copyright (c) 2016 Yehuda Katz, Tom Dale and Ember.js contributors
+License: (https://github.com/emberjs/ember.js/blob/master/LICENSE)
 
 ------------------------------------------------------------------------------
 

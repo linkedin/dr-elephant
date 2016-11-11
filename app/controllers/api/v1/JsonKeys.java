@@ -42,6 +42,13 @@ public class JsonKeys {
   public static final String JOB_CATEGORY = "jobcategory";
   public static final String TOTAL = "total";
   public static final String SUMMARIES = "summaries";
+  public static final String SCHEDULER = "scheduler";
+  public static final String CRITICAL = "critical";
+  public static final String SEVERE = "severe";
+  public static final String MODERATE = "moderate";
+  public static final String LOW = "low";
+  public static final String NONE = "none";
+  public static final String DASHBOARD_SUMMARIES = "dashboard-summaries";
 
   // Workflows
   public static final String WORKFLOW_SUMMARIES = "workflow-summaries";

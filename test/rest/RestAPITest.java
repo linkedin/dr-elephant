@@ -17,6 +17,7 @@
 package rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.linkedin.drelephant.util.Utils;
 import common.DBTestUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -345,14 +346,14 @@ public class RestAPITest {
           JsonNode userResourceUsage = userResources.next();
           if (userResourceUsage.findValue("user").asText().equals("growth")) {
             assertTrue("Wrong resourceusage for user growth",
-                userResourceUsage.findValue("resourceUsed").asLong() == 100);
+                userResourceUsage.findValue("resourceUsed").asDouble() == Utils.MBSecondsToGBHours(100));
             assertTrue("Wrong wastedResources for user growth",
-                userResourceUsage.findValue("resourceWasted").asLong() == 30);
+                userResourceUsage.findValue("resourceWasted").asDouble() == Utils.MBSecondsToGBHours(30));
           } else if (userResourceUsage.findValue("user").asText().equals("metrics")) {
             assertTrue("Wrong resourceusage for user metrics",
-                userResourceUsage.findValue("resourceUsed").asLong() == 200);
+                userResourceUsage.findValue("resourceUsed").asDouble() == Utils.MBSecondsToGBHours(200));
             assertTrue("Wrong wastedResources for user metrics",
-                userResourceUsage.findValue("resourceWasted").asLong() == 40);
+                userResourceUsage.findValue("resourceWasted").asDouble() == Utils.MBSecondsToGBHours(40));
           } else {
             assertTrue("Unexpected user" + userResourceUsage.findValue("user").asText(), false);
           }

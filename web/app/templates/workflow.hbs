@@ -1,0 +1,86 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div class="nav-extension"></div>
+
+<div class="container" role="main">
+
+    <div class="bread-crumb flat">
+        {{#link-to "dashboard"}}<i class="glyphicon glyphicon-home"></i>{{/link-to}}
+        {{#link-to "workflow" (query-params workflowid=model.id) class="active"}}<label>Workflow</label>{{/link-to}}
+    </div>
+
+    <div class="shadow details-container box">
+        <h4>{{model.flowname}}</h4>
+        <hr class="horizontal-line">
+
+        <table class="info borderless">
+            <tbody>
+            <tr>
+                <td>User</td>
+                <td>{{model.username}}</td>
+            </tr>
+            <tr>
+                <td>Queue</td>
+                <td>{{model.queue}}</td>
+            </tr>
+            <tr>
+                <td>Start time</td>
+                <td>{{model.starttime}}</td>
+            </tr>
+            <tr>
+                <td>End time</td>
+                <td>{{model.finishtime}}</td>
+            </tr>
+
+            </tbody>
+        </table>
+
+        <table class="info borderless">
+            <tr>
+                <div class="menu-workflow">
+                    <a class="btn"
+                       href="/newflowhistory?flow-def-id={{urlEncode model.flowdefid}}&select-graph-type=resources"><span
+                            class="glyphicon glyphicon-stats"></span> FlowHistory</a>
+                    <a class="btn" href={{model.flowdefid}}><span class="glyphicon glyphicon-info-sign"></span> Flow
+                        definition</a>
+                    <a class="btn" href="{{model.flowexecid}}"><span class="glyphicon glyphicon-cog"></span> Flow
+                        execution</a>
+                </div>
+            </tr>
+        </table>
+
+        <table class="borderless info">
+            <tbody>
+            <tr>
+                <td>{{jobs-severity jobsseverity=model.jobsseverity}}</td>
+            </tr>
+            <tr>
+                <td>{{aggregated-metrics application=model}}</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="shadow summary-list-container">
+        <div class="summary-list-header">Jobs</div>
+        {{job-list jobs=model.jobssummaries}}
+    </div>
+
+</div>

@@ -55,6 +55,7 @@ import views.html.help.metrics.helpRuntime;
 import views.html.help.metrics.helpWaittime;
 import views.html.help.metrics.helpUsedResources;
 import views.html.help.metrics.helpWastedResources;
+import views.html.index;
 import views.html.page.comparePage;
 import views.html.page.flowHistoryPage;
 import views.html.page.helpPage;
@@ -121,6 +122,14 @@ public class Application extends Controller {
   private static int _numJobsAnalyzed = 0;
   private static int _numJobsCritical = 0;
   private static int _numJobsSevere = 0;
+
+
+  /**
+  * Serves the initial index.html page for the new user interface. This page contains the whole web app
+  */
+  public static Result serveAsset(String path) {
+    return ok(index.render());
+  }
 
   /**
    * Controls the Home page of Dr. Elephant.
@@ -607,13 +616,8 @@ public class Application extends Controller {
         return ok(flowHistoryPage.render(flowDefPair.getId(), graphType,
             flowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
-        if (hasSparkJob) {
-          return notFound("Cannot plot graph for " + graphType + " since it contains a spark job. " + graphType
-              + " graphs are not supported for spark right now");
-        } else {
           return ok(flowHistoryPage.render(flowDefPair.getId(), graphType, flowMetricsHistoryResults
               .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
-        }
       }
     } else {
       if (graphType.equals("heuristics")) {
@@ -743,12 +747,8 @@ public class Application extends Controller {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
             jobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
-        if (hasSparkJob) {
-          return notFound("Resource and time graph are not supported for spark right now");
-        } else {
           return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
               jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
-        }
       }
     } else {
       if (graphType.equals("heuristics")) {
@@ -1517,8 +1517,8 @@ public class Application extends Controller {
 
   private static class AppResourceUsageData {
     String user;
-    long resourceUsed;
-    long resourceWasted;
+    double resourceUsed;
+    double resourceWasted;
   }
 
   /**
@@ -1541,8 +1541,8 @@ public class Application extends Controller {
         data.user = result.username;
         userResourceUsage.put(result.username, data);
       }
-      userResourceUsage.get(result.username).resourceUsed += result.resourceUsed;
-      userResourceUsage.get(result.username).resourceWasted += result.resourceWasted;
+      userResourceUsage.get(result.username).resourceUsed += Utils.MBSecondsToGBHours(result.resourceUsed);
+      userResourceUsage.get(result.username).resourceWasted += Utils.MBSecondsToGBHours(result.resourceWasted);
     }
 
     return userResourceUsage.values();

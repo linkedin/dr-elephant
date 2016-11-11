@@ -1,0 +1,113 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div class="nav-extension"></div>
+
+<div class="container" role="main">
+
+    <div class="bread-crumb flat">
+        {{#link-to "dashboard"}}<i class="glyphicon glyphicon-home"></i>{{/link-to}}
+        {{#if (notEmpty model.flowexecid)}}
+            {{#link-to "workflow" (query-params workflowid=model.flowexecid)}}Workflow{{/link-to}}
+        {{/if}}
+        {{#if (notEmpty model.jobexecid)}}
+            {{#link-to "job" (query-params jobid=model.jobexecid)}}Job{{/link-to}}
+        {{/if}}
+        {{#link-to "app" (query-params jobid=model.id) class="active" }}<label>Application</label>{{/link-to}}
+    </div>
+
+
+    <div class="shadow details-container box">
+        <h4>{{model.id}}</h4>
+        <hr>
+        <table class="info borderless">
+            <tbody>
+            <tr>
+                <td>username</td>
+                <td>{{model.username}}</td>
+            </tr>
+            <tr>
+                <td>Queue</td>
+                <td>{{model.queue}}</td>
+            </tr>
+            <tr>
+                <td>jobtype</td>
+                <td>{{model.jobtype}}</td>
+            </tr>
+
+            {{#if (notEmpty model.mapreducejobname)}}
+                <tr>
+                    <td>jobname</td>
+                    <td>{{model.mapreducejobname}}</td>
+                </tr>
+            {{/if}}
+            <tr>
+                <td>jobtracker</td>
+                <td><a href="{{model.trackingurl}}">{{model.id}}</a></td>
+            </tr>
+            </tbody>
+        </table>
+
+        {{#if (notEmpty model.flowexecid)}}
+        <table class="info borderless">
+            <tr>
+                <td><a class="btn"
+                       href="/newflowhistory?flow-def-id={{urlEncode model.flowdefid}}&select-graph-type=heuristics"><span
+                        class="glyphicon glyphicon-stats"></span> FlowHistory</a></td>
+                <td><a class="btn" href={{model.flowdefid}}><span class="glyphicon glyphicon-info-sign"></span> Flow
+                    definition</a></td>
+                <td><a class="btn" href="{{model.flowexecid}}"><span class="glyphicon glyphicon-cog"></span> Flow
+                    execution</a></td>
+            </tr>
+            <tr>
+                <td><a class="btn"
+                       href="/newjobhistory?job-def-id={{urlEncode model.jobdefid}}&select-graph-type=heuristics"><span
+                        class="glyphicon glyphicon-stats"></span> JobHistory</a></td>
+                <td><a class="btn" href="{{model.jobdefid}}"><span class="glyphicon glyphicon-info-sign"></span> Job
+                    definition</a></td>
+                <td><a class="btn" href="{{model.jobexecid}}"><span class="glyphicon glyphicon-cog"></span> Job
+                    execution</a></td>
+            </tr>
+        </table>
+        {{/if}}
+        <table class="info borderless">
+            <tbody>
+
+            <tr>
+                <td>
+                    {{heuristics-summary heuristics=model.yarnappheuristicresults}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{aggregated-metrics application=model}}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="shadow summary-list-container">
+        <div class="summary-list-header">Heuristic Details</div>
+        {{heuristic-details-list heuristic-details = model.yarnappheuristicresults}}
+    </div>
+</div>
+
+
+
+

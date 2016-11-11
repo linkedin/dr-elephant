@@ -132,9 +132,9 @@
 
                       <tbody style="height:100%;">
                         <tr style="text-align: center;">
-                          <td class="used-resource-td hasTooltip" style="width: 95px">@Utils.getDurationInGBHours(Utils.getTotalResources(jobMap.get(jobDefPair)) ).split("GB")(0)
+                          <td class="used-resource-td hasTooltip" style="width: 95px">@Utils.getResourceInGBHours(Utils.getTotalResources(jobMap.get(jobDefPair)) ).split("GB")(0)
                           </td>
-                          <td class="wasted-resource-td hasTooltip" style="width: 95px">@Utils.getDurationInGBHours(Utils.getTotalWastedResources(jobMap.get(jobDefPair)) ).split("GB")(0)
+                          <td class="wasted-resource-td hasTooltip" style="width: 95px">@Utils.getResourceInGBHours(Utils.getTotalWastedResources(jobMap.get(jobDefPair)) ).split("GB")(0)
                           </td>
                           <td class="run-time-td hasTooltip" style="width: 95px">@(Utils.getDurationBreakdown(Utils.getTotalRuntime(jobMap.get(jobDefPair))).split("Hours")(0))
                           </td>
