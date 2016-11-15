@@ -26,32 +26,32 @@ public class HadoopAggregatedData {
   private long totalDelay = 0;
 
   /**
-   * Returns the resource usage of the job
-   * @return The resource usage of the job
+   * Returns the resource usage (in MBSeconds) of the job
+   * @return The resource usage (in MBSeconds) of the job
    */
   public long getResourceUsed() {
     return resourceUsed;
   }
 
   /**
-   * Setter for the resource usage of the job
-   * @param resourceUsed The resource usage of the job
+   * Setter for the resource usage (in MBSeconds) of the job
+   * @param resourceUsed The resource usage (in MBSeconds) of the job
    */
   public void setResourceUsed(long resourceUsed) {
     this.resourceUsed = resourceUsed;
   }
 
   /**
-   * Returns the wasted resources of the job
-   * @return The wasted resources of the job
+   * Returns the wasted resources (in MBSeconds) of the job
+   * @return The wasted resources (in MBSeconds) of the job
    */
   public long getResourceWasted() {
     return resourceWasted;
   }
 
   /**
-   * Setter for the wasted resources
-   * @param resourceWasted The wasted resources of the job
+   * Setter for the wasted resources (in MBSeconds)
+   * @param resourceWasted The wasted resources (in MBSeconds) of the job
    */
   public void setResourceWasted(long resourceWasted) {
     this.resourceWasted = resourceWasted;

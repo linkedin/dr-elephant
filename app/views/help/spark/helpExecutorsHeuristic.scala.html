@@ -1,0 +1,36 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+<p>This heuristic concerns the distribution (min, 25p, median, 75p,
+max) of key executor metrics including input bytes, shuffle read
+bytes, shuffle write bytes, storage memory used, and task time. The
+max-to-median ratio determines the severity of any particular metric.</p>
+
+<p>Spark application get resources from YARN allocated all at once,
+and don't release these until the application completes. Thus, it's
+important to balance load on the executors to avoid wasting
+resources.</p>
+
+<p>To achieve better load balancing:</p>
+
+<ul>
+  <li>use an appropriate number of partitions (some small multiple of
+  the # of executors) so that there are enough tasks handling those
+  partitions to keep the executors busy</li>
+  <li>try avoiding key skew; you should know which partitioner you are
+  using and what is the distribution of your keys</li>
+  <li>consider enabling spark.speculation, so that straggler tasks can
+  be re-launched</li>
+</ul>

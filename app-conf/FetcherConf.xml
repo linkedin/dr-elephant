@@ -70,4 +70,10 @@
     </params>
     -->
   </fetcher>
+
+  <!-- Experimental Spark fetcher -->
+  <!-- <fetcher> -->
+  <!--   <applicationtype>spark</applicationtype> -->
+  <!--   <classname>com.linkedin.drelephant.spark.fetchers.SparkComboFetcher</classname> -->
+  <!-- </fetcher> -->
 </fetchers>

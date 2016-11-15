@@ -98,6 +98,14 @@ public class StatisticsTest {
     assertEquals(10, Statistics.percentile(finishTimes,10));
     assertEquals(10, Statistics.percentile(finishTimes,4));
 
+    List<Long> oddLengthValues = new ArrayList<Long>();
+    oddLengthValues.add(1L);
+    oddLengthValues.add(2L);
+    oddLengthValues.add(3L);
+    oddLengthValues.add(4L);
+    oddLengthValues.add(5L);
+    assertEquals(3L, Statistics.percentile(oddLengthValues, 50));
+
     List<Long> finishTimeSingle = new ArrayList<Long>();
     finishTimeSingle.add(10L);
     assertEquals(10,Statistics.percentile(finishTimeSingle,100));

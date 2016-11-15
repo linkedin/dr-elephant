@@ -219,4 +219,30 @@
     <viewname>views.html.help.spark.helpEventLogLimit</viewname>
   </heuristic>
 
+  <!-- Experimental Spark heuristics -->
+  <!-- <heuristic> -->
+  <!--   <applicationtype>spark</applicationtype> -->
+  <!--   <heuristicname>Spark Configuration</heuristicname> -->
+  <!--   <classname>com.linkedin.drelephant.spark.heuristics.ConfigurationHeuristic</classname> -->
+  <!--   <viewname>views.html.help.spark.helpConfigurationHeuristic</viewname> -->
+  <!-- </heuristic> -->
+  <!-- <heuristic> -->
+  <!--   <applicationtype>spark</applicationtype> -->
+  <!--   <heuristicname>Spark Executor Metrics</heuristicname> -->
+  <!--   <classname>com.linkedin.drelephant.spark.heuristics.ExecutorsHeuristic</classname> -->
+  <!--   <viewname>views.html.help.spark.helpExecutorsHeuristic</viewname> -->
+  <!-- </heuristic> -->
+  <!-- <heuristic> -->
+  <!--   <applicationtype>spark</applicationtype> -->
+  <!--   <heuristicname>Spark Job Metrics</heuristicname> -->
+  <!--   <classname>com.linkedin.drelephant.spark.heuristics.JobsHeuristic</classname> -->
+  <!--   <viewname>views.html.help.spark.helpJobsHeuristic</viewname> -->
+  <!-- </heuristic> -->
+  <!-- <heuristic> -->
+  <!--   <applicationtype>spark</applicationtype> -->
+  <!--   <heuristicname>Spark Stage Metrics</heuristicname> -->
+  <!--   <classname>com.linkedin.drelephant.spark.heuristics.StagesHeuristic</classname> -->
+  <!--   <viewname>views.html.help.spark.helpStagesHeuristic</viewname> -->
+  <!-- </heuristic> -->
+
 </heuristics>

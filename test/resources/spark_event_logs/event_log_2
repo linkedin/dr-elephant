@@ -1,0 +1,4 @@
+{"Event":"SparkListenerLogStart","Spark Version":"1.4.1"}
+{"Event":"SparkListenerBlockManagerAdded","Block Manager ID":{"Executor ID":"driver","Host":"127.0.0.1","Port":54157},"Maximum Memory":515411804,"Timestamp":1475761114342}
+{"Event":"SparkListenerEnvironmentUpdate","Spark Properties":{"spark.serializer":"org.apache.spark.serializer.KryoSerializer","spark.storage.memoryFraction":"0.3","spark.driver.memory":"2G","spark.executor.instances":"900","spark.executor.memory":"1g","spark.shuffle.memoryFraction":"0.5"},"JVM Information":{},"System Properties":{},"Classpath Entries":{}}
+{"Event":"SparkListenerApplicationStart","App Name":"app","App ID":"application_1","Timestamp":1475761112578,"User":"foo","App Attempt ID":"1"}

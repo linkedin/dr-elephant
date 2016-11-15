@@ -98,7 +98,10 @@ public final class Statistics {
     }
 
     Collections.sort(values);
-    int position = (int) Math.ceil(values.size() * percentile / 100);
+
+    // Use Nearest Rank method.
+    // https://en.wikipedia.org/wiki/Percentile#The_Nearest_Rank_method
+    int position = (int) Math.ceil(values.size() * percentile / 100.0);
 
     // should never happen.
     if (position == 0) {

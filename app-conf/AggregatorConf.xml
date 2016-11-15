@@ -42,4 +42,10 @@
     </params>
     -->
   </aggregator>
+
+  <!-- Experimental Spark aggregator -->
+  <!-- <aggregator> -->
+  <!--   <applicationtype>spark</applicationtype> -->
+  <!--   <classname>com.linkedin.drelephant.spark.SparkComboMetricsAggregator</classname> -->
+  <!-- </aggregator> -->
 </aggregators>
