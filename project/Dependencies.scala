@@ -24,7 +24,6 @@ object Dependencies {
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
   lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
-  lazy val hk2Version = "2.5.0-b05"
   lazy val jacksonMapperAslVersion = "1.7.3"
   lazy val jacksonVersion = "2.5.3"
   lazy val jerseyVersion = "2.24"
@@ -84,11 +83,6 @@ object Dependencies {
     "org.glassfish.jersey.media" % "jersey-media-json-jackson" % jerseyVersion % Test,
     "org.glassfish.jersey.test-framework" % "jersey-test-framework-core" % jerseyVersion % Test,
     "org.glassfish.jersey.test-framework.providers" % "jersey-test-framework-provider-grizzly2" % jerseyVersion % Test,
-
-    // Force hk2-utils and hk2-locator versions so that Travis CI doesn't fail.
-    "org.glassfish.hk2" % "hk2-utils" % hk2Version,
-    "org.glassfish.hk2" % "hk2-locator" % hk2Version,
-
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
