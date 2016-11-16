@@ -86,8 +86,8 @@ object Dependencies {
     "org.glassfish.jersey.test-framework.providers" % "jersey-test-framework-provider-grizzly2" % jerseyVersion % Test,
 
     // Force hk2-utils and hk2-locator versions so that Travis CI doesn't fail.
-    "org.glassfish.hk2" % "hk2-utils" % hk2Version % Test,
-    "org.glassfish.hk2" % "hk2-locator" % hk2Version % Test,
+    "org.glassfish.hk2" % "hk2-utils" % hk2Version,
+    "org.glassfish.hk2" % "hk2-locator" % hk2Version,
 
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
