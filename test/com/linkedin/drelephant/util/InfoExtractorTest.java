@@ -26,9 +26,11 @@ import java.util.Properties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import mockit.Expectations;
 import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 
@@ -38,6 +40,7 @@ import play.test.Helpers;
 import static org.junit.Assert.assertEquals;
 
 
+@RunWith(JMockit.class)
 public class InfoExtractorTest {
   @Mocked
   OozieClient oozieClient;
