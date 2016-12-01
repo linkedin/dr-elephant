@@ -55,6 +55,7 @@ public class MetricsController extends Controller {
   private static final String HEALTHCHECK_NOT_ENABLED = "Healthcheck not enabled";
   private static final String UNINITIALIZED_MESSAGE = "Metrics should be initialized before use.";
 
+  private static boolean _initialized = false;
   private static MetricRegistry _metricRegistry = null;
   private static HealthCheckRegistry _healthCheckRegistry = null;
 
@@ -128,6 +129,8 @@ public class MetricsController extends Controller {
 
     _healthCheckRegistry.register("ThreadDeadlockHealthCheck",
         new ThreadDeadlockHealthCheck());
+
+    _initialized = true;
   }
 
   /**
@@ -170,6 +173,13 @@ public class MetricsController extends Controller {
    */
   public static void setRetryQueueSize(int retryQueueSize) {
     _retryQueueSize = retryQueueSize;
+  }
+
+  /**
+   * Checks if the MetricsController is initialized
+   */
+  public static boolean isInitialized() {
+    return _initialized;
   }
 
   /**
