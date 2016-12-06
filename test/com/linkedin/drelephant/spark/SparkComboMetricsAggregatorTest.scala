@@ -18,6 +18,8 @@ package com.linkedin.drelephant.spark
 
 import java.util.Date
 
+import scala.collection.JavaConverters
+
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkComboApplicationData, SparkLogDerivedData, SparkRestDerivedData}
@@ -29,7 +31,9 @@ class SparkComboMetricsAggregatorTest extends FunSpec with Matchers {
   import SparkComboMetricsAggregatorTest._
 
   describe("SparkComboMetricsAggregator") {
-    val aggregatorConfigurationData = newFakeAggregatorConfigurationData()
+    val aggregatorConfigurationData = newFakeAggregatorConfigurationData(
+      Map("allocated_memory_waste_buffer_percentage" -> "0.5")
+    )
 
     val appId = "application_1"
 
@@ -89,9 +93,7 @@ class SparkComboMetricsAggregatorTest extends FunSpec with Matchers {
       val executorMemoryMb = 4096
       val totalExecutorTaskTimeSeconds = 1000 + 3000
 
-      result.getResourceWasted should be(
-        (totalExecutorMemoryMb * applicationDurationSeconds) - (executorMemoryMb * totalExecutorTaskTimeSeconds)
-      )
+      result.getResourceWasted should be(4096 * 4000)
     }
 
     it("doesn't calculate total delay") {
@@ -101,8 +103,10 @@ class SparkComboMetricsAggregatorTest extends FunSpec with Matchers {
 }
 
 object SparkComboMetricsAggregatorTest {
-  def newFakeAggregatorConfigurationData(): AggregatorConfigurationData =
-    new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", new ApplicationType("SPARK"), null)
+  import JavaConverters._
+
+  def newFakeAggregatorConfigurationData(params: Map[String, String] = Map.empty): AggregatorConfigurationData =
+    new AggregatorConfigurationData("org.apache.spark.SparkMetricsAggregator", new ApplicationType("SPARK"), params.asJava)
 
   def newFakeSparkListenerEnvironmentUpdate(appConfigurationProperties: Map[String, String]): SparkListenerEnvironmentUpdate =
     SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
