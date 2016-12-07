@@ -20,7 +20,6 @@ import com.linkedin.drelephant.analysis.HadoopApplicationData;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
 import com.linkedin.drelephant.schedulers.Scheduler;
-import com.linkedin.drelephant.spark.data.SparkApplicationData;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -108,8 +107,6 @@ public class InfoExtractor {
     Properties properties = new Properties();
     if (data instanceof MapReduceApplicationData) {
       properties = retrieveMapreduceProperties((MapReduceApplicationData) data);
-    } else if (data instanceof SparkApplicationData) {
-      properties = retrieveSparkProperties((SparkApplicationData) data);
     }
 
     Scheduler scheduler = getSchedulerInstance(data.getAppId(), properties);
@@ -156,33 +153,6 @@ public class InfoExtractor {
    */
   public static Properties retrieveMapreduceProperties(MapReduceApplicationData appData) {
     return appData.getConf();
-  }
-
-  /**
-   * Retrieve the spark properties from SPARK_EXTRA_JAVA_OPTIONS
-   *
-   * @param appData the Spark Application Data
-   * @return The retrieved Spark properties
-   */
-  public static Properties retrieveSparkProperties(SparkApplicationData appData) {
-    String prop = appData.getEnvironmentData().getSparkProperty(SPARK_EXTRA_JAVA_OPTIONS);
-    Properties properties = new Properties();
-    if (prop != null) {
-      try {
-        Map<String, String> javaOptions = Utils.parseJavaOptions(prop);
-        for (String key : javaOptions.keySet()) {
-          properties.setProperty(key, unescapeString(javaOptions.get(key)));
-        }
-        logger.info("Parsed options:" + properties.toString());
-      } catch (IllegalArgumentException e) {
-        logger.error("Encountered error while parsing java options into urls: " + e.getMessage());
-      }
-    } else {
-      logger.error("Unable to retrieve the scheduler info for application [" +
-          appData.getGeneralData().getApplicationId() + "]. It does not contain [" + SPARK_EXTRA_JAVA_OPTIONS
-          + "] property in its spark properties.");
-    }
-    return properties;
   }
 
   /**
