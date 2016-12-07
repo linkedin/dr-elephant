@@ -16,16 +16,21 @@
 
 package com.linkedin.drelephant.spark.data
 
-import scala.collection.JavaConverters
 import java.util.Properties
 
+import scala.collection.JavaConverters
+
 import com.linkedin.drelephant.analysis.{ApplicationType, HadoopApplicationData}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
 
 
 case class SparkComboApplicationData(
   appId: String,
-  restDerivedData: SparkRestDerivedData,
-  logDerivedData: Option[SparkLogDerivedData]
+  appConfigurationProperties: Map[String, String],
+  applicationInfo: ApplicationInfo,
+  jobDatas: Seq[JobData],
+  stageDatas: Seq[StageData],
+  executorSummaries: Seq[ExecutorSummary]
 ) extends HadoopApplicationData {
   import SparkComboApplicationData._
   import JavaConverters._
@@ -34,10 +39,7 @@ case class SparkComboApplicationData(
 
   override def getConf(): Properties = {
     val properties = new Properties()
-    logDerivedData.map(_.appConfigurationProperties) match {
-      case Some(appConfigurationProperties) => properties.putAll(appConfigurationProperties.asJava)
-      case None => {} // Do nothing.
-    }
+    properties.putAll(appConfigurationProperties.asJava)
     properties
   }
 
@@ -49,4 +51,20 @@ case class SparkComboApplicationData(
 
 object SparkComboApplicationData {
   val APPLICATION_TYPE = new ApplicationType("SPARK")
+
+  def apply(
+    appId: String,
+    restDerivedData: SparkRestDerivedData,
+    logDerivedData: Option[SparkLogDerivedData]
+  ): SparkComboApplicationData = {
+    val appConfigurationProperties: Map[String, String] =
+      logDerivedData
+        .flatMap { _.environmentUpdate.environmentDetails.get("Spark Properties").map(_.toMap) }
+        .getOrElse(Map.empty)
+    val applicationInfo = restDerivedData.applicationInfo
+    val jobDatas = restDerivedData.jobDatas
+    val stageDatas = restDerivedData.stageDatas
+    val executorSummaries = restDerivedData.executorSummaries
+    apply(appId, appConfigurationProperties, applicationInfo, jobDatas, stageDatas, executorSummaries)
+  }
 }

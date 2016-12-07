@@ -124,12 +124,12 @@ object StagesHeuristic {
   val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
 
   class Evaluator(stagesHeuristic: StagesHeuristic, data: SparkComboApplicationData) {
-    lazy val stageDatas: Seq[StageData] = data.restDerivedData.stageDatas
+    lazy val stageDatas: Seq[StageData] = data.stageDatas
 
-    lazy val appConfigurationProperties: Option[Map[String, String]] =
-      data.logDerivedData.map(_.appConfigurationProperties)
+    lazy val appConfigurationProperties: Map[String, String] =
+      data.appConfigurationProperties
 
-    lazy val executorSummaries: Seq[ExecutorSummary] = data.restDerivedData.executorSummaries
+    lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
 
     lazy val numCompletedStages: Int = stageDatas.count { _.status == StageStatus.COMPLETE }
 
@@ -177,7 +177,7 @@ object StagesHeuristic {
     private lazy val runtimeSeverities: Seq[Severity] = stagesAndAverageExecutorRuntimeSeverities.map { case (_, _, severity) => severity }
 
     private lazy val executorInstances: Int =
-      appConfigurationProperties.flatMap { _.get(SPARK_EXECUTOR_INSTANCES_KEY) }.map(_.toInt).getOrElse(executorSummaries.size)
+      appConfigurationProperties.get(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt).getOrElse(executorSummaries.size)
 
     private def taskFailureRateAndSeverityOf(stageData: StageData): (Double, Severity) = {
       val taskFailureRate = taskFailureRateOf(stageData).getOrElse(0.0D)

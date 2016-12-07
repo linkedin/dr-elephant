@@ -46,13 +46,10 @@ class SparkComboMetricsAggregator(private val aggregatorConfigurationData: Aggre
     case _ => throw new IllegalArgumentException("data should be SparkComboApplicationData")
   }
 
-  private def aggregate(data: SparkComboApplicationData): Unit = for {
-    logDerivedData <- data.logDerivedData
-    restDerivedData = data.restDerivedData
-  } {
-    val (executorInstances, executorMemoryBytes) = executorInstancesAndMemoryBytesOf(logDerivedData)
-    val applicationDurationMillis = applicationDurationMillisOf(restDerivedData)
-    val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(restDerivedData)
+  private def aggregate(data: SparkComboApplicationData): Unit = {
+    val (executorInstances, executorMemoryBytes) = executorInstancesAndMemoryBytesOf(data)
+    val applicationDurationMillis = applicationDurationMillisOf(data)
+    val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
     val resourcesAllocatedMBSeconds =
       aggregateResourcesAllocatedMBSeconds(executorInstances, executorMemoryBytes, applicationDurationMillis)
@@ -89,21 +86,21 @@ class SparkComboMetricsAggregator(private val aggregatorConfigurationData: Aggre
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
 
-  private def executorInstancesAndMemoryBytesOf(logDerivedData: SparkLogDerivedData): (Int, Long) = {
-    val appConfigurationProperties = logDerivedData.appConfigurationProperties
+  private def executorInstancesAndMemoryBytesOf(data: SparkComboApplicationData): (Int, Long) = {
+    val appConfigurationProperties = data.appConfigurationProperties
     val executorInstances = appConfigurationProperties("spark.executor.instances").toInt
     val executorMemoryBytes = MemoryFormatUtils.stringToBytes(appConfigurationProperties("spark.executor.memory"))
     (executorInstances, executorMemoryBytes)
   }
 
-  private def applicationDurationMillisOf(restDerivedData: SparkRestDerivedData): Long = {
-    require(restDerivedData.applicationInfo.attempts.nonEmpty)
-    val lastApplicationAttemptInfo = restDerivedData.applicationInfo.attempts.last
+  private def applicationDurationMillisOf(data: SparkComboApplicationData): Long = {
+    require(data.applicationInfo.attempts.nonEmpty)
+    val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
     lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime
   }
 
-  private def totalExecutorTaskTimeMillisOf(restDerivedData: SparkRestDerivedData): BigInt = {
-    restDerivedData.executorSummaries.map { executorSummary => BigInt(executorSummary.totalDuration) }.sum
+  private def totalExecutorTaskTimeMillisOf(data: SparkComboApplicationData): BigInt = {
+    data.executorSummaries.map { executorSummary => BigInt(executorSummary.totalDuration) }.sum
   }
 }
 

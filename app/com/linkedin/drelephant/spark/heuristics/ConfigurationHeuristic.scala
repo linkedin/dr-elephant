@@ -97,8 +97,8 @@ object ConfigurationHeuristic {
   val SPARK_SERIALIZER_KEY = "spark.serializer"
 
   class Evaluator(configurationHeuristic: ConfigurationHeuristic, data: SparkComboApplicationData) {
-    lazy val appConfigurationProperties: Option[Map[String, String]] =
-      data.logDerivedData.map(_.appConfigurationProperties)
+    lazy val appConfigurationProperties: Map[String, String] =
+      data.appConfigurationProperties
 
     lazy val driverMemoryBytes: Option[Long] =
       Try(getProperty(SPARK_DRIVER_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(None)
@@ -127,6 +127,6 @@ object ConfigurationHeuristic {
     private val serializerIfNonNullSeverityIfRecommendationUnmet: Severity =
       configurationHeuristic.serializerIfNonNullSeverityIfRecommendationUnmet
 
-    private def getProperty(key: String): Option[String] = appConfigurationProperties.flatMap { _.get(key) }
+    private def getProperty(key: String): Option[String] = appConfigurationProperties.get(key)
   }
 }

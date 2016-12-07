@@ -65,18 +65,14 @@ class SparkComboFetcherTest extends FunSpec with Matchers {
 
     val analyticJob = new AnalyticJob().setAppId(appId)
 
-    it("returns REST- and log-derived data") {
+    it("returns data") {
       val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
         override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData)))
       }
-
       val data = sparkComboFetcher.fetchData(analyticJob)
-
       data.appId should be(appId)
-      data.restDerivedData should not be(None)
-      data.logDerivedData should not be(None)
     }
 
     it("throws an exception if the REST client fails") {

@@ -95,7 +95,7 @@ object JobsHeuristic {
   val TASK_FAILURE_RATE_SEVERITY_THRESHOLDS_KEY = "job_task_failure_rate_severity_thresholds"
 
   class Evaluator(jobsHeuristic: JobsHeuristic, data: SparkComboApplicationData) {
-    lazy val jobDatas: Seq[JobData] = data.restDerivedData.jobDatas
+    lazy val jobDatas: Seq[JobData] = data.jobDatas
 
     lazy val numCompletedJobs: Int = jobDatas.count { _.status == JobExecutionStatus.SUCCEEDED }
 

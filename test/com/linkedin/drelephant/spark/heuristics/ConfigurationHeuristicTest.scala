@@ -193,6 +193,6 @@ object ConfigurationHeuristicTest {
       executorSummaries = Seq.empty
     )
 
-    new SparkComboApplicationData(appId, restDerivedData, Some(logDerivedData))
+    SparkComboApplicationData(appId, restDerivedData, Some(logDerivedData))
   }
 }

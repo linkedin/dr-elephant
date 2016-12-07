@@ -143,7 +143,7 @@ object ExecutorsHeuristic {
   val IGNORE_MAX_MILLIS_LESS_THAN_THRESHOLD_KEY: String = "ignore_max_millis_less_than_threshold"
 
   class Evaluator(executorsHeuristic: ExecutorsHeuristic, data: SparkComboApplicationData) {
-    lazy val executorSummaries: Seq[ExecutorSummary] = data.restDerivedData.executorSummaries
+    lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
 
     lazy val totalStorageMemoryAllocated: Long = executorSummaries.map { _.maxMemory }.sum
 
