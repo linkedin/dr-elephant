@@ -158,91 +158,27 @@
 
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Spark Configuration Best Practice</heuristicname>
-    <classname>com.linkedin.drelephant.spark.heuristics.BestPropertiesConventionHeuristic</classname>
-    <viewname>views.html.help.spark.helpBestProperties</viewname>
-    <!--<params>
-      <driver_memory_severity_in_gb>4, 4, 8, 8</driver_memory_severity_in_gb>
-      <num_core_severity>2</num_core_severity>
-    </params>-->
+    <heuristicname>Spark Configuration</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.ConfigurationHeuristic</classname>
+    <viewname>views.html.help.spark.helpConfigurationHeuristic</viewname>
   </heuristic>
-
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Spark Memory Limit</heuristicname>
-    <classname>com.linkedin.drelephant.spark.heuristics.MemoryLimitHeuristic</classname>
-    <viewname>views.html.help.spark.helpMemoryLimit</viewname>
-    <!--<params>
-      <total_mem_severity_in_tb>0.5, 1, 1.5, 2</total_mem_severity_in_tb>
-      <mem_util_severity>0.8, 0.6, 0.4, 0.2</mem_util_severity>
-    </params>-->
+    <heuristicname>Spark Executor Metrics</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.ExecutorsHeuristic</classname>
+    <viewname>views.html.help.spark.helpExecutorsHeuristic</viewname>
   </heuristic>
-
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Spark Stage Runtime</heuristicname>
-    <classname>com.linkedin.drelephant.spark.heuristics.StageRuntimeHeuristic</classname>
-    <viewname>views.html.help.spark.helpStageRuntime</viewname>
-    <!--<params>
-      <stage_runtime_severity_in_min>15, 30, 60, 60</stage_runtime_severity_in_min>
-      <stage_failure_rate_severity>0.3, 0.3, 0.5, 0.5</stage_failure_rate_severity>
-      <single_stage_tasks_failure_rate_severity>0.0, 0.3, 0.5, 0.5</single_stage_tasks_failure_rate_severity>
-    </params>-->
+    <heuristicname>Spark Job Metrics</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.JobsHeuristic</classname>
+    <viewname>views.html.help.spark.helpJobsHeuristic</viewname>
   </heuristic>
-
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Spark Job Runtime</heuristicname>
-    <classname>com.linkedin.drelephant.spark.heuristics.JobRuntimeHeuristic</classname>
-    <viewname>views.html.help.spark.helpJobRuntime</viewname>
-    <!--<params>
-      <avg_job_failure_rate_severity>0.1, 0.3, 0.5, 0.5</avg_job_failure_rate_severity>
-      <single_job_failure_rate_severity>0.0, 0.3, 0.5, 0.5</single_job_failure_rate_severity>
-    </params>-->
+    <heuristicname>Spark Stage Metrics</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.StagesHeuristic</classname>
+    <viewname>views.html.help.spark.helpStagesHeuristic</viewname>
   </heuristic>
-
-  <heuristic>
-    <applicationtype>spark</applicationtype>
-    <heuristicname>Spark Executor Load Balance</heuristicname>
-    <classname>com.linkedin.drelephant.spark.heuristics.ExecutorLoadHeuristic</classname>
-    <viewname>views.html.help.spark.helpExecutorLoad</viewname>
-    <!--<params>
-      <looser_metric_deviation_severity>0.8, 1, 1.2, 1.4</looser_metric_deviation_severity>
-      <metric_deviation_severity>0.4, 0.6, 0.8, 1.0</metric_deviation_severity>
-    </params>-->
-  </heuristic>
-
-  <heuristic>
-    <applicationtype>spark</applicationtype>
-    <heuristicname>Spark Event Log Limit</heuristicname>
-    <classname>com.linkedin.drelephant.spark.heuristics.EventLogLimitHeuristic</classname>
-    <viewname>views.html.help.spark.helpEventLogLimit</viewname>
-  </heuristic>
-
-  <!-- Experimental Spark heuristics -->
-  <!-- <heuristic> -->
-  <!--   <applicationtype>spark</applicationtype> -->
-  <!--   <heuristicname>Spark Configuration</heuristicname> -->
-  <!--   <classname>com.linkedin.drelephant.spark.heuristics.ConfigurationHeuristic</classname> -->
-  <!--   <viewname>views.html.help.spark.helpConfigurationHeuristic</viewname> -->
-  <!-- </heuristic> -->
-  <!-- <heuristic> -->
-  <!--   <applicationtype>spark</applicationtype> -->
-  <!--   <heuristicname>Spark Executor Metrics</heuristicname> -->
-  <!--   <classname>com.linkedin.drelephant.spark.heuristics.ExecutorsHeuristic</classname> -->
-  <!--   <viewname>views.html.help.spark.helpExecutorsHeuristic</viewname> -->
-  <!-- </heuristic> -->
-  <!-- <heuristic> -->
-  <!--   <applicationtype>spark</applicationtype> -->
-  <!--   <heuristicname>Spark Job Metrics</heuristicname> -->
-  <!--   <classname>com.linkedin.drelephant.spark.heuristics.JobsHeuristic</classname> -->
-  <!--   <viewname>views.html.help.spark.helpJobsHeuristic</viewname> -->
-  <!-- </heuristic> -->
-  <!-- <heuristic> -->
-  <!--   <applicationtype>spark</applicationtype> -->
-  <!--   <heuristicname>Spark Stage Metrics</heuristicname> -->
-  <!--   <classname>com.linkedin.drelephant.spark.heuristics.StagesHeuristic</classname> -->
-  <!--   <viewname>views.html.help.spark.helpStagesHeuristic</viewname> -->
-  <!-- </heuristic> -->
 
 </heuristics>
