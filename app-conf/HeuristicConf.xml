@@ -37,6 +37,7 @@
     <classname>com.linkedin.drelephant.mapreduce.heuristics.MapperGCHeuristic</classname>
     <viewname>views.html.help.mapreduce.helpGC</viewname>
     <!--<params>
+      <exclude_jobtypes_filter>OozieLauncher</exclude_jobtypes_filter>
       <gc_ratio_severity>0.01, 0.02, 0.03, 0.04</gc_ratio_severity>
       <runtime_severity_in_min>5, 10, 12, 15</runtime_severity_in_min>
     </params>-->
@@ -48,6 +49,7 @@
     <classname>com.linkedin.drelephant.mapreduce.heuristics.MapperTimeHeuristic</classname>
     <viewname>views.html.help.mapreduce.helpMapperTime</viewname>
     <!--<params>
+      <exclude_jobtypes_filter>OozieLauncher</exclude_jobtypes_filter>
       <short_runtime_severity_in_min>10, 4, 2, 1</short_runtime_severity_in_min>
       <long_runtime_severity_in_min>15, 30, 60, 120</long_runtime_severity_in_min>
       <num_tasks_severity>50, 101, 500, 1000</num_tasks_severity>
@@ -60,6 +62,7 @@
     <classname>com.linkedin.drelephant.mapreduce.heuristics.MapperSpeedHeuristic</classname>
     <viewname>views.html.help.mapreduce.helpMapperSpeed</viewname>
     <!--<params>
+      <exclude_jobtypes_filter>OozieLauncher</exclude_jobtypes_filter>
       <disk_speed_severity>1/2, 1/4, 1/8, 1/32</disk_speed_severity>
       <runtime_severity_in_min>5, 10, 15, 30</runtime_severity_in_min>
     </params>-->

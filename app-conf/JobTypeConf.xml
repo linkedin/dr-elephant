@@ -48,6 +48,11 @@
     <conf>hive.mapred.mode</conf>
   </jobType>
   <jobType>
+    <name>OozieLauncher</name>
+    <applicationtype>mapreduce</applicationtype>
+    <conf>oozie.launcher.action.main.class</conf>
+  </jobType>
+  <jobType>
     <name>Cascading</name>
     <applicationtype>mapreduce</applicationtype>
     <conf>cascading.app.frameworks</conf>

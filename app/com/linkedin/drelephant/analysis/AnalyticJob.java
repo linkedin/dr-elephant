@@ -20,6 +20,7 @@ import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
@@ -36,6 +37,7 @@ public class AnalyticJob {
 
   private static final String UNKNOWN_JOB_TYPE = "Unknown";   // The default job type when the data matches nothing.
   private static final int _RETRY_LIMIT = 3;                  // Number of times a job needs to be tried before dropping
+  private static final String EXCLUDE_JOBTYPE = "exclude_jobtypes_filter"; // excluded Job Types for heuristic
 
   private int _retries = 0;
   private ApplicationType _type;
@@ -230,6 +232,9 @@ public class AnalyticJob {
     ElephantFetcher fetcher = ElephantContext.instance().getFetcherForApplicationType(getAppType());
     HadoopApplicationData data = fetcher.fetchData(this);
 
+    JobType jobType = ElephantContext.instance().matchJobType(data);
+    String jobTypeName = jobType == null ? UNKNOWN_JOB_TYPE : jobType.getName();
+
     // Run all heuristics over the fetched data
     List<HeuristicResult> analysisResults = new ArrayList<HeuristicResult>();
     if (data == null || data.isEmpty()) {
@@ -239,15 +244,18 @@ public class AnalyticJob {
     } else {
       List<Heuristic> heuristics = ElephantContext.instance().getHeuristicsForApplicationType(getAppType());
       for (Heuristic heuristic : heuristics) {
-        HeuristicResult result = heuristic.apply(data);
-        if (result != null) {
-          analysisResults.add(result);
+        String confExcludedApps = heuristic.getHeuristicConfData().getParamMap().get(EXCLUDE_JOBTYPE);
+
+        if (confExcludedApps == null || confExcludedApps.length() == 0 ||
+                !Arrays.asList(confExcludedApps.split(",")).contains(jobTypeName)) {
+          HeuristicResult result = heuristic.apply(data);
+          if (result != null) {
+            analysisResults.add(result);
+          }
         }
       }
     }
 
-    JobType jobType = ElephantContext.instance().matchJobType(data);
-    String jobTypeName = jobType == null ? UNKNOWN_JOB_TYPE : jobType.getName();
 
     HadoopMetricsAggregator hadoopMetricsAggregator = ElephantContext.instance().getAggregatorForApplicationType(getAppType());
     hadoopMetricsAggregator.aggregate(data);
