@@ -24,7 +24,7 @@ import com.linkedin.drelephant.analysis.{ApplicationType, HadoopApplicationData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
 
 
-case class SparkComboApplicationData(
+case class SparkApplicationData(
   appId: String,
   appConfigurationProperties: Map[String, String],
   applicationInfo: ApplicationInfo,
@@ -32,7 +32,7 @@ case class SparkComboApplicationData(
   stageDatas: Seq[StageData],
   executorSummaries: Seq[ExecutorSummary]
 ) extends HadoopApplicationData {
-  import SparkComboApplicationData._
+  import SparkApplicationData._
   import JavaConverters._
 
   override def getApplicationType(): ApplicationType = APPLICATION_TYPE
@@ -49,14 +49,14 @@ case class SparkComboApplicationData(
   override def isEmpty(): Boolean = false
 }
 
-object SparkComboApplicationData {
+object SparkApplicationData {
   val APPLICATION_TYPE = new ApplicationType("SPARK")
 
   def apply(
     appId: String,
     restDerivedData: SparkRestDerivedData,
     logDerivedData: Option[SparkLogDerivedData]
-  ): SparkComboApplicationData = {
+  ): SparkApplicationData = {
     val appConfigurationProperties: Map[String, String] =
       logDerivedData
         .flatMap { _.environmentUpdate.environmentDetails.get("Spark Properties").map(_.toMap) }

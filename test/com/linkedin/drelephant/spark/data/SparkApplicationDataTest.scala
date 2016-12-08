@@ -24,11 +24,11 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInf
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-class SparkComboApplicationDataTest extends FunSpec with Matchers {
-  import SparkComboApplicationDataTest._
+class SparkApplicationDataTest extends FunSpec with Matchers {
+  import SparkApplicationDataTest._
   import JavaConverters._
 
-  describe("SparkComboApplicationData") {
+  describe("SparkApplicationData") {
     val appId = "application_1"
     val attemptId = Some("1")
 
@@ -60,14 +60,14 @@ class SparkComboApplicationDataTest extends FunSpec with Matchers {
 
     describe(".getConf") {
       it("returns the Spark properties") {
-        val data = SparkComboApplicationData(appId, restDerivedData, Some(logDerivedData))
+        val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
         data.getConf.asScala should contain theSameElementsAs(configurationProperties)
       }
     }
   }
 }
 
-object SparkComboApplicationDataTest {
+object SparkApplicationDataTest {
   def newFakeApplicationAttemptInfo(
     attemptId: Option[String],
     startTime: Date,

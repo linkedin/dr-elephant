@@ -24,7 +24,7 @@ import scala.concurrent.duration.Duration
 import com.linkedin.drelephant.analysis.{Heuristic, HeuristicResult, HeuristicResultDetails, Severity, SeverityThresholds}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.math.Statistics
-import com.linkedin.drelephant.spark.data.SparkComboApplicationData
+import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageData
 import org.apache.spark.status.api.v1.StageStatus
 
@@ -36,7 +36,7 @@ import org.apache.spark.status.api.v1.StageStatus
   * each stage.
   */
 class StagesHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
-    extends Heuristic[SparkComboApplicationData] {
+    extends Heuristic[SparkApplicationData] {
   import StagesHeuristic._
   import JavaConverters._
 
@@ -55,7 +55,7 @@ class StagesHeuristic(private val heuristicConfigurationData: HeuristicConfigura
 
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
-  override def apply(data: SparkComboApplicationData): HeuristicResult = {
+  override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
 
     def formatStagesWithHighTaskFailureRates(stagesWithHighTaskFailureRates: Seq[(StageData, Double)]): String =
@@ -123,7 +123,7 @@ object StagesHeuristic {
 
   val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
 
-  class Evaluator(stagesHeuristic: StagesHeuristic, data: SparkComboApplicationData) {
+  class Evaluator(stagesHeuristic: StagesHeuristic, data: SparkApplicationData) {
     lazy val stageDatas: Seq[StageData] = data.stageDatas
 
     lazy val appConfigurationProperties: Map[String, String] =

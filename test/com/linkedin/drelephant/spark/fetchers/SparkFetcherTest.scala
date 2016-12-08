@@ -33,10 +33,10 @@ import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.mockito.Mockito
 import org.scalatest.{FunSpec, Matchers}
 
-class SparkComboFetcherTest extends FunSpec with Matchers {
-  import SparkComboFetcherTest._
+class SparkFetcherTest extends FunSpec with Matchers {
+  import SparkFetcherTest._
 
-  describe("SparkComboFetcher") {
+  describe("SparkFetcher") {
     import ExecutionContext.Implicits.global
 
     val fetcherConfigurationData = newFakeFetcherConfigurationData()
@@ -66,33 +66,33 @@ class SparkComboFetcherTest extends FunSpec with Matchers {
     val analyticJob = new AnalyticJob().setAppId(appId)
 
     it("returns data") {
-      val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
         override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData)))
       }
-      val data = sparkComboFetcher.fetchData(analyticJob)
+      val data = sparkFetcher.fetchData(analyticJob)
       data.appId should be(appId)
     }
 
     it("throws an exception if the REST client fails") {
-      val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future { throw new Exception() })
         override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData)))
       }
 
-      an[Exception] should be thrownBy { sparkComboFetcher.fetchData(analyticJob) }
+      an[Exception] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
     }
 
     it("throws an exception if the log client fails") {
-      val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
         override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future { throw new Exception() }))
       }
 
-      an[Exception] should be thrownBy { sparkComboFetcher.fetchData(analyticJob) }
+      an[Exception] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
     }
 
     it("gets its SparkConf when SPARK_CONF_DIR is set") {
@@ -104,12 +104,12 @@ class SparkComboFetcherTest extends FunSpec with Matchers {
       managedCopyInputStreamToOutputStream(testResourceIn, testResourceOut)
 
       val fetcherConfigurationData = newFakeFetcherConfigurationData()
-      val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkUtils = new SparkUtils() {
           override val defaultEnv = Map("SPARK_CONF_DIR" -> tempDir.toString)
         }
       }
-      val sparkConf = sparkComboFetcher.sparkConf
+      val sparkConf = sparkFetcher.sparkConf
 
       tempDir.delete()
 
@@ -130,12 +130,12 @@ class SparkComboFetcherTest extends FunSpec with Matchers {
       managedCopyInputStreamToOutputStream(testResourceIn, testResourceOut)
 
       val fetcherConfigurationData = newFakeFetcherConfigurationData()
-      val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkUtils = new SparkUtils() {
           override val defaultEnv = Map("SPARK_HOME" -> tempDir.toString)
         }
       }
-      val sparkConf = sparkComboFetcher.sparkConf
+      val sparkConf = sparkFetcher.sparkConf
 
       tempDir.delete()
 
@@ -147,19 +147,19 @@ class SparkComboFetcherTest extends FunSpec with Matchers {
 
     it("throws an exception if neither SPARK_CONF_DIR nor SPARK_HOME are set") {
       val fetcherConfigurationData = newFakeFetcherConfigurationData()
-      val sparkComboFetcher = new SparkComboFetcher(fetcherConfigurationData) {
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkUtils = new SparkUtils() { override val defaultEnv = Map.empty[String, String] }
       }
-      an[IllegalStateException] should be thrownBy { sparkComboFetcher.sparkConf }
+      an[IllegalStateException] should be thrownBy { sparkFetcher.sparkConf }
     }
   }
 }
 
-object SparkComboFetcherTest {
+object SparkFetcherTest {
   import JavaConverters._
 
   def newFakeFetcherConfigurationData(): FetcherConfigurationData =
-    new FetcherConfigurationData(classOf[SparkComboFetcher].getName, new ApplicationType("SPARK"), Map.empty.asJava)
+    new FetcherConfigurationData(classOf[SparkFetcher].getName, new ApplicationType("SPARK"), Map.empty.asJava)
 
   def newFakeApplicationAttemptInfo(
     attemptId: Option[String],

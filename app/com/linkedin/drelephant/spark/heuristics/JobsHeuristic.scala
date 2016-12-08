@@ -20,7 +20,7 @@ import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.{Heuristic, HeuristicResult, HeuristicResultDetails, Severity, SeverityThresholds}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.SparkComboApplicationData
+import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.JobData
 import org.apache.spark.JobExecutionStatus
 
@@ -31,7 +31,7 @@ import org.apache.spark.JobExecutionStatus
   * This heuristic reports job failures and high task failure rates for each job.
   */
 class JobsHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
-    extends Heuristic[SparkComboApplicationData] {
+    extends Heuristic[SparkApplicationData] {
   import JobsHeuristic._
   import JavaConverters._
 
@@ -45,7 +45,7 @@ class JobsHeuristic(private val heuristicConfigurationData: HeuristicConfigurati
 
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
-  override def apply(data: SparkComboApplicationData): HeuristicResult = {
+  override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
 
     def formatFailedJobs(failedJobs: Seq[JobData]): String = failedJobs.map(formatFailedJob).mkString("\n")
@@ -94,7 +94,7 @@ object JobsHeuristic {
 
   val TASK_FAILURE_RATE_SEVERITY_THRESHOLDS_KEY = "job_task_failure_rate_severity_thresholds"
 
-  class Evaluator(jobsHeuristic: JobsHeuristic, data: SparkComboApplicationData) {
+  class Evaluator(jobsHeuristic: JobsHeuristic, data: SparkApplicationData) {
     lazy val jobDatas: Seq[JobData] = data.jobDatas
 
     lazy val numCompletedJobs: Int = jobDatas.count { _.status == JobExecutionStatus.SUCCEEDED }

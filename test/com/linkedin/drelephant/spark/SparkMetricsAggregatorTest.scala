@@ -22,15 +22,15 @@ import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkComboApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo, ExecutorSummary}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-class SparkComboMetricsAggregatorTest extends FunSpec with Matchers {
-  import SparkComboMetricsAggregatorTest._
+class SparkMetricsAggregatorTest extends FunSpec with Matchers {
+  import SparkMetricsAggregatorTest._
 
-  describe("SparkComboMetricsAggregator") {
+  describe("SparkMetricsAggregator") {
     val aggregatorConfigurationData = newFakeAggregatorConfigurationData(
       Map("allocated_memory_waste_buffer_percentage" -> "0.5")
     )
@@ -73,9 +73,9 @@ class SparkComboMetricsAggregatorTest extends FunSpec with Matchers {
       SparkLogDerivedData(environmentUpdate)
     }
 
-    val data = SparkComboApplicationData(appId, restDerivedData, Some(logDerivedData))
+    val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
 
-    val aggregator = new SparkComboMetricsAggregator(aggregatorConfigurationData)
+    val aggregator = new SparkMetricsAggregator(aggregatorConfigurationData)
     aggregator.aggregate(data)
 
     val result = aggregator.getResult
@@ -102,7 +102,7 @@ class SparkComboMetricsAggregatorTest extends FunSpec with Matchers {
   }
 }
 
-object SparkComboMetricsAggregatorTest {
+object SparkMetricsAggregatorTest {
   import JavaConverters._
 
   def newFakeAggregatorConfigurationData(params: Map[String, String] = Map.empty): AggregatorConfigurationData =

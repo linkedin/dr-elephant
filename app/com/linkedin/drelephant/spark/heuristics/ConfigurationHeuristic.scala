@@ -21,7 +21,7 @@ import scala.util.Try
 
 import com.linkedin.drelephant.analysis.{HeuristicResultDetails, Heuristic, HeuristicResult, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.SparkComboApplicationData
+import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.util.MemoryFormatUtils
 
 
@@ -32,7 +32,7 @@ import com.linkedin.drelephant.util.MemoryFormatUtils
   * driver memory, executor cores, executor instances, executor memory, and the serializer.
   */
 class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
-    extends Heuristic[SparkComboApplicationData] {
+    extends Heuristic[SparkApplicationData] {
   import ConfigurationHeuristic._
   import JavaConverters._
 
@@ -45,7 +45,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
 
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
-  override def apply(data: SparkComboApplicationData): HeuristicResult = {
+  override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
 
     def formatProperty(property: Option[String]): String =
@@ -96,7 +96,7 @@ object ConfigurationHeuristic {
   val SPARK_EXECUTOR_CORES_KEY = "spark.executor.cores"
   val SPARK_SERIALIZER_KEY = "spark.serializer"
 
-  class Evaluator(configurationHeuristic: ConfigurationHeuristic, data: SparkComboApplicationData) {
+  class Evaluator(configurationHeuristic: ConfigurationHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
 

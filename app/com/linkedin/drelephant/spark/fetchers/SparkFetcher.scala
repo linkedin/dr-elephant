@@ -24,7 +24,7 @@ import scala.util.control.NonFatal
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkComboApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.util.SparkUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
@@ -34,12 +34,12 @@ import org.apache.spark.SparkConf
 /**
   * A fetcher that gets Spark-related data from a combination of the Spark monitoring REST API and Spark event logs.
   */
-class SparkComboFetcher(fetcherConfigurationData: FetcherConfigurationData)
-    extends ElephantFetcher[SparkComboApplicationData] {
-  import SparkComboFetcher._
+class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
+    extends ElephantFetcher[SparkApplicationData] {
+  import SparkFetcher._
   import ExecutionContext.Implicits.global
 
-  private val logger: Logger = Logger.getLogger(classOf[SparkComboFetcher])
+  private val logger: Logger = Logger.getLogger(classOf[SparkFetcher])
 
   private[fetchers] lazy val hadoopConfiguration: Configuration = new Configuration()
 
@@ -61,7 +61,7 @@ class SparkComboFetcher(fetcherConfigurationData: FetcherConfigurationData)
     if (eventLogEnabled) Some(new SparkLogClient(hadoopConfiguration, sparkConf)) else None
   }
 
-  override def fetchData(analyticJob: AnalyticJob): SparkComboApplicationData = {
+  override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     val appId = analyticJob.getAppId
     logger.info(s"Fetching data for ${appId}")
     try {
@@ -74,7 +74,7 @@ class SparkComboFetcher(fetcherConfigurationData: FetcherConfigurationData)
   }
 }
 
-object SparkComboFetcher {
+object SparkFetcher {
   import Async.{async, await}
 
   val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"
@@ -86,7 +86,7 @@ object SparkComboFetcher {
     appId: String
   )(
     implicit ec: ExecutionContext
-  ): Future[SparkComboApplicationData] = async {
+  ): Future[SparkApplicationData] = async {
     val restDerivedData = await(sparkRestClient.fetchData(appId))
     val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy { _.startTime }.attemptId
 
@@ -96,6 +96,6 @@ object SparkComboFetcher {
       case None => None
     }
 
-    SparkComboApplicationData(appId, restDerivedData, logDerivedData)
+    SparkApplicationData(appId, restDerivedData, logDerivedData)
   }
 }

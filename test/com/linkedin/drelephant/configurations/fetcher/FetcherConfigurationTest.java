@@ -127,10 +127,6 @@ public class FetcherConfigurationTest {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document5.getDocumentElement());
     assertEquals(fetcherConf.getFetchersConfigurationData().size(), 1);
     assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getAppType().getName(), spark);
-    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().size(), 3);
-    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().get(logSizeField), logSizeValue);
-    assertEquals(fetcherConf.getFetchersConfigurationData().get(0).getParamMap().get(logDirField), logDirValue);
   }
 
 }
-

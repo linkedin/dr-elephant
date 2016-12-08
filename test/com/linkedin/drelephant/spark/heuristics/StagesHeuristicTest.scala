@@ -21,7 +21,7 @@ import scala.concurrent.duration.Duration
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkComboApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, JobData, StageData}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.apache.spark.status.api.v1.StageStatus
@@ -172,7 +172,7 @@ object StagesHeuristicTest {
   def newFakeSparkApplicationData(
     stageDatas: Seq[StageData],
     appConfigurationProperties: Map[String, String]
-  ): SparkComboApplicationData = {
+  ): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
@@ -186,6 +186,6 @@ object StagesHeuristicTest {
       SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
     )
 
-    SparkComboApplicationData(appId, restDerivedData, Some(logDerivedData))
+    SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
   }
 }

@@ -20,7 +20,7 @@ import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkComboApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, JobData}
 import org.apache.spark.JobExecutionStatus
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
@@ -150,7 +150,7 @@ object JobsHeuristicTest {
     numFailedStages = 0
   )
 
-  def newFakeSparkApplicationData(jobDatas: Seq[JobData]): SparkComboApplicationData = {
+  def newFakeSparkApplicationData(jobDatas: Seq[JobData]): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
@@ -160,6 +160,6 @@ object JobsHeuristicTest {
       executorSummaries = Seq.empty
     )
 
-    SparkComboApplicationData(appId, restDerivedData, logDerivedData = None)
+    SparkApplicationData(appId, restDerivedData, logDerivedData = None)
   }
 }

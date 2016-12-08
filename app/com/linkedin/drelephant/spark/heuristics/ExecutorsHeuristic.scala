@@ -22,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.linkedin.drelephant.analysis.{Heuristic, HeuristicResult, HeuristicResultDetails, Severity, SeverityThresholds}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.math.Statistics
-import com.linkedin.drelephant.spark.data.SparkComboApplicationData
+import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
 import com.linkedin.drelephant.util.MemoryFormatUtils
 
@@ -35,7 +35,7 @@ import com.linkedin.drelephant.util.MemoryFormatUtils
   * severity of any particular metric.
   */
 class ExecutorsHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
-    extends Heuristic[SparkComboApplicationData] {
+    extends Heuristic[SparkApplicationData] {
   import ExecutorsHeuristic._
   import JavaConverters._
 
@@ -55,7 +55,7 @@ class ExecutorsHeuristic(private val heuristicConfigurationData: HeuristicConfig
 
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
-  override def apply(data: SparkComboApplicationData): HeuristicResult = {
+  override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
 
     def formatDistribution(distribution: Distribution, longFormatter: Long => String, separator: String = ", "): String = {
@@ -142,7 +142,7 @@ object ExecutorsHeuristic {
 
   val IGNORE_MAX_MILLIS_LESS_THAN_THRESHOLD_KEY: String = "ignore_max_millis_less_than_threshold"
 
-  class Evaluator(executorsHeuristic: ExecutorsHeuristic, data: SparkComboApplicationData) {
+  class Evaluator(executorsHeuristic: ExecutorsHeuristic, data: SparkApplicationData) {
     lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
 
     lazy val totalStorageMemoryAllocated: Long = executorSummaries.map { _.maxMemory }.sum

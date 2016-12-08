@@ -19,18 +19,18 @@ package com.linkedin.drelephant.spark
 import com.linkedin.drelephant.analysis.{HadoopAggregatedData, HadoopApplicationData, HadoopMetricsAggregator}
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.math.Statistics
-import com.linkedin.drelephant.spark.data.{SparkComboApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
 import scala.util.Try
 
 
-class SparkComboMetricsAggregator(private val aggregatorConfigurationData: AggregatorConfigurationData)
+class SparkMetricsAggregator(private val aggregatorConfigurationData: AggregatorConfigurationData)
     extends HadoopMetricsAggregator {
-  import SparkComboMetricsAggregator._
+  import SparkMetricsAggregator._
 
-  private val logger: Logger = Logger.getLogger(classOf[SparkComboMetricsAggregator])
+  private val logger: Logger = Logger.getLogger(classOf[SparkMetricsAggregator])
 
   private val allocatedMemoryWasteBufferPercentage: Double =
     Option(aggregatorConfigurationData.getParamMap.get(ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE_KEY))
@@ -42,11 +42,11 @@ class SparkComboMetricsAggregator(private val aggregatorConfigurationData: Aggre
   override def getResult(): HadoopAggregatedData = hadoopAggregatedData
 
   override def aggregate(data: HadoopApplicationData): Unit = data match {
-    case (data: SparkComboApplicationData) => aggregate(data)
-    case _ => throw new IllegalArgumentException("data should be SparkComboApplicationData")
+    case (data: SparkApplicationData) => aggregate(data)
+    case _ => throw new IllegalArgumentException("data should be SparkApplicationData")
   }
 
-  private def aggregate(data: SparkComboApplicationData): Unit = {
+  private def aggregate(data: SparkApplicationData): Unit = {
     val (executorInstances, executorMemoryBytes) = executorInstancesAndMemoryBytesOf(data)
     val applicationDurationMillis = applicationDurationMillisOf(data)
     val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
@@ -86,25 +86,25 @@ class SparkComboMetricsAggregator(private val aggregatorConfigurationData: Aggre
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
 
-  private def executorInstancesAndMemoryBytesOf(data: SparkComboApplicationData): (Int, Long) = {
+  private def executorInstancesAndMemoryBytesOf(data: SparkApplicationData): (Int, Long) = {
     val appConfigurationProperties = data.appConfigurationProperties
     val executorInstances = appConfigurationProperties("spark.executor.instances").toInt
     val executorMemoryBytes = MemoryFormatUtils.stringToBytes(appConfigurationProperties("spark.executor.memory"))
     (executorInstances, executorMemoryBytes)
   }
 
-  private def applicationDurationMillisOf(data: SparkComboApplicationData): Long = {
+  private def applicationDurationMillisOf(data: SparkApplicationData): Long = {
     require(data.applicationInfo.attempts.nonEmpty)
     val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
     lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime
   }
 
-  private def totalExecutorTaskTimeMillisOf(data: SparkComboApplicationData): BigInt = {
+  private def totalExecutorTaskTimeMillisOf(data: SparkApplicationData): BigInt = {
     data.executorSummaries.map { executorSummary => BigInt(executorSummary.totalDuration) }.sum
   }
 }
 
-object SparkComboMetricsAggregator {
+object SparkMetricsAggregator {
   /** The percentage of allocated memory we expect to waste because of overhead. */
   val DEFAULT_ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE = 0.5D
 
