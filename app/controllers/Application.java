@@ -42,6 +42,8 @@ import java.util.TreeSet;
 import models.AppHeuristicResult;
 import models.AppResult;
 
+import org.apache.commons.collections.OrderedMap;
+import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
@@ -604,11 +606,24 @@ public class Application extends Controller {
 
     // Calculate unique list of jobs (job def url) to maintain order across executions. List will contain job def urls
     // from latest execution first followed by any other extra job def url that may appear in previous executions.
-    Map<IdUrlPair, String> idPairToJobNameMap = new HashMap<IdUrlPair, String>();
-    Map<IdUrlPair, List<AppResult>> filteredMap =
+    final Map<IdUrlPair, String> idPairToJobNameMap = new ListOrderedMap() ;
+
+    Map<IdUrlPair, List<AppResult>> filteredTempMap =
         ControllerUtil.groupJobs(filteredResults, ControllerUtil.GroupBy.JOB_DEFINITION_ID);
-    for (Map.Entry<IdUrlPair, List<AppResult>> entry : filteredMap.entrySet()) {
-      idPairToJobNameMap.put(entry.getKey(), filteredMap.get(entry.getKey()).get(0).jobName);
+
+    List<Map.Entry<IdUrlPair, List<AppResult>>> filteredMapList =
+        new LinkedList<Map.Entry<IdUrlPair, List<AppResult>>>( filteredTempMap.entrySet() );
+
+    Collections.sort(filteredMapList, new Comparator<Map.Entry<IdUrlPair, List<AppResult>>>() {
+      @Override
+      public int compare(Map.Entry<IdUrlPair, List<AppResult>> idUrlPairListMap, Map.Entry<IdUrlPair, List<AppResult>> t1) {
+        return ( new Long(idUrlPairListMap.getValue().get(0).finishTime)).compareTo(t1.getValue().get(0).finishTime);
+      }
+    });
+
+
+    for (Map.Entry<IdUrlPair, List<AppResult>> entry : filteredMapList) {
+      idPairToJobNameMap.put(entry.getKey(), entry.getValue().get(0).jobName);
     }
 
     if (version.equals(Version.NEW)) {
