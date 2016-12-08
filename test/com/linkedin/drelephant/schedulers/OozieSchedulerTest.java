@@ -256,7 +256,7 @@ public class OozieSchedulerTest {
         SchedulerConfigurationData schedulerConfig = makeConfig("oozie", new HashMap<String, String>());
         OozieScheduler scheduler = new OozieScheduler("id", getOozieProperties(), schedulerConfig, oozieClient);
 
-        assertEquals(2, scheduler.getWorkflowDepth());
+        assertEquals(1, scheduler.getWorkflowDepth());
 
     }
 

@@ -20,7 +20,7 @@ import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationDa
 import com.linkedin.drelephant.util.Utils;
 import org.apache.log4j.Logger;
 import org.apache.oozie.client.*;
-
+import org.apache.commons.lang.StringUtils;
 import java.util.Properties;
 
 
@@ -107,7 +107,7 @@ public class OozieScheduler implements Scheduler {
                 if (isCoordinatorJob(superParentId)) {
                     coordinatedJobInfo(workflow, actionId, superParentId);
                 } else {
-                    manualCommitedJob(workflow, actionId, superParentId);
+                    manualCommittedJob(workflow, actionId, superParentId);
                 }
             } catch (OozieClientException e) {
                 throw new RuntimeException("Failed fetching Oozie workflow " + workflowId + " info", e);
@@ -115,7 +115,7 @@ public class OozieScheduler implements Scheduler {
         }
     }
 
-    private void manualCommitedJob(WorkflowJob workflow, String actionId, String superParentId) throws OozieClientException {
+    private void manualCommittedJob(WorkflowJob workflow, String actionId, String superParentId) throws OozieClientException {
         logger.info("Oozie workflow " + actionId + " was manually submitted");
         WorkflowJob flowDefWorkflow = oozieClient.getJobInfo(extractId(superParentId));
         flowDefIdUrl = flowDefWorkflow.getConsoleUrl();
@@ -154,23 +154,28 @@ public class OozieScheduler implements Scheduler {
     }
 
     private String getSuperParentId(WorkflowJob workflow) throws OozieClientException {
-        String result = workflow.getParentId();
-        WorkflowJob next = workflow;
-        workflowDepth = 0;
-        String parentId = next.getParentId();
 
-        while (parentId != null && !parentId.isEmpty() && !isCoordinatorJob(extractId(parentId))) {
-            next = oozieClient.getJobInfo(parentId);
-            parentId = next.getParentId();
-            result = extractId(next.getId());
+        WorkflowJob current = workflow;
+        workflowDepth = 0;
+
+        while (hasParent(current)) {
+            if (isCoordinatorJob(current.getParentId())) {
+                return current.getParentId();
+            }
+            current = oozieClient.getJobInfo(current.getParentId());
+
             workflowDepth++;
         }
 
-        return result;
+        return current.getId();
     }
 
-    private boolean isCoordinatorJob(String parentId) {
-        return extractId(parentId).endsWith("C");
+    private boolean hasParent(WorkflowJob workflow) {
+        return StringUtils.isNotEmpty(workflow.getParentId());
+    }
+
+    private boolean isCoordinatorJob(String workflowId) {
+        return workflowId != null && extractId(workflowId).endsWith("C");
     }
 
     private OozieClient makeOozieClient(SchedulerConfigurationData schedulerConfData) {
