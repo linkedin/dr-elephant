@@ -46,8 +46,10 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     case _ => throw new IllegalArgumentException("data should be SparkApplicationData")
   }
 
-  private def aggregate(data: SparkApplicationData): Unit = {
-    val (executorInstances, executorMemoryBytes) = executorInstancesAndMemoryBytesOf(data)
+  private def aggregate(data: SparkApplicationData): Unit = for {
+    executorInstances <- executorInstancesOf(data)
+    executorMemoryBytes <- executorMemoryBytesOf(data)
+  } {
     val applicationDurationMillis = applicationDurationMillisOf(data)
     val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
@@ -86,11 +88,14 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
 
-  private def executorInstancesAndMemoryBytesOf(data: SparkApplicationData): (Int, Long) = {
+  private def executorInstancesOf(data: SparkApplicationData): Option[Int] = {
     val appConfigurationProperties = data.appConfigurationProperties
-    val executorInstances = appConfigurationProperties("spark.executor.instances").toInt
-    val executorMemoryBytes = MemoryFormatUtils.stringToBytes(appConfigurationProperties("spark.executor.memory"))
-    (executorInstances, executorMemoryBytes)
+    appConfigurationProperties.get(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)
+  }
+
+  private def executorMemoryBytesOf(data: SparkApplicationData): Option[Long] = {
+    val appConfigurationProperties = data.appConfigurationProperties
+    appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)
   }
 
   private def applicationDurationMillisOf(data: SparkApplicationData): Long = {
@@ -109,4 +114,7 @@ object SparkMetricsAggregator {
   val DEFAULT_ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE = 0.5D
 
   val ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE_KEY = "allocated_memory_waste_buffer_percentage"
+
+  val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
+  val SPARK_EXECUTOR_MEMORY_KEY = "spark.executor.memory"
 }

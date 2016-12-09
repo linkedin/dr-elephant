@@ -59,45 +59,68 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
       )
     }
 
-    val logDerivedData = {
-      val environmentUpdate = newFakeSparkListenerEnvironmentUpdate(
-        Map(
-          "spark.serializer" -> "org.apache.spark.serializer.KryoSerializer",
-          "spark.storage.memoryFraction" -> "0.3",
-          "spark.driver.memory" -> "2G",
-          "spark.executor.instances" -> "2",
-          "spark.executor.memory" -> "4g",
-          "spark.shuffle.memoryFraction" -> "0.5"
+    describe("when it has log-derived data") {
+      val logDerivedData = {
+        val environmentUpdate = newFakeSparkListenerEnvironmentUpdate(
+          Map(
+            "spark.serializer" -> "org.apache.spark.serializer.KryoSerializer",
+            "spark.storage.memoryFraction" -> "0.3",
+            "spark.driver.memory" -> "2G",
+            "spark.executor.instances" -> "2",
+            "spark.executor.memory" -> "4g",
+            "spark.shuffle.memoryFraction" -> "0.5"
+          )
         )
-      )
-      SparkLogDerivedData(environmentUpdate)
+        SparkLogDerivedData(environmentUpdate)
+      }
+
+      val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
+
+      val aggregator = new SparkMetricsAggregator(aggregatorConfigurationData)
+      aggregator.aggregate(data)
+
+      val result = aggregator.getResult
+
+      it("calculates resources used") {
+        val executorMemoryMb = 4096
+        val totalExecutorTaskTimeSeconds = 1000 + 3000
+        result.getResourceUsed should be(executorMemoryMb * totalExecutorTaskTimeSeconds)
+      }
+
+      it("calculates resources wasted") {
+        val totalExecutorMemoryMb = 2 * 4096
+        val applicationDurationSeconds = 8000
+
+        val executorMemoryMb = 4096
+        val totalExecutorTaskTimeSeconds = 1000 + 3000
+
+        result.getResourceWasted should be(4096 * 4000)
+      }
+
+      it("doesn't calculate total delay") {
+        result.getTotalDelay should be(0L)
+      }
     }
 
-    val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
+    describe("when it doesn't have log-derived data") {
+      val data = SparkApplicationData(appId, restDerivedData, logDerivedData = None)
 
-    val aggregator = new SparkMetricsAggregator(aggregatorConfigurationData)
-    aggregator.aggregate(data)
+      val aggregator = new SparkMetricsAggregator(aggregatorConfigurationData)
+      aggregator.aggregate(data)
 
-    val result = aggregator.getResult
+      val result = aggregator.getResult
 
-    it("calculates resources used") {
-      val executorMemoryMb = 4096
-      val totalExecutorTaskTimeSeconds = 1000 + 3000
-      result.getResourceUsed should be(executorMemoryMb * totalExecutorTaskTimeSeconds)
-    }
+      it("doesn't calculate resources used") {
+        result.getResourceUsed should be(0L)
+      }
 
-    it("calculates resources wasted") {
-      val totalExecutorMemoryMb = 2 * 4096
-      val applicationDurationSeconds = 8000
+      it("doesn't calculate resources wasted") {
+        result.getResourceWasted should be(0L)
+      }
 
-      val executorMemoryMb = 4096
-      val totalExecutorTaskTimeSeconds = 1000 + 3000
-
-      result.getResourceWasted should be(4096 * 4000)
-    }
-
-    it("doesn't calculate total delay") {
-      result.getTotalDelay should be(0L)
+      it("doesn't calculate total delay") {
+        result.getTotalDelay should be(0L)
+      }
     }
   }
 }
