@@ -228,7 +228,11 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
         replayBus.addListener(executorsListener)
         replayBus.addListener(storageListener)
 
-        val logPath = new Path(_logDir, appId)
+        var logPath = new Path(_logDir, appId)
+        if(_logDir.contains("$USER$")) {
+          val _newlogDir = _logDir.replaceAll("\\$USER\\$", (analyticJob.getUser() + '/'));
+          logPath = new Path(_newlogDir, appId)
+        }
         val logInput: InputStream =
           if (isLegacyLogDirectory(logPath)) {
             if (!shouldThrottle(logPath)) {
