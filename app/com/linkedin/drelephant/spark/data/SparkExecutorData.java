@@ -45,12 +45,24 @@ public class SparkExecutorData {
     public long shuffleRead = 0L;
     public long shuffleWrite = 0L;
 
+    public long startTime;
+    // Maybe set finishTime to 0 when an executor keep running until application finished.
+    // In this situation, we finally set finishTime to Application finish time.
+    public long finishTime;
+
+    public long getExecutorDuration() {
+      return finishTime <= 0 ? 0 : finishTime - startTime;
+    }
+
     public String toString() {
       return "{execId: " + execId + ", hostPort:" + hostPort + " , rddBlocks: " + rddBlocks + ", memUsed: " + memUsed
           + ", maxMem: " + maxMem + ", diskUsed: " + diskUsed + ", totalTasks" + totalTasks + ", tasksActive: "
           + activeTasks + ", tasksComplete: " + completedTasks + ", tasksFailed: " + failedTasks + ", duration: "
           + duration + ", inputBytes: " + inputBytes + ", outputBytes:" + outputBytes + ", shuffleRead: " + shuffleRead
-          + ", shuffleWrite: " + shuffleWrite + "}";
+          + ", shuffleWrite: " + shuffleWrite
+          + ", startTime: " + startTime
+          + ", finishTime: " + finishTime
+          + "}";
     }
   }
 

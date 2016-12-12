@@ -42,4 +42,13 @@
     </params>
     -->
   </aggregator>
+  <!--
+  <aggregator>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.aggregator.YarnSparkMetricsAggregator</classname>
+    <params>
+      <executor_memory_default>1024</executor_memory_default>
+    </params>
+  </aggregator>
+  -->
 </aggregators>
