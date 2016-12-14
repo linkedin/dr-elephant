@@ -51,6 +51,7 @@ Router.map(function () {
   this.route('app');
   this.route('search');
   this.route('not-found');
+  this.route('user-details');
 });
 
 export default Router;

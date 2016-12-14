@@ -30,7 +30,7 @@ const TIME = {
  */
 export function getDurationBreakdown(params) {
   let [duration] = params;
-  var seconds = parseInt((duration / TIME.milliseconds_in_seconds) % TIME.seconds_in_minutes), minutes = parseInt((duration / (TIME.milliseconds_in_seconds * TIME.seconds_in_minutes)) % TIME.minutes_in_hours), hours = parseInt((duration / (TIME.milliseconds_in_seconds * TIME.seconds_in_minutes * TIME.minutes_in_hours)) % TIME.hours_in_days);
+  var seconds = parseInt((duration / TIME.milliseconds_in_seconds) % TIME.seconds_in_minutes), minutes = parseInt((duration / (TIME.milliseconds_in_seconds * TIME.seconds_in_minutes)) % TIME.minutes_in_hours), hours = parseInt((duration / (TIME.milliseconds_in_seconds * TIME.seconds_in_minutes * TIME.minutes_in_hours)));
 
   if(duration<TIME.milliseconds_in_seconds) {
     return "00:00:00";

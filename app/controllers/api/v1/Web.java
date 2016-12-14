@@ -17,6 +17,12 @@
 package controllers.api.v1;
 
 import com.avaje.ebean.Query;
+import com.avaje.ebean.Junction;
+import com.avaje.ebean.ExpressionList;
+import com.avaje.ebean.SqlRow;
+import com.avaje.ebean.SqlQuery;
+import com.avaje.ebean.Ebean;
+
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -29,13 +35,16 @@ import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.util.Utils;
 import controllers.ControllerUtil;
 import controllers.IdUrlPair;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
+
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
@@ -1128,6 +1137,10 @@ public class Web extends Controller {
       return notFound(new Gson().toJson(parent));
     }
 
+    if (applicationid.contains("job")) {
+      applicationid = applicationid.replaceAll("job", "application");
+    }
+
     JsonObject applicationObject = new JsonObject();
     JsonArray heuristicsArray = new JsonArray();
 
@@ -1451,11 +1464,324 @@ public class Web extends Controller {
     return ok(new Gson().toJson(parent));
   }
 
+
   /**
-   * This utility method is used to sort the jsonArray based on FinishTime
-   * @param jsonArray The jsonArray to be sorted
-   * @return The sorted jsonArray based on finishtime
+   * Returns the filter parameters for the user summary
+   * @return The filter parameters for the user summary
    */
+  public static Map<String,String> getFilterParamsForUserSummary() {
+    DynamicForm form = Form.form().bindFromRequest(request());
+    Map<String,String> filterParams = new HashMap<String,String>();
+    filterParams.put(Application.FINISHED_TIME_BEGIN, form.get(Application.FINISHED_TIME_BEGIN));
+    filterParams.put(Application.FINISHED_TIME_END, form.get(Application.FINISHED_TIME_END));
+    filterParams.put(Application.STARTED_TIME_BEGIN, form.get(Application.STARTED_TIME_BEGIN));
+    filterParams.put(Application.STARTED_TIME_END, form.get(Application.STARTED_TIME_END));
+    return filterParams;
+  }
+
+
+  /**
+   *  The rest interface to return the results for a particular user. When the date is not specified, it returns the result
+   *  for the last seven days.
+   * @return The json object of the form:
+   * result:
+   * * {
+   *   "user-details": {
+   *     "id": "user",
+   *     "totalapplications": 3,
+   *     "totaljobs": 3,
+   *     "totalworkflows": 3,
+   *     "resourceused": 101394532,
+   *     "resourcewasted": 15999828,
+   *     "runtime": 312283,
+   *     "waittime": 46234,
+   *     "start": 0,
+   *     "end": 3,
+   *     "total": 3,
+   *     "summaries": [
+   *       {
+   *         "id": "application_12432132131",
+   *         "username": "user",
+   *         "starttime": 1477389986871,
+   *         "finishtime": 1477390004463,
+   *         "runtime": 17592,
+   *         "waittime": 0,
+   *         "resourceused": 12288,
+   *         "resourcewasted": 6360,
+   *         "severity": "Critical",
+   *         "queue": "spark_default",
+   *         "heuristicsummary": [
+   *           {
+   *             "name": "Spark Configuration Best Practice",
+   *             "severity": "None"
+   *           },
+   *           {
+   *             "name": "Spark Memory Limit",
+   *             "severity": "None"
+   *           },
+   *           {
+   *             "name": "Spark Stage Runtime",
+   *             "severity": "Low"
+   *           },
+   *           {
+   *             "name": "Spark Job Runtime",
+   *             "severity": "Low"
+   *           },
+   *           {
+   *             "name": "Spark Executor Load Balance",
+   *             "severity": "Critical"
+   *           },
+   *           {
+   *             "name": "Spark Event Log Limit",
+   *             "severity": "None"
+   *           }
+   *         ]
+   *       }
+   *     }
+   *   }
+   *
+   */
+  public static Result restGetUsersSummaryStats() {
+    DynamicForm form = Form.form().bindFromRequest(request());
+    int offset = SEARCH_DEFAULT_PAGE_OFFSET;
+    int limit = SEARCH_DEFAULT_PAGE_LIMIT;
+    int end = 0;
+    int total = 0;
+
+    if (form.get("offset") != null && form.get("offset") != "") {
+      offset = Integer.valueOf(form.get("offset"));
+    }
+
+    if (form.get("limit") != null && form.get("limit") != "") {
+      limit = Integer.valueOf(form.get("limit"));
+    }
+
+    if (offset < 0) {
+      offset = 0;
+    }
+
+    if (limit > SEARCH_APPLICATION_MAX_OFFSET) {
+      limit = SEARCH_APPLICATION_MAX_OFFSET;
+    } else if (limit <= 0) {
+      return ok(new Gson().toJson(new JsonObject()));
+    }
+
+    String sortBy = "severity";
+    boolean increasing = true;
+
+    String usernameString = form.get("usernames");
+    if(usernameString == null || usernameString.isEmpty()) {
+      JsonObject parent = new JsonObject();
+      parent.add(JsonKeys.USERRESULTS, new JsonObject());
+      return notFound(new Gson().toJson(parent));
+    }
+
+    List<String> usernames = Arrays.asList(usernameString.split(","));
+
+    Map<String,String> filterParamsForUserSummary = getFilterParamsForUserSummary();
+
+    if(form.get("sortKey")!=null) {
+      sortBy = form.get("sortKey");
+    }
+
+    if(form.get("increasing")!=null) {
+      increasing = Boolean.valueOf(form.get("increasing"));
+    }
+
+    JsonObject userResult = new JsonObject();
+    List<String> usernameQueryList = new ArrayList<String>();
+    for(int i=0;i<usernames.size();i++) {
+      usernameQueryList.add("username=:user" + i);
+    }
+
+    String usernameQueryString = String.join(" or ", usernameQueryList);
+
+    // by default, fetch data from last week
+    String finishedTimeBegin = String.valueOf(System.currentTimeMillis() - DAY*31);
+    String finishedTimeEnd = String.valueOf(System.currentTimeMillis());
+
+    if (Utils.isSet(filterParamsForUserSummary.get(Application.FINISHED_TIME_BEGIN))) {
+      finishedTimeBegin = filterParamsForUserSummary.get(Application.FINISHED_TIME_BEGIN);
+    }
+
+    if (Utils.isSet(filterParamsForUserSummary.get(Application.FINISHED_TIME_END))) {
+      finishedTimeEnd = filterParamsForUserSummary.get(Application.FINISHED_TIME_END);
+    }
+
+
+    StringBuilder timeFilterStringBuilder = new StringBuilder();
+    if(finishedTimeBegin!=null) {
+      timeFilterStringBuilder.append("finish_time");
+      timeFilterStringBuilder.append(">=");
+      timeFilterStringBuilder.append(parseTime(String.valueOf(finishedTimeBegin)));
+      if(finishedTimeEnd!=null) {
+        timeFilterStringBuilder.append(" and ");
+      }
+    }
+
+    if(finishedTimeEnd!=null) {
+      timeFilterStringBuilder.append("finish_time");
+      timeFilterStringBuilder.append("<=");
+      timeFilterStringBuilder.append(parseTime(String.valueOf(finishedTimeEnd)));
+    }
+
+    String timeFilterString = timeFilterStringBuilder.toString();
+
+
+    String sql;
+    StringBuilder sqlBuilder = new StringBuilder();
+    sqlBuilder.append("select count(id) as num_of_applications, count(distinct(job_exec_id)) as num_of_jobs, count(distinct(flow_exec_id)) as num_of_flows, sum(resource_used) as total_resource_used, sum(resource_wasted) as total_resource_wasted, sum(finish_time) - sum(start_time) as execution_time, sum(total_delay) as total_delay from yarn_app_result where");
+    if(timeFilterString!=null && !timeFilterString.isEmpty()) {
+      sqlBuilder.append(" ( ");
+      sqlBuilder.append(usernameQueryString);
+      sqlBuilder.append(" ) and ");
+      sqlBuilder.append(timeFilterString);
+    } else {
+      sqlBuilder.append(" ");
+      sqlBuilder.append(usernameQueryString);
+    }
+
+    sql = sqlBuilder.toString();
+    SqlQuery query = Ebean.createSqlQuery(sql);
+
+    int iUserIndex = 0;
+    for(String username: usernames) {
+      query.setParameter("user"+iUserIndex,username);
+      iUserIndex++;
+    }
+
+    SqlRow resultRow = query.findUnique();
+    userResult.addProperty(JsonKeys.ID, usernameString);
+    userResult.addProperty(JsonKeys.TOTAL_APPLICATIONS, resultRow.getLong("num_of_applications"));
+    userResult.addProperty(JsonKeys.TOTAL_JOBS, resultRow.getLong("num_of_jobs"));
+    userResult.addProperty(JsonKeys.TOTAL_WORKFLOWS, resultRow.getLong("num_of_flows"));
+    userResult.addProperty(JsonKeys.RESOURCE_USED, resultRow.getLong("total_resource_used"));
+    userResult.addProperty(JsonKeys.RESOURCE_WASTED, resultRow.getLong("total_resource_wasted"));
+    userResult.addProperty(JsonKeys.RUNTIME, resultRow.getLong("execution_time"));
+    userResult.addProperty(JsonKeys.WAITTIME, resultRow.getLong("total_delay"));
+
+
+    Query<AppResult> userSummaryQuery = generateUserApplicationSummaryQuery(usernames, filterParamsForUserSummary, sortBy, increasing);
+
+    total = userSummaryQuery.findRowCount();
+
+    List<AppResult> results = userSummaryQuery.setFirstRow(offset).setMaxRows(limit)
+            .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields()).findList();
+
+    end = offset + results.size();
+
+    JsonArray applicationSummaryArray = new JsonArray();
+
+    for (AppResult application : results) {
+      JsonObject applicationObject = new JsonObject();
+      JsonArray heuristicsArray = new JsonArray();
+      List<AppHeuristicResult> appHeuristicResult = application.yarnAppHeuristicResults;
+
+      for (AppHeuristicResult heuristic : appHeuristicResult) {
+        JsonObject heuristicObject = new JsonObject();
+        heuristicObject.addProperty(JsonKeys.NAME, heuristic.heuristicName);
+        heuristicObject.addProperty(JsonKeys.SEVERITY, heuristic.severity.getText());
+        heuristicsArray.add(heuristicObject);
+      }
+
+      applicationObject.addProperty(JsonKeys.ID, application.id);
+
+      applicationObject.addProperty(JsonKeys.USERNAME, application.username);
+      applicationObject.addProperty(JsonKeys.START_TIME, application.startTime);
+      applicationObject.addProperty(JsonKeys.FINISH_TIME, application.finishTime);
+      applicationObject.addProperty(JsonKeys.RUNTIME, application.finishTime - application.startTime);
+      applicationObject.addProperty(JsonKeys.WAITTIME, application.totalDelay);
+      applicationObject.addProperty(JsonKeys.RESOURCE_USED, application.resourceUsed);
+      applicationObject.addProperty(JsonKeys.RESOURCE_WASTED, application.resourceWasted);
+      applicationObject.addProperty(JsonKeys.SEVERITY, application.severity.getText());
+      applicationObject.addProperty(JsonKeys.QUEUE, application.queueName);
+
+      applicationObject.add(JsonKeys.HEURISTICS_SUMMARY, heuristicsArray);
+      applicationSummaryArray.add(applicationObject);
+    }
+
+
+    userResult.addProperty(JsonKeys.START, offset);
+    userResult.addProperty(JsonKeys.END, end);
+    userResult.addProperty(JsonKeys.TOTAL, total);
+    userResult.add(JsonKeys.SUMMARIES,applicationSummaryArray);
+
+    JsonObject parent = new JsonObject();
+    parent.add(JsonKeys.USER_DETAILS, userResult);
+    return ok(new Gson().toJson(parent));
+  }
+
+
+  /**
+   * Generates the query for returning the application summaries
+   * @param usernames The list of usernames
+   * @param searchParams Any additional parameters
+   * @param sortKey The key on which the applications should be sorted
+   * @param increasing The boolean value to sort the output based on the key desc or increasing
+   * @return The Query object based on the given above parameters
+   */
+  public static Query<AppResult> generateUserApplicationSummaryQuery(List<String> usernames,Map<String,String> searchParams,String sortKey,boolean increasing) {
+    ExpressionList<AppResult> query = AppResult.find.select(AppResult.getSearchFields()).where();
+    Junction<AppResult> junction = query.disjunction();
+    for(String username: usernames) {
+      junction.eq(AppResult.TABLE.USERNAME, username);
+    }
+    query.endJunction();
+
+    String finishedTimeBegin = searchParams.get(Application.FINISHED_TIME_BEGIN);
+    if (!Utils.isSet(finishedTimeBegin)) {
+      finishedTimeBegin = String.valueOf(System.currentTimeMillis() - 31 * DAY); // month of data if not specified
+    }
+
+    long time = parseTime(finishedTimeBegin);
+    if (time > 0) {
+      query.ge(AppResult.TABLE.FINISH_TIME, time);
+    }
+
+    String finishedTimeEnd = searchParams.get(Application.FINISHED_TIME_END);
+    if (!Utils.isSet(finishedTimeEnd)) {
+      finishedTimeEnd = String.valueOf(System.currentTimeMillis());
+    }
+
+    time = parseTime(finishedTimeEnd);
+    if (time > 0) {
+      query.le(AppResult.TABLE.FINISH_TIME, time);
+    }
+
+    if(increasing) {
+      return query.order(getSortKey(sortKey));
+    } else {
+      return query.order().desc(getSortKey(sortKey));
+    }
+  }
+
+
+  /**
+   * Maps the sort key to the actual field values
+   * @param sortKey The sortKey
+   * @return The value from the sort key
+   */
+  private static String getSortKey(String sortKey) {
+    if(sortKey.equals("severity")) {
+      return AppResult.TABLE.SEVERITY;
+    } else if (sortKey.equals("resourceUsed")) {
+      return AppResult.TABLE.RESOURCE_USAGE;
+    } else if (sortKey.equals("resourceWasted")) {
+      return AppResult.TABLE.WASTED_RESOURCES;
+    } else if (sortKey.equals("delay")) {
+      return AppResult.TABLE.TOTAL_DELAY;
+    } else if (sortKey.equals("finish_time")) {
+      return AppResult.TABLE.FINISH_TIME;
+    }
+    return "severity";
+  }
+
+
+    /**
+     * This utility method is used to sort the jsonArray based on FinishTime
+     * @param jsonArray The jsonArray to be sorted
+     * @return The sorted jsonArray based on finishtime
+     */
   private static JsonArray getSortedJsonArrayByFinishTime(JsonArray jsonArray) {
     JsonArray sortedJsonArray = new JsonArray();
     List<JsonObject> jsonValues = new ArrayList<JsonObject>();
@@ -1484,5 +1810,21 @@ public class Web extends Controller {
         }
       });
       return severityList;
+  }
+
+  /**
+   * Parse the string for time in long
+   *
+   * @param time The string to be parsed
+   * @return the epoch value
+   */
+  private static long parseTime(String time) {
+    long unixTime = 0;
+    try {
+      unixTime = Long.parseLong(time);
+    } catch (NumberFormatException ex) {
+      // return 0
+    }
+    return unixTime;
   }
 }

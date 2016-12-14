@@ -52,6 +52,7 @@ GET        /rest/applications                   controllers.api.v1.Web.restAppli
 GET        /rest/search-options                 controllers.api.v1.Web.restSearchOptions()
 GET        /rest/search-results                 controllers.api.v1.Web.search()
 GET        /rest/resourceusagedatabyuser        controllers.Application.restResourceUsageDataByUser(startTime: String, endTime: String)
+GET        /rest/user-details                    controllers.api.v1.Web.restGetUsersSummaryStats()
 
 # Metrics calls
 GET        /ping                                controllers.MetricsController.ping()

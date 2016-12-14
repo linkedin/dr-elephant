@@ -1,3 +1,4 @@
+
 {{!--
 
  Copyright 2016 LinkedIn Corp.
@@ -21,6 +22,9 @@
     <div class="input-group-btn search-panel">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
             <span id="search_concept">{{selectedType}}</span> <span class="caret"></span>
+          {{#tooltip-on-element}}
+            <span>{{selectedTypeToolTip}}</span>
+          {{/tooltip-on-element}}
         </button>
         <ul class="dropdown-menu" role="menu">
             {{#each applicationTypes as |type|}}

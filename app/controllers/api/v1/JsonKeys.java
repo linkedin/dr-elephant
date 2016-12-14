@@ -49,12 +49,15 @@ public class JsonKeys {
   public static final String LOW = "low";
   public static final String NONE = "none";
   public static final String DASHBOARD_SUMMARIES = "dashboard-summaries";
+  public static final String USERRESULTS = "user-results";
+  public static final String USER_DETAILS = "user-details";
 
   // Workflows
   public static final String WORKFLOW_SUMMARIES = "workflow-summaries";
   public static final String WORKFLOWS = "workflows";
   public static final String FLOW_DEF_ID = "flowdefid";
   public static final String FLOW_EXEC_ID = "flowexecid";
+  public static final String TOTAL_WORKFLOWS = "totalworkflows";
 
   // Jobs
   public static final String JOB_SUMMARIES = "job-summaries";
@@ -65,6 +68,8 @@ public class JsonKeys {
   public static final String JOB_NAME = "jobname";
   public static final String JOBS = "jobs";
   public static final String JOBSSUMMARIES = "jobssummaries";
+  public static final String TOTAL_JOBS = "totaljobs";
+
 
   // Tasks
   public static final String APPLICATION_SUMMARIES = "application-summaries";
@@ -76,4 +81,5 @@ public class JsonKeys {
   public static final String DETAILS = "details";
   public static final String YARN_APP_HEURISTIC_RESULTS = "yarnappheuristicresults";
   public static final String APPLICATIONS = "applications";
+  public static final String TOTAL_APPLICATIONS = "totalapplications";
 }
