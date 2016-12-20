@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
@@ -345,6 +346,7 @@ public class Web extends Controller {
    *      "resourceused": 101382144,
    *      "resourcewasted": 15993417,
    *      "severity": "Moderate",
+   *      "scheduler": "azkaban",
    *      "tasksseverity": [
    *    {
    *      "severity": "Moderate",
@@ -384,6 +386,9 @@ public class Web extends Controller {
       String jobName = "";
       String user = null;
       String queueName = "";
+      String scheduler = "";
+      String jobDefId = "";
+      String jobExecId = "";
 
       Map<Severity, Long> applicationSeverityCount = new HashMap<Severity, Long>();
 
@@ -394,8 +399,11 @@ public class Web extends Controller {
 
         jobType = application.jobType;
         jobName = application.jobName;
+        jobDefId = application.jobDefId;
+        jobExecId = application.jobExecId;
 
         queueName = application.queueName;
+        scheduler = application.scheduler;
 
         if (application.startTime < jobStartTime) {
           jobStartTime = application.startTime;
@@ -419,13 +427,14 @@ public class Web extends Controller {
       }
 
       JsonArray applicationSeverity = new JsonArray();
-
-      for (Map.Entry<Severity, Long> entry : applicationSeverityCount.entrySet()) {
+      List<Severity> keys = getSortedSeverityKeys(applicationSeverityCount.keySet());
+      for (Severity key: keys) {
         JsonObject severityObject = new JsonObject();
-        severityObject.addProperty(JsonKeys.SEVERITY, entry.getKey().getText());
-        severityObject.addProperty(JsonKeys.COUNT, entry.getValue());
+        severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
+        severityObject.addProperty(JsonKeys.COUNT, applicationSeverityCount.get(key));
         applicationSeverity.add(severityObject);
       }
+
 
       totalJobDelay = Utils.getTotalWaittime(jobExecIdToJobsMap.get(jobDefPair));
       totalJobRuntime = Utils.getTotalRuntime(jobExecIdToJobsMap.get(jobDefPair));
@@ -442,7 +451,10 @@ public class Web extends Controller {
       jobObject.addProperty(JsonKeys.RESOURCE_USED, totalJobMemoryUsed);
       jobObject.addProperty(JsonKeys.RESOURCE_WASTED, totalJobMemoryWasted);
       jobObject.addProperty(JsonKeys.QUEUE, queueName);
+      jobObject.addProperty(JsonKeys.SCHEDULER, scheduler);
       jobObject.addProperty(JsonKeys.SEVERITY, jobSeverity.getText());
+      jobObject.addProperty(JsonKeys.JOB_DEF_ID, jobDefId);
+      jobObject.addProperty(JsonKeys.JOB_EXEC_ID, jobExecId);
 
       jobObject.add(JsonKeys.TASKS_SEVERITY, applicationSeverity);
 
@@ -560,12 +572,11 @@ public class Web extends Controller {
       totalFlowRuntime = Utils.getTotalRuntime(flowExecIdToJobsMap.get(flowExecPair));
 
       JsonArray jobSeverity = new JsonArray();
-
-      // add severity object
-      for (Map.Entry<Severity, Long> entry : jobSeverityCount.entrySet()) {
+      List<Severity> keys = getSortedSeverityKeys(jobSeverityCount.keySet());
+      for (Severity key: keys) {
         JsonObject severityObject = new JsonObject();
-        severityObject.addProperty(JsonKeys.SEVERITY, entry.getKey().getText());
-        severityObject.addProperty(JsonKeys.COUNT, entry.getValue());
+        severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
+        severityObject.addProperty(JsonKeys.COUNT, jobSeverityCount.get(key));
         jobSeverity.add(severityObject);
       }
 
@@ -645,6 +656,13 @@ public class Web extends Controller {
    * </pre>
    */
   public static Result restWorkflowFromFlowId(String flowId) {
+
+    if (flowId==null || flowId.isEmpty()) {
+      JsonObject parent = new JsonObject();
+      parent.add(JsonKeys.WORKFLOWS, new JsonObject());
+      return notFound(new Gson().toJson(parent));
+    }
+
     JsonArray jobSeverityArray = new JsonArray();
     JsonArray jobSummaryArray = new JsonArray();
     JsonObject data = new JsonObject();
@@ -668,7 +686,7 @@ public class Web extends Controller {
     if (results.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.WORKFLOWS, data);
-      return ok(new Gson().toJson(parent));
+      return notFound(new Gson().toJson(parent));
     }
 
     Map<IdUrlPair, List<AppResult>> jobExecIdToJobsMap =
@@ -724,12 +742,13 @@ public class Web extends Controller {
         jobSeverityCount.put(jobSeverity, 1L);
       }
 
+
       JsonArray taskSeverity = new JsonArray();
-      // add severity object
-      for (Map.Entry<Severity, Long> entry : taskSeverityCount.entrySet()) {
+      List<Severity> keys = getSortedSeverityKeys(taskSeverityCount.keySet());
+      for (Severity key: keys) {
         JsonObject severityObject = new JsonObject();
-        severityObject.addProperty(JsonKeys.SEVERITY, entry.getKey().getText());
-        severityObject.addProperty(JsonKeys.COUNT, entry.getValue());
+        severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
+        severityObject.addProperty(JsonKeys.COUNT, taskSeverityCount.get(key));
         taskSeverity.add(severityObject);
       }
 
@@ -771,10 +790,12 @@ public class Web extends Controller {
       }
     }// job map scope ends here
 
-    for (Map.Entry<Severity, Long> entry : jobSeverityCount.entrySet()) {
+
+    List<Severity> keys = getSortedSeverityKeys(jobSeverityCount.keySet());
+    for (Severity key: keys) {
       JsonObject severityObject = new JsonObject();
-      severityObject.addProperty(JsonKeys.SEVERITY, entry.getKey().getText());
-      severityObject.addProperty(JsonKeys.COUNT, entry.getValue());
+      severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
+      severityObject.addProperty(JsonKeys.COUNT, jobSeverityCount.get(key));
       jobSeverityArray.add(severityObject);
     }
 
@@ -893,6 +914,14 @@ public class Web extends Controller {
    * </pre>
    */
   public static Result restJobFromJobId(String jobid) {
+
+
+    if (jobid==null || jobid.isEmpty()) {
+      JsonObject parent = new JsonObject();
+      parent.add(JsonKeys.JOBS, new JsonObject());
+      return notFound(new Gson().toJson(parent));
+    }
+
     JsonArray taskSummaryArray = new JsonArray();
 
     String jobDefID = jobid;
@@ -911,13 +940,14 @@ public class Web extends Controller {
     String flowDefinitionId = "";
     String jobname = "";
     String queueName = "";
+    String scheduler = "";
 
     List<AppResult> results = getRestJobResultsFromJobExecutionId(jobid);
 
     if (results.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.JOBS, new JsonObject());
-      return ok(new Gson().toJson(parent));
+      return notFound(new Gson().toJson(parent));
     }
 
     Map<Severity, Long> taskSeverityCount = new HashMap<Severity, Long>();
@@ -931,6 +961,7 @@ public class Web extends Controller {
       flowExecutionId = task.flowExecId;
       flowDefinitionId = task.flowDefId;
       queueName = task.queueName;
+      scheduler = task.scheduler;
 
       JsonObject taskObject = new JsonObject();
       JsonArray heuristicsArray = new JsonArray();
@@ -981,11 +1012,11 @@ public class Web extends Controller {
     }
 
     JsonArray taskSeverity = new JsonArray();
-
-    for (Map.Entry<Severity, Long> entry : taskSeverityCount.entrySet()) {
+    List<Severity> keys = getSortedSeverityKeys(taskSeverityCount.keySet());
+    for (Severity key: keys) {
       JsonObject severityObject = new JsonObject();
-      severityObject.addProperty(JsonKeys.SEVERITY, entry.getKey().getText());
-      severityObject.addProperty(JsonKeys.COUNT, entry.getValue());
+      severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
+      severityObject.addProperty(JsonKeys.COUNT, taskSeverityCount.get(key));
       taskSeverity.add(severityObject);
     }
 
@@ -1008,6 +1039,7 @@ public class Web extends Controller {
     data.addProperty(JsonKeys.FLOW_EXEC_ID, flowExecutionId);
     data.addProperty(JsonKeys.FLOW_DEF_ID, flowDefinitionId);
     data.addProperty(JsonKeys.QUEUE, queueName);
+    data.addProperty(JsonKeys.SCHEDULER, scheduler);
     data.add(JsonKeys.TASKS_SUMMARIES, taskSummaryArray);
     data.add(JsonKeys.TASKS_SEVERITY, taskSeverity);
 
@@ -1089,6 +1121,13 @@ public class Web extends Controller {
    * </pre>
    */
   public static Result restApplicationFromApplicationId(String applicationid) {
+
+    if (applicationid==null || applicationid.isEmpty()) {
+      JsonObject parent = new JsonObject();
+      parent.add(JsonKeys.APPLICATIONS, new JsonObject());
+      return notFound(new Gson().toJson(parent));
+    }
+
     JsonObject applicationObject = new JsonObject();
     JsonArray heuristicsArray = new JsonArray();
 
@@ -1097,7 +1136,7 @@ public class Web extends Controller {
     if (result == null) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.APPLICATIONS, new JsonObject());
-      return ok(new Gson().toJson(parent));
+      return notFound(new Gson().toJson(parent));
     }
 
     for (AppHeuristicResult appHeuristicResult : result.yarnAppHeuristicResults) {
@@ -1434,5 +1473,16 @@ public class Web extends Controller {
       sortedJsonArray.add(object);
     }
     return sortedJsonArray;
+  }
+
+  private static List<Severity> getSortedSeverityKeys(Set<Severity> severities) {
+    List<Severity> severityList = new ArrayList<Severity>();
+    severityList.addAll(severities);
+      Collections.sort(severityList, new Comparator<Severity>() {
+        public int compare(Severity a, Severity b) {
+          return b.getValue() - a.getValue();
+        }
+      });
+      return severityList;
   }
 }

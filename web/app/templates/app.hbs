@@ -38,7 +38,7 @@
         <table class="info borderless">
             <tbody>
             <tr>
-                <td>username:</td>
+                <td>username</td>
                 <td>{{model.username}}</td>
             </tr>
             <tr>
@@ -57,11 +57,13 @@
                 </tr>
             {{/if}}
             <tr>
-                <td>jobtracker:</td>
-                <td><a href="{{model.trackingurl}}">{{model.trackingurl}}</a></td>
+                <td>jobtracker</td>
+                <td><a href="{{model.trackingurl}}">{{model.id}}</a></td>
             </tr>
             </tbody>
         </table>
+
+        {{#if (notEmpty model.flowexecid)}}
         <table class="info borderless">
             <tr>
                 <td><a class="btn"
@@ -82,6 +84,7 @@
                     execution</a></td>
             </tr>
         </table>
+        {{/if}}
         <table class="info borderless">
             <tbody>
 

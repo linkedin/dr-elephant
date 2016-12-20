@@ -19,13 +19,13 @@ import Dependencies._
 
 name := "dr-elephant"
 
-version := "2.0.5"
+version := "2.0.6"
 
 organization := "com.linkedin.drelephant"
 
 javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
 
-libraryDependencies ++= dependencies
+libraryDependencies ++= dependencies map { _.excludeAll(exclusionRules: _*) }
 
 // Create a new custom configuration called compileonly
 ivyConfigurations += config("compileonly").hide
@@ -34,3 +34,5 @@ ivyConfigurations += config("compileonly").hide
 unmanagedClasspath in Compile ++= update.value.select(configurationFilter("compileonly"))
 
 playJavaSettings
+
+scalaVersion := "2.10.4"

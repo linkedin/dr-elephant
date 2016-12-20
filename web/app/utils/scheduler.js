@@ -60,5 +60,41 @@ export default Ember.Object.extend({
             flowName = flowExecutionId;
         }
         return flowName;
+    },
+
+  getJobDisplayName(jobExecutionId, jobDefinitionId, schedulerName) {
+
+    var displayName;
+
+    try {
+
+      // can add multiple schedulers in the switch statement.
+      switch (schedulerName) {
+
+
+        case Schedulers.AZKABAN:
+          var parser = document.createElement('a');
+
+          parser.href = jobDefinitionId;
+
+          var queryString = (parser.search).substring(1);
+          var jobname = queryString.split("&")[2].split("=")[1];
+
+          parser.href = jobExecutionId;
+          queryString = (parser.search).substring(1);
+          var execution = queryString.split("&")[0].split("=")[1];
+
+          displayName = jobname + ": " + execution;
+          console.log(displayName);
+          break;
+
+        default:
+          displayName = jobExecutionId;
+
+      }
+    } catch (err) {
+      displayName = jobExecutionId;
     }
+    return displayName;
+  }
 });

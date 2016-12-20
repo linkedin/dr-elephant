@@ -25,5 +25,12 @@ export default Ember.Route.extend({
     model(){
         this.applications = this.store.queryRecord('application', {applicationid: this.get("applicationid")});
         return this.applications;
+    },
+    actions: {
+        error(error, transition) {
+            if (error.errors[0].status == 404) {
+                return this.transitionTo('not-found', { queryParams: {'previous': window.location.href}});
+            }
+        }
     }
 });

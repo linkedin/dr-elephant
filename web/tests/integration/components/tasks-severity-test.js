@@ -36,7 +36,7 @@ test('Test for task severity component', function(assert) {
       }
     ]
   });
-  this.render(hbs`{{tasks-severity job=job}}`);
+  this.render(hbs`{{tasks-severity tasksseverity=job.tasksseverity}}`);
 
   assert.equal(this.$().text().trim().split("\n").join("").replace(/ /g,''), '1Severe5Critical');
 

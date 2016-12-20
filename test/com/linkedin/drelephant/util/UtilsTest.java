@@ -45,6 +45,24 @@ public class UtilsTest {
   }
 
   @Test
+  public void testParseJavaOptionsIgnoresNonStandardOptions() {
+    Map<String, String> options1 = Utils.parseJavaOptions("-Dfoo=bar -XX:+UseCompressedOops -XX:MaxPermSize=512m -Dfoo2=bar2");
+    assertEquals(2, options1.size());
+    assertEquals("bar", options1.get("foo"));
+    assertEquals("bar2", options1.get("foo2"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testParseJavaOptionsThrowsIllegalArgumentExceptionForMissingAssignment() {
+    Utils.parseJavaOptions("-Dfoo");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testParseJavaOptionsThrowsIllegalArgumentExceptionForUnexpectedProperties() {
+    Utils.parseJavaOptions("-foo");
+  }
+
+  @Test
   public void testGetParam() {
     Map<String, String> paramMap = new HashMap<String, String>();
     paramMap.put("test_severity_1", "10, 50, 100, 200");

@@ -44,7 +44,7 @@
 
   </head>
 
-  <body role="document">
+  <body>
       <!-- Fixed navbar -->
     <div class="navbar-default navbar-inverse navbar-static-top" role="navigation">
       <div class="container">
@@ -59,7 +59,7 @@
           <a class="navbar-brand" href="new">Dr Elephant</a>
         </div>
 
-        <div class="navbar-collapse collapse">
+        <div class="navbar-collapse collapse" style="float:left">
           <ul class="nav navbar-nav">
             <li><a href="new" class="active">Dashboard</a></li>
             <li><a href="newjobhistory">JobHistory</a></li>
@@ -68,6 +68,13 @@
           </ul>
 
 
+        </div>
+        <div class="col-sm-3 col-md-3">
+          <div class="navbar-form">
+            <div>
+              @tags.searchPanel()
+            </div>
+          </div>
         </div>
 
       </div>
@@ -85,6 +92,7 @@
     <script src="@routes.Assets.at("assets/bootstrap-datepicker/js/bootstrap-datepicker.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("assets/jquery/jquery.deserialize.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("js/searchform.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("js/searchpanel.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("assets/d3/d3.min.js")" type="text/javascript"></script>
     @if(analytics) {
       <script src="@routes.Assets.at("assets/analytics/track.js")" type="text/javascript"></script>

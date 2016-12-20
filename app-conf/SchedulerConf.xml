@@ -30,4 +30,31 @@
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
     </scheduler>
 
+    <scheduler>
+        <name>oozie</name>
+        <classname>com.linkedin.drelephant.schedulers.OozieScheduler</classname>
+        <params>
+            <!-- URL of oozie host -->
+            <oozie_api_url>http://localhost:11000/oozie</oozie_api_url>
+
+            <!-- ### Non mandatory properties ###
+            ### choose authentication method
+            <oozie_auth_option>KERBEROS/SIMPLE</oozie_auth_option>
+
+            ### override oozie console url with a template (only parameter will be the id)
+            <oozie_job_url_template></oozie_job_url_template>
+            <oozie_job_exec_url_template></oozie_job_exec_url_template>
+
+            ### (if scheduled jobs are expected make sure to add following templates since oozie doesn't provide their URLS on server v4.1.0)
+            <oozie_workflow_url_template>http://localhost:11000/oozie/?job=%s</oozie_workflow_url_template>
+            <oozie_workflow_exec_url_template>http://localhost:11000/oozie/?job=%s</oozie_workflow_exec_url_template>
+
+            ### Use true if you can assure all app names are unique.
+            ### When true dr-elephant will unit all coordinator runs (in case of coordinator killed and then run again)
+            <oozie_app_name_uniqueness>false</oozie_app_name_uniqueness>
+            -->
+        </params>
+    </scheduler>
+
+
 </schedulers>

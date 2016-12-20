@@ -153,7 +153,11 @@ public class JobTypeConfiguration {
       }
     }
 
-    logger.info("Loaded total " + _appTypeToJobTypeList.size() + " job types.");
+    Integer jobTypesSize = 0;
+    for (List<JobType> jobTypes : _appTypeToJobTypeList.values() ) {
+      jobTypesSize += jobTypes.size();
+    }
+    logger.info("Loaded total " + jobTypesSize + " job types for " + _appTypeToJobTypeList.size() + " app types");
   }
 
   private List<JobType> getJobTypeList(ApplicationType appType) {

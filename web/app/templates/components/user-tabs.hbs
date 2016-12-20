@@ -31,7 +31,11 @@
       {{#if showInputBox}}
         {{input id="user-input" action=addTab action="resetInput" placeholder="Add user" class="input-user" valueBinding="newUser" value=""  autofocus="true"}}
       {{/if}}
+
         <button {{action 'showInput'}} class="glyphicon glyphicon-plus input-user-button"></button>
+          {{#tooltip-on-element}}
+            Add a new user
+          {{/tooltip-on-element}}
     </li>
 
 </ul>

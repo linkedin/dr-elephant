@@ -27,6 +27,7 @@
 @import 'partials/heuristic-detail.css';
 @import 'partials/loading-panel.css';
 @import 'partials/search-panel.css';
+@import 'partials/not-found.css';
 
 .list-group-item {
   border-radius: 0 !important;

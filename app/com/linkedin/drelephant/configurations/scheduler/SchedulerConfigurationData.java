@@ -20,7 +20,7 @@ import java.util.Map;
 
 
 /**
- * The Heuristic Configuration Holder
+ * Scheduler Configuration Holder
  */
 public class SchedulerConfigurationData {
   private final String _schedulerName;

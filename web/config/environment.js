@@ -18,6 +18,20 @@
 
 module.exports = function(environment) {
   var ENV = {
+
+    /* you can enable 'ENV.APP.enableMetrics': true, and add your own metrics tracking code below. Example shown */
+    /**
+    metricsAdapters: [
+      {
+        name: 'Piwik',
+        environments: ['production','development'],
+        config: {
+          piwikUrl: 'https://localhost/piwik/',
+          siteId: 86
+        }
+      }
+    ],
+    **/
     modulePrefix: 'dr-elephant',
     environment: environment,
     baseURL: '/',
@@ -26,7 +40,9 @@ module.exports = function(environment) {
       FEATURES: {}
     },
 
-    APP: {},
+    APP: {
+      'enableMetrics': false
+    },
     'ember-cli-notifications': {
       icons: 'bootstrap'
     }

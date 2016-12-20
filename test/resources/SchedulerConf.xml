@@ -31,4 +31,12 @@
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
     </scheduler>
 
+    <scheduler>
+        <name>oozie</name>
+        <classname>com.linkedin.drelephant.schedulers.OozieScheduler</classname>
+        <params>
+          <oozie_api_url>http://oozie/</oozie_api_url>
+        </params>
+    </scheduler>
+
 </schedulers>

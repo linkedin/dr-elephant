@@ -35,11 +35,9 @@
   </aggregator>
   <aggregator>
     <applicationtype>spark</applicationtype>
-    <classname>org.apache.spark.SparkMetricsAggregator</classname>
-    <!--
+    <classname>com.linkedin.drelephant.spark.SparkMetricsAggregator</classname>
     <params>
-      <storage_mem_wastage_buffer>0.5</storage_mem_wastage_buffer>
+      <allocated_memory_waste_buffer_percentage>0.5</allocated_memory_waste_buffer_percentage>
     </params>
-    -->
   </aggregator>
 </aggregators>

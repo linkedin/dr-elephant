@@ -17,11 +17,18 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
-    beforeModel: function (transition) {
-        this.jobid = transition.queryParams.jobid;
-    },
-    model(){
-        this.jobs = this.store.queryRecord('job', {jobid: this.get("jobid")});
-        return this.jobs;
+  beforeModel: function (transition) {
+    this.jobid = transition.queryParams.jobid;
+  },
+  model(){
+    this.jobs = this.store.queryRecord('job', {jobid: this.get("jobid")});
+    return this.jobs;
+  },
+  actions: {
+    error(error, transition) {
+      if (error.errors[0].status == 404) {
+        return this.transitionTo('not-found', { queryParams: {'previous': window.location.href}});
+      }
     }
+  }
 });

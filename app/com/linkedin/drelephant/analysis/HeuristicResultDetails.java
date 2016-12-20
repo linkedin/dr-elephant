@@ -29,6 +29,10 @@ public class HeuristicResultDetails {
   private String _value;
   private String _details;
 
+  public HeuristicResultDetails(String name, String value) {
+    this(name, value, null);
+  }
+
   public HeuristicResultDetails(String name, String value, String details) {
     this._name = name;
     this._value = value;

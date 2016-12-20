@@ -176,7 +176,9 @@ public class MetricsController extends Controller {
    * Increments the meter for keeping track of processed jobs in metrics registry.
    */
   public static void markProcessedJobs() {
-    _processedJobs.mark();
+    if(_processedJobs != null) {
+      _processedJobs.mark();
+    }
   }
 
   /**
@@ -184,7 +186,9 @@ public class MetricsController extends Controller {
    * @param processingTimeTaken
    */
   public static void setJobProcessingTime(long processingTimeTaken) {
-    _jobProcessingTime.update(processingTimeTaken);
+    if(_jobProcessingTime != null) {
+      _jobProcessingTime.update(processingTimeTaken);
+    }
   }
 
   /**
@@ -193,7 +197,9 @@ public class MetricsController extends Controller {
    * retries can be marked as skipped.
    */
   public static void markSkippedJob() {
-    _skippedJobs.mark();
+    if(_skippedJobs != null) {
+      _skippedJobs.mark();
+    }
   }
 
   /**

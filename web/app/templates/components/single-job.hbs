@@ -29,7 +29,7 @@
                           {{#if (not-empty job.jobname)}}
                               <span>{{job.jobtype}}</span>: {{job.jobname}}
                           {{else}}
-                              <span>{{job.jobtype}}</span>: {{job.id}}
+                              <span>{{job.jobtype}}</span>: {{job.jobdisplayname}}
                           {{/if}}
                       </td>
                       <td class="user" id="job_summary_username"><span class="glyphicon glyphicon-user"></span>  {{job.username}}</td>

@@ -46,7 +46,7 @@ test('test for single-job component', function (assert) {
 
   this.render(hbs`{{single-job job=job}}`);
 
-  assert.equal(this.$('#job_name').text().trim(), 'sample_job');
+  assert.equal(this.$('#job_name').text().trim(), ': sample_job');
   assert.equal(this.$('#job_summary_username').text().trim(), 'user1');
   assert.equal(this.$('#job_summary_finishtime').text().trim(), 'Mon Jan 05 1970 01:57:03 GMT+0530 (IST)');
   assert.equal(this.$('#job_summary_aggregated_metrics').text().trim().split("\n").join("").replace(/ /g, ''), '0.929GBHours6.85%00:31:3957.88%');
@@ -72,7 +72,7 @@ test('test for single-job component', function (assert) {
   });
 
   this.render(hbs`{{single-job job=job}}`);
-  assert.equal(this.$('#job_name').text().trim(), 'sample_job_2');
+  assert.equal(this.$('#job_name').text().trim(), ': sample_job_2');
   assert.equal(this.$('#job_summary_username').text().trim(), 'user2');
   assert.equal(this.$('#job_summary_finishtime').text().trim(), "Thu Jan 01 1970 06:25:28 GMT+0530 (IST)");
   assert.equal(this.$('#job_summary_aggregated_metrics').text().trim().split("\n").join("").replace(/ /g, ''), '0.929GBHours6.85%00:31:3957.88%');

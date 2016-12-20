@@ -18,7 +18,25 @@ import Ember from 'ember';
 import config from './config/environment';
 
 const Router = Ember.Router.extend({
-  location: config.locationType
+  location: config.locationType,
+
+  metrics: Ember.inject.service(),
+
+  didTransition() {
+    this._super(...arguments);
+    if(config.APP.enableMetrics) {
+      this._trackPage();
+    }
+  },
+
+  _trackPage() {
+    Ember.run.scheduleOnce('afterRender', this, () => {
+      const page = this.get('url');
+      const title = this.getWithDefault('currentRouteName', 'unknown');
+
+      Ember.get(this, 'metrics').trackPage({ page, title });
+    });
+  }
 });
 
 Router.map(function () {
@@ -32,6 +50,7 @@ Router.map(function () {
   this.route('job');
   this.route('app');
   this.route('search');
+  this.route('not-found');
 });
 
 export default Router;
