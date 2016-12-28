@@ -30,7 +30,6 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 
 import models.AppResult;
-import play.api.Play;
 
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 
@@ -69,7 +68,7 @@ public class InfoExtractor {
     if (properties != null) {
       for (SchedulerConfigurationData data : _configuredSchedulers) {
         try {
-          Class<?> schedulerClass = Play.current().classloader().loadClass(data.getClassName());
+          Class<?> schedulerClass = Class.forName(data.getClassName());
           Object instance = schedulerClass.getConstructor(String.class, Properties.class, SchedulerConfigurationData.class).newInstance(appId, properties, data);
           if (!(instance instanceof Scheduler)) {
             throw new IllegalArgumentException(
