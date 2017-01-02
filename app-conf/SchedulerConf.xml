@@ -56,5 +56,9 @@
         </params>
     </scheduler>
 
+    <scheduler>
+       <name>no_scheduler</name>
+       <classname>com.linkedin.drelephant.schedulers.NoScheduler</classname>
+    </scheduler>
 
 </schedulers>
