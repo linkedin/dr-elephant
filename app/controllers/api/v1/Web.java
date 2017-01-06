@@ -48,6 +48,7 @@ import java.util.Arrays;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -84,8 +85,8 @@ public class Web extends Controller {
   private static int _numJobsNone = 0;
 
   /**
-  * Returns the json object for the dashboard summaries of jobs analzyed in last day.
-  */
+   * Returns the json object for the dashboard summaries of jobs analzyed in last day.
+   */
   public static Result restDashboardSummaries() {
 
     long now = System.currentTimeMillis();
@@ -93,27 +94,26 @@ public class Web extends Controller {
 
     //Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsAnalyzed = AppResult.find.where()
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .findRowCount();
       _numJobsCritical = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
-        .findRowCount();
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
+          .findRowCount();
       _numJobsSevere = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
-        .findRowCount();
-      _numJobsModerate = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.MODERATE.getValue())
-        .findRowCount();
-      _numJobsLow = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.LOW.getValue())
-        .findRowCount();
-      _numJobsNone = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.NONE.getValue())
-        .findRowCount();
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
+          .findRowCount();
+      _numJobsModerate = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.MODERATE.getValue())
+          .findRowCount();
+      _numJobsLow = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.LOW.getValue())
+          .findRowCount();
+      _numJobsNone = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.NONE.getValue())
+          .findRowCount();
       _lastFetch = now;
     }
 
@@ -130,7 +130,6 @@ public class Web extends Controller {
 
     return ok(new Gson().toJson(parent));
   }
-
 
   /**
    * Returns the list of AppResults for the given username limit by maxApplications
@@ -437,13 +436,12 @@ public class Web extends Controller {
 
       JsonArray applicationSeverity = new JsonArray();
       List<Severity> keys = getSortedSeverityKeys(applicationSeverityCount.keySet());
-      for (Severity key: keys) {
+      for (Severity key : keys) {
         JsonObject severityObject = new JsonObject();
         severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
         severityObject.addProperty(JsonKeys.COUNT, applicationSeverityCount.get(key));
         applicationSeverity.add(severityObject);
       }
-
 
       totalJobDelay = Utils.getTotalWaittime(jobExecIdToJobsMap.get(jobDefPair));
       totalJobRuntime = Utils.getTotalRuntime(jobExecIdToJobsMap.get(jobDefPair));
@@ -582,7 +580,7 @@ public class Web extends Controller {
 
       JsonArray jobSeverity = new JsonArray();
       List<Severity> keys = getSortedSeverityKeys(jobSeverityCount.keySet());
-      for (Severity key: keys) {
+      for (Severity key : keys) {
         JsonObject severityObject = new JsonObject();
         severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
         severityObject.addProperty(JsonKeys.COUNT, jobSeverityCount.get(key));
@@ -666,7 +664,7 @@ public class Web extends Controller {
    */
   public static Result restWorkflowFromFlowId(String flowId) {
 
-    if (flowId==null || flowId.isEmpty()) {
+    if (flowId == null || flowId.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.WORKFLOWS, new JsonObject());
       return notFound(new Gson().toJson(parent));
@@ -725,7 +723,7 @@ public class Web extends Controller {
         jobName = task.jobName;
         flowDefinitionId = task.flowDefId;
         queueName = task.queueName;
-	schedulerName = task.scheduler;
+        schedulerName = task.scheduler;
 
         if (task.startTime < jobStartTime) {
           jobStartTime = task.startTime;
@@ -751,10 +749,9 @@ public class Web extends Controller {
         jobSeverityCount.put(jobSeverity, 1L);
       }
 
-
       JsonArray taskSeverity = new JsonArray();
       List<Severity> keys = getSortedSeverityKeys(taskSeverityCount.keySet());
-      for (Severity key: keys) {
+      for (Severity key : keys) {
         JsonObject severityObject = new JsonObject();
         severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
         severityObject.addProperty(JsonKeys.COUNT, taskSeverityCount.get(key));
@@ -799,9 +796,8 @@ public class Web extends Controller {
       }
     }// job map scope ends here
 
-
     List<Severity> keys = getSortedSeverityKeys(jobSeverityCount.keySet());
-    for (Severity key: keys) {
+    for (Severity key : keys) {
       JsonObject severityObject = new JsonObject();
       severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
       severityObject.addProperty(JsonKeys.COUNT, jobSeverityCount.get(key));
@@ -924,8 +920,7 @@ public class Web extends Controller {
    */
   public static Result restJobFromJobId(String jobid) {
 
-
-    if (jobid==null || jobid.isEmpty()) {
+    if (jobid == null || jobid.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.JOBS, new JsonObject());
       return notFound(new Gson().toJson(parent));
@@ -1022,7 +1017,7 @@ public class Web extends Controller {
 
     JsonArray taskSeverity = new JsonArray();
     List<Severity> keys = getSortedSeverityKeys(taskSeverityCount.keySet());
-    for (Severity key: keys) {
+    for (Severity key : keys) {
       JsonObject severityObject = new JsonObject();
       severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
       severityObject.addProperty(JsonKeys.COUNT, taskSeverityCount.get(key));
@@ -1131,13 +1126,13 @@ public class Web extends Controller {
    */
   public static Result restApplicationFromApplicationId(String applicationid) {
 
-    if (applicationid==null || applicationid.isEmpty()) {
+    if (applicationid == null || applicationid.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.APPLICATIONS, new JsonObject());
       return notFound(new Gson().toJson(parent));
     }
 
-    if (applicationid.contains("job")) {
+    if (applicationid.startsWith("job")) {
       applicationid = applicationid.replaceAll("job", "application");
     }
 
@@ -1464,21 +1459,19 @@ public class Web extends Controller {
     return ok(new Gson().toJson(parent));
   }
 
-
   /**
    * Returns the filter parameters for the user summary
    * @return The filter parameters for the user summary
    */
-  public static Map<String,String> getFilterParamsForUserSummary() {
+  public static Map<String, String> getFilterParamsForUserSummary() {
     DynamicForm form = Form.form().bindFromRequest(request());
-    Map<String,String> filterParams = new HashMap<String,String>();
+    Map<String, String> filterParams = new HashMap<String, String>();
     filterParams.put(Application.FINISHED_TIME_BEGIN, form.get(Application.FINISHED_TIME_BEGIN));
     filterParams.put(Application.FINISHED_TIME_END, form.get(Application.FINISHED_TIME_END));
     filterParams.put(Application.STARTED_TIME_BEGIN, form.get(Application.STARTED_TIME_BEGIN));
     filterParams.put(Application.STARTED_TIME_END, form.get(Application.STARTED_TIME_END));
     return filterParams;
   }
-
 
   /**
    *  The rest interface to return the results for a particular user. When the date is not specified, it returns the result
@@ -1570,34 +1563,34 @@ public class Web extends Controller {
     boolean increasing = true;
 
     String usernameString = form.get("usernames");
-    if(usernameString == null || usernameString.isEmpty()) {
+    if (usernameString == null || usernameString.isEmpty()) {
       JsonObject parent = new JsonObject();
-      parent.add(JsonKeys.USERRESULTS, new JsonObject());
+      parent.add(JsonKeys.USER_RESULTS, new JsonObject());
       return notFound(new Gson().toJson(parent));
     }
 
     List<String> usernames = Arrays.asList(usernameString.split(","));
 
-    Map<String,String> filterParamsForUserSummary = getFilterParamsForUserSummary();
+    Map<String, String> filterParamsForUserSummary = getFilterParamsForUserSummary();
 
-    if(form.get("sortKey")!=null) {
+    if (form.get("sortKey") != null) {
       sortBy = form.get("sortKey");
     }
 
-    if(form.get("increasing")!=null) {
+    if (form.get("increasing") != null) {
       increasing = Boolean.valueOf(form.get("increasing"));
     }
 
     JsonObject userResult = new JsonObject();
     List<String> usernameQueryList = new ArrayList<String>();
-    for(int i=0;i<usernames.size();i++) {
+    for (int i = 0; i < usernames.size(); i++) {
       usernameQueryList.add("username=:user" + i);
     }
 
-    String usernameQueryString = String.join(" or ", usernameQueryList);
+    String usernameQueryString = StringUtils.join(usernameQueryList, " or ");
 
     // by default, fetch data from last week
-    String finishedTimeBegin = String.valueOf(System.currentTimeMillis() - DAY*31);
+    String finishedTimeBegin = String.valueOf(System.currentTimeMillis() - DAY * 7);
     String finishedTimeEnd = String.valueOf(System.currentTimeMillis());
 
     if (Utils.isSet(filterParamsForUserSummary.get(Application.FINISHED_TIME_BEGIN))) {
@@ -1608,18 +1601,17 @@ public class Web extends Controller {
       finishedTimeEnd = filterParamsForUserSummary.get(Application.FINISHED_TIME_END);
     }
 
-
     StringBuilder timeFilterStringBuilder = new StringBuilder();
-    if(finishedTimeBegin!=null) {
+    if (finishedTimeBegin != null) {
       timeFilterStringBuilder.append("finish_time");
       timeFilterStringBuilder.append(">=");
       timeFilterStringBuilder.append(parseTime(String.valueOf(finishedTimeBegin)));
-      if(finishedTimeEnd!=null) {
+      if (finishedTimeEnd != null) {
         timeFilterStringBuilder.append(" and ");
       }
     }
 
-    if(finishedTimeEnd!=null) {
+    if (finishedTimeEnd != null) {
       timeFilterStringBuilder.append("finish_time");
       timeFilterStringBuilder.append("<=");
       timeFilterStringBuilder.append(parseTime(String.valueOf(finishedTimeEnd)));
@@ -1627,11 +1619,11 @@ public class Web extends Controller {
 
     String timeFilterString = timeFilterStringBuilder.toString();
 
-
     String sql;
     StringBuilder sqlBuilder = new StringBuilder();
-    sqlBuilder.append("select count(id) as num_of_applications, count(distinct(job_exec_id)) as num_of_jobs, count(distinct(flow_exec_id)) as num_of_flows, sum(resource_used) as total_resource_used, sum(resource_wasted) as total_resource_wasted, sum(finish_time) - sum(start_time) as execution_time, sum(total_delay) as total_delay from yarn_app_result where");
-    if(timeFilterString!=null && !timeFilterString.isEmpty()) {
+    sqlBuilder.append(
+        "select count(id) as num_of_applications, count(distinct(job_exec_id)) as num_of_jobs, count(distinct(flow_exec_id)) as num_of_flows, sum(resource_used) as total_resource_used, sum(resource_wasted) as total_resource_wasted, sum(finish_time) - sum(start_time) as execution_time, sum(total_delay) as total_delay from yarn_app_result where");
+    if (timeFilterString != null && !timeFilterString.isEmpty()) {
       sqlBuilder.append(" ( ");
       sqlBuilder.append(usernameQueryString);
       sqlBuilder.append(" ) and ");
@@ -1645,8 +1637,8 @@ public class Web extends Controller {
     SqlQuery query = Ebean.createSqlQuery(sql);
 
     int iUserIndex = 0;
-    for(String username: usernames) {
-      query.setParameter("user"+iUserIndex,username);
+    for (String username : usernames) {
+      query.setParameter("user" + iUserIndex, username);
       iUserIndex++;
     }
 
@@ -1660,13 +1652,13 @@ public class Web extends Controller {
     userResult.addProperty(JsonKeys.RUNTIME, resultRow.getLong("execution_time"));
     userResult.addProperty(JsonKeys.WAITTIME, resultRow.getLong("total_delay"));
 
-
-    Query<AppResult> userSummaryQuery = generateUserApplicationSummaryQuery(usernames, filterParamsForUserSummary, sortBy, increasing);
+    Query<AppResult> userSummaryQuery =
+        generateUserApplicationSummaryQuery(usernames, filterParamsForUserSummary, sortBy, increasing);
 
     total = userSummaryQuery.findRowCount();
 
     List<AppResult> results = userSummaryQuery.setFirstRow(offset).setMaxRows(limit)
-            .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields()).findList();
+        .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields()).findList();
 
     end = offset + results.size();
 
@@ -1700,17 +1692,15 @@ public class Web extends Controller {
       applicationSummaryArray.add(applicationObject);
     }
 
-
     userResult.addProperty(JsonKeys.START, offset);
     userResult.addProperty(JsonKeys.END, end);
     userResult.addProperty(JsonKeys.TOTAL, total);
-    userResult.add(JsonKeys.SUMMARIES,applicationSummaryArray);
+    userResult.add(JsonKeys.SUMMARIES, applicationSummaryArray);
 
     JsonObject parent = new JsonObject();
     parent.add(JsonKeys.USER_DETAILS, userResult);
     return ok(new Gson().toJson(parent));
   }
-
 
   /**
    * Generates the query for returning the application summaries
@@ -1720,10 +1710,11 @@ public class Web extends Controller {
    * @param increasing The boolean value to sort the output based on the key desc or increasing
    * @return The Query object based on the given above parameters
    */
-  public static Query<AppResult> generateUserApplicationSummaryQuery(List<String> usernames,Map<String,String> searchParams,String sortKey,boolean increasing) {
+  public static Query<AppResult> generateUserApplicationSummaryQuery(List<String> usernames,
+      Map<String, String> searchParams, String sortKey, boolean increasing) {
     ExpressionList<AppResult> query = AppResult.find.select(AppResult.getSearchFields()).where();
     Junction<AppResult> junction = query.disjunction();
-    for(String username: usernames) {
+    for (String username : usernames) {
       junction.eq(AppResult.TABLE.USERNAME, username);
     }
     query.endJunction();
@@ -1748,13 +1739,12 @@ public class Web extends Controller {
       query.le(AppResult.TABLE.FINISH_TIME, time);
     }
 
-    if(increasing) {
+    if (increasing) {
       return query.order(getSortKey(sortKey));
     } else {
       return query.order().desc(getSortKey(sortKey));
     }
   }
-
 
   /**
    * Maps the sort key to the actual field values
@@ -1762,7 +1752,7 @@ public class Web extends Controller {
    * @return The value from the sort key
    */
   private static String getSortKey(String sortKey) {
-    if(sortKey.equals("severity")) {
+    if (sortKey.equals("severity")) {
       return AppResult.TABLE.SEVERITY;
     } else if (sortKey.equals("resourceUsed")) {
       return AppResult.TABLE.RESOURCE_USAGE;
@@ -1776,12 +1766,11 @@ public class Web extends Controller {
     return "severity";
   }
 
-
-    /**
-     * This utility method is used to sort the jsonArray based on FinishTime
-     * @param jsonArray The jsonArray to be sorted
-     * @return The sorted jsonArray based on finishtime
-     */
+  /**
+   * This utility method is used to sort the jsonArray based on FinishTime
+   * @param jsonArray The jsonArray to be sorted
+   * @return The sorted jsonArray based on finishtime
+   */
   private static JsonArray getSortedJsonArrayByFinishTime(JsonArray jsonArray) {
     JsonArray sortedJsonArray = new JsonArray();
     List<JsonObject> jsonValues = new ArrayList<JsonObject>();
@@ -1804,12 +1793,12 @@ public class Web extends Controller {
   private static List<Severity> getSortedSeverityKeys(Set<Severity> severities) {
     List<Severity> severityList = new ArrayList<Severity>();
     severityList.addAll(severities);
-      Collections.sort(severityList, new Comparator<Severity>() {
-        public int compare(Severity a, Severity b) {
-          return b.getValue() - a.getValue();
-        }
-      });
-      return severityList;
+    Collections.sort(severityList, new Comparator<Severity>() {
+      public int compare(Severity a, Severity b) {
+        return b.getValue() - a.getValue();
+      }
+    });
+    return severityList;
   }
 
   /**

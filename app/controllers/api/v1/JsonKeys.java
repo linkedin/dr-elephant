@@ -49,7 +49,7 @@ public class JsonKeys {
   public static final String LOW = "low";
   public static final String NONE = "none";
   public static final String DASHBOARD_SUMMARIES = "dashboard-summaries";
-  public static final String USERRESULTS = "user-results";
+  public static final String USER_RESULTS = "user-results";
   public static final String USER_DETAILS = "user-details";
 
   // Workflows

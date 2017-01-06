@@ -19,6 +19,10 @@ import Ember from 'ember';
 export default Ember.Route.extend({
 
   beforeModel(transition) {
+  this.finishTimeBegin = transition.queryParams.finishTimeBegin;
+  this.finishTimeEnd = transition.queryParams.finishTimeEnd;
+  this.sortKey = transition.queryParams.sortKey;
+  this.increasing = transition.queryParams.increasing;
     this.users = transition.queryParams.usernames;
     if(this.users!="" && this.users!=null) {
       this.set("usernames", transition.queryParams.usernames.split(","));
@@ -29,7 +33,13 @@ export default Ember.Route.extend({
 
   model() {
     if(this.users!=null && this.users!="") {
-      let userdetails = this.store.queryRecord('user-detail', {usernames: this.users});
+      let userdetails = this.store.queryRecord('user-detail', {
+        'usernames': this.users,
+        'finished-time-begin': this.finishTimeBegin,
+        'finished-time-end': this.finishTimeEnd,
+        'sortKey': this.sortKey,
+        'increasing': this.increasing
+      });
       return userdetails;
     } else {
       return null;

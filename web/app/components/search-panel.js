@@ -17,7 +17,7 @@
 import Ember from 'ember';
 
 const APPLICATION_TYPES = {
-    workflow: "Workflow", job: "Job", application: "Application"
+    workflow: "Workflow ", job: "Job", application: "Application"
 };
 
 export default Ember.Component.extend({
@@ -26,6 +26,7 @@ export default Ember.Component.extend({
     selectedType: APPLICATION_TYPES.workflow,
     applicationTypes: [APPLICATION_TYPES.workflow, APPLICATION_TYPES.job, APPLICATION_TYPES.application],
     selectedTypeToolTip: "Workflow execution id/url",
+    selectedTypePlaceHolder: "Workflow execution id/url",
 
     notifications: Ember.inject.service('notification-messages'),
 
@@ -36,12 +37,15 @@ export default Ember.Component.extend({
         this.get('router').transitionTo("search");
     } else {
         this.set("selectedType", selectionName);
-        if(selectionName=="Workflow") {
+        if(selectionName==APPLICATION_TYPES.workflow) {
             this.set("selectedTypeToolTip","Workflow execution url/id");
-        } else if (selectionName=="Job") {
+            this.set("selectedTypePlaceHolder","Workflow execution url/id")
+        } else if (selectionName==APPLICATION_TYPES.job) {
             this.set("selectedTypeToolTip","Job execution url/id");
-        } else if (selectionName=="Application") {
-            this.set("selectedTypeToolTip","application id of the job. e.g. application_23423423_343" );
+            this.set("selectedTypePlaceHolder","Execution id/url of scheduler job(Pig,Hive)")
+        } else if (selectionName==APPLICATION_TYPES.application) {
+            this.set("selectedTypeToolTip","Yarn application" );
+            this.set("selectedTypePlaceHolder","job_23423432_343/ application_23423432_343")
         }
     }
   },
