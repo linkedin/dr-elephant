@@ -57,10 +57,14 @@ public class NoScheduler implements Scheduler {
     workflowDepth = 0; // No sub-workflow support
 
     jobName = properties.getProperty("mapreduce.job.name");
-    jobDefId = properties.getProperty("mapreduce.workflow.name");
+    String workflowName = properties.getProperty("mapreduce.workflow.name");
+    if (workflowName == null) {
+      return;
+    }
+    jobDefId = properties.getProperty("mapreduce.job.user.name") + ":" + workflowName;
     jobExecId = properties.getProperty("mapreduce.workflow.id");    
-    flowDefId = properties.getProperty("mapreduce.workflow.name");
-    flowExecId = properties.getProperty("mapreduce.workflow.id");
+    flowDefId = jobDefId;
+    flowExecId = jobExecId;
   }
 
   @Override
