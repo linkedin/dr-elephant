@@ -232,9 +232,19 @@ public class AnalyticJob {
     ElephantFetcher fetcher = ElephantContext.instance().getFetcherForApplicationType(getAppType());
     HadoopApplicationData data = fetcher.fetchData(this);
 
+    return getAnalysis(data);
+  }
+
+  /**
+   * Analyzes given app data and returns AppResult that could be directly serialized into DB.
+   *
+   * @param data Hadoop application data to analyze.
+   * @throws Exception if the analysis process encountered a problem.
+   * @return the analysed AppResult
+   */
+  public AppResult getAnalysis(HadoopApplicationData data) throws Exception {
     JobType jobType = ElephantContext.instance().matchJobType(data);
     String jobTypeName = jobType == null ? UNKNOWN_JOB_TYPE : jobType.getName();
-
     // Run all heuristics over the fetched data
     List<HeuristicResult> analysisResults = new ArrayList<HeuristicResult>();
     if (data == null || data.isEmpty()) {
