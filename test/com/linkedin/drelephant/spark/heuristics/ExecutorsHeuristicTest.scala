@@ -119,20 +119,26 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
         details.getValue should include regex("16 min 40 sec.*16 min 40 sec.*41 min 40 sec.*50 min.*1 hr 6 min 40 sec")
       }
 
-      it("returns the distribution of input bytes among executors") {
+      it("returns the total sum of task time among executors") {
         val details = heuristicResultDetails.get(5)
+        details.getName should include("task time sum")
+        details.getValue should include regex("10000")
+      }
+
+      it("returns the distribution of input bytes among executors") {
+        val details = heuristicResultDetails.get(6)
         details.getName should include("input bytes")
         details.getValue should include regex("976.56 KB.*976.56 KB.*2.38 MB.*2.86 MB.*3.81 MB")
       }
 
       it("returns the distribution of shuffle read bytes among executors") {
-        val details = heuristicResultDetails.get(6)
+        val details = heuristicResultDetails.get(7)
         details.getName should include("shuffle read bytes")
         details.getValue should include regex("976.57 KB.*976.57 KB.*2.38 MB.*2.86 MB.*3.81 MB")
       }
 
       it("returns the distribution of shuffle write bytes among executors") {
-        val details = heuristicResultDetails.get(7)
+        val details = heuristicResultDetails.get(8)
         details.getName should include("shuffle write bytes")
         details.getValue should include regex("976.57 KB.*976.57 KB.*2.38 MB.*2.86 MB.*3.81 MB")
       }

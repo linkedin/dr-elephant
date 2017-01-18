@@ -17,7 +17,7 @@
 package com.linkedin.drelephant.spark.heuristics
 
 import com.linkedin.drelephant.spark.data.SparkRestDerivedData
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationInfo
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
 import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
@@ -25,6 +25,7 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
+import java.util.Date
 
 
 class ConfigurationHeuristicTest extends FunSpec with Matchers {
@@ -82,8 +83,14 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         details.getValue should include("default")
       }
 
-      it("returns the serializer") {
+      it("returns the application duration") {
         val details = heuristicResultDetails.get(4)
+        details.getName should include("spark.application.duration")
+        details.getValue should include("10")
+      }
+
+      it("returns the serializer") {
+        val details = heuristicResultDetails.get(5)
         details.getName should include("spark.serializer")
         details.getValue should be("org.apache.spark.serializer.KryoSerializer")
       }
@@ -186,8 +193,13 @@ object ConfigurationHeuristicTest {
     )
 
     val appId = "application_1"
+    val startDate = new Date()
+    val endDate = new Date(startDate.getTime() - 10000)
+    val applicationAttempt = new ApplicationAttemptInfo(Option("attempt1"),startDate, endDate, "sparkUser")
+    val applicationAttempts = Seq(applicationAttempt)
+
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(appId, name = "app", Seq.empty),
+      new ApplicationInfo(appId, name = "app", applicationAttempts),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = Seq.empty

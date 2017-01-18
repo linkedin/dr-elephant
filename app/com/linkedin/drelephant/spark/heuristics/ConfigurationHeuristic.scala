@@ -16,6 +16,8 @@
 
 package com.linkedin.drelephant.spark.heuristics
 
+import com.linkedin.drelephant.math.Statistics
+
 import scala.collection.JavaConverters
 import scala.util.Try
 
@@ -69,6 +71,10 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
         formatProperty(evaluator.executorCores.map(_.toString))
       ),
       new HeuristicResultDetails(
+        SPARK_APPLICATION_DURATION,
+        evaluator.applicationDuration.toString + " Seconds"
+      ),
+      new HeuristicResultDetails(
         SPARK_SERIALIZER_KEY,
         formatProperty(evaluator.serializer)
       )
@@ -95,6 +101,7 @@ object ConfigurationHeuristic {
   val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
   val SPARK_EXECUTOR_CORES_KEY = "spark.executor.cores"
   val SPARK_SERIALIZER_KEY = "spark.serializer"
+  val SPARK_APPLICATION_DURATION = "spark.application.duration"
 
   class Evaluator(configurationHeuristic: ConfigurationHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
@@ -111,6 +118,12 @@ object ConfigurationHeuristic {
 
     lazy val executorCores: Option[Int] =
       Try(getProperty(SPARK_EXECUTOR_CORES_KEY).map(_.toInt)).getOrElse(None)
+
+    lazy val applicationDuration : Long = {
+      require(data.applicationInfo.attempts.nonEmpty)
+      val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
+      (lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime) / Statistics.SECOND_IN_MS
+    }
 
     lazy val serializer: Option[String] = getProperty(SPARK_SERIALIZER_KEY)
 

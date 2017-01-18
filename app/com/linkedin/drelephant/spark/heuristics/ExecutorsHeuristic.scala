@@ -97,6 +97,10 @@ class ExecutorsHeuristic(private val heuristicConfigurationData: HeuristicConfig
         formatDistributionDuration(evaluator.taskTimeDistribution)
       ),
       new HeuristicResultDetails(
+        "Executor task time sum",
+        (evaluator.totalTaskTime / BigInt(Statistics.SECOND_IN_MS)).toString
+      ),
+      new HeuristicResultDetails(
         "Executor input bytes distribution",
         formatDistributionBytes(evaluator.inputBytesDistribution)
       ),
@@ -159,6 +163,8 @@ object ExecutorsHeuristic {
 
     lazy val taskTimeDistribution: Distribution =
       Distribution(executorSummaries.map { _.totalDuration })
+
+    lazy val totalTaskTime : Long = executorSummaries.map(_.totalDuration).sum
 
     lazy val taskTimeSeverity: Severity =
       severityOfDistribution(taskTimeDistribution, ignoreMaxMillisLessThanThreshold)

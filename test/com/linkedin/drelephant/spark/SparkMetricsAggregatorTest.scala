@@ -82,19 +82,24 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
       val result = aggregator.getResult
 
       it("calculates resources used") {
+        val totalExecutorMemoryMb = 2 * 4096
+        val applicationDurationSeconds = 8000
         val executorMemoryMb = 4096
         val totalExecutorTaskTimeSeconds = 1000 + 3000
-        result.getResourceUsed should be(executorMemoryMb * totalExecutorTaskTimeSeconds)
+        result.getResourceUsed should be(totalExecutorMemoryMb * applicationDurationSeconds)
       }
 
       it("calculates resources wasted") {
         val totalExecutorMemoryMb = 2 * 4096
         val applicationDurationSeconds = 8000
+        val resourceAllocated = totalExecutorMemoryMb * applicationDurationSeconds;
 
         val executorMemoryMb = 4096
         val totalExecutorTaskTimeSeconds = 1000 + 3000
+        val resourceUsed = executorMemoryMb * totalExecutorTaskTimeSeconds;
 
-        result.getResourceWasted should be(4096 * 4000)
+
+        result.getResourceWasted should be(resourceAllocated - resourceUsed * 1.5)
       }
 
       it("doesn't calculate total delay") {
