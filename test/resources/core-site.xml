@@ -30,6 +30,11 @@
   </property>
 
   <property>
+    <name>yarn.timeline-service.webapp.address</name>
+    <value>localhost:8188</value>
+  </property>
+
+  <property>
     <name>dfs.nameservices</name>
     <value>sample</value>
   </property>

@@ -78,6 +78,10 @@
     </params>
   -->
   <fetcher>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.TezFetcher</classname>
+  </fetcher>
+  <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
   </fetcher>
