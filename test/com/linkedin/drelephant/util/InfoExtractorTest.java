@@ -16,12 +16,16 @@
 
 package com.linkedin.drelephant.util;
 
+import com.linkedin.drelephant.analysis.ApplicationType;
+import com.linkedin.drelephant.analysis.HadoopApplicationData;
+import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
 import com.linkedin.drelephant.schedulers.AirflowScheduler;
 import com.linkedin.drelephant.schedulers.AzkabanScheduler;
 import com.linkedin.drelephant.schedulers.OozieScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
 
 import java.util.Properties;
+import models.AppResult;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,6 +35,7 @@ import org.junit.runner.RunWith;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
+import org.apache.commons.lang.StringUtils;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowJob;
 
@@ -38,7 +43,7 @@ import play.test.FakeApplication;
 import play.test.Helpers;
 
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertFalse;
 
 @RunWith(JMockit.class)
 public class InfoExtractorTest {
@@ -147,4 +152,62 @@ public class InfoExtractorTest {
     assertEquals(null, scheduler);
   }
 
+  @Test
+  public void testLoadSchedulerInfo() {
+    Properties properties = new Properties();
+    properties.put(AzkabanScheduler.AZKABAN_JOB_URL,
+                   "https://grid.example.com:9000/manager?project=project-name&flow=flow-name&job=job-name");
+    properties.put(AzkabanScheduler.AZKABAN_ATTEMPT_URL,
+                   "https://grid.example.com:9000/executor?execid=123456&job=job-name&attempt=0");
+    properties.put(AzkabanScheduler.AZKABAN_WORKFLOW_URL,
+                   "https://grid.example.com:9000/manager?project=project-name&flow=flow-name");
+    properties.put(AzkabanScheduler.AZKABAN_EXECUTION_URL,
+                   "https://grid.example.com:9000/executor?execid=123456");
+    properties.put(AzkabanScheduler.AZKABAN_JOB_NAME, "job-name");
+
+    SchedulerConfigurationData schedulerConfigurationData = new SchedulerConfigurationData("azkaban", null, null);
+
+    Scheduler scheduler = new AzkabanScheduler("id", properties, schedulerConfigurationData);
+
+    AppResult result = new AppResult();
+
+    HadoopApplicationData data =
+      new HadoopApplicationData() {
+        String appId = "application_5678";
+        Properties conf = new Properties();
+        ApplicationType applicationType = new ApplicationType("foo");
+
+        @Override
+        public String getAppId() {
+          return appId;
+        }
+
+        @Override
+        public Properties getConf() {
+          return conf;
+        }
+
+        @Override
+        public ApplicationType getApplicationType() {
+          return applicationType;
+        }
+
+        @Override
+        public boolean isEmpty() {
+          return false;
+        }
+      };
+
+    InfoExtractor.loadSchedulerInfo(result, data, scheduler);
+
+    assertEquals(result.scheduler, "azkaban");
+    assertFalse(StringUtils.isEmpty(result.getJobExecId()));
+    assertFalse(StringUtils.isEmpty(result.getJobDefId()));
+    assertFalse(StringUtils.isEmpty(result.getFlowExecId()));
+    assertFalse(StringUtils.isEmpty(result.getFlowDefId()));
+    assertFalse(StringUtils.isEmpty(result.getJobExecUrl()));
+    assertFalse(StringUtils.isEmpty(result.getJobDefUrl()));
+    assertFalse(StringUtils.isEmpty(result.getFlowExecUrl()));
+    assertFalse(StringUtils.isEmpty(result.getFlowDefUrl()));
+  }
 }

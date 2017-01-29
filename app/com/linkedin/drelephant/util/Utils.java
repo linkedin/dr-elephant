@@ -234,11 +234,12 @@ public final class Utils {
    *
    * @param field the field to br truncated
    * @param limit the truncation limit
+   * @param context additional context for logging purposes
    * @return The truncated field
    */
-  public static String truncateField(String field, int limit, String appId) {
+  public static String truncateField(String field, int limit, String context) {
     if (field != null && limit > TRUNCATE_SUFFIX.length() && field.length() > limit) {
-      logger.info("Truncating " + field + " to " + limit + " characters for " + appId);
+      logger.info("Truncating " + field + " to " + limit + " characters for " + context);
       field = field.substring(0, limit - 3) + "...";
     }
     return field;
