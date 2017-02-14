@@ -51,6 +51,9 @@ Router.map(function () {
   this.route('app');
   this.route('search');
   this.route('not-found');
+  this.route('user-details');
+  this.route('workflow-exceptions');
+  this.route('work-in-progress');
 });
 
 export default Router;

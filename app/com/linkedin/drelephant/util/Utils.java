@@ -39,7 +39,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import play.Play;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,7 +76,7 @@ public final class Utils {
   public static Document loadXMLDoc(String filePath) {
     InputStream instream = null;
     logger.info("Loading configuration file " + filePath);
-    instream = Play.application().resourceAsStream(filePath);
+    instream = ClassLoader.getSystemClassLoader().getResourceAsStream(filePath);
 
     if (instream == null) {
       logger.info("Configuation file not present in classpath. File:  " + filePath);
@@ -235,11 +234,12 @@ public final class Utils {
    *
    * @param field the field to br truncated
    * @param limit the truncation limit
+   * @param context additional context for logging purposes
    * @return The truncated field
    */
-  public static String truncateField(String field, int limit, String appId) {
+  public static String truncateField(String field, int limit, String context) {
     if (field != null && limit > TRUNCATE_SUFFIX.length() && field.length() > limit) {
-      logger.info("Truncating " + field + " to " + limit + " characters for " + appId);
+      logger.info("Truncating " + field + " to " + limit + " characters for " + context);
       field = field.substring(0, limit - 3) + "...";
     }
     return field;
@@ -414,7 +414,7 @@ public final class Utils {
     }
     return paramsMap;
   }
-   
+
   /* Returns the total resources used by the job list
    * @param resultList The job lsit
    * @return The total resources used by the job list

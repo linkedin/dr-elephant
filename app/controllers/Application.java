@@ -42,7 +42,6 @@ import java.util.TreeSet;
 import models.AppHeuristicResult;
 import models.AppResult;
 
-import org.apache.commons.collections.OrderedMap;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -79,7 +78,6 @@ import views.html.results.jobHistoryResults;
 import views.html.results.flowHistoryResults;
 import views.html.results.flowMetricsHistoryResults;
 import views.html.results.jobMetricsHistoryResults;
-import views.html.page.helpPage;
 import views.html.page.oldHelpPage;
 
 import com.google.gson.*;

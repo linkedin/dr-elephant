@@ -38,6 +38,7 @@
     "ember-cli-release": "0.2.9",
     "ember-cli-sri": "2.1.1",
     "ember-cli-uglify": "1.2.0",
+    "ember-collapsible-panel": "2.0.1",
     "ember-d3": "0.2.0",
     "ember-data": "2.7.0",
     "ember-export-application-global": "1.0.5",

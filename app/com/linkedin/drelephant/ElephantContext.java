@@ -48,7 +48,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
-import play.api.Play;
 import play.api.templates.Html;
 
 
@@ -117,7 +116,7 @@ public class ElephantContext {
     _aggregatorConfData = new AggregatorConfiguration(document.getDocumentElement()).getAggregatorsConfigurationData();
     for (AggregatorConfigurationData data : _aggregatorConfData) {
       try {
-        Class<?> aggregatorClass = Play.current().classloader().loadClass(data.getClassName());
+        Class<?> aggregatorClass = Class.forName(data.getClassName());
         Object instance = aggregatorClass.getConstructor(AggregatorConfigurationData.class).newInstance(data);
         if (!(instance instanceof HadoopMetricsAggregator)) {
           throw new IllegalArgumentException(
@@ -155,7 +154,7 @@ public class ElephantContext {
     _fetchersConfData = new FetcherConfiguration(document.getDocumentElement()).getFetchersConfigurationData();
     for (FetcherConfigurationData data : _fetchersConfData) {
       try {
-        Class<?> fetcherClass = Play.current().classloader().loadClass(data.getClassName());
+        Class<?> fetcherClass = Class.forName(data.getClassName());
         Object instance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
         if (!(instance instanceof ElephantFetcher)) {
           throw new IllegalArgumentException(
@@ -195,7 +194,7 @@ public class ElephantContext {
 
       // Load all the heuristic classes
       try {
-        Class<?> heuristicClass = Play.current().classloader().loadClass(data.getClassName());
+        Class<?> heuristicClass = Class.forName(data.getClassName());
 
         Object instance = heuristicClass.getConstructor(HeuristicConfigurationData.class).newInstance(data);
         if (!(instance instanceof Heuristic)) {
@@ -228,7 +227,7 @@ public class ElephantContext {
 
       // Load all the heuristic views
       try {
-        Class<?> viewClass = Play.current().classloader().loadClass(data.getViewName());
+        Class<?> viewClass = Class.forName(data.getViewName());
 
         Method render = viewClass.getDeclaredMethod("render");
         Html page = (Html) render.invoke(null);
