@@ -17,6 +17,12 @@
 package controllers.api.v1;
 
 import com.avaje.ebean.Query;
+import com.avaje.ebean.Junction;
+import com.avaje.ebean.ExpressionList;
+import com.avaje.ebean.SqlRow;
+import com.avaje.ebean.SqlQuery;
+import com.avaje.ebean.Ebean;
+
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -26,19 +32,31 @@ import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.JobType;
 import com.linkedin.drelephant.analysis.Severity;
+import com.linkedin.drelephant.exceptions.ExceptionFinder;
+import com.linkedin.drelephant.exceptions.HadoopException;
+import com.linkedin.drelephant.security.HadoopSecurity;
+import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import controllers.ControllerUtil;
 import controllers.IdUrlPair;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
+
+import javax.naming.AuthenticationException;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -75,8 +93,8 @@ public class Web extends Controller {
   private static int _numJobsNone = 0;
 
   /**
-  * Returns the json object for the dashboard summaries of jobs analzyed in last day.
-  */
+   * Returns the json object for the dashboard summaries of jobs analzyed in last day.
+   */
   public static Result restDashboardSummaries() {
 
     long now = System.currentTimeMillis();
@@ -84,27 +102,26 @@ public class Web extends Controller {
 
     //Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsAnalyzed = AppResult.find.where()
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .findRowCount();
       _numJobsCritical = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
-        .findRowCount();
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
+          .findRowCount();
       _numJobsSevere = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
-        .findRowCount();
-      _numJobsModerate = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.MODERATE.getValue())
-        .findRowCount();
-      _numJobsLow = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.LOW.getValue())
-        .findRowCount();
-      _numJobsNone = AppResult.find.where()
-        .gt(AppResult.TABLE.FINISH_TIME, finishDate)
-        .eq(AppResult.TABLE.SEVERITY, Severity.NONE.getValue())
-        .findRowCount();
+          .gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
+          .findRowCount();
+      _numJobsModerate = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.MODERATE.getValue())
+          .findRowCount();
+      _numJobsLow = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.LOW.getValue())
+          .findRowCount();
+      _numJobsNone = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate)
+          .eq(AppResult.TABLE.SEVERITY, Severity.NONE.getValue())
+          .findRowCount();
       _lastFetch = now;
     }
 
@@ -121,7 +138,6 @@ public class Web extends Controller {
 
     return ok(new Gson().toJson(parent));
   }
-
 
   /**
    * Returns the list of AppResults for the given username limit by maxApplications
@@ -428,13 +444,12 @@ public class Web extends Controller {
 
       JsonArray applicationSeverity = new JsonArray();
       List<Severity> keys = getSortedSeverityKeys(applicationSeverityCount.keySet());
-      for (Severity key: keys) {
+      for (Severity key : keys) {
         JsonObject severityObject = new JsonObject();
         severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
         severityObject.addProperty(JsonKeys.COUNT, applicationSeverityCount.get(key));
         applicationSeverity.add(severityObject);
       }
-
 
       totalJobDelay = Utils.getTotalWaittime(jobExecIdToJobsMap.get(jobDefPair));
       totalJobRuntime = Utils.getTotalRuntime(jobExecIdToJobsMap.get(jobDefPair));
@@ -573,7 +588,7 @@ public class Web extends Controller {
 
       JsonArray jobSeverity = new JsonArray();
       List<Severity> keys = getSortedSeverityKeys(jobSeverityCount.keySet());
-      for (Severity key: keys) {
+      for (Severity key : keys) {
         JsonObject severityObject = new JsonObject();
         severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
         severityObject.addProperty(JsonKeys.COUNT, jobSeverityCount.get(key));
@@ -657,7 +672,7 @@ public class Web extends Controller {
    */
   public static Result restWorkflowFromFlowId(String flowId) {
 
-    if (flowId==null || flowId.isEmpty()) {
+    if (flowId == null || flowId.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.WORKFLOWS, new JsonObject());
       return notFound(new Gson().toJson(parent));
@@ -716,7 +731,7 @@ public class Web extends Controller {
         jobName = task.jobName;
         flowDefinitionId = task.flowDefId;
         queueName = task.queueName;
-	schedulerName = task.scheduler;
+        schedulerName = task.scheduler;
 
         if (task.startTime < jobStartTime) {
           jobStartTime = task.startTime;
@@ -742,10 +757,9 @@ public class Web extends Controller {
         jobSeverityCount.put(jobSeverity, 1L);
       }
 
-
       JsonArray taskSeverity = new JsonArray();
       List<Severity> keys = getSortedSeverityKeys(taskSeverityCount.keySet());
-      for (Severity key: keys) {
+      for (Severity key : keys) {
         JsonObject severityObject = new JsonObject();
         severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
         severityObject.addProperty(JsonKeys.COUNT, taskSeverityCount.get(key));
@@ -790,9 +804,8 @@ public class Web extends Controller {
       }
     }// job map scope ends here
 
-
     List<Severity> keys = getSortedSeverityKeys(jobSeverityCount.keySet());
-    for (Severity key: keys) {
+    for (Severity key : keys) {
       JsonObject severityObject = new JsonObject();
       severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
       severityObject.addProperty(JsonKeys.COUNT, jobSeverityCount.get(key));
@@ -915,8 +928,7 @@ public class Web extends Controller {
    */
   public static Result restJobFromJobId(String jobid) {
 
-
-    if (jobid==null || jobid.isEmpty()) {
+    if (jobid == null || jobid.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.JOBS, new JsonObject());
       return notFound(new Gson().toJson(parent));
@@ -1013,7 +1025,7 @@ public class Web extends Controller {
 
     JsonArray taskSeverity = new JsonArray();
     List<Severity> keys = getSortedSeverityKeys(taskSeverityCount.keySet());
-    for (Severity key: keys) {
+    for (Severity key : keys) {
       JsonObject severityObject = new JsonObject();
       severityObject.addProperty(JsonKeys.SEVERITY, key.getText());
       severityObject.addProperty(JsonKeys.COUNT, taskSeverityCount.get(key));
@@ -1122,10 +1134,14 @@ public class Web extends Controller {
    */
   public static Result restApplicationFromApplicationId(String applicationid) {
 
-    if (applicationid==null || applicationid.isEmpty()) {
+    if (applicationid == null || applicationid.isEmpty()) {
       JsonObject parent = new JsonObject();
       parent.add(JsonKeys.APPLICATIONS, new JsonObject());
       return notFound(new Gson().toJson(parent));
+    }
+
+    if (applicationid.startsWith("job")) {
+      applicationid = applicationid.replaceAll("job", "application");
     }
 
     JsonObject applicationObject = new JsonObject();
@@ -1452,6 +1468,486 @@ public class Web extends Controller {
   }
 
   /**
+   * Returns the filter parameters for the user summary
+   * @return The filter parameters for the user summary
+   */
+  public static Map<String, String> getFilterParamsForUserSummary() {
+    DynamicForm form = Form.form().bindFromRequest(request());
+    Map<String, String> filterParams = new HashMap<String, String>();
+    filterParams.put(Application.FINISHED_TIME_BEGIN, form.get(Application.FINISHED_TIME_BEGIN));
+    filterParams.put(Application.FINISHED_TIME_END, form.get(Application.FINISHED_TIME_END));
+    filterParams.put(Application.STARTED_TIME_BEGIN, form.get(Application.STARTED_TIME_BEGIN));
+    filterParams.put(Application.STARTED_TIME_END, form.get(Application.STARTED_TIME_END));
+    return filterParams;
+  }
+
+  /**
+   *  The rest interface to return the results for a particular user. When the date is not specified, it returns the result
+   *  for the last seven days.
+   * @return The json object of the form:
+   * result:
+   * * {
+   *   "user-details": {
+   *     "id": "user",
+   *     "totalapplications": 3,
+   *     "totaljobs": 3,
+   *     "totalworkflows": 3,
+   *     "resourceused": 101394532,
+   *     "resourcewasted": 15999828,
+   *     "runtime": 312283,
+   *     "waittime": 46234,
+   *     "start": 0,
+   *     "end": 3,
+   *     "total": 3,
+   *     "summaries": [
+   *       {
+   *         "id": "application_12432132131",
+   *         "username": "user",
+   *         "starttime": 1477389986871,
+   *         "finishtime": 1477390004463,
+   *         "runtime": 17592,
+   *         "waittime": 0,
+   *         "resourceused": 12288,
+   *         "resourcewasted": 6360,
+   *         "severity": "Critical",
+   *         "queue": "spark_default",
+   *         "heuristicsummary": [
+   *           {
+   *             "name": "Spark Configuration Best Practice",
+   *             "severity": "None"
+   *           },
+   *           {
+   *             "name": "Spark Memory Limit",
+   *             "severity": "None"
+   *           },
+   *           {
+   *             "name": "Spark Stage Runtime",
+   *             "severity": "Low"
+   *           },
+   *           {
+   *             "name": "Spark Job Runtime",
+   *             "severity": "Low"
+   *           },
+   *           {
+   *             "name": "Spark Executor Load Balance",
+   *             "severity": "Critical"
+   *           },
+   *           {
+   *             "name": "Spark Event Log Limit",
+   *             "severity": "None"
+   *           }
+   *         ]
+   *       }
+   *     }
+   *   }
+   *
+   */
+  public static Result restGetUsersSummaryStats() {
+    DynamicForm form = Form.form().bindFromRequest(request());
+    int offset = SEARCH_DEFAULT_PAGE_OFFSET;
+    int limit = SEARCH_DEFAULT_PAGE_LIMIT;
+    int end = 0;
+    int total = 0;
+
+    if (form.get("offset") != null && form.get("offset") != "") {
+      offset = Integer.valueOf(form.get("offset"));
+    }
+
+    if (form.get("limit") != null && form.get("limit") != "") {
+      limit = Integer.valueOf(form.get("limit"));
+    }
+
+    if (offset < 0) {
+      offset = 0;
+    }
+
+    if (limit > SEARCH_APPLICATION_MAX_OFFSET) {
+      limit = SEARCH_APPLICATION_MAX_OFFSET;
+    } else if (limit <= 0) {
+      return ok(new Gson().toJson(new JsonObject()));
+    }
+
+    String sortBy = "severity";
+    boolean increasing = true;
+
+    String usernameString = form.get("usernames");
+    if (usernameString == null || usernameString.isEmpty()) {
+      JsonObject parent = new JsonObject();
+      parent.add(JsonKeys.USER_RESULTS, new JsonObject());
+      return notFound(new Gson().toJson(parent));
+    }
+
+    List<String> usernames = Arrays.asList(usernameString.split(","));
+
+    Map<String, String> filterParamsForUserSummary = getFilterParamsForUserSummary();
+
+    if (form.get("sortKey") != null) {
+      sortBy = form.get("sortKey");
+    }
+
+    if (form.get("increasing") != null) {
+      increasing = Boolean.valueOf(form.get("increasing"));
+    }
+
+    JsonObject userResult = new JsonObject();
+    List<String> usernameQueryList = new ArrayList<String>();
+    for (int i = 0; i < usernames.size(); i++) {
+      usernameQueryList.add("username=:user" + i);
+    }
+
+    String usernameQueryString = StringUtils.join(usernameQueryList, " or ");
+
+    // by default, fetch data from last week
+    String finishedTimeBegin = String.valueOf(System.currentTimeMillis() - DAY * 7); // week of data if not specified
+    String finishedTimeEnd = String.valueOf(System.currentTimeMillis());
+
+    if (Utils.isSet(filterParamsForUserSummary.get(Application.FINISHED_TIME_BEGIN))) {
+      finishedTimeBegin = filterParamsForUserSummary.get(Application.FINISHED_TIME_BEGIN);
+    }
+
+    if (Utils.isSet(filterParamsForUserSummary.get(Application.FINISHED_TIME_END))) {
+      finishedTimeEnd = filterParamsForUserSummary.get(Application.FINISHED_TIME_END);
+    }
+
+    StringBuilder timeFilterStringBuilder = new StringBuilder();
+    if (finishedTimeBegin != null) {
+      timeFilterStringBuilder.append("finish_time");
+      timeFilterStringBuilder.append(">=");
+      timeFilterStringBuilder.append(parseTime(String.valueOf(finishedTimeBegin)));
+      if (finishedTimeEnd != null) {
+        timeFilterStringBuilder.append(" and ");
+      }
+    }
+
+    if (finishedTimeEnd != null) {
+      timeFilterStringBuilder.append("finish_time");
+      timeFilterStringBuilder.append("<=");
+      timeFilterStringBuilder.append(parseTime(String.valueOf(finishedTimeEnd)));
+    }
+
+    String timeFilterString = timeFilterStringBuilder.toString();
+
+    String sql;
+    StringBuilder sqlBuilder = new StringBuilder();
+    sqlBuilder.append(
+        "select count(id) as num_of_applications, count(distinct(job_exec_id)) as num_of_jobs, count(distinct(flow_exec_id)) as num_of_flows, sum(resource_used) as total_resource_used, sum(resource_wasted) as total_resource_wasted, sum(finish_time) - sum(start_time) as execution_time, sum(total_delay) as total_delay from yarn_app_result where");
+    if (timeFilterString != null && !timeFilterString.isEmpty()) {
+      sqlBuilder.append(" ( ");
+      sqlBuilder.append(usernameQueryString);
+      sqlBuilder.append(" ) and ");
+      sqlBuilder.append(timeFilterString);
+    } else {
+      sqlBuilder.append(" ");
+      sqlBuilder.append(usernameQueryString);
+    }
+
+    sql = sqlBuilder.toString();
+    SqlQuery query = Ebean.createSqlQuery(sql);
+
+    int iUserIndex = 0;
+    for (String username : usernames) {
+      query.setParameter("user" + iUserIndex, username);
+      iUserIndex++;
+    }
+
+    SqlRow resultRow = query.findUnique();
+    userResult.addProperty(JsonKeys.ID, usernameString);
+    userResult.addProperty(JsonKeys.TOTAL_APPLICATIONS, resultRow.getLong("num_of_applications"));
+    userResult.addProperty(JsonKeys.TOTAL_JOBS, resultRow.getLong("num_of_jobs"));
+    userResult.addProperty(JsonKeys.TOTAL_WORKFLOWS, resultRow.getLong("num_of_flows"));
+    userResult.addProperty(JsonKeys.RESOURCE_USED, resultRow.getLong("total_resource_used"));
+    userResult.addProperty(JsonKeys.RESOURCE_WASTED, resultRow.getLong("total_resource_wasted"));
+    userResult.addProperty(JsonKeys.RUNTIME, resultRow.getLong("execution_time"));
+    userResult.addProperty(JsonKeys.WAITTIME, resultRow.getLong("total_delay"));
+
+    Query<AppResult> userSummaryQuery =
+        generateUserApplicationSummaryQuery(usernames, filterParamsForUserSummary, sortBy, increasing);
+
+    total = userSummaryQuery.findRowCount();
+
+    List<AppResult> results = userSummaryQuery.setFirstRow(offset).setMaxRows(limit)
+        .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields()).findList();
+
+    end = offset + results.size();
+
+    JsonArray applicationSummaryArray = new JsonArray();
+
+    for (AppResult application : results) {
+      JsonObject applicationObject = new JsonObject();
+      JsonArray heuristicsArray = new JsonArray();
+      List<AppHeuristicResult> appHeuristicResult = application.yarnAppHeuristicResults;
+
+      for (AppHeuristicResult heuristic : appHeuristicResult) {
+        JsonObject heuristicObject = new JsonObject();
+        heuristicObject.addProperty(JsonKeys.NAME, heuristic.heuristicName);
+        heuristicObject.addProperty(JsonKeys.SEVERITY, heuristic.severity.getText());
+        heuristicsArray.add(heuristicObject);
+      }
+
+      applicationObject.addProperty(JsonKeys.ID, application.id);
+
+      applicationObject.addProperty(JsonKeys.USERNAME, application.username);
+      applicationObject.addProperty(JsonKeys.START_TIME, application.startTime);
+      applicationObject.addProperty(JsonKeys.FINISH_TIME, application.finishTime);
+      applicationObject.addProperty(JsonKeys.RUNTIME, application.finishTime - application.startTime);
+      applicationObject.addProperty(JsonKeys.WAITTIME, application.totalDelay);
+      applicationObject.addProperty(JsonKeys.RESOURCE_USED, application.resourceUsed);
+      applicationObject.addProperty(JsonKeys.RESOURCE_WASTED, application.resourceWasted);
+      applicationObject.addProperty(JsonKeys.SEVERITY, application.severity.getText());
+      applicationObject.addProperty(JsonKeys.QUEUE, application.queueName);
+
+      applicationObject.add(JsonKeys.HEURISTICS_SUMMARY, heuristicsArray);
+      applicationSummaryArray.add(applicationObject);
+    }
+
+    userResult.addProperty(JsonKeys.START, offset);
+    userResult.addProperty(JsonKeys.END, end);
+    userResult.addProperty(JsonKeys.TOTAL, total);
+    userResult.add(JsonKeys.SUMMARIES, applicationSummaryArray);
+
+    JsonObject parent = new JsonObject();
+    parent.add(JsonKeys.USER_DETAILS, userResult);
+    return ok(new Gson().toJson(parent));
+  }
+
+  /**
+   * Returns the status of the exception feature.
+   * return: JsonObject corresponding to the exception status
+   * response:
+   *
+   * {
+   * "exception-statuses": {
+   * "exceptionenabled": "true",
+   * "schedulers": [
+   *    {
+   *       "name": "azkaban"
+   *    }
+   *  ],
+   *  "id": "exception-status"
+   *  }
+   * }
+   */
+  public static Result restExceptionStatuses () {
+    JsonObject parent = new JsonObject();
+    Set<String> schedulersConfigured = InfoExtractor.getSchedulersConfiguredForException();
+    JsonObject exception = new JsonObject();
+    if(schedulersConfigured.isEmpty()) {
+      exception.addProperty(JsonKeys.EXCEPTION_ENABLED, "true");
+      exception.add(JsonKeys.SCHEDULERS, new JsonArray());
+
+      exception.addProperty(JsonKeys.ID, "exception-status");
+      parent.add(JsonKeys.EXCEPTION_STATUSES, exception);
+      return ok(new Gson().toJson(parent));
+    }
+
+    JsonArray schedulers = new JsonArray();
+    for(String scheduler: schedulersConfigured) {
+      JsonObject schedulerObject = new JsonObject();
+      schedulerObject.addProperty(JsonKeys.NAME, scheduler);
+      schedulers.add(schedulerObject);
+    }
+    exception.addProperty(JsonKeys.EXCEPTION_ENABLED, "true");
+    exception.add(JsonKeys.SCHEDULERS, schedulers);
+    exception.addProperty(JsonKeys.ID, "exception-status");
+    parent.add(JsonKeys.EXCEPTION_STATUSES, exception);
+    return ok(new Gson().toJson(parent));
+  }
+
+
+
+  /**
+   * Controls Exceptions
+   * @throws URISyntaxException
+   */
+  public static Result restExceptions() throws URISyntaxException, MalformedURLException, IOException,
+                                               AuthenticationException {
+    DynamicForm form = Form.form().bindFromRequest(request());
+    String url = form.get("flow-exec-url");
+    JsonObject parent = new JsonObject();
+
+    String scheduler = form.get("scheduler");
+
+    HadoopSecurity _hadoopSeverity = HadoopSecurity.getInstance();
+
+
+    logger.info(String.format("scheduler + ", scheduler));
+    if(scheduler==null) {
+      scheduler = "azkaban";
+      logger.info(String.format("Setting scheduler ", scheduler));
+    }
+    if(!InfoExtractor.getSchedulersConfiguredForException().contains(scheduler)) {
+      logger.info("scheduler not found ");
+      parent.add("workflow-exceptions", new JsonArray());
+      return status(503,"Service is currently unavailable");
+    }
+    if (url == null || url.isEmpty()) {
+      parent.add("workflow-exceptions", new JsonArray());
+      return notFound(new Gson().toJson(parent));
+    } else {
+      ExceptionFinder expGen = new ExceptionFinder(url, scheduler);
+      HadoopException flowException = expGen.getExceptions();
+
+      JsonArray jobsArray = new JsonArray();
+
+      if (!flowException.getChildExceptions().isEmpty()) {
+        for (HadoopException jobException : flowException.getChildExceptions()) {
+          JsonObject job = new JsonObject();
+          job.addProperty(JsonKeys.NAME, jobException.getId());
+          job.addProperty(JsonKeys.TYPE, jobException.getType().toString());
+          job.addProperty(JsonKeys.ID, jobException.getId());
+
+          if (jobException.getType() == HadoopException.HadoopExceptionType.SCHEDULER) {
+            if (jobException.getLoggingEvent() != null && jobException.getLoggingEvent().getLog() != null) {
+              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(jobException.getLoggingEvent().getLog()));
+              job.addProperty(JsonKeys.STATUS, "failed");
+            } else {
+              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
+              job.addProperty(JsonKeys.STATUS, "failed");
+            }
+          }
+
+
+          if (jobException.getType() == HadoopException.HadoopExceptionType.SCRIPT) {
+            if (jobException.getLoggingEvent() != null && jobException.getLoggingEvent().getLog() != null) {
+              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(jobException.getLoggingEvent().getLog()));
+              job.addProperty(JsonKeys.STATUS, "failed");
+            } else {
+              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
+              job.addProperty(JsonKeys.STATUS, "failed");
+            }
+          }
+
+          JsonArray mrExceptionsArray = new JsonArray();
+          if (jobException.getType() == HadoopException.HadoopExceptionType.MR) {
+            for (HadoopException mrJobException : jobException.getChildExceptions()) {
+              JsonObject child = new JsonObject();
+              child.addProperty(JsonKeys.NAME, mrJobException.getId());
+              if (mrJobException.getLoggingEvent() != null && mrJobException.getLoggingEvent().getLog() != null) {
+                child.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(mrJobException.getLoggingEvent().getLog()));
+              } else {
+                child.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
+              }
+
+              JsonArray taskExceptionsArray = new JsonArray();
+              for (HadoopException mrTaskException : mrJobException.getChildExceptions()) {
+                JsonObject task = new JsonObject();
+                task.addProperty(JsonKeys.NAME, mrTaskException.getId());
+                if (mrTaskException.getLoggingEvent() != null && mrTaskException.getLoggingEvent().getLog() != null) {
+                  task.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(mrTaskException.getLoggingEvent().getLog()));
+                } else {
+                  task.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
+                }
+                taskExceptionsArray.add(task);
+              }
+              child.add(JsonKeys.TASKS, taskExceptionsArray);
+              mrExceptionsArray.add(child);
+            }
+
+            if(jobException.getChildExceptions().isEmpty()) {
+              JsonObject child = new JsonObject();
+              child.addProperty(JsonKeys.NAME,"");
+              child.add(JsonKeys.TASKS, new JsonArray());
+              child.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(jobException.getLoggingEvent().getLog()));
+              mrExceptionsArray.add(child);
+            }
+            job.add(JsonKeys.APPLICATIONS, mrExceptionsArray);
+            job.addProperty(JsonKeys.STATUS, "failed");
+          }
+          jobsArray.add(job);
+        }
+        parent.add(JsonKeys.WORKFLOW_EXCEPTIONS, jobsArray);
+        return ok(new Gson().toJson(parent));
+      }
+      parent.add(JsonKeys.WORKFLOW_EXCEPTIONS, jobsArray);
+      return ok(new Gson().toJson(parent));
+    }
+  }
+
+  /**
+   * TAkes a list of strings and appends returns a single string
+   * @param logs The logs by the scheduler
+   * @return The scheduler logs
+   */
+  private static String getSchedulerLog(List<List<String>> logs) {
+    if(logs==null || logs.isEmpty()) {
+      return "";
+    }
+    StringBuilder builder = new StringBuilder();
+    for(List<String> lines: logs) {
+      for(String line: lines) {
+        builder.append(line);
+        builder.append("\n");
+      }
+    }
+    return builder.toString();
+  }
+
+
+  /**
+   * Generates the query for returning the application summaries
+   * @param usernames The list of usernames
+   * @param searchParams Any additional parameters
+   * @param sortKey The key on which the applications should be sorted
+   * @param increasing The boolean value to sort the output based on the key desc or increasing
+   * @return The Query object based on the given above parameters
+   */
+  public static Query<AppResult> generateUserApplicationSummaryQuery(List<String> usernames,
+      Map<String, String> searchParams, String sortKey, boolean increasing) {
+    ExpressionList<AppResult> query = AppResult.find.select(AppResult.getSearchFields()).where();
+    Junction<AppResult> junction = query.disjunction();
+    for (String username : usernames) {
+      junction.eq(AppResult.TABLE.USERNAME, username);
+    }
+    query.endJunction();
+
+    String finishedTimeBegin = searchParams.get(Application.FINISHED_TIME_BEGIN);
+    if (!Utils.isSet(finishedTimeBegin)) {
+      finishedTimeBegin = String.valueOf(System.currentTimeMillis() - 7 * DAY); // week of data if not specified
+    }
+
+    long time = parseTime(finishedTimeBegin);
+    if (time > 0) {
+      query.ge(AppResult.TABLE.FINISH_TIME, time);
+    }
+
+    String finishedTimeEnd = searchParams.get(Application.FINISHED_TIME_END);
+    if (!Utils.isSet(finishedTimeEnd)) {
+      finishedTimeEnd = String.valueOf(System.currentTimeMillis());
+    }
+
+    time = parseTime(finishedTimeEnd);
+    if (time > 0) {
+      query.le(AppResult.TABLE.FINISH_TIME, time);
+    }
+
+    if (increasing) {
+      return query.order(getSortKey(sortKey));
+    } else {
+      return query.order().desc(getSortKey(sortKey));
+    }
+  }
+
+  /**
+   * Maps the sort key to the actual field values
+   * @param sortKey The sortKey
+   * @return The value from the sort key
+   */
+  private static String getSortKey(String sortKey) {
+    if (sortKey.equals("severity")) {
+      return AppResult.TABLE.SEVERITY;
+    } else if (sortKey.equals("resourceUsed")) {
+      return AppResult.TABLE.RESOURCE_USAGE;
+    } else if (sortKey.equals("resourceWasted")) {
+      return AppResult.TABLE.WASTED_RESOURCES;
+    } else if (sortKey.equals("delay")) {
+      return AppResult.TABLE.TOTAL_DELAY;
+    } else if (sortKey.equals("finish_time")) {
+      return AppResult.TABLE.FINISH_TIME;
+    }
+    return "severity";
+  }
+
+  /**
    * This utility method is used to sort the jsonArray based on FinishTime
    * @param jsonArray The jsonArray to be sorted
    * @return The sorted jsonArray based on finishtime
@@ -1478,11 +1974,27 @@ public class Web extends Controller {
   private static List<Severity> getSortedSeverityKeys(Set<Severity> severities) {
     List<Severity> severityList = new ArrayList<Severity>();
     severityList.addAll(severities);
-      Collections.sort(severityList, new Comparator<Severity>() {
-        public int compare(Severity a, Severity b) {
-          return b.getValue() - a.getValue();
-        }
-      });
-      return severityList;
+    Collections.sort(severityList, new Comparator<Severity>() {
+      public int compare(Severity a, Severity b) {
+        return b.getValue() - a.getValue();
+      }
+    });
+    return severityList;
+  }
+
+  /**
+   * Parse the string for time in long
+   *
+   * @param time The string to be parsed
+   * @return the epoch value
+   */
+  private static long parseTime(String time) {
+    long unixTime = 0;
+    try {
+      unixTime = Long.parseLong(time);
+    } catch (NumberFormatException ex) {
+      // return 0
+    }
+    return unixTime;
   }
 }

@@ -28,6 +28,14 @@
     <scheduler>
         <name>azkaban</name>
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
+        <params>
+          <!--<exception_enabled>true</exception_enabled>-->
+          <!--<exception_class>com.linkedin.drelephant.exceptions.azkaban.AzkabanWorkflowClient</exception_class>-->
+          <!--<private_key>/home/key/private_key</private_key>-->
+          <!--<userame>elephant</userame>-->
+          <!--<password></password>-->
+        </params>
+
     </scheduler>
 
     <scheduler>
@@ -56,5 +64,9 @@
         </params>
     </scheduler>
 
+    <scheduler>
+       <name>no_scheduler</name>
+       <classname>com.linkedin.drelephant.schedulers.NoScheduler</classname>
+    </scheduler>
 
 </schedulers>

@@ -28,6 +28,8 @@
 @import 'partials/loading-panel.css';
 @import 'partials/search-panel.css';
 @import 'partials/not-found.css';
+@import 'partials/user-detail.css';
+@import 'partials/user-tags.css';
 
 .list-group-item {
   border-radius: 0 !important;
@@ -174,3 +176,27 @@
 }
 
 
+.cp-Panel {
+  /*border: 1px solid #e9e9e9;*/
+  border: 1px solid rgba(70, 167, 211, 0.34);
+}
+.cp-Panel-toggle {
+  display: block;
+  padding: 1em;
+
+}
+.cp-Panel-toggle:link {
+  text-decoration: none;
+}
+.cp-Panel-toggle:hover {
+  background-color: #46A7D3;
+  color: white;
+  /*border: 1px solid #46A7D3;*/
+}
+.cp-Panel-body-inner {
+  padding: 1em;
+}
+
+.workflow-panel-cp {
+  margin: 10px 10px 10px 10px;
+}

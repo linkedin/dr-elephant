@@ -1,0 +1,117 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+<div class="nav-extension"></div>
+
+<div class="container" role="main">
+
+  <div class=" user-detail-general box shadow user-top">
+
+    {{user-tags usernamesArray=usernamesArray  deleteTab=(action "deleteTab") addTab=(action "addTab")}}
+
+    <form id="search-form" {{action 'search' on="submit"}}>
+      <div class="date-filter">
+        <div class="date-block">
+          <label>Finish time ( from )</label>
+          {{bootstrap-datepicker  value=finishTimeBeginValue utc=true class="form-control" placeholder="From: mm/dd/yyyy" autoclose=true}}
+        </div>
+        <div class="date-block">
+          <label>Finish time ( To )</label>
+          {{bootstrap-datepicker  value=finishTimeEndValue utc=true class="form-control" placeholder="To: mm/dd/yyyy" autoclose=true}}
+        </div>
+
+        <div class="date-block">
+          <label>Sort</label>
+          <label>( increasing </label>
+          {{input type="checkbox" name="isIncreasing" checked=increasing}}
+          <label>)</label>
+          <select class="form-control" id="form-job-type" name="job-type"
+                  onChange={{action 'selectSortKey' value="target.value"}}>
+            <option value="severity">Severity</option>
+            <option value="finish_time">Finished time</option>
+            <option value="resourceUsed">Resource used</option>
+            <option value="resourceWasted">Resource wasted</option>
+            <option value="delay">Wait time</option>
+          </select>
+        </div>
+        <div class="date-block">
+          <label>Filter </label><br/>
+          <button class="btn btn-default" id="submit-button" action="search"><span
+              class="glyphicon glyphicon-search"></span></button>
+        </div>
+      </div>
+    </form>
+
+  </div>
+
+  {{#if loading}}
+    {{loading-panel message="searching..."}}
+  {{else}}
+    {{#if showUserDetails}}
+      <div class="wrapper-for-details">
+        <div class="application-count-block shadow">
+          <div class="application-count">{{getResourceInGbHoursValue model.resourceused}}</div>
+          <div class="application-type application-normal">Resources Used (GB Hours)</div>
+        </div>
+
+        <div class="application-count-block shadow">
+          <div
+              class="application-count application-critical">{{getResourceInGbHoursValue model.resourcewasted}}</div>
+          <div class="application-type application-critical">Resources wasted (GB Hours)</div>
+        </div>
+
+        <div class="application-count-block shadow">
+          <div class="application-count">{{getDurationBreakdown model.runtime}}</div>
+          <div class="application-type application-normal">Runtime (HH:MM:SS)</div>
+        </div>
+
+        <div class="application-count-block shadow">
+          <div class="application-count application-critical">{{getDurationBreakdown model.waittime}}</div>
+          <div class="application-type application-critical">Total delay (HH:MM:SS)</div>
+        </div>
+
+        <div class="application-count-block shadow ">
+          <div class="application-count application-count-workflow">{{model.totalworkflows}}</div>
+          <div class="application-type application-count-workflow">Workflows</div>
+        </div>
+
+        <div class="application-count-block shadow">
+          <div class="application-count application-count-job">{{model.totaljobs}}</div>
+          <div class="application-type application-count-job">Jobs</div>
+        </div>
+
+        <div class="application-count-block shadow">
+          <div class="application-count application-count-application">{{model.totalapplications}}</div>
+          <div class="application-type application-count-application">Applications</div>
+        </div>
+      </div>
+
+      <div class="shadow summary-list-container">
+        <div class="summary-list-header">Applications</div>
+        {{application-list applications=model.summaries}}
+      </div>
+
+    {{/if}}
+
+    {{#if shouldShowPaging}}
+      {{paging-panel paging=paging loadPage=(action 'loadPage')}}
+    {{/if}}
+
+  {{/if}}
+</div>
+

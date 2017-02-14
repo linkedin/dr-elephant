@@ -94,7 +94,7 @@ public class ElephantRunner implements Runnable {
   public void run() {
     logger.info("Dr.elephant has started");
     try {
-      _hadoopSecurity = new HadoopSecurity();
+      _hadoopSecurity = HadoopSecurity.getInstance();
       _hadoopSecurity.doAs(new PrivilegedAction<Void>() {
         @Override
         public Void run() {

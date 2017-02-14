@@ -18,5 +18,5 @@ import Ember from 'ember';
 
 export default Ember.Controller.extend({
   queryParams: ['applicationid'],
-  applicationid: null,
+  applicationid: null
 });

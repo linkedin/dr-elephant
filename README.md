@@ -9,17 +9,27 @@
 
 ## Documentation
 
-For more information on Dr. Elephant, [see the wiki](https://github.com/linkedin/dr-elephant/wiki).
+For more information on Dr. Elephant, check the wiki pages [here](https://github.com/linkedin/dr-elephant/wiki).
 
-User guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/User-Guide)
+For quick setup instructions: [Click here](https://github.com/linkedin/dr-elephant/wiki/Quick-Setup-Instructions)
 
 Developer guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/Developer-Guide)
 
 Administrator guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/Administrator-Guide)
 
-Google groups mailing list: [Click here](https://groups.google.com/forum/#!forum/dr-elephant-users)
+User guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/User-Guide)
 
 Engineering Blog: [Click here](https://engineering.linkedin.com/blog/2016/04/dr-elephant-open-source-self-serve-performance-tuning-hadoop-spark)
+
+## Mailing-list & Github Issues
+
+Google groups mailing list: [Click here](https://groups.google.com/forum/#!forum/dr-elephant-users)
+
+Github issues: [click here](https://github.com/linkedin/dr-elephant/issues)
+
+## How to Contribute?
+
+Check this [link](https://github.com/linkedin/dr-elephant/wiki/How-to-Contribute%3F).
 
 ## License
 

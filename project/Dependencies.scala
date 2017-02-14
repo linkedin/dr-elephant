@@ -50,13 +50,13 @@ object Dependencies {
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-    )
+      )
   } else {
     "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-    )
+      )
   }
 
   // Dependency coordinates
@@ -77,7 +77,7 @@ object Dependencies {
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.apache.oozie" % "oozie-client" % oozieClientVersion excludeAll(
       ExclusionRule(organization = "org.apache.hadoop")
-    ),
+      ),
     "org.glassfish.jersey.core" % "jersey-client" % jerseyVersion,
     "org.glassfish.jersey.core" % "jersey-common" % jerseyVersion,
     "org.glassfish.jersey.media" % "jersey-media-json-jackson" % jerseyVersion % Test,
@@ -90,7 +90,9 @@ object Dependencies {
     "org.mockito" % "mockito-core" % "1.10.19" exclude ("org.hamcrest", "hamcrest-core"),
     "org.jmockit" % "jmockit" % "1.23" % Test,
     "org.scala-lang.modules" %% "scala-async" % "0.9.5",
+    "org.apache.httpcomponents" % "httpclient" % "4.5.2",
     "org.scalatest" %% "scalatest" % "3.0.0" % Test
+
   ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
