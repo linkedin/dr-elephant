@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -106,19 +107,60 @@ public class InfoExtractor {
    * @param data The Hadoop application data
    */
   public static void loadInfo(AppResult result, HadoopApplicationData data) {
-    Properties properties = data.getConf();
+    Properties properties = new Properties();
+    if( data instanceof MapReduceApplicationData) {
+      properties = retrieveMapreduceProperties((MapReduceApplicationData) data);
+    } else if ( data instanceof SparkApplicationData) {
+      properties = retrieveSparkProperties((SparkApplicationData) data);
+    }
     Scheduler scheduler = getSchedulerInstance(data.getAppId(), properties);
 
     if (scheduler == null) {
+      logger.info("No Scheduler found for appid: " + data.getAppId());
       loadNoSchedulerInfo(result);
     } else if (StringUtils.isEmpty(scheduler.getJobDefId()) || StringUtils.isEmpty(scheduler.getJobExecId())
                || StringUtils.isEmpty(scheduler.getFlowDefId()) || StringUtils.isEmpty(scheduler.getFlowExecId())) {
       logger.warn("This job doesn't have the correct " + scheduler.getSchedulerName() + " integration support. I"
                   + " will treat this as an adhoc job");
+      logger.info("No Flow/job info found for appid: " + data.getAppId());
       loadNoSchedulerInfo(result);
     } else {
       loadSchedulerInfo(result, data, scheduler);
     }
+  }
+
+  /**
+    * Retrieve the spark properties from SPARK_EXTRA_JAVA_OPTIONS
+    *
+    * @param appData the Spark Application Data
+    * @return The retrieved Spark properties
+    */
+  public static Properties retrieveSparkProperties(SparkApplicationData appData) {
+    String prop = appData.appConfigurationProperties().get(SPARK_EXTRA_JAVA_OPTIONS).get();
+    Properties properties = new Properties();
+    if (prop != null) {
+      try {
+        Map<String, String> javaOptions = Utils.parseJavaOptions(prop);
+        for (String key : javaOptions.keySet()) {
+          properties.setProperty(key, unescapeString(javaOptions.get(key)));
+        }
+      } catch (IllegalArgumentException e) {
+        logger.error("Encountered error while parsing java options into urls: " + e.getMessage());
+      }
+    } else {
+      logger.error("Unable to retrieve the scheduler info for application [" +
+          appData.appId() + "]. It does not contain [" + SPARK_EXTRA_JAVA_OPTIONS + "] property in its spark properties.");
+    }
+    return properties;
+  }
+
+  /**
+   * Retrieve the mapreduce application properties
+   * @param appData the mapReduce Application Data
+   * @return the retrieve mapreduce properties
+   */
+  public static Properties retrieveMapreduceProperties(MapReduceApplicationData appData) {
+    return appData.getConf();
   }
 
   /**

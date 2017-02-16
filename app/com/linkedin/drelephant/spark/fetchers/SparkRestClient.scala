@@ -24,7 +24,7 @@ import scala.async.Async
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.linkedin.drelephant.spark.data.SparkRestDerivedData
@@ -92,7 +92,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(appTarget, SparkRestObjectMapper.readValue[ApplicationInfo])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading ${appTarget.getUri}", e)
+        logger.error(s"error reading applicationInfo ${appTarget.getUri}", e)
         throw e
       }
     }
@@ -104,7 +104,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[JobData]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading ${target.getUri}", e)
+        logger.error(s"error reading jobData ${target.getUri}", e)
         throw e
       }
     }
@@ -116,7 +116,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[StageData]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading ${target.getUri}", e)
+        logger.error(s"error reading stageData ${target.getUri}", e)
         throw e
       }
     }
@@ -128,7 +128,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummary]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading ${target.getUri}", e)
+        logger.error(s"error reading executorSummary ${target.getUri}", e)
         throw e
       }
     }
@@ -150,6 +150,7 @@ object SparkRestClient {
     val objectMapper = new ObjectMapper() with ScalaObjectMapper
     objectMapper.setDateFormat(dateFormat)
     objectMapper.registerModule(DefaultScalaModule)
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     objectMapper
   }
 
