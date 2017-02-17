@@ -18,7 +18,13 @@ package com.linkedin.drelephant.mapreduce.fetchers;
 
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
+import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.TaskID;
+import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.jobhistory.JobHistoryParser;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,6 +39,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class MapReduceFSFetcherHadoop2Test {
 
@@ -140,6 +148,66 @@ public class MapReduceFSFetcherHadoop2Test {
       Assert.assertEquals("Error history directory", expected, fetcher.getHistoryDir(job));
     } catch (IOException e) {
       Assert.assertNull("Failed to initialize FileSystem", e);
+    }
+  }
+
+  @Test
+  public void testGetTaskData() {
+    FetcherConfiguration fetcherConf = new FetcherConfiguration(document9.getDocumentElement());
+
+    try {
+      MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(
+              fetcherConf.getFetchersConfigurationData().get(0));
+      String jobId = "job_14000_001";
+      List<JobHistoryParser.TaskInfo> infoList = new ArrayList<JobHistoryParser.TaskInfo>();
+      infoList.add(new MockTaskInfo(1, true));
+      infoList.add(new MockTaskInfo(2, false));
+
+      MapReduceTaskData[] taskList = fetcher.getTaskData(jobId, infoList);
+      Assert.assertNotNull("taskList should not be null.", taskList);
+      for (MapReduceTaskData task : taskList) {
+        Assert.assertNotNull("Null pointer in taskList.", task);
+      }
+      Assert.assertEquals("Should have only one succeeded task.", 1, taskList.length);
+    } catch (IOException e) {
+      Assert.assertNull("Failed to initialize FileSystem.", e);
+    }
+  }
+
+  class MockTaskInfo extends JobHistoryParser.TaskInfo {
+    TaskID taskId;
+    TaskType taskType;
+    boolean succeeded;
+    Counters counters;
+    long startTime, finishTime;
+    TaskAttemptID failedDueToAttemptId;
+    TaskAttemptID successfulAttemptId;
+    Map<TaskAttemptID, JobHistoryParser.TaskAttemptInfo> attemptsMap;
+
+    public MockTaskInfo(int id, boolean succeeded) {
+      this.taskId = new TaskID("job1", 1, TaskType.MAP, id);
+      this.taskType = TaskType.MAP;
+      this.succeeded = succeeded;
+      this.counters = new Counters();
+      this.finishTime = System.currentTimeMillis();
+      this.startTime = finishTime - 10000;
+      this.failedDueToAttemptId = new TaskAttemptID(taskId, 0);
+      this.successfulAttemptId = new TaskAttemptID(taskId, 1);
+      this.attemptsMap = new HashMap<TaskAttemptID, JobHistoryParser.TaskAttemptInfo>();
+      this.attemptsMap.put(failedDueToAttemptId, new JobHistoryParser.TaskAttemptInfo());
+      this.attemptsMap.put(successfulAttemptId, new JobHistoryParser.TaskAttemptInfo());
+    }
+
+    public TaskID getTaskId() { return taskId;  }
+    public long getStartTime() { return startTime; }
+    public long getFinishTime() { return finishTime; }
+    public Counters getCounters() { return counters; }
+    public TaskType getTaskType() { return taskType; }
+    public String getTaskStatus() { return succeeded ? "SUCCEEDED" : "FAILED";  }
+    public TaskAttemptID getSuccessfulAttemptId() { return successfulAttemptId;  }
+    public TaskAttemptID getFailedDueToAttemptId() {  return failedDueToAttemptId;  }
+    public Map<TaskAttemptID, JobHistoryParser.TaskAttemptInfo> getAllTaskAttempts() {
+      return attemptsMap;
     }
   }
 }

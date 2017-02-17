@@ -21,6 +21,7 @@ package com.linkedin.drelephant.mapreduce.data;
  * This class manages the MapReduce Tasks
  */
 public class MapReduceTaskData {
+
   private MapReduceCounterData _counterHolder;
   private String _taskId;
   // The successful attempt id
@@ -30,39 +31,22 @@ public class MapReduceTaskData {
   private long _sortTimeMs = 0;
   private long _startTimeMs = 0;
   private long _finishTimeMs = 0;
-  private boolean _sampled = false;
-
-  public MapReduceTaskData(MapReduceCounterData counterHolder, long[] time) {
-    this._counterHolder = counterHolder;
-    this._totalTimeMs = time[0];
-    this._shuffleTimeMs = time[1];
-    this._sortTimeMs = time[2];
-    this._startTimeMs = time[3];
-    this._finishTimeMs = time[4];
-    this._sampled = true;
-  }
-
-  public MapReduceTaskData(MapReduceCounterData counterHolder) {
-    this._counterHolder = counterHolder;
-  }
+  // This flag will only be true when successfully setting time and counter values.
+  private boolean _isTimeAndCounterDataPresent = false;
 
   public MapReduceTaskData(String taskId, String taskAttemptId) {
     this._taskId = taskId;
     this._attemptId = taskAttemptId;
   }
 
-  public void setCounter(MapReduceCounterData counterHolder) {
-    this._counterHolder = counterHolder;
-    this._sampled = true;
-  }
-
-  public void setTime(long[] time) {
+  public void setTimeAndCounter(long[] time, MapReduceCounterData counterHolder) {
     this._totalTimeMs = time[0];
     this._shuffleTimeMs = time[1];
     this._sortTimeMs = time[2];
     this._startTimeMs = time[3];
     this._finishTimeMs = time[4];
-    this._sampled = true;
+    this._counterHolder = counterHolder;
+    this._isTimeAndCounterDataPresent = true;
   }
 
   public MapReduceCounterData getCounters() {
@@ -93,8 +77,8 @@ public class MapReduceTaskData {
     return _finishTimeMs;
   }
 
-  public boolean isSampled() {
-    return _sampled;
+  public boolean isTimeAndCounterDataPresent() {
+    return _isTimeAndCounterDataPresent;
   }
 
   public String getTaskId() {

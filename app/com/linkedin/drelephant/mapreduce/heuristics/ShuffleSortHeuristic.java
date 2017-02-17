@@ -94,7 +94,7 @@ public class ShuffleSortHeuristic implements Heuristic<MapReduceApplicationData>
     List<Long> sortTimeMs = new ArrayList<Long>();
 
     for (MapReduceTaskData task : tasks) {
-      if (task.isSampled()) {
+      if (task.isTimeAndCounterDataPresent()) {
         execTimeMs.add(task.getCodeExecutionTimeMs());
         shuffleTimeMs.add(task.getShuffleTimeMs());
         sortTimeMs.add(task.getSortTimeMs());

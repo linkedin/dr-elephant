@@ -335,8 +335,7 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
         URL taskAttemptURL = getTaskAttemptURL(jobId, data.getTaskId(), data.getAttemptId());
         long[] taskExecTime = getTaskExecTime(taskAttemptURL);
 
-        data.setCounter(taskCounter);
-        data.setTime(taskExecTime);
+        data.setTimeAndCounter(taskExecTime, taskCounter);
       }
     }
 

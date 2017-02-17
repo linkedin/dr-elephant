@@ -75,10 +75,12 @@ public class JobQueueLimitHeuristicTest extends TestCase {
     jobConf.put("mapred.job.queue.name", queueName);
     int i = 0;
     for (; i < 2 * NUM_TASKS / 3; i++) {
-      mappers[i] = new MapReduceTaskData(dummyCounter, new long[] { runtimeMs, 0, 0 ,0, 0 });
+      mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0, 0, 0 }, dummyCounter);
     }
     for (i = 0; i < NUM_TASKS / 3; i++) {
-      reducers[i] = new MapReduceTaskData(dummyCounter, new long[] { runtimeMs, 0, 0 ,0, 0 });
+      reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      reducers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0, 0, 0 }, dummyCounter);
     }
     MapReduceApplicationData data =
         new MapReduceApplicationData().setCounters(dummyCounter).setReducerData(reducers).setMapperData(mappers)

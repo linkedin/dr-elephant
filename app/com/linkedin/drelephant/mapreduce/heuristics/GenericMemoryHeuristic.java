@@ -149,7 +149,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
     long taskPMin = Long.MAX_VALUE;
     long taskPMax = 0;
     for (MapReduceTaskData task : tasks) {
-      if (task.isSampled()) {
+      if (task.isTimeAndCounterDataPresent()) {
         runtimesMs.add(task.getTotalRunTimeMs());
         long taskPMem = task.getCounters().get(MapReduceCounterData.CounterName.PHYSICAL_MEMORY_BYTES);
         long taskVMem = task.getCounters().get(MapReduceCounterData.CounterName.VIRTUAL_MEMORY_BYTES);

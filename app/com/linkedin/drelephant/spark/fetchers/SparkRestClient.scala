@@ -68,22 +68,17 @@ class SparkRestClient(sparkConf: SparkConf) {
 
     // Limit scope of async.
     async {
-      val lastAttemptId = applicationInfo.attempts.maxBy { _.startTime }.attemptId
-      lastAttemptId match {
-        case Some(attemptId) => {
-          val attemptTarget = appTarget.path(attemptId)
-          val futureJobDatas = async { getJobDatas(attemptTarget) }
-          val futureStageDatas = async { getStageDatas(attemptTarget) }
-          val futureExecutorSummaries = async { getExecutorSummaries(attemptTarget) }
-          SparkRestDerivedData(
-            applicationInfo,
-            await(futureJobDatas),
-            await(futureStageDatas),
-            await(futureExecutorSummaries)
-          )
-        }
-        case None => throw new IllegalArgumentException("Spark REST API has no attempt information")
-      }
+      val lastAttemptId = applicationInfo.attempts.maxBy {_.startTime}.attemptId
+      val attemptTarget = lastAttemptId.map(appTarget.path).getOrElse(appTarget)
+      val futureJobDatas = async { getJobDatas(attemptTarget) }
+      val futureStageDatas = async { getStageDatas(attemptTarget) }
+      val futureExecutorSummaries = async { getExecutorSummaries(attemptTarget) }
+      SparkRestDerivedData(
+        applicationInfo,
+        await(futureJobDatas),
+        await(futureStageDatas),
+        await(futureExecutorSummaries)
+      )
     }
   }
 

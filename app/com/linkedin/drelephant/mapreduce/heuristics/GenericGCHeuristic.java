@@ -96,7 +96,7 @@ public abstract class GenericGCHeuristic implements Heuristic<MapReduceApplicati
     List<Long> runtimesMs = new ArrayList<Long>();
 
     for (MapReduceTaskData task : tasks) {
-      if (task.isSampled()) {
+      if (task.isTimeAndCounterDataPresent()) {
         runtimesMs.add(task.getTotalRunTimeMs());
         gcMs.add(task.getCounters().get(MapReduceCounterData.CounterName.GC_MILLISECONDS));
         cpuMs.add(task.getCounters().get(MapReduceCounterData.CounterName.CPU_MILLISECONDS));

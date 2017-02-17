@@ -292,28 +292,28 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     return time;
   }
 
-  private MapReduceTaskData[] getTaskData(String jobId, List<JobHistoryParser.TaskInfo> infoList) {
+  protected MapReduceTaskData[] getTaskData(String jobId, List<JobHistoryParser.TaskInfo> infoList) {
     int sampleSize = sampleAndGetSize(jobId, infoList);
 
-    MapReduceTaskData[] taskList = new MapReduceTaskData[sampleSize];
+    List<MapReduceTaskData> taskList = new ArrayList<MapReduceTaskData>();
     for (int i = 0; i < sampleSize; i++) {
       JobHistoryParser.TaskInfo tInfo = infoList.get(i);
       if (!"SUCCEEDED".equals(tInfo.getTaskStatus())) {
-        System.out.println("This is a failed task: " + tInfo.getTaskId().toString());
+        logger.info(String.format("Skipped a failed task of %s: %s", jobId, tInfo.getTaskId().toString()));
         continue;
       }
 
       String taskId = tInfo.getTaskId().toString();
       TaskAttemptID attemptId = tInfo.getSuccessfulAttemptId();
-      taskList[i] = new MapReduceTaskData(taskId, attemptId.toString());
+      MapReduceTaskData taskData = new MapReduceTaskData(taskId, attemptId.toString());
 
       MapReduceCounterData taskCounterData = getCounterData(tInfo.getCounters());
       long[] taskExecTime = getTaskExecTime(tInfo.getAllTaskAttempts().get(attemptId));
 
-      taskList[i].setCounter(taskCounterData);
-      taskList[i].setTime(taskExecTime);
+      taskData.setTimeAndCounter(taskExecTime, taskCounterData);
+      taskList.add(taskData);
     }
-    return taskList;
+    return taskList.toArray(new MapReduceTaskData[taskList.size()]);
   }
 
   private class DataFiles {

@@ -89,7 +89,8 @@ public class MapperSpeedHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
-      mappers[i] = new MapReduceTaskData(counter, new long[] { runtimeMs, 0, 0 ,0, 0});
+      mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0 ,0, 0}, counter);
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);

@@ -90,7 +90,7 @@ public class MapperSpillHeuristic implements Heuristic<MapReduceApplicationData>
 
     for (MapReduceTaskData task : tasks) {
 
-      if (task.isSampled()) {
+      if (task.isTimeAndCounterDataPresent()) {
         totalSpills += task.getCounters().get(MapReduceCounterData.CounterName.SPILLED_RECORDS);
         totalOutputRecords += task.getCounters().get(MapReduceCounterData.CounterName.MAP_OUTPUT_RECORDS);
       }

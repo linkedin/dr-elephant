@@ -80,7 +80,8 @@ public class MapperMemoryHeuristicTest extends TestCase {
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
-      mappers[i] = new MapReduceTaskData(counter, new long[5]);
+      mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTimeAndCounter(new long[5], counter);
     }
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);

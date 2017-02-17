@@ -113,7 +113,7 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<MapReduceApp
     List<Long> inputBytes = new ArrayList<Long>();
 
     for (int i = 0; i < tasks.length; i++) {
-      if (tasks[i].isSampled()) {
+      if (tasks[i].isTimeAndCounterDataPresent()) {
         inputBytes.add(tasks[i].getCounters().get(_counterName));
       }
     }

@@ -75,7 +75,8 @@ public class AnalyticJobTest {
       for (int i = 1; i <= mappers.length; i++) {
         MapReduceCounterData taskCounter = new MapReduceCounterData();
         setCounterData(taskCounter, FILENAME_MAPPERTASK.replaceFirst("\\$", Integer.toString(i)));
-        mappers[i - 1] = new MapReduceTaskData(taskCounter, mapperTasksTime[i - 1]);
+        mappers[i - 1 ] = new MapReduceTaskData("task-id-"+(i-1), "task-attempt-id-"+(i-1));
+        mappers[i - 1].setTimeAndCounter(mapperTasksTime[i - 1], taskCounter);
       }
 
       // Setup reducer data
@@ -84,7 +85,8 @@ public class AnalyticJobTest {
       for (int i = 1; i <= reducers.length; i++) {
         MapReduceCounterData taskCounter = new MapReduceCounterData();
         setCounterData(taskCounter, FILENAME_REDUCERTASK.replaceFirst("\\$", Integer.toString(i)));
-        reducers[i - 1] = new MapReduceTaskData(taskCounter, reducerTasksTime[i - 1]);
+        reducers[i - 1] = new MapReduceTaskData("task-id-"+(i-1), "task-attempt-id-"+(i-1));
+        reducers[i - 1].setTimeAndCounter(reducerTasksTime[i - 1], taskCounter);
       }
 
       // Setup job configuration data
