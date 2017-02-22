@@ -136,7 +136,7 @@ public class InfoExtractor {
     * @return The retrieved Spark properties
     */
   public static Properties retrieveSparkProperties(SparkApplicationData appData) {
-    String prop = appData.appConfigurationProperties().get(SPARK_EXTRA_JAVA_OPTIONS).get();
+    String prop = appData.appConfigurationProperties().get(SPARK_EXTRA_JAVA_OPTIONS).getOrElse(null);
     Properties properties = new Properties();
     if (prop != null) {
       try {

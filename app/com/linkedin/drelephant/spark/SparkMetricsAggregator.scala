@@ -53,31 +53,31 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     val applicationDurationMillis = applicationDurationMillisOf(data)
     val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
-    val resourcesAllocatedMBSeconds =
-      aggregateResourcesAllocatedMBSeconds(executorInstances, executorMemoryBytes, applicationDurationMillis)
-    val resourcesUsedMBSeconds = aggregateResourcesUsedMBSeconds(executorMemoryBytes, totalExecutorTaskTimeMillis)
+    val resourcesAllocatedForUse =
+      aggregateresourcesAllocatedForUse(executorInstances, executorMemoryBytes, applicationDurationMillis)
+    val resourcesActuallyUsed = aggregateresourcesActuallyUsed(executorMemoryBytes, totalExecutorTaskTimeMillis)
 
-    val resourcesUsedWithBuffer = resourcesUsedMBSeconds.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
-    val resourcesWastedMBSeconds =  (resourcesUsedWithBuffer < resourcesAllocatedMBSeconds.doubleValue()) match {
-      case true => resourcesAllocatedMBSeconds.doubleValue() - resourcesUsedWithBuffer
+    val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
+    val resourcesWastedMBSeconds =  (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
+      case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
       case false => 0.0
     }
     //allocated is the total used resource from the cluster.
-    if (resourcesAllocatedMBSeconds.isValidLong) {
-      hadoopAggregatedData.setResourceUsed(resourcesAllocatedMBSeconds.toLong)
+    if (resourcesAllocatedForUse.isValidLong) {
+      hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
     } else {
-      logger.info(s"resourcesAllocatedMBSeconds exceeds Long.MaxValue: ${resourcesAllocatedMBSeconds  }")
+      logger.info(s"resourcesAllocatedForUse exceeds Long.MaxValue: ${resourcesAllocatedForUse  }")
     }
 
     hadoopAggregatedData.setResourceWasted(resourcesWastedMBSeconds.toLong)
   }
 
-  private def aggregateResourcesUsedMBSeconds(executorMemoryBytes: Long, totalExecutorTaskTimeMillis: BigInt): BigInt = {
+  private def aggregateresourcesActuallyUsed(executorMemoryBytes: Long, totalExecutorTaskTimeMillis: BigInt): BigInt = {
     val bytesMillis = BigInt(executorMemoryBytes) * totalExecutorTaskTimeMillis
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
 
-  private def aggregateResourcesAllocatedMBSeconds(
+  private def aggregateresourcesAllocatedForUse(
     executorInstances: Int,
     executorMemoryBytes: Long,
     applicationDurationMillis: Long

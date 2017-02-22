@@ -98,7 +98,7 @@ class ExecutorsHeuristic(private val heuristicConfigurationData: HeuristicConfig
       ),
       new HeuristicResultDetails(
         "Executor task time sum",
-        (evaluator.totalTaskTime / BigInt(Statistics.SECOND_IN_MS)).toString
+        (evaluator.totalTaskTime / Statistics.SECOND_IN_MS).toString
       ),
       new HeuristicResultDetails(
         "Executor input bytes distribution",

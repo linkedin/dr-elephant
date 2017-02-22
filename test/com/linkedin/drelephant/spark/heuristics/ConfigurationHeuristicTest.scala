@@ -194,7 +194,7 @@ object ConfigurationHeuristicTest {
 
     val appId = "application_1"
     val startDate = new Date()
-    val endDate = new Date(startDate.getTime() - 10000)
+    val endDate = new Date(startDate.getTime() + 10000)
     val applicationAttempt = new ApplicationAttemptInfo(Option("attempt1"),startDate, endDate, "sparkUser")
     val applicationAttempts = Seq(applicationAttempt)
 
