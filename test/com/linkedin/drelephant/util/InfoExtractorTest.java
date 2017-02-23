@@ -58,6 +58,7 @@ import scala.collection.immutable.Vector;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -282,5 +283,27 @@ public class InfoExtractorTest {
     assertTrue(result.jobExecId.equals(JOB_EXEC_URL));
     assertTrue(result.flowDefId.equals(FLOW_DEF_URL));
     assertTrue(result.flowExecId.equals(FLOW_EXEC_URL));
+  }
+
+  @Test
+  public void testLoadInfoSparkNoConfig() {
+    Map<String,String> properties = new HashMap<String,String>();
+
+    AppResult result = new AppResult();
+
+    HadoopApplicationData data = new SparkApplicationData("application_5678",
+        properties,
+        new ApplicationInfo("", "", new Vector<ApplicationAttemptInfo>(0,1,0)),
+        new Vector<JobData>(0,1,0),
+        new Vector<StageData>(0,1,0),
+        new Vector<ExecutorSummary>(0,1,0));
+
+    // test to make sure loadInfo does not throw exception if properties are not defined
+    InfoExtractor.loadInfo(result, data);
+
+    assertTrue(result.jobDefId.isEmpty());
+    assertTrue(result.jobExecId.isEmpty());
+    assertTrue(result.flowDefId.isEmpty());
+    assertTrue(result.flowExecId.isEmpty());
   }
 }
