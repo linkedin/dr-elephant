@@ -47,6 +47,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+import org.apache.spark.SparkMetricsAggregator;
 import org.w3c.dom.Document;
 import play.api.templates.Html;
 

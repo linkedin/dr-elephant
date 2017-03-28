@@ -41,10 +41,6 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
   import SparkRestClientTest._
 
   describe("SparkRestClient") {
-    it("throws an exception if spark.eventLog.dir is missing") {
-      an[IllegalArgumentException] should be thrownBy(new SparkRestClient(new SparkConf()))
-    }
-
     it("returns the desired data from the Spark REST API for cluster mode application") {
       import ExecutionContext.Implicits.global
       val fakeJerseyServer = new FakeJerseyServer() {
@@ -145,6 +141,24 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
         fakeJerseyServer.tearDown()
         assertion
       }
+    }
+
+    it("throws an exception if spark.yarn.historyServer.address is missing") {
+      an[IllegalArgumentException] should be thrownBy(new SparkRestClient(new SparkConf()))
+    }
+
+    it("handles unrecognized fields gracefully when parsing") {
+      val objectMapper = SparkRestClient.SparkRestObjectMapper
+      val json = s"""{
+        "startTime" : "2016-09-12T19:30:18.101GMT",
+        "endTime" : "1969-12-31T23:59:59.999GMT",
+        "sparkUser" : "foo",
+        "completed" : false,
+        "unrecognized" : "bar"
+      }"""
+
+      val applicationAttemptInfo = objectMapper.readValue[ApplicationAttemptInfo](json)
+      applicationAttemptInfo.sparkUser should be("foo")
     }
   }
 }

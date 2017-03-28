@@ -16,73 +16,54 @@
 
 package com.linkedin.drelephant.spark.fetchers
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, OutputStream}
+import java.io.{ByteArrayOutputStream, InputStream}
 import java.net.URI
 
 import scala.concurrent.ExecutionContext
 
+import com.linkedin.drelephant.util.{SparkUtils, SparkUtilsTest}
+import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FSDataInputStream, FileSystem, Path, PositionedReadable}
-import org.apache.hadoop.io.compress.CompressionInputStream
+import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkConf
-import org.mockito.BDDMockito
 import org.scalatest.{AsyncFunSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
 import org.xerial.snappy.SnappyOutputStream
 
 class SparkLogClientTest extends AsyncFunSpec with Matchers with MockitoSugar {
-  import SparkLogClientTest._
-
   describe("SparkLogClient") {
-    it("throws an exception if spark.eventLog.dir is missing") {
-      an[IllegalArgumentException] should be thrownBy { new SparkLogClient(new Configuration(), new SparkConf()) }
-    }
-
-    it("uses spark.eventLog.dir if it is already an webhdfs URI") {
-      val hadoopConfiguration = new Configuration()
-      val sparkConf = new SparkConf().set("spark.eventLog.dir", "webhdfs://nn1.grid.example.com:50070/logs/spark")
-      val sparkLogClient = new SparkLogClient(hadoopConfiguration, sparkConf)
-      sparkLogClient.webhdfsEventLogUri should be(new URI("webhdfs://nn1.grid.example.com:50070/logs/spark"))
-    }
-
-    it("uses a webhdfs URI constructed from spark.eventLog.dir and dfs.namenode.http-address if spark.eventLog.dir is an hdfs URI") {
-      val hadoopConfiguration = new Configuration()
-      hadoopConfiguration.set("dfs.namenode.http-address", "0.0.0.0:50070")
-      val sparkConf = new SparkConf().set("spark.eventLog.dir", "hdfs://nn1.grid.example.com:9000/logs/spark")
-      val sparkLogClient = new SparkLogClient(hadoopConfiguration, sparkConf)
-      sparkLogClient.webhdfsEventLogUri should be(new URI("webhdfs://nn1.grid.example.com:50070/logs/spark"))
-    }
-
-    it("returns the desired data from the Spark event logs") {
-      import ExecutionContext.Implicits.global
-
-      val hadoopConfiguration = new Configuration()
-      hadoopConfiguration.set("dfs.namenode.http-address", "0.0.0.0:50070")
+    it("returns log-derived data") {
+      val hadoopConfiguration = new Configuration(false)
 
       val sparkConf =
         new SparkConf()
-          .set("spark.eventLog.dir", "hdfs://nn1.grid.example.com:9000/logs/spark")
+          .set("spark.eventLog.dir", "webhdfs://nn1.grid.example.com:50070/logs/spark")
           .set("spark.eventLog.compress", "true")
           .set("spark.io.compression.codec", "snappy")
 
       val appId = "application_1"
       val attemptId = Some("1")
 
-      val testResourceIn = getClass.getClassLoader.getResourceAsStream("spark_event_logs/event_log_2")
-      val byteOut = new ByteArrayOutputStream()
-      val snappyOut = new SnappyOutputStream(byteOut)
-      managedCopyInputStreamToOutputStream(testResourceIn, snappyOut)
+      val eventLogBytes = {
+        val bout = new ByteArrayOutputStream()
+        for {
+          in <- resource.managed(getClass.getClassLoader.getResourceAsStream("spark_event_logs/event_log_2"))
+          out <- resource.managed(new SnappyOutputStream(bout))
+        } {
+          IOUtils.copy(in, out)
+        }
+        bout.toByteArray
+      }
 
       val sparkLogClient = new SparkLogClient(hadoopConfiguration, sparkConf) {
-        override lazy val fs: FileSystem = {
-          val fs = mock[FileSystem]
-          val expectedPath = new Path("webhdfs://nn1.grid.example.com:50070/logs/spark/application_1_1.snappy")
-          BDDMockito.given(fs.exists(expectedPath)).willReturn(true)
-          BDDMockito.given(fs.open(expectedPath)).willReturn(
-            new FSDataInputStream(new FakeCompressionInputStream(new ByteArrayInputStream(byteOut.toByteArray)))
-          )
-          fs
-        }
+        override lazy val sparkUtils = SparkUtilsTest.newFakeSparkUtilsForEventLog(
+          new URI("webhdfs://nn1.grid.example.com:50070"),
+          new Path("/logs/spark"),
+          new Path("application_1_1.snappy"),
+          eventLogBytes
+        )
+
+        override protected def doAsPrivilegedAction[T](action: () => T): T = action()
       }
 
       sparkLogClient.fetchData(appId, attemptId).map { logDerivedData =>
@@ -97,34 +78,6 @@ class SparkLogClientTest extends AsyncFunSpec with Matchers with MockitoSugar {
         val actualProperties = logDerivedData.appConfigurationProperties
         actualProperties should be(expectedProperties)
       }
-    }
-  }
-}
-
-object SparkLogClientTest {
-  class FakeCompressionInputStream(in: InputStream) extends CompressionInputStream(in) with PositionedReadable {
-    override def read(): Int = in.read()
-    override def read(b: Array[Byte], off: Int, len: Int): Int = in.read(b, off, len)
-    override def read(pos: Long, buffer: Array[Byte], off: Int, len: Int): Int = ???
-    override def readFully(pos: Long, buffer: Array[Byte], off: Int, len: Int): Unit = ???
-    override def readFully(pos: Long, buffer: Array[Byte]): Unit = ???
-    override def resetState(): Unit = ???
-  }
-
-  def managedCopyInputStreamToOutputStream(in: => InputStream, out: => OutputStream): Unit = {
-    for {
-      input <- resource.managed(in)
-      output <- resource.managed(out)
-    } {
-      val buffer = new Array[Byte](512)
-      def read(): Unit = input.read(buffer) match {
-        case -1 => ()
-        case bytesRead => {
-          output.write(buffer, 0, bytesRead)
-          read()
-        }
-      }
-      read()
     }
   }
 }

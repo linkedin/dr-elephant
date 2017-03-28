@@ -16,32 +16,26 @@
 
 package com.linkedin.drelephant.spark.fetchers
 
-import java.io.{BufferedInputStream, FileNotFoundException, InputStream}
-import java.net.URI
+import java.io.InputStream
+import java.security.PrivilegedAction
 
 import scala.async.Async
-import scala.collection.mutable.HashMap
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
+import com.linkedin.drelephant.security.HadoopSecurity
 import com.linkedin.drelephant.spark.data.SparkLogDerivedData
+import com.linkedin.drelephant.util.SparkUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.io.{CompressionCodec, LZ4CompressionCodec, LZFCompressionCodec, SnappyCompressionCodec}
 import org.apache.spark.scheduler.{SparkListenerEnvironmentUpdate, SparkListenerEvent}
 import org.json4s.{DefaultFormats, JsonAST}
 import org.json4s.jackson.JsonMethods
 
 
 /**
-  * A client for getting data from the Spark event logs, using the location configured for spark.eventLog.dir.
-  *
-  * This client uses webhdfs to access the location, even if spark.eventLog.dir is provided as an hdfs URL.
-  *
-  * The codecs used by this client use JNI, which results in some weird classloading issues (at least when testing in the console),
-  * so some of the client's implementation is non-lazy or synchronous when needed.
+  * A client for getting data from the Spark event logs.
   */
 class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf) {
   import SparkLogClient._
@@ -49,48 +43,35 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf) {
 
   private val logger: Logger = Logger.getLogger(classOf[SparkLogClient])
 
-  private[fetchers] val webhdfsEventLogUri: URI = {
-    val eventLogUri = sparkConf.getOption(SPARK_EVENT_LOG_DIR_KEY).map(new URI(_))
-    val dfsNamenodeHttpAddress = Option(hadoopConfiguration.get(HADOOP_DFS_NAMENODE_HTTP_ADDRESS_KEY))
-    (eventLogUri, dfsNamenodeHttpAddress) match {
-      case (Some(eventLogUri), _) if eventLogUri.getScheme == "webhdfs" =>
-        eventLogUri
-      case (Some(eventLogUri), Some(dfsNamenodeHttpAddress)) if eventLogUri.getScheme == "hdfs" =>
-        val dfsNamenodeHttpUri = new URI(null, dfsNamenodeHttpAddress, null, null, null)
-        new URI(s"webhdfs://${eventLogUri.getHost}:${dfsNamenodeHttpUri.getPort}${eventLogUri.getPath}")
-      case _ =>
-        throw new IllegalArgumentException(
-          s"""|${SPARK_EVENT_LOG_DIR_KEY} must be provided as webhdfs:// or hdfs://;
-              |if hdfs, ${HADOOP_DFS_NAMENODE_HTTP_ADDRESS_KEY} must also be provided for port""".stripMargin.replaceAll("\n", " ")
-        )
-    }
-  }
+  private lazy val security: HadoopSecurity = new HadoopSecurity()
 
-  private[fetchers] lazy val fs: FileSystem = FileSystem.get(webhdfsEventLogUri, hadoopConfiguration)
+  protected lazy val sparkUtils: SparkUtils = SparkUtils
 
-  private lazy val shouldCompress = sparkConf.getBoolean("spark.eventLog.compress", defaultValue = false)
-  private lazy val compressionCodec = if (shouldCompress) Some(compressionCodecFromConf(sparkConf)) else None
-  private lazy val compressionCodecShortName = compressionCodec.map(shortNameOfCompressionCodec)
+  def fetchData(appId: String, attemptId: Option[String])(implicit ec: ExecutionContext): Future[SparkLogDerivedData] =
+    doAsPrivilegedAction { () => doFetchData(appId, attemptId) }
 
-  def fetchData(appId: String, attemptId: Option[String])(implicit ec: ExecutionContext): Future[SparkLogDerivedData] = {
-    val logPath = getLogPath(webhdfsEventLogUri, appId, attemptId, compressionCodecShortName)
-    logger.info(s"looking for logs at ${logPath}")
+  protected def doAsPrivilegedAction[T](action: () => T): T =
+    security.doAs[T](new PrivilegedAction[T] { override def run(): T = action() })
 
-    val codec = compressionCodecForLogPath(sparkConf, logPath)
+  protected def doFetchData(
+    appId: String,
+    attemptId: Option[String]
+  )(
+    implicit ec: ExecutionContext
+  ): Future[SparkLogDerivedData] = {
+    val (eventLogFileSystem, baseEventLogPath) =
+      sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+    val (eventLogPath, eventLogCodec) =
+      sparkUtils.pathAndCodecforEventLog(sparkConf, eventLogFileSystem, baseEventLogPath, appId, attemptId)
 
-    // Limit scope of async.
     async {
-      resource.managed { openEventLog(sparkConf, logPath, fs) }
-        .acquireAndGet { in => findDerivedData(codec.map { _.compressedInputStream(in) }.getOrElse(in)) }
+      sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec)(findDerivedData(_))
     }
   }
 }
 
 object SparkLogClient {
   import JsonAST._
-
-  val SPARK_EVENT_LOG_DIR_KEY = "spark.eventLog.dir"
-  val HADOOP_DFS_NAMENODE_HTTP_ADDRESS_KEY = "dfs.namenode.http-address"
 
   private implicit val formats: DefaultFormats = DefaultFormats
 
@@ -122,85 +103,6 @@ object SparkLogClient {
   // https://github.com/apache/spark/blob/v1.4.1/core/src/main/scala/org/apache/spark/io/CompressionCodec.scala
   // https://github.com/apache/spark/blob/v1.4.1/core/src/main/scala/org/apache/spark/util/JsonProtocol.scala
   // https://github.com/apache/spark/blob/v1.4.1/core/src/main/scala/org/apache/spark/util/Utils.scala
-
-  private val IN_PROGRESS = ".inprogress"
-  private val DEFAULT_COMPRESSION_CODEC = "snappy"
-
-  private val compressionCodecClassNamesByShortName = Map(
-    "lz4" -> classOf[LZ4CompressionCodec].getName,
-    "lzf" -> classOf[LZFCompressionCodec].getName,
-    "snappy" -> classOf[SnappyCompressionCodec].getName
-  )
-
-  // A cache for compression codecs to avoid creating the same codec many times
-  private val compressionCodecMap = HashMap.empty[String, CompressionCodec]
-
-  private def compressionCodecFromConf(conf: SparkConf): CompressionCodec = {
-    val codecName = conf.get("spark.io.compression.codec", DEFAULT_COMPRESSION_CODEC)
-    loadCompressionCodec(conf, codecName)
-  }
-
-  private def loadCompressionCodec(conf: SparkConf, codecName: String): CompressionCodec = {
-    val codecClass = compressionCodecClassNamesByShortName.getOrElse(codecName.toLowerCase, codecName)
-    val classLoader = Option(Thread.currentThread().getContextClassLoader).getOrElse(getClass.getClassLoader)
-    val codec = try {
-      val ctor = Class.forName(codecClass, true, classLoader).getConstructor(classOf[SparkConf])
-      Some(ctor.newInstance(conf).asInstanceOf[CompressionCodec])
-    } catch {
-      case e: ClassNotFoundException => None
-      case e: IllegalArgumentException => None
-    }
-    codec.getOrElse(throw new IllegalArgumentException(s"Codec [$codecName] is not available. "))
-  }
-
-  private def shortNameOfCompressionCodec(compressionCodec: CompressionCodec): String = {
-    val codecName = compressionCodec.getClass.getName
-    if (compressionCodecClassNamesByShortName.contains(codecName)) {
-      codecName
-    } else {
-      compressionCodecClassNamesByShortName
-        .collectFirst { case (k, v) if v == codecName => k }
-        .getOrElse { throw new IllegalArgumentException(s"No short name for codec $codecName.") }
-    }
-  }
-
-  private def getLogPath(
-    logBaseDir: URI,
-    appId: String,
-    appAttemptId: Option[String],
-    compressionCodecName: Option[String] = None
-  ): Path = {
-    val base = logBaseDir.toString.stripSuffix("/") + "/" + sanitize(appId)
-    val codec = compressionCodecName.map("." + _).getOrElse("")
-    if (appAttemptId.isDefined) {
-      new Path(base + "_" + sanitize(appAttemptId.get) + codec)
-    } else {
-      new Path(base + codec)
-    }
-  }
-
-  private def openEventLog(conf: SparkConf, logPath: Path, fs: FileSystem): InputStream = {
-    // It's not clear whether FileSystem.open() throws FileNotFoundException or just plain
-    // IOException when a file does not exist, so try our best to throw a proper exception.
-    if (!fs.exists(logPath)) {
-      throw new FileNotFoundException(s"File ${logPath} does not exist.")
-    }
-
-    new BufferedInputStream(fs.open(logPath))
-  }
-
-  private def compressionCodecForLogPath(conf: SparkConf, logPath: Path): Option[CompressionCodec] = {
-    // Compression codec is encoded as an extension, e.g. app_123.lzf
-    // Since we sanitize the app ID to not include periods, it is safe to split on it
-    val logBaseName = logPath.getName.stripSuffix(IN_PROGRESS)
-    logBaseName.split("\\.").tail.lastOption.map { codecName =>
-      compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(conf, codecName))
-    }
-  }
-
-  private def sanitize(str: String): String = {
-    str.replaceAll("[ :/]", "-").replaceAll("[.${}'\"]", "_").toLowerCase
-  }
 
   private def sparkEventFromJson(json: JValue): Option[SparkListenerEvent] = {
     val environmentUpdate = getFormattedClassName(SparkListenerEnvironmentUpdate)

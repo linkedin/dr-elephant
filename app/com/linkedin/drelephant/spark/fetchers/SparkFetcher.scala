@@ -19,7 +19,7 @@ package com.linkedin.drelephant.spark.fetchers
 import scala.async.Async
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, SECONDS}
-import scala.util.Try
+import scala.util.{Try, Success, Failure}
 import scala.util.control.NonFatal
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
@@ -37,6 +37,7 @@ import org.apache.spark.SparkConf
 class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     extends ElephantFetcher[SparkApplicationData] {
   import SparkFetcher._
+  import Async.{async, await}
   import ExecutionContext.Implicits.global
 
   private val logger: Logger = Logger.getLogger(classOf[SparkFetcher])
@@ -47,7 +48,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
 
   private[fetchers] lazy val sparkConf: SparkConf = {
     val sparkConf = new SparkConf()
-    sparkUtils.getDefaultPropertiesFile(sparkUtils.defaultEnv) match {
+    sparkUtils.getDefaultPropertiesFile() match {
       case Some(filename) => sparkConf.setAll(sparkUtils.getPropertiesFromFile(filename))
       case None => throw new IllegalStateException("can't find Spark conf; please set SPARK_HOME or SPARK_CONF_DIR")
     }
@@ -61,32 +62,40 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     if (eventLogEnabled) Some(new SparkLogClient(hadoopConfiguration, sparkConf)) else None
   }
 
+  private[fetchers] lazy val backupFetcher: ElephantFetcher[SparkApplicationData] =
+    new LegacyFetcher(fetcherConfigurationData)
+
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
-    val appId = analyticJob.getAppId
-    logger.info(s"Fetching data for ${appId}")
-    try {
-      Await.result(doFetchData(sparkRestClient, sparkLogClient, appId), DEFAULT_TIMEOUT)
-    } catch {
-      case NonFatal(e) =>
-        logger.error(s"Failed fetching data for ${appId}", e)
-        throw e
+    doFetchData(analyticJob) match {
+      case Success(data) => data
+      case Failure(e) => throw e
     }
   }
-}
 
-object SparkFetcher {
-  import Async.{async, await}
+  private def doFetchData(analyticJob: AnalyticJob): Try[SparkApplicationData] = {
+    val appId = analyticJob.getAppId
+    logger.info(s"Fetching data for ${appId}")
+    Try {
+      Await.result(doFetchDataUsingRestAndLogClients(analyticJob), DEFAULT_TIMEOUT)
+    }.recover {
+      case e => {
+        logger.warn("Exception fetching data. Will make another attempt with backup fetcher instead.", e)
+        Await.result(doFetchDataUsingBackupFetcher(analyticJob), DEFAULT_TIMEOUT)
+      }
+    }.transform(
+      data => {
+        logger.info(s"Succeeded fetching data for ${appId}")
+        Success(data)
+      },
+      e => {
+        logger.error(s"Failed fetching data for ${appId}", e)
+        Failure(e)
+      }
+    )
+  }
 
-  val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"
-  val DEFAULT_TIMEOUT = Duration(30, SECONDS)
-
-  private def doFetchData(
-    sparkRestClient: SparkRestClient,
-    sparkLogClient: Option[SparkLogClient],
-    appId: String
-  )(
-    implicit ec: ExecutionContext
-  ): Future[SparkApplicationData] = async {
+  private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = async {
+    val appId = analyticJob.getAppId
     val restDerivedData = await(sparkRestClient.fetchData(appId))
     val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy { _.startTime }.attemptId
 
@@ -98,4 +107,26 @@ object SparkFetcher {
 
     SparkApplicationData(appId, restDerivedData, logDerivedData)
   }
+
+  private def doFetchDataUsingBackupFetcher(analyticJob: AnalyticJob): Future[SparkApplicationData] = async {
+    backupFetcher.fetchData(analyticJob)
+  }
+}
+
+object SparkFetcher {
+  import org.apache.spark.deploy.history.SparkFSFetcher
+  import com.linkedin.drelephant.spark.legacydata.LegacyDataConverters
+
+  private[fetchers] class LegacyFetcher(fetcherConfigurationData: FetcherConfigurationData)
+      extends ElephantFetcher[SparkApplicationData] {
+    lazy val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData)
+
+    override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
+      val legacyData = legacyFetcher.fetchData(analyticJob)
+      LegacyDataConverters.convert(legacyData)
+    }
+  }
+
+  val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"
+  val DEFAULT_TIMEOUT = Duration(60, SECONDS)
 }
