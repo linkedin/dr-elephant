@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.linkedin.drelephant.spark.legacyfetchers
+package com.linkedin.drelephant.spark.fetchers
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
@@ -22,6 +22,10 @@ import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.legacydata.LegacyDataConverters
 import org.apache.spark.deploy.history.SparkFSFetcher
 
+/**
+ * Wraps the SparkFSFetcher which has the actual logic to comply to the new SparkApplicationData interface
+ * @param fetcherConfigurationData
+ */
 class FSFetcher(fetcherConfigurationData: FetcherConfigurationData)
   extends ElephantFetcher[SparkApplicationData] {
   lazy val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData)
