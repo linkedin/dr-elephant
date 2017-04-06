@@ -68,16 +68,19 @@ public class MapperSpillHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long spilledRecords, long mapRecords, int numTasks) throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
-    MapReduceTaskData[] mappers = new MapReduceTaskData[numTasks];
+    MapReduceTaskData[] mappers = new MapReduceTaskData[numTasks + 1];
 
     MapReduceCounterData counter = new MapReduceCounterData();
     counter.set(MapReduceCounterData.CounterName.SPILLED_RECORDS, spilledRecords);
     counter.set(MapReduceCounterData.CounterName.MAP_OUTPUT_RECORDS, mapRecords);
 
-    for (int i=0; i < numTasks; i++) {
+    int i = 0;
+    for (; i < numTasks; i++) {
       mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       mappers[i].setTimeAndCounter(new long[5], counter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);
     HeuristicResult result = _heuristic.apply(data);

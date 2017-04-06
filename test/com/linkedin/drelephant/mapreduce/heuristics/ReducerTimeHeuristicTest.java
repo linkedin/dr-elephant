@@ -80,13 +80,15 @@ public class ReducerTimeHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long runtimeMs, int numTasks) throws IOException {
     MapReduceCounterData dummyCounter = new MapReduceCounterData();
-    MapReduceTaskData[] reducers = new MapReduceTaskData[numTasks];
+    MapReduceTaskData[] reducers = new MapReduceTaskData[numTasks + 1];
 
     int i = 0;
     for (; i < numTasks; i++) {
       reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       reducers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0, 0, 0 }, dummyCounter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(dummyCounter).setReducerData(reducers);
     HeuristicResult result = _heuristic.apply(data);

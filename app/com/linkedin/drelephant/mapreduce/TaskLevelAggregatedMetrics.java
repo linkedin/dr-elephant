@@ -90,6 +90,7 @@ public class TaskLevelAggregatedMetrics {
 
   /**
    * Computes the aggregated metrics -> peakMemory, delay, total task duration, wasted resources and memory usage.
+   * Aggregated metrics are expected to be approximation when sampling is enabled.
    * @param taskDatas
    * @param containerSize
    * @param idealStartTime
@@ -106,6 +107,9 @@ public class TaskLevelAggregatedMetrics {
     }
 
     for (MapReduceTaskData taskData: taskDatas) {
+      if (!taskData.isTimeAndCounterDataPresent()) {
+        continue;
+      }
       long taskMemory = taskData.getCounters().get(MapReduceCounterData.CounterName.PHYSICAL_MEMORY_BYTES)/ FileUtils.ONE_MB; // MB
       long taskVM = taskData.getCounters().get(MapReduceCounterData.CounterName.VIRTUAL_MEMORY_BYTES)/ FileUtils.ONE_MB; // MB
       long taskDuration = taskData.getFinishTimeMs() - taskData.getStartTimeMs(); // Milliseconds

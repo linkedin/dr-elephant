@@ -71,7 +71,7 @@ public class ReducerDataSkewHeuristicTest extends TestCase {
   private Severity analyzeJob(int numSmallTasks, int numLargeTasks, long smallInputSize, long largeInputSize)
       throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
-    MapReduceTaskData[] reducers = new MapReduceTaskData[numSmallTasks + numLargeTasks];
+    MapReduceTaskData[] reducers = new MapReduceTaskData[numSmallTasks + numLargeTasks + 1];
 
     MapReduceCounterData smallCounter = new MapReduceCounterData();
     smallCounter.set(MapReduceCounterData.CounterName.REDUCE_SHUFFLE_BYTES, smallInputSize);
@@ -88,6 +88,8 @@ public class ReducerDataSkewHeuristicTest extends TestCase {
       reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       reducers[i].setTimeAndCounter(new long[5], largeCounter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);
     HeuristicResult result = _heuristic.apply(data);

@@ -19,13 +19,15 @@ package com.linkedin.drelephant.mapreduce.heuristics;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
-
 
 public class JobQueueLimitHeuristic implements Heuristic<MapReduceApplicationData> {
 
@@ -89,13 +91,13 @@ public class JobQueueLimitHeuristic implements Heuristic<MapReduceApplicationDat
   }
 
   private Severity[] getTasksSeverity(MapReduceTaskData[] tasks, long queueTimeout) {
-    Severity[] tasksSeverity = new Severity[tasks.length];
-    int i = 0;
+    List<Severity> taskSeverityList = new ArrayList<Severity>();
     for (MapReduceTaskData task : tasks) {
-      tasksSeverity[i] = getQueueLimitSeverity(task.getTotalRunTimeMs(), queueTimeout);
-      i++;
+      if (task.isTimeAndCounterDataPresent()) {
+        taskSeverityList.add(getQueueLimitSeverity(task.getTotalRunTimeMs(), queueTimeout));
+      }
     }
-    return tasksSeverity;
+    return taskSeverityList.toArray(new Severity[taskSeverityList.size()]);
   }
 
   private long getSeverityFrequency(Severity severity, Severity[] tasksSeverity) {

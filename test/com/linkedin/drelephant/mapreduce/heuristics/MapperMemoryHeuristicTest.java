@@ -70,7 +70,7 @@ public class MapperMemoryHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long taskAvgMemMB, long containerMemMB) throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
-    MapReduceTaskData[] mappers = new MapReduceTaskData[NUMTASKS];
+    MapReduceTaskData[] mappers = new MapReduceTaskData[NUMTASKS + 1];
 
     MapReduceCounterData counter = new MapReduceCounterData();
     counter.set(MapReduceCounterData.CounterName.PHYSICAL_MEMORY_BYTES, taskAvgMemMB* FileUtils.ONE_MB);
@@ -83,6 +83,8 @@ public class MapperMemoryHeuristicTest extends TestCase {
       mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       mappers[i].setTimeAndCounter(new long[5], counter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);
     data.setJobConf(p);

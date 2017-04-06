@@ -82,7 +82,7 @@ public class MapperSpeedHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long runtimeMs, long readBytes) throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
-    MapReduceTaskData[] mappers = new MapReduceTaskData[NUMTASKS];
+    MapReduceTaskData[] mappers = new MapReduceTaskData[NUMTASKS + 1];
 
     MapReduceCounterData counter = new MapReduceCounterData();
     counter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, readBytes);
@@ -92,6 +92,8 @@ public class MapperSpeedHeuristicTest extends TestCase {
       mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       mappers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0 ,0, 0}, counter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);
     HeuristicResult result = _heuristic.apply(data);

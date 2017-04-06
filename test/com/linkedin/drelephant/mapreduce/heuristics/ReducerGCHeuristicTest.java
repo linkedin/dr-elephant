@@ -61,7 +61,7 @@ public class ReducerGCHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long runtimeMs, long cpuMs, long gcMs) throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
-    MapReduceTaskData[] reducers = new MapReduceTaskData[NUMTASKS];
+    MapReduceTaskData[] reducers = new MapReduceTaskData[NUMTASKS + 1];
 
     MapReduceCounterData counter = new MapReduceCounterData();
     counter.set(MapReduceCounterData.CounterName.CPU_MILLISECONDS, cpuMs);
@@ -72,6 +72,8 @@ public class ReducerGCHeuristicTest extends TestCase {
       reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       reducers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0, 0, 0 }, counter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
     MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);
     HeuristicResult result = _heuristic.apply(data);

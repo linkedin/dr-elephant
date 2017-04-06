@@ -69,8 +69,8 @@ public class JobQueueLimitHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long runtimeMs, String queueName) throws IOException {
     MapReduceCounterData dummyCounter = new MapReduceCounterData();
-    MapReduceTaskData[] mappers = new MapReduceTaskData[2 * NUM_TASKS / 3];
-    MapReduceTaskData[] reducers = new MapReduceTaskData[NUM_TASKS / 3];
+    MapReduceTaskData[] mappers = new MapReduceTaskData[(2 * NUM_TASKS / 3) + 1];
+    MapReduceTaskData[] reducers = new MapReduceTaskData[(NUM_TASKS / 3) + 1];
     Properties jobConf = new Properties();
     jobConf.put("mapred.job.queue.name", queueName);
     int i = 0;
@@ -78,10 +78,14 @@ public class JobQueueLimitHeuristicTest extends TestCase {
       mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       mappers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0, 0, 0 }, dummyCounter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
     for (i = 0; i < NUM_TASKS / 3; i++) {
       reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
       reducers[i].setTimeAndCounter(new long[] { runtimeMs, 0, 0, 0, 0 }, dummyCounter);
     }
+    // Non-sampled task, which does not contain time and counter data
+    reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
     MapReduceApplicationData data =
         new MapReduceApplicationData().setCounters(dummyCounter).setReducerData(reducers).setMapperData(mappers)
             .setJobConf(jobConf);
