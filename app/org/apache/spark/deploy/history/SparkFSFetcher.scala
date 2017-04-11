@@ -49,6 +49,8 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       .map { _(0) }
       .getOrElse(DEFAULT_EVENT_LOG_SIZE_LIMIT_MB)
   logger.info("The event log limit of Spark application is set to " + eventLogSizeLimitMb + " MB")
+  val eventLogUri = Option(fetcherConfData.getParamMap.get(LOG_LOCATION_URI_XML_FIELD))
+  logger.info("The event log location of Spark application is set to " + eventLogUri)
 
   private lazy val security = new HadoopSecurity()
 
@@ -79,9 +81,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     val dataCollection = new SparkDataCollection()
 
     val (eventLogFileSystem, baseEventLogPath) =
-      sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+      sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, eventLogUri)
     val (eventLogPath, eventLogCodec) =
-      sparkUtils.pathAndCodecforEventLog(sparkConf, eventLogFileSystem, baseEventLogPath, appId, DEFAULT_ATTEMPT_ID)
+      sparkUtils.pathAndCodecforEventLog(sparkConf, eventLogFileSystem, baseEventLogPath, appId, None)
 
     // Check if the log parser should be throttled when the file is too large.
     val shouldThrottle = eventLogFileSystem.getFileStatus(eventLogPath).getLen() > (eventLogSizeLimitMb * FileUtils.ONE_MB)
@@ -95,7 +97,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       logger.info("The event log of Spark application: " + appId + " is over the limit size of "
         + eventLogSizeLimitMb + " MB, the parsing process gets throttled.")
     } else {
-      logger.info("Replaying Spark logs for application: " + appId)
+      logger.info("Replaying Spark logs for application: " + appId +
+                          " withlogPath: " + eventLogPath +
+                          " with codec:" + eventLogCodec)
 
       sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec) { in =>
         dataCollection.load(in, eventLogPath.toString())
@@ -105,6 +109,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
     }
 
     dataCollection
+
   }
 }
 
@@ -114,6 +119,8 @@ object SparkFSFetcher {
   val DEFAULT_EVENT_LOG_SIZE_LIMIT_MB = 100d; // 100MB
 
   val LOG_SIZE_XML_FIELD = "event_log_size_limit_in_mb"
+
+  val LOG_LOCATION_URI_XML_FIELD = "event_log_location_uri"
 
   val DEFAULT_ATTEMPT_ID = Some("1")
 }

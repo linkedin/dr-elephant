@@ -28,7 +28,7 @@ import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
 import com.linkedin.drelephant.spark.legacydata.{MockSparkApplicationData, SparkGeneralData}
-import com.linkedin.drelephant.spark.legacyfetchers.FSFetcher
+import com.linkedin.drelephant.spark.fetchers.FSFetcher
 import com.linkedin.drelephant.util.{SparkUtils, HadoopUtils}
 import org.apache.hadoop.fs.Path
 import org.apache.log4j.Logger

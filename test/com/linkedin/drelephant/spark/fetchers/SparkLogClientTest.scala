@@ -55,7 +55,7 @@ class SparkLogClientTest extends AsyncFunSpec with Matchers with MockitoSugar {
         bout.toByteArray
       }
 
-      val sparkLogClient = new SparkLogClient(hadoopConfiguration, sparkConf) {
+      val sparkLogClient = new SparkLogClient(hadoopConfiguration, sparkConf, None) {
         override lazy val sparkUtils = SparkUtilsTest.newFakeSparkUtilsForEventLog(
           new URI("webhdfs://nn1.grid.example.com:50070"),
           new Path("/logs/spark"),

@@ -21,20 +21,37 @@ import java.net.URI
 
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FSDataInputStream, FileStatus, FileSystem, Path, PositionedReadable}
+import org.apache.hadoop.fs.{FSDataInputStream, FileStatus, FileSystem, Path, PathFilter, PositionedReadable}
 import org.apache.hadoop.io.compress.CompressionInputStream
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.io.SnappyCompressionCodec
 import org.mockito.BDDMockito
+import org.mockito.Matchers
 import org.scalatest.{FunSpec, Matchers, OptionValues}
 import org.scalatest.mockito.MockitoSugar
 import org.xerial.snappy.SnappyOutputStream
 
 
-class SparkUtilsTest extends FunSpec with Matchers with OptionValues with MockitoSugar {
+class SparkUtilsTest extends FunSpec with org.scalatest.Matchers with OptionValues with MockitoSugar {
   describe("SparkUtils") {
     describe(".fileSystemAndPathForEventLogDir") {
+      it("returns a filesystem + path based on uri from fetcherConfg") {
+        val hadoopConfiguration = new Configuration(false)
+        val sparkConf = new SparkConf()
+        val sparkUtils = new SparkUtils {
+          override lazy val logger = mock[Logger]
+          override lazy val hadoopUtils = mock[HadoopUtils]
+          override lazy val defaultEnv = Map.empty[String, String]
+        }
+
+        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration,
+              sparkConf,
+              Some("webhdfs://nn1.grid.example.com:50070/logs/spark"))
+        fs.getUri.toString should be("webhdfs://nn1.grid.example.com:50070")
+        path should be(new Path("/logs/spark"))
+      }
+
       it("returns a webhdfs filesystem + path based on spark.eventLog.dir when it is a webhdfs URL") {
         val hadoopConfiguration = new Configuration(false)
         val sparkConf = new SparkConf().set("spark.eventLog.dir", "webhdfs://nn1.grid.example.com:50070/logs/spark")
@@ -44,7 +61,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           override lazy val defaultEnv = Map.empty[String, String]
         }
 
-        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
         fs.getUri.toString should be("webhdfs://nn1.grid.example.com:50070")
         path should be(new Path("/logs/spark"))
       }
@@ -58,7 +75,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           override lazy val defaultEnv = Map.empty[String, String]
         }
 
-        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
         fs.getUri.toString should be("webhdfs://nn1.grid.example.com:50070")
         path should be(new Path("/logs/spark"))
       }
@@ -83,7 +100,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           override lazy val defaultEnv = Map.empty[String, String]
         }
 
-        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
         fs.getUri.toString should be("webhdfs://sample-ha2.grid.example.com:50070")
         path should be(new Path("/logs/spark"))
       }
@@ -109,7 +126,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           override lazy val defaultEnv = Map.empty[String, String]
         }
 
-        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
         fs.getUri.toString should be("webhdfs://sample.grid.example.com:50070")
         path should be(new Path("/logs/spark"))
       }
@@ -131,7 +148,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           override lazy val defaultEnv = Map.empty[String, String]
         }
 
-        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, path) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
         fs.getUri.toString should be("webhdfs://sample.grid.example.com:50070")
         path should be(new Path("/logs/spark"))
       }
@@ -147,7 +164,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           override lazy val defaultEnv = Map.empty[String, String]
         }
 
-        an[Exception] should be thrownBy { sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf) }
+        an[Exception] should be thrownBy { sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None) }
       }
     }
 
@@ -167,7 +184,7 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           Array.empty[Byte]
         )
 
-        val (fs, basePath) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, basePath) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
 
         val (path, codec) =
           sparkUtils.pathAndCodecforEventLog(sparkConf: SparkConf, fs: FileSystem, basePath: Path, "application_1", Some("1"))
@@ -207,10 +224,10 @@ class SparkUtilsTest extends FunSpec with Matchers with OptionValues with Mockit
           eventLogBytes
         )
 
-        val (fs, basePath) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+        val (fs, basePath) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
 
         val (path, codec) =
-          sparkUtils.pathAndCodecforEventLog(sparkConf: SparkConf, fs: FileSystem, basePath: Path, "application_1", Some("1"))
+          sparkUtils.pathAndCodecforEventLog(sparkConf: SparkConf, fs: FileSystem, basePath: Path, "application_1", None)
 
         sparkUtils.withEventLog(fs, path, codec) { in =>
           val bout = new ByteArrayOutputStream()
@@ -237,18 +254,31 @@ object SparkUtilsTest extends MockitoSugar {
 
     override def fileSystemAndPathForEventLogDir(
       hadoopConfiguration: Configuration,
-      sparkConf: SparkConf
+      sparkConf: SparkConf,
+      uriFromFetcherConf: Option[String]
     ): (FileSystem, Path) = {
       val fs = mock[FileSystem]
       val expectedPath = new Path(new Path(fileSystemUri), new Path(basePath, filename))
       val expectedFileStatus = {
         val fileStatus = mock[FileStatus]
         BDDMockito.given(fileStatus.getLen).willReturn(bytes.length.toLong)
+        BDDMockito.given(fileStatus.getPath()).willReturn(expectedPath)
         fileStatus
       }
+      val expectedStatusArray =  Array(expectedFileStatus)
+
+      val filter = new PathFilter() {
+        override def accept(file: Path): Boolean = {
+          file.getName().startsWith("mockAppId");
+        }
+      }
+
       BDDMockito.given(fs.getUri).willReturn(fileSystemUri)
       BDDMockito.given(fs.exists(expectedPath)).willReturn(true)
       BDDMockito.given(fs.getFileStatus(expectedPath)).willReturn(expectedFileStatus)
+      BDDMockito.given(fs.listStatus(org.mockito.Matchers.refEq(new Path( new Path(fileSystemUri), basePath)),
+                                      org.mockito.Matchers.any(filter.getClass))).
+                 willReturn(expectedStatusArray)
       BDDMockito.given(fs.open(expectedPath)).willReturn(
         new FSDataInputStream(new FakeCompressionInputStream(new ByteArrayInputStream(bytes)))
       )

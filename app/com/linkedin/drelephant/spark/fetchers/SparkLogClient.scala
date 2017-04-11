@@ -37,7 +37,7 @@ import org.json4s.jackson.JsonMethods
 /**
   * A client for getting data from the Spark event logs.
   */
-class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf) {
+class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf, eventLogUri: Option[String]) {
   import SparkLogClient._
   import Async.async
 
@@ -60,7 +60,7 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf) {
     implicit ec: ExecutionContext
   ): Future[SparkLogDerivedData] = {
     val (eventLogFileSystem, baseEventLogPath) =
-      sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf)
+      sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, eventLogUri)
     val (eventLogPath, eventLogCodec) =
       sparkUtils.pathAndCodecforEventLog(sparkConf, eventLogFileSystem, baseEventLogPath, appId, attemptId)
 

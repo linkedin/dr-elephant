@@ -25,7 +25,6 @@ import scala.util.control.NonFatal
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.legacyfetchers.FSFetcher
 import com.linkedin.drelephant.util.SparkUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
@@ -42,6 +41,9 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   import ExecutionContext.Implicits.global
 
   private val logger: Logger = Logger.getLogger(classOf[SparkFetcher])
+
+  val eventLogUri = Option(fetcherConfigurationData.getParamMap.get(LOG_LOCATION_URI_XML_FIELD))
+  logger.info("The event log location of Spark application is set to " + eventLogUri)
 
   private[fetchers] lazy val hadoopConfiguration: Configuration = new Configuration()
 
@@ -60,7 +62,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
 
   private[fetchers] lazy val sparkLogClient: Option[SparkLogClient] = {
     val eventLogEnabled = sparkConf.getBoolean(SPARK_EVENT_LOG_ENABLED_KEY, false)
-    if (eventLogEnabled) Some(new SparkLogClient(hadoopConfiguration, sparkConf)) else None
+    if (eventLogEnabled) Some(new SparkLogClient(hadoopConfiguration, sparkConf, eventLogUri)) else None
   }
 
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
@@ -107,4 +109,5 @@ object SparkFetcher {
 
   val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"
   val DEFAULT_TIMEOUT = Duration(60, SECONDS)
+  val LOG_LOCATION_URI_XML_FIELD = "event_log_location_uri"
 }
