@@ -192,6 +192,29 @@ class SparkUtilsTest extends FunSpec with org.scalatest.Matchers with OptionValu
         path should be(new Path("webhdfs://nn1.grid.example.com:50070/logs/spark/application_1_1.snappy"))
         codec.value should be(a[SnappyCompressionCodec])
       }
+      it("returns the path and codec for the event log, given the base path and appid. Extracts attempt and codec from path") {
+        val hadoopConfiguration = new Configuration(false)
+
+        val sparkConf =
+          new SparkConf()
+            .set("spark.eventLog.dir", "/logs/spark")
+            .set("spark.eventLog.compress", "true")
+
+        val sparkUtils = SparkUtilsTest.newFakeSparkUtilsForEventLog(
+          new URI("webhdfs://nn1.grid.example.com:50070"),
+          new Path("/logs/spark"),
+          new Path("application_1_1.snappy"),
+          Array.empty[Byte]
+        )
+
+        val (fs, basePath) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
+
+        val (path, codec) =
+          sparkUtils.pathAndCodecforEventLog(sparkConf: SparkConf, fs: FileSystem, basePath: Path, "application_1", None)
+
+        path should be(new Path("webhdfs://nn1.grid.example.com:50070/logs/spark/application_1_1.snappy"))
+        codec.value should be(a[SnappyCompressionCodec])
+      }
     }
 
     describe(".withEventLog") {
