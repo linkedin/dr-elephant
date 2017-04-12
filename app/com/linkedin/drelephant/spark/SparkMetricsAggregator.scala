@@ -63,18 +63,10 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
       case false => 0.0
     }
     //allocated is the total used resource from the cluster.
-    if (resourcesAllocatedForUse.isValidLong && resourcesAllocatedForUse > 0) {
+    if (resourcesAllocatedForUse.isValidLong) {
       hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
     } else {
-      logger.warn(s"resourcesAllocatedForUse exceeds Long.MaxValue: ${resourcesAllocatedForUse}")
-      logger.warn(s"ResourceUsed: ${resourcesAllocatedForUse}")
-      logger.warn(s"executorInstances: ${executorInstances}")
-      logger.warn(s"executorMemoryBytes:${executorMemoryBytes}")
-      logger.warn(s"applicationDurationMillis:${applicationDurationMillis}")
-      logger.warn(s"totalExecutorTaskTimeMillis:${totalExecutorTaskTimeMillis}")
-      logger.warn(s"resourcesActuallyUsedWithBuffer:${resourcesActuallyUsedWithBuffer}")
-      logger.warn(s"resourcesWastedMBSeconds:${resourcesWastedMBSeconds}")
-      logger.warn(s"allocatedMemoryWasteBufferPercentage:${allocatedMemoryWasteBufferPercentage}")
+      logger.info(s"resourcesAllocatedForUse exceeds Long.MaxValue: ${resourcesAllocatedForUse  }")
     }
 
     hadoopAggregatedData.setResourceWasted(resourcesWastedMBSeconds.toLong)
@@ -107,12 +99,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   private def applicationDurationMillisOf(data: SparkApplicationData): Long = {
     require(data.applicationInfo.attempts.nonEmpty)
     val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
-    if(lastApplicationAttemptInfo.endTime.getTime <  lastApplicationAttemptInfo.startTime.getTime) {
-      logger.info(s"Negative duration:${lastApplicationAttemptInfo.attemptId.get} startTime:${lastApplicationAttemptInfo.startTime.getTime} endTime:${lastApplicationAttemptInfo.endTime.getTime} ")
-      0L
-    } else {
-      lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime
-    }
+    lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime
   }
 
   private def totalExecutorTaskTimeMillisOf(data: SparkApplicationData): BigInt = {
