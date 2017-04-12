@@ -17,6 +17,7 @@
 package com.linkedin.drelephant.spark.fetchers
 
 import scala.async.Async
+import scala.collection.JavaConverters._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, SECONDS}
 import scala.util.control.NonFatal
@@ -45,10 +46,21 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   private[fetchers] lazy val sparkUtils: SparkUtils = SparkUtils
 
   private[fetchers] lazy val sparkConf: SparkConf = {
+    // Allow to override SPARK_CONF_DIR and SPARK_HOME with values in
+    // the fetcher configuration.
+    val envOverride = fetcherConfigurationData.getParamMap.asScala
+      .map { case (key, value) => key.toUpperCase() -> value }
+      .toMap
+    val env = sparkUtils.defaultEnv ++ envOverride
+
     val sparkConf = new SparkConf()
-    sparkUtils.getDefaultPropertiesFile(sparkUtils.defaultEnv) match {
-      case Some(filename) => sparkConf.setAll(sparkUtils.getPropertiesFromFile(filename))
-      case None => throw new IllegalStateException("can't find Spark conf; please set SPARK_HOME or SPARK_CONF_DIR")
+    sparkUtils.getDefaultPropertiesFile(env) match {
+      case Some(filename) =>
+        logger.info(s"Loading Spark configuration from $filename")
+        sparkConf.setAll(sparkUtils.getPropertiesFromFile(filename))
+      case None => throw new IllegalStateException(
+        "can't find Spark conf; please set SPARK_HOME or SPARK_CONF_DIR " +
+        "or define them in lowercase in fetcher params")
     }
     sparkConf
   }

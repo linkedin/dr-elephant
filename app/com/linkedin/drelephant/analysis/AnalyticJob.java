@@ -21,11 +21,14 @@ import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
 import org.apache.log4j.Logger;
+
+import javax.annotation.Nullable;
 
 
 /**
@@ -229,8 +232,26 @@ public class AnalyticJob {
    * @return the analysed AppResult
    */
   public AppResult getAnalysis() throws Exception {
-    ElephantFetcher fetcher = ElephantContext.instance().getFetcherForApplicationType(getAppType());
-    HadoopApplicationData data = fetcher.fetchData(this);
+    Iterator<ElephantFetcher> fetchers = ElephantContext.instance()
+            .getFetchersForApplicationType(getAppType())
+            .iterator();
+    @Nullable HadoopApplicationData data = null;
+    @Nullable Exception error = null;
+
+    while (data == null && fetchers.hasNext()) {
+      error = null;
+
+      try {
+        data = fetchers.next().fetchData(this);
+      } catch (Exception e) {
+        error = e;
+      }
+    }
+
+    // All of the fetchers failed. Re-raise the last error.
+    if (error != null) {
+      throw error;
+    }
 
     JobType jobType = ElephantContext.instance().matchJobType(data);
     String jobTypeName = jobType == null ? UNKNOWN_JOB_TYPE : jobType.getName();

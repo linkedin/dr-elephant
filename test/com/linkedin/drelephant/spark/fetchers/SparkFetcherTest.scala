@@ -146,6 +146,31 @@ class SparkFetcherTest extends FunSpec with Matchers {
       sparkConf.get("spark.eventLog.dir") should be("hdfs://nn1.grid.example.com:9000/logs/spark")
     }
 
+    it("allows to override SPARK_CONF_DIR and SPARK_HOME via fetcher config") {
+      val tempDir = Files.createTempDir()
+
+      val testResourceIn = getClass.getClassLoader.getResourceAsStream("spark-defaults.conf")
+      val testResourceFile = new File(tempDir, "spark-defaults.conf")
+      val testResourceOut = new FileOutputStream(testResourceFile)
+      managedCopyInputStreamToOutputStream(testResourceIn, testResourceOut)
+
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("spark_conf_dir" -> tempDir.toString)
+      )
+
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkUtils = new SparkUtils() {
+          override val defaultEnv = Map("SPARK_CONF_DIR" -> "/foo/bar/baz")
+        }
+      }
+
+      val sparkConf = sparkFetcher.sparkConf
+      sparkConf.get("spark.yarn.historyServer.address") should be("jh1.grid.example.com:18080")
+      sparkConf.get("spark.eventLog.enabled") should be("true")
+      sparkConf.get("spark.eventLog.compress") should be("true")
+      sparkConf.get("spark.eventLog.dir") should be("hdfs://nn1.grid.example.com:9000/logs/spark")
+    }
+
     it("throws an exception if neither SPARK_CONF_DIR nor SPARK_HOME are set") {
       val fetcherConfigurationData = newFakeFetcherConfigurationData()
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {

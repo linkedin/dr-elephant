@@ -16,7 +16,9 @@
 
 package com.linkedin.drelephant;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
@@ -38,6 +40,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +79,7 @@ public class ElephantContext {
   private final Map<String, ApplicationType> _nameToType = new HashMap<String, ApplicationType>();
   private final Map<ApplicationType, List<Heuristic>> _typeToHeuristics = new HashMap<ApplicationType, List<Heuristic>>();
   private final Map<ApplicationType, HadoopMetricsAggregator> _typeToAggregator = new HashMap<ApplicationType, HadoopMetricsAggregator>();
-  private final Map<ApplicationType, ElephantFetcher> _typeToFetcher = new HashMap<ApplicationType, ElephantFetcher>();
+  private final Multimap<ApplicationType, ElephantFetcher> _typeToFetcher = ArrayListMultimap.create();
   private final Map<String, Html> _heuristicToView = new HashMap<String, Html>();
   private Map<ApplicationType, List<JobType>> _appTypeToJobTypes = new HashMap<ApplicationType, List<JobType>>();
 
@@ -162,9 +165,7 @@ public class ElephantContext {
         }
 
         ApplicationType type = data.getAppType();
-        if (_typeToFetcher.get(type) == null) {
-          _typeToFetcher.put(type, (ElephantFetcher) instance);
-        }
+        _typeToFetcher.put(type, (ElephantFetcher) instance);
 
         logger.info("Load Fetcher : " + data.getClassName());
       } catch (ClassNotFoundException e) {
@@ -357,7 +358,7 @@ public class ElephantContext {
    * @param type The application type
    * @return The corresponding fetcher
    */
-  public ElephantFetcher getFetcherForApplicationType(ApplicationType type) {
+  public Collection<ElephantFetcher> getFetchersForApplicationType(ApplicationType type) {
     return _typeToFetcher.get(type);
   }
 
