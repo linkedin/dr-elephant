@@ -52,12 +52,16 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf) {
   private[fetchers] val webhdfsEventLogUri: URI = {
     val eventLogUri = sparkConf.getOption(SPARK_EVENT_LOG_DIR_KEY).map(new URI(_))
     val dfsNamenodeHttpAddress = Option(hadoopConfiguration.get(HADOOP_DFS_NAMENODE_HTTP_ADDRESS_KEY))
+    val dfsNamenodeAddress = Option(hadoopConfiguration.get(HADOOP_DEFAULT_FILESYSTEM_KEY)).map(new URI(_))
     (eventLogUri, dfsNamenodeHttpAddress) match {
       case (Some(eventLogUri), _) if eventLogUri.getScheme == "webhdfs" =>
         eventLogUri
       case (Some(eventLogUri), Some(dfsNamenodeHttpAddress)) if eventLogUri.getScheme == "hdfs" =>
         val dfsNamenodeHttpUri = new URI(null, dfsNamenodeHttpAddress, null, null, null)
-        new URI(s"webhdfs://${eventLogUri.getHost}:${dfsNamenodeHttpUri.getPort}${eventLogUri.getPath}")
+        val webhdfsHost = Option(eventLogUri.getHost).getOrElse(dfsNamenodeAddress.get.getHost)
+        val webhdfsPort = dfsNamenodeHttpUri.getPort
+        val webhdfsPath = eventLogUri.getPath
+        new URI(s"webhdfs://${webhdfsHost}:${webhdfsPort}${webhdfsPath}")
       case _ =>
         throw new IllegalArgumentException(
           s"""|${SPARK_EVENT_LOG_DIR_KEY} must be provided as webhdfs:// or hdfs://;
@@ -91,6 +95,7 @@ object SparkLogClient {
 
   val SPARK_EVENT_LOG_DIR_KEY = "spark.eventLog.dir"
   val HADOOP_DFS_NAMENODE_HTTP_ADDRESS_KEY = "dfs.namenode.http-address"
+  val HADOOP_DEFAULT_FILESYSTEM_KEY = "fs.defaultFS"
 
   private implicit val formats: DefaultFormats = DefaultFormats
 

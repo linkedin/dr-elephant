@@ -53,6 +53,15 @@ class SparkLogClientTest extends AsyncFunSpec with Matchers with MockitoSugar {
       sparkLogClient.webhdfsEventLogUri should be(new URI("webhdfs://nn1.grid.example.com:50070/logs/spark"))
     }
 
+    it("uses a webhdfs URI constructed from spark.eventLog.dir, dfs.namenode.http-address, and fs.defaultFS if spark.eventLog.dir does not has hostname") {
+      val hadoopConfiguration = new Configuration()
+      hadoopConfiguration.set("dfs.namenode.http-address", "0.0.0.0:50070")
+      hadoopConfiguration.set("fs.defaultFS", "hdfs://nn1.grid.example.com:8020");
+      val sparkConf = new SparkConf().set("spark.eventLog.dir", "hdfs:///logs/spark")
+      val sparkLogClient = new SparkLogClient(hadoopConfiguration, sparkConf)
+      sparkLogClient.webhdfsEventLogUri should be(new URI("webhdfs://nn1.grid.example.com:50070/logs/spark"))
+    }
+
     it("returns the desired data from the Spark event logs") {
       import ExecutionContext.Implicits.global
 
