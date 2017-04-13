@@ -114,7 +114,7 @@ trait SparkUtils {
             if (shouldUseCompression) Some(shortNameOfCompressionCodec(compressionCodecFromConf(sparkConf))) else None
           getLogPath(fs.getUri.resolve(basePath.toUri), appId, attemptId, compressionCodecShortName)
         }
-          val codec = compressionCodecForLogPath(sparkConf, path)
+          val codec = compressionCodecForLogName(sparkConf, path.getName())
           (path, codec)
       }
       case None => {
@@ -167,6 +167,15 @@ trait SparkUtils {
         k => (k, properties.getProperty(k).trim)).toMap
     } finally {
       inReader.close()
+    }
+  }
+
+  def compressionCodecForLogName(conf: SparkConf, logName: String): Option[CompressionCodec] = {
+    // Compression codec is encoded as an extension, e.g. app_123.lzf
+    // Since we sanitize the app ID to not include periods, it is safe to split on it
+    val logBaseName = logName.stripSuffix(IN_PROGRESS)
+    logBaseName.split("\\.").tail.lastOption.map { codecName =>
+      compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(conf, codecName))
     }
   }
 
@@ -293,15 +302,6 @@ trait SparkUtils {
     }
 
     new BufferedInputStream(fs.open(logPath))
-  }
-
-  private def compressionCodecForLogPath(conf: SparkConf, logPath: Path): Option[CompressionCodec] = {
-    // Compression codec is encoded as an extension, e.g. app_123.lzf
-    // Since we sanitize the app ID to not include periods, it is safe to split on it
-    val logBaseName = logPath.getName.stripSuffix(IN_PROGRESS)
-    logBaseName.split("\\.").tail.lastOption.map { codecName =>
-      compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(conf, codecName))
-    }
   }
 
   private def sanitize(str: String): String = {

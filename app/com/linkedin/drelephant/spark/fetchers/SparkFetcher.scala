@@ -70,18 +70,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   private[fetchers] lazy val sparkRestClient: SparkRestClient = new SparkRestClient(sparkConf)
 
   private[fetchers] lazy val sparkLogClient: SparkLogClient = {
-    new SparkLogClient(hadoopConfiguration, sparkConf)
-  }
-
-  sealed trait EventLogSource
-
-  object EventLogSource {
-    /** Fetch event logs through REST API. */
-    case object Rest extends EventLogSource
-    /** Fetch event logs through WebHDFS. */
-    case object WebHdfs extends EventLogSource
-    /** Event logs are not available. */
-    case object None extends EventLogSource
+    new SparkLogClient(hadoopConfiguration, sparkConf, eventLogUri)
   }
 
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {

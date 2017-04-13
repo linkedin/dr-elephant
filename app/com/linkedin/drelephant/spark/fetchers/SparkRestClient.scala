@@ -30,6 +30,7 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.linkedin.drelephant.spark.data.{SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
+import com.linkedin.drelephant.util.SparkUtils
 import javax.ws.rs.client.{Client, ClientBuilder, WebTarget}
 import javax.ws.rs.core.MediaType
 
@@ -124,7 +125,7 @@ class SparkRestClient(sparkConf: SparkConf) {
         logger.warn(s"failed to resolve log for ${target.getUri}")
         None
       } else {
-        val codec = SparkLogClient.compressionCodecForLogName(sparkConf, entry.getName)
+        val codec = SparkUtils.compressionCodecForLogName(sparkConf, entry.getName)
         Some(SparkLogClient.findDerivedData(
           codec.map { _.compressedInputStream(zis) }.getOrElse(zis)))
       }
