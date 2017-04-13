@@ -127,6 +127,17 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
 
 object SparkFetcher {
 
+  sealed trait EventLogSource
+
+  object EventLogSource {
+    /** Fetch event logs through REST API. */
+    case object Rest extends EventLogSource
+    /** Fetch event logs through WebHDFS. */
+    case object WebHdfs extends EventLogSource
+    /** Event logs are not available. */
+    case object None extends EventLogSource
+  }
+
   val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"
   val DEFAULT_TIMEOUT = Duration(60, SECONDS)
   val LOG_LOCATION_URI_XML_FIELD = "event_log_location_uri"
