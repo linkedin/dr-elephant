@@ -24,7 +24,7 @@ import scala.util.control.NonFatal
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.util.SparkUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
@@ -58,11 +58,30 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     sparkConf
   }
 
+  private[fetchers] lazy val eventLogSource: EventLogSource = {
+    val eventLogEnabled = sparkConf.getBoolean(SPARK_EVENT_LOG_ENABLED_KEY, false)
+    val useRestForLogs = Option(fetcherConfigurationData.getParamMap.get("use_rest_for_eventlogs"))
+      .exists(_.toBoolean)
+    if (!eventLogEnabled) {
+      EventLogSource.None
+    } else if (useRestForLogs) EventLogSource.Rest else EventLogSource.WebHdfs
+  }
+
   private[fetchers] lazy val sparkRestClient: SparkRestClient = new SparkRestClient(sparkConf)
 
-  private[fetchers] lazy val sparkLogClient: Option[SparkLogClient] = {
-    val eventLogEnabled = sparkConf.getBoolean(SPARK_EVENT_LOG_ENABLED_KEY, false)
-    if (eventLogEnabled) Some(new SparkLogClient(hadoopConfiguration, sparkConf, eventLogUri)) else None
+  private[fetchers] lazy val sparkLogClient: SparkLogClient = {
+    new SparkLogClient(hadoopConfiguration, sparkConf)
+  }
+
+  sealed trait EventLogSource
+
+  object EventLogSource {
+    /** Fetch event logs through REST API. */
+    case object Rest extends EventLogSource
+    /** Fetch event logs through WebHDFS. */
+    case object WebHdfs extends EventLogSource
+    /** Event logs are not available. */
+    case object None extends EventLogSource
   }
 
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
@@ -91,13 +110,14 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
 
   private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = async {
     val appId = analyticJob.getAppId
-    val restDerivedData = await(sparkRestClient.fetchData(appId))
-    val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy { _.startTime }.attemptId
+    val restDerivedData = await(sparkRestClient.fetchData(appId, eventLogSource == EventLogSource.Rest))
 
-    // Would use .map but await doesn't like that construction.
-    val logDerivedData = sparkLogClient match {
-      case Some(sparkLogClient) => Some(await(sparkLogClient.fetchData(appId, lastAttemptId)))
-      case None => None
+    val logDerivedData = eventLogSource match {
+      case EventLogSource.None => None
+      case EventLogSource.Rest => restDerivedData.logDerivedData
+      case EventLogSource.WebHdfs =>
+        val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy { _.startTime }.attemptId
+        Some(await(sparkLogClient.fetchData(appId, lastAttemptId)))
     }
 
     SparkApplicationData(appId, restDerivedData, logDerivedData)

@@ -259,7 +259,7 @@ object ExecutorsHeuristicTest {
       new ApplicationInfo(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries
+      executorSummaries = executorSummaries
     )
 
     SparkApplicationData(appId, restDerivedData, logDerivedData = None)

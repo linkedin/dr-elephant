@@ -23,5 +23,5 @@ case class SparkRestDerivedData(
   applicationInfo: ApplicationInfo,
   jobDatas: Seq[JobData],
   stageDatas: Seq[StageData],
-  executorSummaries: Seq[ExecutorSummary]
-)
+  executorSummaries: Seq[ExecutorSummary],
+  private[spark] val logDerivedData: Option[SparkLogDerivedData] = None)

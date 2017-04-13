@@ -20,12 +20,12 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.util.Date
 
-import scala.collection.JavaConverters
 import scala.concurrent.{ExecutionContext, Future}
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ApplicationType}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.fetchers.SparkFetcher.EventLogSource
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
 import com.linkedin.drelephant.spark.legacydata.{MockSparkApplicationData, SparkGeneralData}
 import com.linkedin.drelephant.spark.fetchers.FSFetcher
@@ -75,7 +75,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
-        override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData)))
+        override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData))
       }
       val data = sparkFetcher.fetchData(analyticJob)
       data.appId should be(appId)
@@ -85,7 +85,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future { throw new Exception() })
-        override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData)))
+        override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData))
       }
 
       an[Exception] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
@@ -94,8 +94,9 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
     it("throws an exception if the log client fails") {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
-        override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future { throw new Exception() }))
+        override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future { throw new Exception() })
       }
 
       an[Exception] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
@@ -166,16 +167,59 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
           override lazy val defaultEnv = Map.empty[String, String]
         }
       }
+
       an[IllegalStateException] should be thrownBy { sparkFetcher.sparkConf }
+    }
+
+    it("eventlog source defaults to WebHDFS") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData()
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+      }
+
+      sparkFetcher.eventLogSource should be(EventLogSource.WebHdfs)
+    }
+
+    it("eventlog source is WebHDFS if use_rest_for_eventlogs is false") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "false"))
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+      }
+
+      sparkFetcher.eventLogSource should be(EventLogSource.WebHdfs)
+    }
+
+    it("eventlog source is REST if use_rest_for_eventlogs is true") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "true"))
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+      }
+
+      sparkFetcher.eventLogSource should be(EventLogSource.Rest)
+    }
+
+    it("eventlog fetching is disabled when spark.eventLog is false") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData()
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "false")
+      }
+
+      sparkFetcher.eventLogSource should be(EventLogSource.None)
     }
   }
 }
 
 object SparkFetcherTest {
-  import JavaConverters._
+  import scala.collection.JavaConverters._
 
-  def newFakeFetcherConfigurationData(): FetcherConfigurationData =
-    new FetcherConfigurationData(classOf[SparkFetcher].getName, new ApplicationType("SPARK"), Map.empty.asJava)
+  def newFakeFetcherConfigurationData(paramMap: Map[String, String] = Map.empty): FetcherConfigurationData =
+    new FetcherConfigurationData(classOf[SparkFetcher].getName, new ApplicationType("SPARK"), paramMap.asJava)
 
   def newFakeApplicationAttemptInfo(
     attemptId: Option[String],

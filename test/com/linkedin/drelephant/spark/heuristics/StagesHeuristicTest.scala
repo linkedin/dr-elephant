@@ -178,7 +178,7 @@ object StagesHeuristicTest {
     val restDerivedData = SparkRestDerivedData(
       new ApplicationInfo(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
-      stageDatas,
+      stageDatas = stageDatas,
       executorSummaries = Seq.empty
     )
 
