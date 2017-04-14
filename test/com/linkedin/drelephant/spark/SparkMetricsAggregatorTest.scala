@@ -46,11 +46,11 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
       new ApplicationInfo(appId, name = "app", Seq(applicationAttemptInfo))
     }
 
+    val executorSummaries = Seq(
+      newFakeExecutorSummary(id = "1", totalDuration = 1000000L),
+      newFakeExecutorSummary(id = "2", totalDuration = 3000000L)
+    )
     val restDerivedData = {
-      val executorSummaries = Seq(
-        newFakeExecutorSummary(id = "1", totalDuration = 1000000L),
-        newFakeExecutorSummary(id = "2", totalDuration = 3000000L)
-      )
       SparkRestDerivedData(
         applicationInfo,
         jobDatas = Seq.empty,
@@ -104,6 +104,31 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
 
       it("doesn't calculate total delay") {
         result.getTotalDelay should be(0L)
+      }
+      it("sets resourceused as 0 when duration is negative") {
+        //make the duration negative
+        val applicationInfo = {
+          val applicationAttemptInfo = {
+            val now = System.currentTimeMillis
+            val duration = -8000000L
+            newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(now - duration), endTime = new Date(now))
+          }
+          new ApplicationInfo(appId, name = "app", Seq(applicationAttemptInfo))
+        }
+        val restDerivedData = SparkRestDerivedData(
+            applicationInfo,
+            jobDatas = Seq.empty,
+            stageDatas = Seq.empty,
+            executorSummaries = executorSummaries
+          )
+
+        val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
+
+        val aggregator = new SparkMetricsAggregator(aggregatorConfigurationData)
+        aggregator.aggregate(data)
+
+        val result = aggregator.getResult
+        result.getResourceUsed should be(0L)
       }
     }
 
