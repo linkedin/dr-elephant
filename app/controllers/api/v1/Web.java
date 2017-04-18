@@ -1732,7 +1732,7 @@ public class Web extends Controller {
     Set<String> schedulersConfigured = InfoExtractor.getSchedulersConfiguredForException();
     JsonObject exception = new JsonObject();
     if(schedulersConfigured.isEmpty()) {
-      exception.addProperty(JsonKeys.EXCEPTION_ENABLED, "true");
+      exception.addProperty(JsonKeys.EXCEPTION_ENABLED, "false");
       exception.add(JsonKeys.SCHEDULERS, new JsonArray());
 
       exception.addProperty(JsonKeys.ID, "exception-status");
@@ -1784,8 +1784,19 @@ public class Web extends Controller {
       parent.add("workflow-exceptions", new JsonArray());
       return notFound(new Gson().toJson(parent));
     } else {
-      ExceptionFinder expGen = new ExceptionFinder(url, scheduler);
-      HadoopException flowException = expGen.getExceptions();
+      ExceptionFinder expGen;
+      HadoopException flowException;
+
+      try {
+        expGen = new ExceptionFinder(url, scheduler);
+        flowException = expGen.getExceptions();
+      } catch (RuntimeException e) {
+        parent.add("workflow-exceptions", new JsonArray());
+        return status(500,"Unexpected error occured");
+      } catch (Exception e) {
+        parent.add("workflow-exceptions", new JsonArray());
+        return status(500,"Unexpected error occured");
+      }
 
       JsonArray jobsArray = new JsonArray();
 
