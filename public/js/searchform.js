@@ -34,6 +34,23 @@ $(document).ready(function(){
   var finishTimeBeginTimestamp = $("#form-finished-time-begin");
   var finishTimeEndTimestamp = $("#form-finished-time-end");
 
+  // --------------------------------------------------------------
+  // Patch to limit search
+  // --------------------------------------------------------------
+  var today = new Date().toISOString().substring(0, 10).split("-");
+  var tomorrow_date = new Date();
+  tomorrow_date.setDate(tomorrow_date.getDate() + 1);
+  var tomorrow = tomorrow_date.toISOString().substring(0, 10).split("-");
+  var begin_date = today[1] + '/' + today[2] + '/' + today[0];
+  var end_date = tomorrow[1] + '/' + tomorrow[2] + '/' + tomorrow[0];
+
+  finishTimeBeginDate.val(begin_date);
+  finishTimeEndDate.val(end_date);
+
+  $("a#search").attr('href', '/search?finished-time-begin='+new Date(begin_date).getTime()+'&finished-time-end='+new Date(end_date).getTime());
+  // --------------------------------------------------------------
+  // --------------------------------------------------------------
+
   finishTimeBeginDate.datepicker({
     autoclose: true,
     todayHighlight: true,
