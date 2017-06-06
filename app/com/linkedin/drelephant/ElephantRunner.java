@@ -178,8 +178,11 @@ public class ElephantRunner implements Runnable {
         result.save();
         long processingTime = System.currentTimeMillis() - analysisStartTimeMillis;
         logger.info(String.format("Analysis of %s took %sms", analysisName, processingTime));
-        MetricsController.setJobProcessingTime(processingTime);
-        MetricsController.markProcessedJobs();
+
+        if(MetricsController.isInitialized()) {
+          MetricsController.setJobProcessingTime(processingTime);
+          MetricsController.markProcessedJobs();
+        }
 
       } catch (InterruptedException e) {
         logger.info("Thread interrupted");
@@ -196,7 +199,9 @@ public class ElephantRunner implements Runnable {
           _analyticJobGenerator.addIntoRetries(_analyticJob);
         } else {
           if (_analyticJob != null) {
-            MetricsController.markSkippedJob();
+            if(MetricsController.isInitialized()) {
+              MetricsController.markSkippedJob();
+            }
             logger.error("Drop the analytic job. Reason: reached the max retries for application id = ["
                     + _analyticJob.getAppId() + "].");
           }
