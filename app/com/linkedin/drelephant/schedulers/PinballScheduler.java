@@ -94,6 +94,7 @@ public class PinballScheduler implements Scheduler {
     return Utils.formatStringOrNull("%s/jobs/?workflow=%s&instance=%s", _baseUrl, _workflowName, _workflowInstanceId);
   }
 
+  // Sub-workflow is not supported on Pinball
   @Override
   public int getWorkflowDepth() {
     return 0;
