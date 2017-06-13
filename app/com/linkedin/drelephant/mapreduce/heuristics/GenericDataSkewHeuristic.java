@@ -53,7 +53,7 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<MapReduceApp
   private double[] deviationLimits = {2, 4, 8, 16};       // Deviation in i/p bytes btw 2 groups
   private double[] filesLimits = {1d/8, 1d/4, 1d/2, 1d};  // Fraction of HDFS Block Size
 
-  private MapReduceCounterData.CounterName _counterName;
+  private List<MapReduceCounterData.CounterName> _counterNames;
   private HeuristicConfigurationData _heuristicConfData;
 
   private void loadParameters() {
@@ -85,9 +85,9 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<MapReduceApp
     }
   }
 
-  protected GenericDataSkewHeuristic(MapReduceCounterData.CounterName counterName,
-      HeuristicConfigurationData heuristicConfData) {
-    this._counterName = counterName;
+  protected GenericDataSkewHeuristic(List<MapReduceCounterData.CounterName> counterNames,
+                                     HeuristicConfigurationData heuristicConfData) {
+    this._counterNames = counterNames;
     this._heuristicConfData = heuristicConfData;
 
     loadParameters();
@@ -114,7 +114,11 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<MapReduceApp
 
     for (int i = 0; i < tasks.length; i++) {
       if (tasks[i].isCounterDataPresent()) {
-        inputBytes.add(tasks[i].getCounters().get(_counterName));
+        long inputByte = 0;
+        for (MapReduceCounterData.CounterName counterName: _counterNames) {
+          inputByte += tasks[i].getCounters().get(counterName);
+        }
+        inputBytes.add(inputByte);
       }
     }
 

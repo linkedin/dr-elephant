@@ -48,6 +48,13 @@ public class MapperSpeedHeuristic implements Heuristic<MapReduceApplicationData>
   private double[] diskSpeedLimits = {1d/2, 1d/4, 1d/8, 1d/32};  // Fraction of HDFS block size
   private double[] runtimeLimits = {5, 10, 15, 30};              // The Map task runtime in milli sec
 
+  private List<MapReduceCounterData.CounterName> _counterNames = Arrays.asList(
+      MapReduceCounterData.CounterName.HDFS_BYTES_READ,
+      MapReduceCounterData.CounterName.S3_BYTES_READ,
+      MapReduceCounterData.CounterName.S3A_BYTES_READ,
+      MapReduceCounterData.CounterName.S3N_BYTES_READ
+  );
+
   private HeuristicConfigurationData _heuristicConfData;
 
   private void loadParameters() {
@@ -101,7 +108,10 @@ public class MapperSpeedHeuristic implements Heuristic<MapReduceApplicationData>
     for (MapReduceTaskData task : tasks) {
 
       if (task.isTimeAndCounterDataPresent()) {
-        long inputBytes = task.getCounters().get(MapReduceCounterData.CounterName.HDFS_BYTES_READ);
+        long inputBytes = 0;
+        for (MapReduceCounterData.CounterName counterName: _counterNames) {
+          inputBytes += task.getCounters().get(counterName);
+        }
         long runtimeMs = task.getTotalRunTimeMs();
         inputByteSizes.add(inputBytes);
         runtimesMs.add(runtimeMs);

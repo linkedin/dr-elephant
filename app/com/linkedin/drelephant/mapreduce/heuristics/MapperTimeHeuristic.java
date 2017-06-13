@@ -48,6 +48,13 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
   private double[] longRuntimeLimits = {15, 30, 60, 120};  // Limits(ms) for tasks with longer runtime
   private double[] numTasksLimits = {50, 101, 500, 1000};  // Number of Map tasks.
 
+  private List<MapReduceCounterData.CounterName> _counterNames = Arrays.asList(
+      MapReduceCounterData.CounterName.HDFS_BYTES_READ,
+      MapReduceCounterData.CounterName.S3_BYTES_READ,
+      MapReduceCounterData.CounterName.S3A_BYTES_READ,
+      MapReduceCounterData.CounterName.S3N_BYTES_READ
+  );
+
   private HeuristicConfigurationData _heuristicConfData;
 
   private void loadParameters() {
@@ -109,7 +116,11 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
     for (MapReduceTaskData task : tasks) {
 
       if (task.isTimeAndCounterDataPresent()) {
-        inputBytes.add(task.getCounters().get(MapReduceCounterData.CounterName.HDFS_BYTES_READ));
+        long inputByte = 0;
+        for (MapReduceCounterData.CounterName counterName: _counterNames) {
+          inputByte += task.getCounters().get(counterName);
+        }
+        inputBytes.add(inputByte);
         long taskTime = task.getTotalRunTimeMs();
         runtimesMs.add(taskTime);
         taskMinMs = Math.min(taskMinMs, taskTime);

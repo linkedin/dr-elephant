@@ -78,7 +78,7 @@ public class MapperDataSkewHeuristicTest extends TestCase {
     smallCounter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, smallInputSize);
 
     MapReduceCounterData largeCounter = new MapReduceCounterData();
-    largeCounter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, largeInputSize);
+    largeCounter.set(MapReduceCounterData.CounterName.S3A_BYTES_READ, largeInputSize);
 
     int i = 0;
     for (; i < numSmallTasks; i++) {
