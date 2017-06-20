@@ -46,7 +46,6 @@
             <bicore>datamart-core</bicore>
             <!--<user>add new langoustine flow here</user>-->
         </params>
-
     </scheduler>
 
     <scheduler>
