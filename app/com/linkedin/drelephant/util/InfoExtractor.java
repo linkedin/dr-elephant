@@ -116,6 +116,13 @@ public class InfoExtractor {
     } else if ( data instanceof SparkApplicationData) {
       properties = retrieveSparkProperties((SparkApplicationData) data);
     }
+
+    // TODO temporary fix, it should be automatically set by langoustine in the /conf properties
+    logger.info("Adding user " + result.username + " to the properties");
+    if (result != null && result.username != null) {
+      properties.setProperty("userName", result.username);
+    }
+
     Scheduler scheduler = getSchedulerInstance(data.getAppId(), properties);
 
     if (scheduler == null) {

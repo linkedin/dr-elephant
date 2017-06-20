@@ -123,6 +123,7 @@ public class Application extends Controller {
   private static int _numJobsCritical = 0;
   private static int _numJobsSevere = 0;
 
+  private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
   /**
   * Serves the initial index.html page for the new user interface. This page contains the whole web app
@@ -457,7 +458,7 @@ public class Application extends Controller {
    * @return A map of Job Urls to the list of jobs corresponding to the 2 flow execution urls
    */
   private static Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> compareFlows(List<AppResult> results1, List<AppResult> results2) {
-    
+
     Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> jobDefMap = new HashMap<IdUrlPair, Map<IdUrlPair, List<AppResult>>>();
 
     if (results1 != null && !results1.isEmpty() && results2 != null && !results2.isEmpty()) {
@@ -1137,14 +1138,26 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+
+      // TODO should make it specific to langoustine as other scheduler are not storing the date in flowExecId field
+      // Parsing the langoustine date
+      long maybeParsed;
+      try {
+        maybeParsed = sdf.parse(mrJobsList.get(mrJobsList.size() - 1).flowExecId).getTime();
+      } catch (ParseException e) {
+        logger.info("Could not parse " + mrJobsList.get(mrJobsList.size() - 1).flowExecId);
+        maybeParsed = mrJobsList.get(mrJobsList.size() - 1).finishTime;
+      }
+      dataset.addProperty("flowtime", maybeParsed);
       dataset.addProperty("score", flowPerfScore);
       dataset.add("jobscores", jobScores);
 
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1228,14 +1241,26 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+
+      // TODO should make it specific to langoustine as other scheduler are not storing the date in flowExecId field
+      // Parsing the langoustine date
+      long maybeParsed;
+      try {
+        maybeParsed = sdf.parse(mrJobsList.get(mrJobsList.size() - 1).flowExecId).getTime();
+      } catch (ParseException e) {
+        logger.info("Could not parse " + mrJobsList.get(mrJobsList.size() - 1).flowExecId);
+        maybeParsed = mrJobsList.get(mrJobsList.size() - 1).finishTime;
+      }
+      dataset.addProperty("flowtime", maybeParsed);
       dataset.addProperty("score", jobPerfScore);
       dataset.add("stagescores", stageScores);
 
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1330,7 +1355,17 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+
+      // TODO should make it specific to langoustine as other scheduler are not storing the date in flowExecId field
+      // Parsing the langoustine date
+      long maybeParsed;
+      try {
+        maybeParsed = sdf.parse(mrJobsList.get(mrJobsList.size() - 1).flowExecId).getTime();
+      } catch (ParseException e) {
+        logger.info("Could not parse " + mrJobsList.get(mrJobsList.size() - 1).flowExecId);
+        maybeParsed = mrJobsList.get(mrJobsList.size() - 1).finishTime;
+      }
+      dataset.addProperty("flowtime", maybeParsed);
       dataset.addProperty("runtime", Utils.getTotalRuntime(mrJobsList));
       dataset.addProperty("waittime", Utils.getTotalWaittime(mrJobsList));
       dataset.addProperty("resourceused", totalMemoryUsed);
@@ -1340,7 +1375,9 @@ public class Application extends Controller {
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1480,7 +1517,17 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+
+      // TODO should make it specific to langoustine as other scheduler are not storing the date in flowExecId field
+      // Parsing the langoustine date
+      long maybeParsed = 0;
+      try {
+        maybeParsed = sdf.parse(mrJobsList.get(mrJobsList.size() - 1).flowExecId).getTime();
+      } catch (ParseException e) {
+        logger.info("Could not parse " + mrJobsList.get(mrJobsList.size() - 1).flowExecId);
+        maybeParsed = mrJobsList.get(mrJobsList.size() - 1).finishTime;
+      }
+      dataset.addProperty("flowtime", maybeParsed);
       dataset.addProperty("runtime", totalFlowRuntime);
       dataset.addProperty("waittime", totalFlowDelay);
       dataset.addProperty("resourceused", totalFlowMemoryUsed);
@@ -1490,7 +1537,37 @@ public class Application extends Controller {
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
+  }
+
+  /**
+   * Sort the JsonArray given in parameters, based on the flowtime property,
+   * from the most recent to the oldest.
+   */
+  private static JsonArray sortJsonArray(JsonArray datasets) {
+    ArrayList<JsonObject> datasetsList = new ArrayList<JsonObject>();
+    for (JsonElement element : datasets) {
+      datasetsList.add(element.getAsJsonObject());
+    }
+
+    Collections.sort( datasetsList, new Comparator<JsonObject>() {
+      private static final String KEY_NAME = "flowtime";
+
+      @Override
+      public int compare(JsonObject a, JsonObject b) {
+        String valA = a.get(KEY_NAME).toString();
+        String valB = b.get(KEY_NAME).toString();
+        return valA.compareTo(valB);
+      }
+    });
+
+    datasets = new JsonArray();
+    for (JsonObject element : datasetsList) {
+      datasets.add(element);
+    }
+    return datasets;
   }
 
   /**
