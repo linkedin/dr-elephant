@@ -34,6 +34,8 @@
           <!--<private_key>/home/key/private_key</private_key>-->
           <!--<userame>elephant</userame>-->
           <!--<password></password>-->
+          <!--<flowtimefield>flowExecId</flowtimefield>-->
+          <!--<flowtimetype>yyyy-MM-dd'T'HH:mm:ss</flowtimetype>-->
         </params>
 
     </scheduler>

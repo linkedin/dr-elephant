@@ -16,11 +16,17 @@
 
 package com.linkedin.drelephant.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.linkedin.drelephant.analysis.Severity;
+import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
 import com.linkedin.drelephant.math.Statistics;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -498,5 +504,69 @@ public final class Utils {
       }
     }
     return totalWaittime;
+  }
+
+  /**
+   * Get the flowtime corresponding to the job.
+   * The flowtime will be used in the front-end as the entries under the 'Flow Executions' column (in the Flow/Job history view).
+   *
+   * By default, the finishTime value of the job is used. However, this can be configured in the scheduler configuration,
+   * so that another field is used instead, with the appropriate formatting to convert it to a long value.
+   *
+   * This method can be extended to include other flowtimefield and flowtimetype.
+   */
+  public static long getFlowTime(AppResult result) {
+    String schedulerName = result.scheduler;
+    SchedulerConfigurationData schedulerData = InfoExtractor.getSchedulerData(schedulerName);
+
+    String flowTimeField = null;
+    String flowTimeType = null;
+    if (schedulerData != null) {
+      flowTimeField = schedulerData.getParamMap().get("flowtimefield");
+      flowTimeType = schedulerData.getParamMap().get("flowtimetype");
+    }
+
+    if (flowTimeField != null && flowTimeType != null && flowTimeField.equals("flowExecId")) {
+      SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(flowTimeType);
+      long flowTime;
+      try {
+        flowTime = DATE_FORMAT.parse(result.flowExecId).getTime();
+      } catch (ParseException e) {
+        logger.warn("Could not parse " + result.flowExecId +" for application " + result.id);
+        flowTime = result.finishTime;
+      }
+      return flowTime;
+    } else {
+      return result.finishTime;
+    }
+
+  }
+
+  /**
+   * Sort the JsonArray given in parameters, based on the flowtime property,
+   * from the most recent to the oldest.
+   */
+  public static JsonArray sortJsonArray(JsonArray datasets) {
+    ArrayList<JsonObject> datasetsList = new ArrayList<JsonObject>();
+    for (JsonElement element : datasets) {
+      datasetsList.add(element.getAsJsonObject());
+    }
+
+    Collections.sort( datasetsList, new Comparator<JsonObject>() {
+      private String KEY_NAME = "flowtime";
+
+      @Override
+      public int compare(JsonObject a, JsonObject b) {
+        Long valA = a.get(KEY_NAME).getAsLong();
+        Long valB = b.get(KEY_NAME).getAsLong();
+        return valA.compareTo(valB);
+      }
+    });
+
+    datasets = new JsonArray();
+    for (JsonObject element : datasetsList) {
+      datasets.add(element);
+    }
+    return datasets;
   }
 }

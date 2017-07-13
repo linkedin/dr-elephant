@@ -457,7 +457,7 @@ public class Application extends Controller {
    * @return A map of Job Urls to the list of jobs corresponding to the 2 flow execution urls
    */
   private static Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> compareFlows(List<AppResult> results1, List<AppResult> results2) {
-    
+
     Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> jobDefMap = new HashMap<IdUrlPair, Map<IdUrlPair, List<AppResult>>>();
 
     if (results1 != null && !results1.isEmpty() && results2 != null && !results2.isEmpty()) {
@@ -1137,15 +1137,19 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("score", flowPerfScore);
       dataset.add("jobscores", jobScores);
 
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
+
+
 
   /**
    * The data for plotting the job history graph. While plotting the job history
@@ -1228,14 +1232,16 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("score", jobPerfScore);
       dataset.add("stagescores", stageScores);
 
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1330,7 +1336,7 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("runtime", Utils.getTotalRuntime(mrJobsList));
       dataset.addProperty("waittime", Utils.getTotalWaittime(mrJobsList));
       dataset.addProperty("resourceused", totalMemoryUsed);
@@ -1340,7 +1346,9 @@ public class Application extends Controller {
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1480,7 +1488,7 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("runtime", totalFlowRuntime);
       dataset.addProperty("waittime", totalFlowDelay);
       dataset.addProperty("resourceused", totalFlowMemoryUsed);
@@ -1490,7 +1498,9 @@ public class Application extends Controller {
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
