@@ -21,9 +21,9 @@
 
   <heuristic>
     <applicationtype>mapreduce</applicationtype>
-    <heuristicname>Mapper Data Skew</heuristicname>
-    <classname>com.linkedin.drelephant.mapreduce.heuristics.MapperDataSkewHeuristic</classname>
-    <viewname>views.html.help.mapreduce.helpMapperDataSkew</viewname>
+    <heuristicname>Mapper Skew</heuristicname>
+    <classname>com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic</classname>
+    <viewname>views.html.help.mapreduce.helpMapperSkew</viewname>
     <!--<params>
       <num_tasks_severity>10, 50, 100, 200</num_tasks_severity>
       <deviation_severity>2, 4, 8, 16</deviation_severity>
@@ -93,9 +93,9 @@
 
   <heuristic>
     <applicationtype>mapreduce</applicationtype>
-    <heuristicname>Reducer Data Skew</heuristicname>
-    <classname>com.linkedin.drelephant.mapreduce.heuristics.ReducerDataSkewHeuristic</classname>
-    <viewname>views.html.help.mapreduce.helpReducerDataSkew</viewname>
+    <heuristicname>Reducer Skew</heuristicname>
+    <classname>com.linkedin.drelephant.mapreduce.heuristics.ReducerSkewHeuristic</classname>
+    <viewname>views.html.help.mapreduce.helpReducerSkew</viewname>
     <!--<params>
       <num_tasks_severity>10, 50, 100, 200</num_tasks_severity>
       <deviation_severity>2, 4, 8, 16</deviation_severity>

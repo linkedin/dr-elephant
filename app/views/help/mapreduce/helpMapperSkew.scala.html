@@ -15,7 +15,7 @@
 *@
 
 <p>
-    This analysis shows whether there is a data-skew for the data entering reducer tasks.
+    This analysis shows whether there is a data/time-skew for the data/time entering mapper tasks.
 </p>
 <p>
     This result of the analysis shows two groups of the spectrum, where the first group has significantly less input data compared to the second group.
@@ -24,21 +24,21 @@
 <p>
 <div class="list-group">
     <a class="list-group-item list-group-item-danger" href="">
-        <h4 class="list-group-item-heading">Reducer Data Skew</h4>
+        <h4 class="list-group-item-heading">Mapper Data Skew</h4>
         <table class="list-group-item-text table table-condensed left-table">
             <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
             <tbody>
             <tr>
                 <td>Number of tasks</td>
-                <td>999</td>
+                <td>2205</td>
             </tr>
             <tr>
                 <td>Group A</td>
-                <td>875 tasks @@ 28 MB avg</td>
+                <td>953 tasks @@ 7 MB avg</td>
             </tr>
             <tr>
                 <td>Group B</td>
-                <td>124 tasks @@ 2 GB avg</td>
+                <td>1252 tasks @@ 512 MB avg</td>
             </tr>
             </tbody>
         </table>
@@ -47,7 +47,6 @@
 </p>
 <h3>Suggestions</h3>
 <p>
-    This is often caused by skew in the keyspace (aggregation key for group by, join key for joins).<br>
-    If using Pig, try a skew join.<br>
-    Otherwise, consider what you're doing in the job and if there's a better way to do it.<br>
+    Try to make your input files strictly smaller than the HDFS block size to avoid the small excess pieces creating new map tasks.
+    Understand WHY there's skew, use CombinedFileInputFormat (or similar in the various languages), turn on slowstart to mitigate effects.
 </p>

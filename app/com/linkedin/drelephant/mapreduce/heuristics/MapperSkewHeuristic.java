@@ -27,9 +27,9 @@ import java.util.Arrays;
 /**
  * This Heuristic analyses the skewness in the mapper input data
  */
-public class MapperDataSkewHeuristic extends GenericDataSkewHeuristic {
+public class MapperSkewHeuristic extends GenericSkewHeuristic {
 
-  public MapperDataSkewHeuristic(HeuristicConfigurationData heuristicConfData) {
+  public MapperSkewHeuristic(HeuristicConfigurationData heuristicConfData) {
     super(Arrays.asList(
         MapReduceCounterData.CounterName.HDFS_BYTES_READ,
         MapReduceCounterData.CounterName.S3_BYTES_READ,

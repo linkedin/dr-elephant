@@ -28,9 +28,9 @@ import java.util.Arrays;
 /**
  * This Heuristic analyses the skewness in the reducer input data
  */
-public class ReducerDataSkewHeuristic extends GenericDataSkewHeuristic {
+public class ReducerSkewHeuristic extends GenericSkewHeuristic {
 
-  public ReducerDataSkewHeuristic(HeuristicConfigurationData heuristicConfData) {
+  public ReducerSkewHeuristic(HeuristicConfigurationData heuristicConfData) {
     super(Arrays.asList(MapReduceCounterData.CounterName.REDUCE_SHUFFLE_BYTES), heuristicConfData);
   }
 

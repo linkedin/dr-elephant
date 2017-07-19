@@ -455,6 +455,7 @@ public class RestAPITest {
         final WS.Response response = WS.url(BASE_URL + REST_APPLICATION_SUMMARIES_PATH).
             setQueryParameter("username", TEST_USERNAME).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+
         Iterator<JsonNode> taskSummaries = response.asJson().elements();
         while (taskSummaries.hasNext()) {
           JsonNode taskSummary = taskSummaries.next();
@@ -473,13 +474,13 @@ public class RestAPITest {
             Iterator<JsonNode> heuristicsSummary = node.findValue("heuristicsummary").elements();
 
             HashMap<String, String> expectedHeuristics = new LinkedHashMap<String, String>();
-            expectedHeuristics.put("Mapper Data Skew", "None");
+            expectedHeuristics.put("Mapper Skew", "None");
             expectedHeuristics.put("Mapper GC", "None");
             expectedHeuristics.put("Mapper Time", "None");
             expectedHeuristics.put("Mapper Speed", "None");
             expectedHeuristics.put("Mapper Spill", "None");
             expectedHeuristics.put("Mapper Memory", "None");
-            expectedHeuristics.put("Reducer Data Skew", "None");
+            expectedHeuristics.put("Reducer Skew", "None");
             expectedHeuristics.put("Reducer Time", "None");
             expectedHeuristics.put("Reducer GC", "None");
             expectedHeuristics.put("Reducer Memory", "None");
@@ -788,13 +789,13 @@ public class RestAPITest {
 
         Iterator<JsonNode> heuristicsSummary = node.findValue("heuristicsummary").elements();
         HashMap<String, String> expectedHeuristics = new LinkedHashMap<String, String>();
-        expectedHeuristics.put("Mapper Data Skew", "None");
+        expectedHeuristics.put("Mapper Skew", "None");
         expectedHeuristics.put("Mapper GC", "None");
         expectedHeuristics.put("Mapper Time", "None");
         expectedHeuristics.put("Mapper Speed", "None");
         expectedHeuristics.put("Mapper Spill", "None");
         expectedHeuristics.put("Mapper Memory", "None");
-        expectedHeuristics.put("Reducer Data Skew", "None");
+        expectedHeuristics.put("Reducer Skew", "None");
         expectedHeuristics.put("Reducer Time", "None");
         expectedHeuristics.put("Reducer GC", "None");
         expectedHeuristics.put("Reducer Memory", "None");

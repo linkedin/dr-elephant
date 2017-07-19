@@ -33,12 +33,12 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 
-public class MapperDataSkewHeuristicTest extends TestCase {
-
-  private static final long UNITSIZE = HDFSContext.HDFS_BLOCK_SIZE / 64; //1MB
+public class ReducerSkewHeuristicTest extends TestCase {
+  private static final long UNITSIZE = HDFSContext.HDFS_BLOCK_SIZE / 64; //1mb
+  private static final long UNITSIZETIME = 1000000; //1000sec
 
   private static Map<String, String> paramsMap = new HashMap<String, String>();
-  private static Heuristic _heuristic = new MapperDataSkewHeuristic(new HeuristicConfigurationData("test_heuristic",
+  private static Heuristic _heuristic = new ReducerSkewHeuristic(new HeuristicConfigurationData("test_heuristic",
       "test_class", "test_view", new ApplicationType("test_apptype"), paramsMap));
 
   public void testCritical() throws IOException {
@@ -69,30 +69,74 @@ public class MapperDataSkewHeuristicTest extends TestCase {
     assertEquals(Severity.NONE, analyzeJob(5, 5, 10 * UNITSIZE, 100 * UNITSIZE));
   }
 
+  public void testCriticalTime() throws IOException {
+    assertEquals(Severity.CRITICAL, analyzeJobTime(200, 200, 1 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testSevereTime() throws IOException {
+    assertEquals(Severity.SEVERE, analyzeJobTime(200, 200, 10 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testModerateTime() throws IOException {
+    assertEquals(Severity.MODERATE, analyzeJobTime(200, 200, 20 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testLowTime() throws IOException {
+    assertEquals(Severity.LOW, analyzeJobTime(200, 200, 30 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testNoneTime() throws IOException {
+    assertEquals(Severity.NONE, analyzeJobTime(200, 200, 50 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testSmallTasksTime() throws IOException {
+    assertEquals(Severity.NONE, analyzeJobTime(5, 5, 10 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
   private Severity analyzeJob(int numSmallTasks, int numLargeTasks, long smallInputSize, long largeInputSize)
       throws IOException {
     MapReduceCounterData jobCounter = new MapReduceCounterData();
-    MapReduceTaskData[] mappers = new MapReduceTaskData[numSmallTasks + numLargeTasks + 1];
+    MapReduceTaskData[] reducers = new MapReduceTaskData[numSmallTasks + numLargeTasks + 1];
 
     MapReduceCounterData smallCounter = new MapReduceCounterData();
-    smallCounter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, smallInputSize);
+    smallCounter.set(MapReduceCounterData.CounterName.REDUCE_SHUFFLE_BYTES, smallInputSize);
 
     MapReduceCounterData largeCounter = new MapReduceCounterData();
-    largeCounter.set(MapReduceCounterData.CounterName.S3A_BYTES_READ, largeInputSize);
+    largeCounter.set(MapReduceCounterData.CounterName.REDUCE_SHUFFLE_BYTES, largeInputSize);
 
     int i = 0;
     for (; i < numSmallTasks; i++) {
-      mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
-      mappers[i].setTimeAndCounter(new long[5], smallCounter);
+      reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      reducers[i].setTimeAndCounter(new long[5], smallCounter);
     }
     for (; i < numSmallTasks + numLargeTasks; i++) {
-      mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
-      mappers[i].setTimeAndCounter(new long[5], largeCounter);
+      reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      reducers[i].setTimeAndCounter(new long[5], largeCounter);
     }
     // Non-sampled task, which does not contain time and counter data
-    mappers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+    reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
 
-    MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setMapperData(mappers);
+    MapReduceApplicationData data = new MapReduceApplicationData().setCounters(jobCounter).setReducerData(reducers);
+    HeuristicResult result = _heuristic.apply(data);
+    return result.getSeverity();
+  }
+
+  private Severity analyzeJobTime(int numSmallTasks, int numLongTasks, long smallTimeTaken, long longTimeTaken)
+          throws IOException {
+    MapReduceTaskData[] reducers = new MapReduceTaskData[numSmallTasks + numLongTasks + 1];
+
+    int i = 0;
+    for (; i < numSmallTasks; i++) {
+      reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      reducers[i].setTotalTimeMs(smallTimeTaken, true);
+    }
+    for (; i < numSmallTasks + numLongTasks; i++) {
+      reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+      reducers[i].setTotalTimeMs(longTimeTaken, true);
+    }
+    // Non-sampled task, which does not contain time data
+    reducers[i] = new MapReduceTaskData("task-id-"+i, "task-attempt-id-"+i);
+    MapReduceApplicationData data = new MapReduceApplicationData().setReducerData(reducers);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();
 

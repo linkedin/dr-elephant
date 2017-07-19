@@ -27,11 +27,18 @@ public class MapReduceTaskData {
   private String _taskId;
   // The successful attempt id
   private String _attemptId;
+
+  public void setTotalTimeMs(long totalTimeMs, boolean isTimeDataPresent) {
+    this._totalTimeMs = totalTimeMs;
+    this._isTimeDataPresent = isTimeDataPresent;
+  }
+
   private long _totalTimeMs = 0;
   private long _shuffleTimeMs = 0;
   private long _sortTimeMs = 0;
   private long _startTimeMs = 0;
   private long _finishTimeMs = 0;
+
   // This flag will only be true when successfully setting time and counter values.
   private boolean _isTimeDataPresent = false;
   private boolean _isCounterDataPresent = false;
