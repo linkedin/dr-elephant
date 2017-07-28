@@ -14,27 +14,35 @@
 * the License.
 *@
 
-@(flowExecPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]])
+@(flowDefIdPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]])
 
 @*
-* Displays all the mr jobs belonging to a flow grouped by job exec url
+* Displays all the mr jobs triggered by a job definition id grouped by flow exec id
 *
-* @param flowExecPair The flow execution pair
-* @param results A map from job Exec URL to all the MR jobs.
+* @param flowDefIdPair The flow definition id pair
+* @param results A map from flow exec id to all the MR jobs triggered by the job definition id in flowDefIdPair.
 *@
 
 <div class="panel panel-default">
 
   <div class="panel-heading">
     <h3 class="panel-title">
-      Flow Execution URL: <a href=@flowExecPair.getUrl>@flowExecPair.getId</a>
+      @if(flowDefIdPair.getUrl.isEmpty){
+        Flow Id: @flowDefIdPair.getId
+      } else {
+        Flow Id: <a href=@flowDefIdPair.getUrl>@flowDefIdPair.getId</a>
+      }
     </h3>
   </div>
 
   <ul class="list-group">
-    @for( (jobExecPair, jobs) <- results) {
+    @for( (flowExecPair, jobs) <- results) {
       <div class="list-group-item">
-        Job Execution URL: <a href=@jobExecPair.getUrl>@jobExecPair.getId</a>
+        @if(flowExecPair.getUrl.isEmpty){
+          Flow Execution ID: @flowExecPair.getId
+        } else {
+          Flow Execution ID: <a href=@flowExecPair.getUrl>@flowExecPair.getId</a>
+        }
         <div class="list-group well-lg">
           @for(result <- jobs) {
             <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
