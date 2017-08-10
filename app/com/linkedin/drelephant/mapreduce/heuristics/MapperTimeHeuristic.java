@@ -134,6 +134,7 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
 
     long averageSize = Statistics.average(inputBytes);
     long averageTimeMs = Statistics.average(runtimesMs);
+    long ecartType = Statistics.standardDeviation(averageTimeMs, runtimesMs);
 
     Severity shortTaskSeverity = shortTaskSeverity(tasks.length, averageTimeMs);
     Severity longTaskSeverity = longTaskSeverity(tasks.length, averageTimeMs);
@@ -147,6 +148,7 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
     result.addResultDetail("Average task runtime", Statistics.readableTimespan(averageTimeMs));
     result.addResultDetail("Max task runtime", Statistics.readableTimespan(taskMaxMs));
     result.addResultDetail("Min task runtime", Statistics.readableTimespan(taskMinMs));
+    result.addResultDetail("Standard deviation task runtime", Statistics.readableTimespan(ecartType));
 
     return result;
   }
