@@ -156,7 +156,7 @@ then
 elif [[ $HADOOP_VERSION == 2* ]];
 then
   JAVA_LIB_PATH=$HADOOP_HOME"/lib/native"
-  echo "This is hadoop2.x grid. Add Java library path: "$JAVA_LIB_PATH
+  echo "This is hadoop2.x grid. Adding Java library to path: "$JAVA_LIB_PATH
 else
   echo "error: Hadoop isn't properly set on this machine. Could you verify cmd 'hadoop version'? "
   exit 1
