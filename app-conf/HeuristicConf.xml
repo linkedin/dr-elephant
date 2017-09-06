@@ -195,6 +195,12 @@
   </heuristic>
   <heuristic>
     <applicationtype>spark</applicationtype>
+    <heuristicname>Spark JVM Used Memory</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.JvmUsedMemoryHeuristic</classname>
+    <viewname>views.html.help.spark.helpJvmUsedMemoryHeuristic</viewname>
+  </heuristic>
+  <heuristic>
+    <applicationtype>spark</applicationtype>
     <heuristicname>Executor GC</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>
