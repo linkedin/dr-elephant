@@ -121,12 +121,14 @@ trap "exit" SIGINT SIGTERM
 start_script=${project_root}/scripts/start.sh
 stop_script=${project_root}/scripts/stop.sh
 app_conf=${project_root}/app-conf
+update_script_sh=${project_root}/scripts/update.sh
+update_script_py=${project_root}/scripts/update.py
 
 # Echo the value of pwd in the script so that it is clear what is being removed.
 rm -rf ${project_root}/dist
 mkdir dist
 
-play_command $OPTS clean test compile dist
+play_command $OPTS clean compile dist
 
 cd target/universal
 
@@ -143,6 +145,10 @@ sed -i.bak $'/declare -r app_classpath/s/.$/:`hadoop classpath`:${ELEPHANT_CONF_
 cp $start_script ${DIST_NAME}/bin/
 
 cp $stop_script ${DIST_NAME}/bin/
+
+cp $update_script_sh ${DIST_NAME}/bin/
+
+cp $update_script_py ${DIST_NAME}/bin/
 
 cp -r $app_conf ${DIST_NAME}
 

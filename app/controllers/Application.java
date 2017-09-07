@@ -18,6 +18,11 @@ package controllers;
 
 import com.avaje.ebean.ExpressionList;
 import com.avaje.ebean.Query;
+import com.avaje.ebean.ExpressionList;
+import com.avaje.ebean.Query;
+import com.avaje.ebean.SqlQuery;
+import com.avaje.ebean.SqlRow;
+import com.avaje.ebean.Ebean;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -682,6 +687,13 @@ public class Application extends Controller {
     boolean hasSparkJob = false;
     // get the graph type
     String graphType = form.get("select-graph-type");
+    
+    SqlQuery q = Ebean.createSqlQuery("select distinct job_def_id from yarn_app_result order by job_def_id;");
+    List<SqlRow> re = q.findList();
+    List<String> jobDefList = new ArrayList<String>();
+    for (SqlRow res : re) {
+        jobDefList.add(res.getString("job_def_id"));
+    }
 
     if (graphType == null) {
       graphType = "resources";
@@ -692,7 +704,7 @@ public class Application extends Controller {
         return ok(
             jobHistoryPage.render(partialJobDefId, graphType, jobHistoryResults.render(null, null, -1, null)));
       } else {
-        return ok(oldJobHistoryPage.render(partialJobDefId, graphType, oldJobHistoryResults.render(null, null, -1, null)));
+        return ok(oldJobHistoryPage.render(partialJobDefId, graphType, oldJobHistoryResults.render(null, null, -1, null), jobDefList));
       }
     }
     IdUrlPair jobDefPair = bestSchedulerInfoMatchGivenPartialId(partialJobDefId, AppResult.TABLE.JOB_DEF_ID);
@@ -771,13 +783,13 @@ public class Application extends Controller {
     } else {
       if (graphType.equals("heuristics")) {
         return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
-            oldJobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+            oldJobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList), jobDefList));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
         if (hasSparkJob) {
           return notFound("Resource and time graph are not supported for spark right now");
         } else {
           return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
-              oldJobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+              oldJobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList), jobDefList));
         }
       }
     }
