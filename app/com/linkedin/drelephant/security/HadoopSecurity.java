@@ -41,13 +41,14 @@ public class HadoopSecurity {
   private static HadoopSecurity instance = null;
 
   public static HadoopSecurity getInstance() throws IOException{
-    if(instance==null) {
-      return new HadoopSecurity();
+    if (instance == null) {
+      instance = new HadoopSecurity();
     }
+
     return instance;
   }
 
-  public HadoopSecurity() throws IOException {
+  private HadoopSecurity() throws IOException {
     Configuration conf = new Configuration();
     UserGroupInformation.setConfiguration(conf);
     _securityEnabled = UserGroupInformation.isSecurityEnabled();

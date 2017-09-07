@@ -52,7 +52,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
   val eventLogUri = Option(fetcherConfData.getParamMap.get(LOG_LOCATION_URI_XML_FIELD))
   logger.info("The event log location of Spark application is set to " + eventLogUri)
 
-  private lazy val security = new HadoopSecurity()
+  private lazy val security = HadoopSecurity.getInstance()
 
   protected lazy val hadoopUtils: HadoopUtils = HadoopUtils
 
