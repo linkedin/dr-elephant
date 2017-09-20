@@ -54,9 +54,10 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
       new HeuristicResultDetails("Note", "The allocated memory for the driver (in " + SPARK_DRIVER_MEMORY + ") is much more than the peak JVM used memory by the driver.")
     }
 
-    if(evaluator.severitySkew.getValue > Severity.LOW.getValue) {
-      new HeuristicResultDetails("Note", "As there is a big difference between median and maximum values of the peak JVM used memory, there could also be a skew in the data being processed. Please look into that.")
-    }
+//    Disabling the skew test for executors
+//    if(evaluator.severitySkew.getValue > Severity.LOW.getValue) {
+//      new HeuristicResultDetails("Note", "As there is a big difference between median and maximum values of the peak JVM used memory, there could also be a skew in the data being processed. Please look into that.")
+//    }
 
     val result = new HeuristicResult(
       heuristicConfigurationData.getClassName,
@@ -106,7 +107,10 @@ object JvmUsedMemoryHeuristic {
 
     val severityExecutor = DEFAULT_MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLDS.severityOf(sparkExecutorMemory)
     val severityDriver = DEFAULT_MAX_DRIVER_PEAK_JVM_USED_MEMORY_THRESHOLDS.severityOf(sparkDriverMemory)
-    val severitySkew = DEFAULT_JVM_MEMORY_SKEW_THRESHOLDS.severityOf(maxExecutorPeakJvmUsedMemory)
-    val severity : Severity = Severity.max(severityDriver, severityExecutor, severitySkew)
+    /**
+      * disabling the skew check for executors
+      * val severitySkew = DEFAULT_JVM_MEMORY_SKEW_THRESHOLDS.severityOf(maxExecutorPeakJvmUsedMemory)
+      */
+    val severity : Severity = Severity.max(severityDriver, severityExecutor)
   }
 }
