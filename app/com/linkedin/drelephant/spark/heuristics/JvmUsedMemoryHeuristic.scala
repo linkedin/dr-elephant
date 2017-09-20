@@ -29,8 +29,6 @@ import scala.collection.JavaConverters
   * A heuristic based on peak JVM used memory for the spark executors and drivers
   *
   */
-
-
 class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
   extends Heuristic[SparkApplicationData] {
 
