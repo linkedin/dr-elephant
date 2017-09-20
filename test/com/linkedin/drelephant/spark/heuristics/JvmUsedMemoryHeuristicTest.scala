@@ -71,9 +71,9 @@ object JvmUsedMemoryHeuristicTest {
     new HeuristicConfigurationData("heuristic", "class", "view", new ApplicationType("type"), params.asJava)
 
   def newDummyExecutorData(
-                            id: String,
-                            peakJvmUsedMemory: Map[String, Long]
-                          ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
+    id: String,
+    peakJvmUsedMemory: Map[String, Long]
+  ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
     rddBlocks = 0,
@@ -93,9 +93,9 @@ object JvmUsedMemoryHeuristicTest {
   )
 
   def newFakeSparkApplicationData(
-                                   appConfigurationProperties: Map[String, String],
-                                   executorSummaries: Seq[ExecutorSummaryImpl]
-                                 ): SparkApplicationData = {
+    appConfigurationProperties: Map[String, String],
+    executorSummaries: Seq[ExecutorSummaryImpl]
+  ): SparkApplicationData = {
 
     val logDerivedData = SparkLogDerivedData(
       SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
