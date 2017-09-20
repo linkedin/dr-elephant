@@ -67,7 +67,6 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
     )
     result
   }
-
 }
 
 object JvmUsedMemoryHeuristic {
