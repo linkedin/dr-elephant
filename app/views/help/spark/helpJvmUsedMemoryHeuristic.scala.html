@@ -15,7 +15,7 @@
 *@
 <p>This is a heuristic for peak JVM used memory.</p>
 <h4>Executor Max Peak JVM Used Memory</h4>
-<p>This is to analyse whether the executor memory is set to a good value. To avoid wasted memory, its checked that the peak JVM used memory is reasonably close to the allocated executor memory, (spark.executor.memory) -- if it is much smaller, then executor memory should be reduced.</p>
+<p>This is to analyse whether the executor memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory is reasonably close to the allocated executor memory, (spark.executor.memory) -- if it is much smaller, then executor memory should be reduced.</p>
 <h4>Executor JVM Used Memory Skew</h4>
 <p>If there is a big difference between median and maximum values of the peak JVM used memory, then there could be skew in the data being processed.</p>
 <h4>Driver Max Peak JVM Used Memory</h4>
