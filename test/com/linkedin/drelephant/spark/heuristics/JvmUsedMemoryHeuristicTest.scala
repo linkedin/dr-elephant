@@ -18,6 +18,7 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
   val peakJvmUsedMemoryHeuristic = new JvmUsedMemoryHeuristic(heuristicConfigurationData)
 
   val appConfigurationProperties = Map("spark.driver.memory"->"40000000000", "spark.executor.memory"->"500000000")
+
   val executorData = Seq(
     newDummyExecutorData("1", Map("jvmUsedMemory" -> 394567123)),
     newDummyExecutorData("2", Map("jvmUsedMemory" -> 23456834)),
@@ -29,7 +30,6 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
   describe(".apply") {
     val data = newFakeSparkApplicationData(appConfigurationProperties, executorData)
     val heuristicResult = peakJvmUsedMemoryHeuristic.apply(data)
-    val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
     it("has severity") {
       heuristicResult.getSeverity should be(Severity.CRITICAL)
@@ -44,18 +44,19 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
       it("has severity executor") {
         evaluator.severityExecutor should be(Severity.NONE)
       }
+
       it("has severity driver") {
         evaluator.severityDriver should be(Severity.CRITICAL)
       }
-      it("has severity skew") {
-        evaluator.severitySkew should be(Severity.CRITICAL)
-      }
+
       it("has median peak jvm memory") {
         evaluator.medianPeakJvmUsedMemory should be (334569)
       }
+
       it("has max peak jvm memory") {
         evaluator.maxExecutorPeakJvmUsedMemory should be (394567123)
       }
+
       it("has max driver peak jvm memory") {
         evaluator.maxDriverPeakJvmUsedMemory should be (394561)
       }
