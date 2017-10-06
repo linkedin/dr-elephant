@@ -16,7 +16,15 @@
 <p>This is a heuristic for peak JVM used memory.</p>
 <h4>Executor Max Peak JVM Used Memory</h4>
 <p>This is to analyse whether the executor memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory is reasonably close to the allocated executor memory, (spark.executor.memory) -- if it is much smaller, then executor memory should be reduced.</p>
-<h4>Executor JVM Used Memory Skew</h4>
-<p>If there is a big difference between median and maximum values of the peak JVM used memory, then there could be skew in the data being processed.</p>
+<p>The thresholds set currently are : <br>
+    Low: spark.executor.memory >= 1.5 * (max peakJvmUsedMemory + 300MB)<br>
+    Moderate: spark.executor.memory >= 2 * (max peakJvmUsedMemory + 300MB)<br>
+    Severe: spark.executor.memory >= 2.5 * (max peakJvmUsedMemory + 300MB)<br>
+    Critical: spark.executor.memory >= 3 * (max peakJvmUsedMemory + 300MB)</p>
 <h4>Driver Max Peak JVM Used Memory</h4>
 <p>Allocated memory for the driver (spark.driver.memory) is examined and it checks if its much more than the peak JVM memory used by the driver</p>
+<p>The thresholds set currently are : <br>
+    Low: spark.driver.memory >= 1.5 * (max peakJvmUsedMemory + 300MB)<br>
+    Moderate: spark.driver.memory >= 2 * (max peakJvmUsedMemory + 300MB)<br>
+    Severe: spark.driver.memory >= 2.5 * (max peakJvmUsedMemory + 300MB)<br>
+    Critical: spark.driver.memory >= 3 * (max peakJvmUsedMemory + 300MB)</p>
