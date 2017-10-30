@@ -57,10 +57,8 @@
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
     <params>
       <sampling_enabled>false</sampling_enabled>
-      <!--
       <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
       <history_server_time_zone>PST</history_server_time_zone>
-      -->
     </params>
   </fetcher>
   
