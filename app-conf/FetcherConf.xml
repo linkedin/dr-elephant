@@ -45,7 +45,7 @@
 
      Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
      files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
-     is 1024MB. To increase this, e.g. to 2048MB, update the below conf in app-conf/elephant.conf:
+     is 1024MB. To increase this, e.g. to 2048MB, update the below mem conf in app-conf/elephant.conf:
        jvm_args="-mem 2048"
 
      To work properly, this fetcher should use the same timezone with the job history server.
