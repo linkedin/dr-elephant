@@ -80,16 +80,16 @@ object JvmUsedMemoryHeuristic {
 
     lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
     lazy val driverSummary : Option[ExecutorSummary] = executorSummaries.find(_.id.equals("driver"))
-    val maxDriverPeakJvmUsedMemory : Long = driverSummary.get.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0).asInstanceOf[Number].longValue
+    val maxDriverPeakJvmUsedMemory : Long = driverSummary.get.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0L).asInstanceOf[Number].longValue
     val executorList : Seq[ExecutorSummary] = executorSummaries.filterNot(_.id.equals("driver"))
-    val sparkExecutorMemory : Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0)
-    val sparkDriverMemory : Long = appConfigurationProperties.get(SPARK_DRIVER_MEMORY).map(MemoryFormatUtils.stringToBytes).getOrElse(0)
+    val sparkExecutorMemory : Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0L)
+    val sparkDriverMemory : Long = appConfigurationProperties.get(SPARK_DRIVER_MEMORY).map(MemoryFormatUtils.stringToBytes).getOrElse(0L)
     val medianPeakJvmUsedMemory: Long = executorList.map {
-      _.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0).asInstanceOf[Number].longValue
+      _.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0L).asInstanceOf[Number].longValue
     }.sortWith(_< _).drop(executorList.size/2).head
     lazy val maxExecutorPeakJvmUsedMemory: Long = (executorList.map {
       _.peakJvmUsedMemory.get(JVM_USED_MEMORY)
-    }.max).getOrElse(0.asInstanceOf[Number].longValue())
+    }.max).getOrElse(0L)
 
     val DEFAULT_MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLDS =
       SeverityThresholds(low = 1.5 * (maxExecutorPeakJvmUsedMemory + reservedMemory), moderate = 2 * (maxExecutorPeakJvmUsedMemory + reservedMemory), severe = 4 * (maxExecutorPeakJvmUsedMemory + reservedMemory), critical = 8 * (maxExecutorPeakJvmUsedMemory + reservedMemory), ascending = true)
