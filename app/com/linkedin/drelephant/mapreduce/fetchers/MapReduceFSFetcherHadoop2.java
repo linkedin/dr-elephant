@@ -153,14 +153,17 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
 
     // Search files in done dir
     String jobHistoryDirPath = getHistoryDir(job);
-    RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(jobHistoryDirPath), false);
-    while (it.hasNext() && (jobConfPath == null || jobHistPath == null)) {
-      String name = it.next().getPath().getName();
-      if (name.contains(jobId)) {
-        if (name.endsWith("_conf.xml")) {
-          jobConfPath = jobHistoryDirPath + name;
-        } else if (name.endsWith(".jhist")) {
-          jobHistPath = jobHistoryDirPath + name;
+
+    if (_fs.exists(new Path(jobHistoryDirPath))) {
+      RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(jobHistoryDirPath), false);
+      while (it.hasNext() && (jobConfPath == null || jobHistPath == null)) {
+        String name = it.next().getPath().getName();
+        if (name.contains(jobId)) {
+          if (name.endsWith("_conf.xml")) {
+            jobConfPath = jobHistoryDirPath + name;
+          } else if (name.endsWith(".jhist")) {
+            jobHistPath = jobHistoryDirPath + name;
+          }
         }
       }
     }
@@ -178,7 +181,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     }
     if (jobHistPath == null) {
       try {
-        it = _fs.listFiles(new Path(intermediateDirPath), false);
+        RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(intermediateDirPath), false);
         while (it.hasNext()) {
           String name = it.next().getPath().getName();
           if (name.contains(jobId) && name.endsWith(".jhist")) {
