@@ -16,7 +16,19 @@
 -->
 <!-- Heuristics configurations, each heuristic will be loaded by a particular analyser -->
 <heuristics>
-
+  
+  <!-- TEZ HEURISTICS -->
+  <heuristic>
+    <applicationtype>tez</applicationtype>
+    <heuristicname>Mapper Spill</heuristicname>
+    <classname>com.linkedin.drelephant.tez.heuristics.MapperSpillHeuristic</classname>
+    <viewname>views.html.help.mapreduce.helpMapperSpill</viewname>
+    <!--<params>
+      <spill_severity>2.01, 2.2, 2.5, 3</spill_severity>
+      <num_tasks_severity>50, 100, 500, 1000</num_tasks_severity>
+    </params>-->
+  </heuristic> 
+  
   <!-- MAP-REDUCE HEURISTICS -->
 
   <heuristic>
