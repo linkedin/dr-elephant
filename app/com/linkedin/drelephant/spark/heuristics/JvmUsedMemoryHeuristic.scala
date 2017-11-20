@@ -87,9 +87,9 @@ object JvmUsedMemoryHeuristic {
     val medianPeakJvmUsedMemory: Long = executorList.map {
       _.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0L).asInstanceOf[Number].longValue
     }.sortWith(_< _).drop(executorList.size/2).head
-    lazy val maxExecutorPeakJvmUsedMemory: Long = (executorList.map {
-      _.peakJvmUsedMemory.get(JVM_USED_MEMORY)
-    }.max).getOrElse(0L)
+    lazy val maxExecutorPeakJvmUsedMemory: Long = executorList.map {
+      _.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0L)
+    }.max
 
     val DEFAULT_MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLDS =
       SeverityThresholds(low = 1.5 * (maxExecutorPeakJvmUsedMemory + reservedMemory), moderate = 2 * (maxExecutorPeakJvmUsedMemory + reservedMemory), severe = 4 * (maxExecutorPeakJvmUsedMemory + reservedMemory), critical = 8 * (maxExecutorPeakJvmUsedMemory + reservedMemory), ascending = true)
