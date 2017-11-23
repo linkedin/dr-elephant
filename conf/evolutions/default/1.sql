@@ -16,6 +16,8 @@
 
 # --- !Ups
 
+SET GLOBAL innodb_file_format=Barracuda;
+SET GLOBAL innodb_large_prefix = ON;
 
 CREATE TABLE yarn_app_result (
   id               VARCHAR(50)   NOT NULL              COMMENT 'The application id, e.g., application_1236543456321_1234567',
@@ -41,7 +43,7 @@ CREATE TABLE yarn_app_result (
   flow_def_url     VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A url to the flow definition on the scheduler',
 
   PRIMARY KEY (id)
-);
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 create index yarn_app_result_i1 on yarn_app_result (finish_time);
 create index yarn_app_result_i2 on yarn_app_result (username,finish_time);
@@ -61,7 +63,7 @@ CREATE TABLE yarn_app_heuristic_result (
 
   PRIMARY KEY (id),
   CONSTRAINT yarn_app_heuristic_result_f1 FOREIGN KEY (yarn_app_result_id) REFERENCES yarn_app_result (id)
-);
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 create index yarn_app_heuristic_result_i1 on yarn_app_heuristic_result (yarn_app_result_id);
 create index yarn_app_heuristic_result_i2 on yarn_app_heuristic_result (heuristic_name,severity);
@@ -74,7 +76,7 @@ CREATE TABLE yarn_app_heuristic_result_details (
 
   PRIMARY KEY (yarn_app_heuristic_result_id,name),
   CONSTRAINT yarn_app_heuristic_result_details_f1 FOREIGN KEY (yarn_app_heuristic_result_id) REFERENCES yarn_app_heuristic_result (id)
-);
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 create index yarn_app_heuristic_result_details_i1 on yarn_app_heuristic_result_details (name);
 
