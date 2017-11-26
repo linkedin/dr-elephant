@@ -39,6 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.v2.util.MRWebAppUtil;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
@@ -51,6 +52,9 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
   private static final Logger logger = Logger.getLogger(MapReduceFetcherHadoop2.class);
+  private static final String JOB_HISTORY_HTTP_POLICY = "mapreduce.jobhistory.http.policy";
+  private static final String JOB_HISTORY_HTTP_ADDRESS = "mapreduce.jobhistory.webapp.address";
+  private static final String JOB_HISTORY_HTTPS_ADDRESS = "mapreduce.jobhistory.webapp.https.address";
   // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
 
   private URLFactory _urlFactory;
@@ -60,19 +64,22 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
   public MapReduceFetcherHadoop2(FetcherConfigurationData fetcherConfData) throws IOException {
     super(fetcherConfData);
 
-    final String jhistoryAddr = new Configuration().get("mapreduce.jobhistory.webapp.address");
+    final Configuration configuration = new Configuration();
+    MRWebAppUtil.initialize(configuration);
+    String jhistoryAddr = MRWebAppUtil.getJHSWebappURLWithScheme(configuration);
 
     logger.info("Connecting to the job history server at " + jhistoryAddr + "...");
     _urlFactory = new URLFactory(jhistoryAddr);
     logger.info("Connection success.");
 
     _jsonFactory = new JSONFactory();
-    _jhistoryWebAddr = "http://" + jhistoryAddr + "/jobhistory/job/";
+    _jhistoryWebAddr = jhistoryAddr + "/jobhistory/job/";
   }
 
   @Override
   public MapReduceApplicationData fetchData(AnalyticJob analyticJob) throws IOException, AuthenticationException {
     String appId = analyticJob.getAppId();
+    logger.debug("Fetching MapReduce ApplicationId " + appId);
     MapReduceApplicationData jobData = new MapReduceApplicationData();
     String jobId = Utils.getJobIdFromApplicationId(appId);
     jobData.setAppId(appId).setJobId(jobId);
@@ -169,7 +176,7 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
     private String _restRoot;
 
     private URLFactory(String hserverAddr) throws IOException {
-      _restRoot = "http://" + hserverAddr + "/ws/v1/history/mapreduce/jobs";
+      _restRoot = hserverAddr + "/ws/v1/history/mapreduce/jobs";
       verifyURL(_restRoot);
     }
 

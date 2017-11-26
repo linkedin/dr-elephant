@@ -21,21 +21,22 @@ import java.net.{HttpURLConnection, URL}
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.http.HttpConfig
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL
 import org.apache.log4j.Logger
 
 trait HadoopUtils {
-  val DFS_NAMESERVICES_KEY = "dfs.nameservices"
-  val DFS_HA_NAMENODES_KEY = "dfs.ha.namenodes"
-  val DFS_NAMENODE_HTTP_ADDRESS_KEY = "dfs.namenode.http-address"
 
+  val HTTP_SCHEME = "http"
+  val HTTPS_SCHEME = "https"
   protected def logger: Logger
 
   def findHaNameNodeAddress(conf: Configuration): Option[String] = {
 
     def findNameNodeAddressInNameServices(nameServices: Array[String]): Option[String] = nameServices match {
       case Array(nameService) => {
-        val ids = Option(conf.get(s"${DFS_HA_NAMENODES_KEY}.${nameService}")).map { _.split(",") }
+        val ids = Option(conf.get(s"${DFSConfigKeys.DFS_HA_NAMENODES_KEY_PREFIX}.${nameService}")).map { _.split(",") }
         val namenodeAddress = ids.flatMap { findNameNodeAddressInNameService(nameService, _) }
         namenodeAddress match {
           case Some(address) => logger.info(s"Active namenode for ${nameService}: ${address}")
@@ -55,17 +56,16 @@ trait HadoopUtils {
 
     def findNameNodeAddressInNameService(nameService: String, nameNodeIds: Array[String]): Option[String] =
       nameNodeIds
-        .flatMap { id => Option(conf.get(s"${DFS_NAMENODE_HTTP_ADDRESS_KEY}.${nameService}.${id}")) }
+        .flatMap { id => Option(conf.get(getNameNodeHttpAddressKey(conf) + s".${nameService}.${id}")) }
         .find(isActiveNameNode)
 
-    val nameServices = Option(conf.get(DFS_NAMESERVICES_KEY)).map { _.split(",") }
+    val nameServices = Option(conf.get(DFSConfigKeys.DFS_NAMESERVICES))map { _.split(",") }
     nameServices.flatMap(findNameNodeAddressInNameServices)
   }
 
-  def httpNameNodeAddress(conf: Configuration): Option[String] = Option(conf.get(DFS_NAMENODE_HTTP_ADDRESS_KEY))
-
   def isActiveNameNode(hostAndPort: String): Boolean = {
-    val url = new URL(s"http://${hostAndPort}/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus")
+    // TO DO : fix this hardcoded sheme prefix
+    val url = new URL(s"https://${hostAndPort}/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus")
     val conn = newAuthenticatedConnection(url)
     try {
       val in = conn.getInputStream()
@@ -81,6 +81,28 @@ trait HadoopUtils {
 
   protected def isActiveNameNode(in: InputStream): Boolean =
     new ObjectMapper().readTree(in).path("beans").get(0).path("State").textValue() == "active"
+
+  def httpNameNodeAddress(conf: Configuration): Option[String] = Option(conf.get(getNameNodeHttpAddressKey(conf)))
+
+  protected def isSslEnabled(conf: Configuration, key: String): Boolean = {
+    (conf.get(key)!= null) && (HttpConfig.Policy.fromString(conf.get(key))== HttpConfig.Policy.HTTPS_ONLY)
+  }
+
+  def isHdfsSslEnabled(conf: Configuration): Boolean = {
+    isSslEnabled(conf, DFSConfigKeys.DFS_HTTP_POLICY_KEY)
+  }
+
+  protected def getHttpPrefixScheme(conf: Configuration): String = {
+    //HttpConfig.getScheme(HttpConfig.Policy.fromString(conf.get(key)))
+    if (isHdfsSslEnabled(conf)) HTTPS_SCHEME else HTTP_SCHEME
+  }
+
+  protected def getNameNodeHttpAddressKey(conf: Configuration): String = {
+    if (isHdfsSslEnabled(conf))
+      DFSConfigKeys.DFS_NAMENODE_HTTPS_ADDRESS_KEY
+    else
+      DFSConfigKeys.DFS_NAMENODE_HTTP_ADDRESS_KEY
+  }
 
   protected def newAuthenticatedConnection(url: URL): HttpURLConnection = {
     val token = new AuthenticatedURL.Token()

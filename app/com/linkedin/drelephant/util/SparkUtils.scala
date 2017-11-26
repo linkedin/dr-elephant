@@ -24,7 +24,8 @@ import scala.collection.JavaConverters
 import scala.collection.mutable.HashMap
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path, PathFilter, FileStatus}
+import org.apache.hadoop.fs.{FileSystem, Path, PathFilter}
+import org.apache.hadoop.hdfs.DFSConfigKeys
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.io.{CompressionCodec, LZ4CompressionCodec, LZFCompressionCodec, SnappyCompressionCodec}
@@ -41,7 +42,8 @@ trait SparkUtils {
 
   val SPARK_EVENT_LOG_DIR_KEY = "spark.eventLog.dir"
   val SPARK_EVENT_LOG_COMPRESS_KEY = "spark.eventLog.compress"
-  val DFS_HTTP_PORT = 50070
+  val WEBHDFS_SCHEME = "webhdfs" // see org.apache.hadoop.hdfs.web.WebHdfsConstants
+  val SWEBHDFS_SCHEME = "swebhdfs" // see org.apache.hadoop.hdfs.web.WebHdfsConstants
 
   /**
     * Returns the webhdfs FileSystem and Path for the configured Spark event log directory and optionally the
@@ -60,21 +62,33 @@ trait SparkUtils {
     if(uriFromFetcherConf.isDefined) {
       logger.info(s"Using log location from FetcherConf ${uriFromFetcherConf}")
       val uri = new URI(uriFromFetcherConf.get)
+      logger.debug("Initiating FileSystem from " + uri)
       (FileSystem.get(uri, hadoopConfiguration), new Path(uri.getPath))
     } else {
       val eventLogUri = sparkConf.getOption(SPARK_EVENT_LOG_DIR_KEY).map(new URI(_))
       eventLogUri match {
         case Some(uri) if uri.getScheme == "webhdfs" =>
+          logger.debug("Initiating webhdfs FileSystem from " + uri)
+          (FileSystem.get(uri, hadoopConfiguration), new Path(uri.getPath))
+        case Some(uri) if uri.getScheme == "swebhdfs" =>
+          logger.debug("Initiating swebhdfs FileSystem from " + uri)
           (FileSystem.get(uri, hadoopConfiguration), new Path(uri.getPath))
         case Some(uri) if uri.getScheme == "hdfs" =>
-          (FileSystem.get(new URI(s"webhdfs://${uri.getHost}:${DFS_HTTP_PORT}${uri.getPath}"), hadoopConfiguration), new Path(uri.getPath))
+          val dfs_http_scheme = getWebHdfsPrefixScheme(hadoopConfiguration)
+          val dfs_http_port = getNameNodeHttpPort(hadoopConfiguration)
+          val dfs_http_uri = s"${dfs_http_scheme}${uri.getHost}:${dfs_http_port}${uri.getPath}"
+          logger.debug("Initiating FileSystem from " + dfs_http_uri)
+          (FileSystem.get(new URI(dfs_http_uri), hadoopConfiguration), new Path(uri.getPath))
         case Some(uri) =>
           val nameNodeAddress
           = hadoopUtils.findHaNameNodeAddress(hadoopConfiguration)
             .orElse(hadoopUtils.httpNameNodeAddress(hadoopConfiguration))
           nameNodeAddress match {
             case Some(address) =>
-              (FileSystem.get(new URI(s"webhdfs://${address}${uri.getPath}"), hadoopConfiguration), new Path(uri.getPath))
+              val dfs_http_scheme = getWebHdfsPrefixScheme(hadoopConfiguration)
+              val dfs_http_uri = s"${dfs_http_scheme}${address}${uri.getPath}"
+              logger.debug("Initiating HA FileSystem from " + dfs_http_uri)
+              (FileSystem.get(new URI(dfs_http_uri), hadoopConfiguration), new Path(uri.getPath))
             case None =>
               throw new IllegalArgumentException("Couldn't find configured namenode")
           }
@@ -82,6 +96,20 @@ trait SparkUtils {
           throw new IllegalArgumentException("${SPARK_EVENT_LOG_DIR_KEY} not provided")
       }
     }
+  }
+
+  def getWebHdfsPrefixScheme(conf: Configuration): String = {
+    if (hadoopUtils.isHdfsSslEnabled(conf))
+      SWEBHDFS_SCHEME + "://"
+    else
+      WEBHDFS_SCHEME + "://"
+  }
+
+  def getNameNodeHttpPort(conf: Configuration): String = {
+    if (hadoopUtils.isHdfsSslEnabled(conf))
+      conf.get(DFSConfigKeys.DFS_NAMENODE_HTTPS_PORT_KEY, DFSConfigKeys.DFS_NAMENODE_HTTPS_PORT_DEFAULT.toString())
+    else
+      conf.get(DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_KEY, DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_DEFAULT.toString())
   }
 
   /**

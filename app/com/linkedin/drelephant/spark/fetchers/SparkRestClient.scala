@@ -60,10 +60,13 @@ class SparkRestClient(sparkConf: SparkConf) {
       val baseUri: URI =
         // Latest versions of CDH include http in their history server address configuration.
         // However, it is not recommended by Spark documentation(http://spark.apache.org/docs/latest/running-on-yarn.html)
-        if (historyServerAddress.contains(s"http://")) {
+        if (historyServerAddress.contains(s"http://") || historyServerAddress.contains(s"https://")) {
           new URI(historyServerAddress)
         } else {
-          new URI(s"http://${historyServerAddress}")
+          if (sparkConf.getOption(SSL_ENABLED_KEY) == "true")
+            new URI(s"https://${historyServerAddress}")
+          else
+            new URI(s"http://${historyServerAddress}")
         }
       require(baseUri.getPath == "")
       baseUri
@@ -217,6 +220,7 @@ class SparkRestClient(sparkConf: SparkConf) {
 
 object SparkRestClient {
   val HISTORY_SERVER_ADDRESS_KEY = "spark.yarn.historyServer.address"
+  val SSL_ENABLED_KEY = "spark.ssl.enabled"
   val API_V1_MOUNT_PATH = "api/v1"
   val IN_PROGRESS = ".inprogress"
 
