@@ -111,6 +111,11 @@ if [ -n "${keytab_location}" ]; then
   OPTS+=" -Dkeytab.location=$keytab_location"
 fi
 
+if [ -n "${truststore_location}" ]; then
+  echo "truststore_location: " $truststore_location
+  OPTS+=" -Djavax.net.ssl.trustStore=$truststore_location"
+fi
+
 if [ -n "${application_secret}" ]; then
   OPTS+=" -Dapplication.secret=$application_secret"
 fi

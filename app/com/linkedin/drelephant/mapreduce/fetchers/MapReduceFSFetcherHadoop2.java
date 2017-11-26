@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Counters;
@@ -36,6 +37,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.mapreduce.jobhistory.JobHistoryParser;
+import org.apache.hadoop.mapreduce.v2.jobhistory.JobHistoryUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -88,8 +90,8 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     logger.info("Using timezone: " + _timeZone.getID());
 
     Configuration conf = new Configuration();
-    this._historyLocation = conf.get("mapreduce.jobhistory.done-dir");
-    this._intermediateHistoryLocation = conf.get("mapreduce.jobhistory.intermediate-done-dir");
+    this._historyLocation = JobHistoryUtils.getConfiguredHistoryServerDoneDirPrefix(conf);
+    this._intermediateHistoryLocation = JobHistoryUtils.getConfiguredHistoryIntermediateDoneDirPrefix(conf);
     try {
       URI uri = new URI(this._historyLocation);
       this._fs = FileSystem.get(uri, conf);
@@ -159,9 +161,9 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
       while (it.hasNext() && (jobConfPath == null || jobHistPath == null)) {
         String name = it.next().getPath().getName();
         if (name.contains(jobId)) {
-          if (name.endsWith("_conf.xml")) {
+          if (name.endsWith(JobHistoryUtils.CONF_FILE_NAME_SUFFIX)) {
             jobConfPath = jobHistoryDirPath + name;
-          } else if (name.endsWith(".jhist")) {
+          } else if (name.endsWith(JobHistoryUtils.JOB_HISTORY_FILE_EXTENSION)) {
             jobHistPath = jobHistoryDirPath + name;
           }
         }
@@ -172,7 +174,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     // not yet moved them into the done-dir.
     String intermediateDirPath = _intermediateHistoryLocation + File.separator + job.getUser() + File.separator;
     if (jobConfPath == null) {
-      jobConfPath = intermediateDirPath + jobId + "_conf.xml";
+      jobConfPath = intermediateDirPath + jobId + JobHistoryUtils.CONF_FILE_NAME_SUFFIX;
       if (!_fs.exists(new Path(jobConfPath))) {
         throw new FileNotFoundException("Can't find config of " + jobId + " in neither "
                 + jobHistoryDirPath + " nor " + intermediateDirPath);
@@ -184,7 +186,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
         RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(intermediateDirPath), false);
         while (it.hasNext()) {
           String name = it.next().getPath().getName();
-          if (name.contains(jobId) && name.endsWith(".jhist")) {
+          if (name.contains(jobId) && name.endsWith(JobHistoryUtils.JOB_HISTORY_FILE_EXTENSION)) {
             jobHistPath = intermediateDirPath + name;
             logger.info("Found history file in intermediate dir: " + jobHistPath);
             break;

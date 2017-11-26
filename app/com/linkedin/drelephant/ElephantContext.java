@@ -167,6 +167,9 @@ public class ElephantContext {
         }
 
         logger.info("Load Fetcher : " + data.getClassName());
+        for (Map.Entry<String, String> entry : data.getParamMap().entrySet()) {
+          logger.debug("  with params : [Key : " + entry.getKey() + ", Value : " + entry.getValue()+"]");
+        }
       } catch (ClassNotFoundException e) {
         throw new RuntimeException("Could not find class " + data.getClassName(), e);
       } catch (InstantiationException e) {
