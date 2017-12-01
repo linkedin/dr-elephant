@@ -22,8 +22,7 @@ import java.util.zip.{ZipInputStream, ZipEntry, ZipOutputStream}
 import java.util.{Calendar, Date, SimpleTimeZone}
 import javax.ws.rs.client.WebTarget
 
-import org.apache.spark.status.api.v1.StageStatus
-
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 import com.fasterxml.jackson.databind.ObjectMapper

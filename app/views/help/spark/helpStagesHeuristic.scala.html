@@ -18,3 +18,10 @@ each stage, and long average executor runtimes for each stage.</p>
 
 <p>Stage/task failures can occur for a number of reasons, so it is
 recommended to look at the YARN application error logs.</p>
+<p>
+  It also checks the ratio of jvmGcTime to executorRunTime, to see if GC is taking too much time (providing more memory could help) or too little time (memory may be over provisioned, and can be reduced). <br/>
+  It is recommended to increase executor memory if too much time is being spent in GC <br/>
+  If unified memory has too much excess capacity, it is recommended to decrease spark.memory.fraction to increase the amount allocated to user memory, instead of increasing executor memory. <br/>
+  We recommend decreasing executor memory if too little time is being spent in GC. <br/>
+  However, if there is execution or storage spill, then it is recommended to increase spark.memory.fraction, instead of decreasing executor memory.
+</p>

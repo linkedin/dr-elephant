@@ -16,19 +16,21 @@
 
 package com.linkedin.drelephant.spark.heuristics
 
+import java.util.Date
+
 import scala.collection.JavaConverters
 import scala.concurrent.duration.Duration
-
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, JobDataImpl, StageDataImpl}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, JobDataImpl, StageDataImpl, TaskMetricsImpl, TaskDataImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
-import org.apache.spark.status.api.v1.StageStatus
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 import org.scalatest.{FunSpec, Matchers}
 
 
 class StagesHeuristicTest extends FunSpec with Matchers {
+
   import StagesHeuristicTest._
 
   describe("StagesHeuristic") {
@@ -41,16 +43,16 @@ class StagesHeuristicTest extends FunSpec with Matchers {
     )
     val stagesHeuristic = new StagesHeuristic(heuristicConfigurationData)
     val stageDatas = Seq(
-      newFakeStageData(StageStatus.COMPLETE, 0, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("2min").toMillis, "foo"),
-      newFakeStageData(StageStatus.COMPLETE, 1, numCompleteTasks = 8, numFailedTasks = 2, executorRunTime = Duration("2min").toMillis, "bar"),
-      newFakeStageData(StageStatus.COMPLETE, 2, numCompleteTasks = 6, numFailedTasks = 4, executorRunTime = Duration("2min").toMillis, "baz"),
-      newFakeStageData(StageStatus.FAILED, 3, numCompleteTasks = 4, numFailedTasks = 6, executorRunTime = Duration("2min").toMillis, "aaa"),
-      newFakeStageData(StageStatus.FAILED, 4, numCompleteTasks = 2, numFailedTasks = 8, executorRunTime = Duration("2min").toMillis, "zzz"),
-      newFakeStageData(StageStatus.COMPLETE, 5, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("0min").toMillis, "bbb"),
-      newFakeStageData(StageStatus.COMPLETE, 6, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("30min").toMillis, "ccc"),
-      newFakeStageData(StageStatus.COMPLETE, 7, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("60min").toMillis, "ddd"),
-      newFakeStageData(StageStatus.COMPLETE, 8, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("90min").toMillis, "eee"),
-      newFakeStageData(StageStatus.COMPLETE, 9, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("120min").toMillis, "fff")
+      newFakeStageData(StageStatus.COMPLETE, 0, jvmGcTime = Duration("2min").toMillis, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("2min").toMillis, "foo"),
+      newFakeStageData(StageStatus.COMPLETE, 1, jvmGcTime = Duration("2min").toMillis, numCompleteTasks = 8, numFailedTasks = 2, executorRunTime = Duration("2min").toMillis, "bar"),
+      newFakeStageData(StageStatus.COMPLETE, 2, jvmGcTime = Duration("2min").toMillis, numCompleteTasks = 6, numFailedTasks = 4, executorRunTime = Duration("2min").toMillis, "baz"),
+      newFakeStageData(StageStatus.FAILED, 3, jvmGcTime = Duration("1min").toMillis, numCompleteTasks = 4, numFailedTasks = 6, executorRunTime = Duration("2min").toMillis, "aaa"),
+      newFakeStageData(StageStatus.FAILED, 4, jvmGcTime = Duration("1min").toMillis, numCompleteTasks = 2, numFailedTasks = 8, executorRunTime = Duration("2min").toMillis, "zzz"),
+      newFakeStageData(StageStatus.COMPLETE, 5, jvmGcTime = Duration("1min").toMillis, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("0min").toMillis, "bbb"),
+      newFakeStageData(StageStatus.COMPLETE, 6, jvmGcTime = Duration("1min").toMillis, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("30min").toMillis, "ccc"),
+      newFakeStageData(StageStatus.COMPLETE, 7, jvmGcTime = Duration("1min").toMillis, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("60min").toMillis, "ddd"),
+      newFakeStageData(StageStatus.COMPLETE, 8, jvmGcTime = Duration("1min").toMillis, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("90min").toMillis, "eee"),
+      newFakeStageData(StageStatus.COMPLETE, 9, jvmGcTime = Duration("2min").toMillis, numCompleteTasks = 10, numFailedTasks = 0, executorRunTime = Duration("120min").toMillis, "fff")
     )
 
     val appConfigurationProperties = Map("spark.executor.instances" -> "2")
@@ -112,25 +114,42 @@ class StagesHeuristicTest extends FunSpec with Matchers {
       it("has the list of stages with high task failure rates") {
         val stageIdsAndTaskFailureRates =
           evaluator.stagesWithHighTaskFailureRates.map { case (stageData, taskFailureRate) => (stageData.stageId, taskFailureRate) }
-        stageIdsAndTaskFailureRates should contain theSameElementsInOrderAs(Seq((3, 0.6D), (4, 0.8D)))
+        stageIdsAndTaskFailureRates should contain theSameElementsInOrderAs (Seq((3, 0.6D), (4, 0.8D)))
       }
 
       it("has the list of stages with long average executor runtimes") {
         val stageIdsAndRuntimes =
           evaluator.stagesWithLongAverageExecutorRuntimes.map { case (stageData, runtime) => (stageData.stageId, runtime) }
-        stageIdsAndRuntimes should contain theSameElementsInOrderAs(
+        stageIdsAndRuntimes should contain theSameElementsInOrderAs (
           Seq((8, Duration("45min").toMillis), (9, Duration("60min").toMillis))
-        )
+          )
       }
 
-      it("computes the overall severity") {
-        evaluator.severity should be(Severity.CRITICAL)
+      it("has the ratio") {
+        evaluator.ratio should be(0.04516129032258064)
+      }
+
+      it("has the total Jvm Gc Time") {
+        evaluator.jvmTime should be(840000)
+      }
+
+      it("has the total executor Run time") {
+        evaluator.executorRunTimeTotal should be(18600000)
+      }
+
+      it("has ascending severity for ratio of JVM GC time to executor run time") {
+        evaluator.severityTimeA should be(Severity.NONE)
+      }
+
+      it("has descending severity for ratio of JVM GC time to executor run time") {
+        evaluator.severityTimeD should be(Severity.LOW)
       }
     }
   }
 }
 
 object StagesHeuristicTest {
+
   import JavaConverters._
 
   def newFakeHeuristicConfigurationData(params: Map[String, String] = Map.empty): HeuristicConfigurationData =
@@ -139,11 +158,12 @@ object StagesHeuristicTest {
   def newFakeStageData(
     status: StageStatus,
     stageId: Int,
+    jvmGcTime: Long,
     numCompleteTasks: Int,
     numFailedTasks: Int,
     executorRunTime: Long,
     name: String
-  ): StageDataImpl = new StageDataImpl(
+   ): StageDataImpl = new StageDataImpl(
     status,
     stageId,
     attemptId = 0,
@@ -165,14 +185,37 @@ object StagesHeuristicTest {
     details = "",
     schedulingPool = "",
     accumulatorUpdates = Seq.empty,
-    tasks = None,
+    tasks = new Some(Map(0.toLong -> new TaskDataImpl(
+      taskId = 0,
+      index = 1,
+      attempt = 0,
+      launchTime = new Date(),
+      executorId = "1",
+      host = "SomeHost",
+      taskLocality = "ANY",
+      speculative = false,
+      accumulatorUpdates = Seq(),
+      errorMessage = None,
+      taskMetrics = new Some(new TaskMetricsImpl(
+        executorDeserializeTime = 0,
+        executorRunTime = 0,
+        resultSize = 0,
+        jvmGcTime,
+        resultSerializationTime = 0,
+        memoryBytesSpilled = 0,
+        diskBytesSpilled = 0,
+        inputMetrics = None,
+        outputMetrics = None,
+        shuffleReadMetrics = None,
+        shuffleWriteMetrics = None))
+    ))),
     executorSummary = None
   )
 
   def newFakeSparkApplicationData(
     stageDatas: Seq[StageDataImpl],
     appConfigurationProperties: Map[String, String]
-  ): SparkApplicationData = {
+   ): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
