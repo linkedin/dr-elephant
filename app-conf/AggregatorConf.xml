@@ -34,6 +34,10 @@
     <classname>com.linkedin.drelephant.mapreduce.MapReduceMetricsAggregator</classname>
   </aggregator>
   <aggregator>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.TezMetricsAggregator</classname>
+  </aggregator>
+  <aggregator>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.SparkMetricsAggregator</classname>
     <params>

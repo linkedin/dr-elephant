@@ -30,6 +30,13 @@
 -->
 <fetchers>
   <!--
+     REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
+   -->
+  <fetcher>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
+  </fetcher>
+  <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
