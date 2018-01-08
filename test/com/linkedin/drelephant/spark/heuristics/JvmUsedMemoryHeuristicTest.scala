@@ -89,6 +89,7 @@ object JvmUsedMemoryHeuristicTest {
     totalShuffleRead = 0,
     totalShuffleWrite = 0,
     maxMemory = 0,
+    totalGCTime = 0,
     executorLogs = Map.empty,
     peakJvmUsedMemory
   )
