@@ -49,10 +49,6 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
         evaluator.severityDriver should be(Severity.CRITICAL)
       }
 
-      it("has median peak jvm memory") {
-        evaluator.medianPeakJvmUsedMemory should be (334569)
-      }
-
       it("has max peak jvm memory") {
         evaluator.maxExecutorPeakJvmUsedMemory should be (394567123)
       }
