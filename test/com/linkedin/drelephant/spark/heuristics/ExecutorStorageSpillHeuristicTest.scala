@@ -111,7 +111,9 @@ object ExecutorStorageSpillHeuristicTest {
     maxMemory= 0,
     totalGCTime = 0,
     totalMemoryBytesSpilled,
-    executorLogs = Map.empty
+    executorLogs = Map.empty,
+    peakJvmUsedMemory = Map.empty,
+    peakUnifiedMemory = Map.empty
   )
 
   def newFakeSparkApplicationData(
@@ -124,7 +126,8 @@ object ExecutorStorageSpillHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = executorSummaries
+      executorSummaries = executorSummaries,
+      stagesWithFailedTasks = Seq.empty
     )
 
     val logDerivedData = SparkLogDerivedData(

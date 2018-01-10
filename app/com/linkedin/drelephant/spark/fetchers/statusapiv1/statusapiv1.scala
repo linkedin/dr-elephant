@@ -90,6 +90,7 @@ trait ExecutorSummary{
   def totalMemoryBytesSpilled: Long
   def executorLogs: Map[String, String]
   def peakJvmUsedMemory: Map[String, Long]
+  def peakUnifiedMemory: Map[String, Long]
 }
 
 trait JobData{
@@ -298,7 +299,8 @@ class ExecutorSummaryImpl(
   var totalGCTime: Long,
   var totalMemoryBytesSpilled: Long,
   var executorLogs: Map[String, String],
-  var peakJvmUsedMemory: Map[String, Long]) extends ExecutorSummary
+  var peakJvmUsedMemory: Map[String, Long],
+  var peakUnifiedMemory: Map[String, Long]) extends ExecutorSummary
 
 class JobDataImpl(
   var jobId: Int,

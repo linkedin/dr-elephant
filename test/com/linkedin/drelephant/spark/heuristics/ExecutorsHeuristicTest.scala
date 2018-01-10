@@ -252,7 +252,8 @@ object ExecutorsHeuristicTest {
     totalGCTime = 0,
     totalMemoryBytesSpilled = 0,
     executorLogs = Map.empty,
-    peakJvmUsedMemory = Map.empty
+    peakJvmUsedMemory = Map.empty,
+    peakUnifiedMemory = Map.empty
   )
 
   def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData = {

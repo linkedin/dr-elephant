@@ -195,6 +195,12 @@
   </heuristic>
   <heuristic>
     <applicationtype>spark</applicationtype>
+    <heuristicname>Peak Unified Memory</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.UnifiedMemoryHeuristic</classname>
+    <viewname>views.html.help.spark.helpUnifiedMemoryHeuristic</viewname>
+  </heuristic>
+  <heuristic>
+    <applicationtype>spark</applicationtype>
     <heuristicname>JVM Used Memory</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.JvmUsedMemoryHeuristic</classname>
     <viewname>views.html.help.spark.helpJvmUsedMemoryHeuristic</viewname>

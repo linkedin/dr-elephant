@@ -86,8 +86,10 @@ object JvmUsedMemoryHeuristicTest {
     totalShuffleWrite = 0,
     maxMemory = 0,
     totalGCTime = 0,
+    totalMemoryBytesSpilled = 0,
     executorLogs = Map.empty,
-    peakJvmUsedMemory
+    peakJvmUsedMemory,
+    peakUnifiedMemory = Map.empty
   )
 
   def newFakeSparkApplicationData(
@@ -104,7 +106,8 @@ object JvmUsedMemoryHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = executorSummaries
+      executorSummaries = executorSummaries,
+      stagesWithFailedTasks = Seq.empty
     )
 
     SparkApplicationData(appId, restDerivedData, Some(logDerivedData))

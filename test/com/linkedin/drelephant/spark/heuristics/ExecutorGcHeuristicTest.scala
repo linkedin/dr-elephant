@@ -121,7 +121,8 @@ object ExecutorGcHeuristicTest {
     totalGCTime,
     totalMemoryBytesSpilled = 0,
     executorLogs = Map.empty,
-    peakJvmUsedMemory = Map.empty
+    peakJvmUsedMemory = Map.empty,
+    peakUnifiedMemory = Map.empty
   )
 
   def newFakeSparkApplicationData(
