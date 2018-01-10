@@ -22,9 +22,12 @@ import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
+import com.linkedin.drelephant.math.Statistics
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl, ExecutorSummaryImpl}
+import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
+import org.apache.commons.io.FileUtils
 import org.scalatest.{FunSpec, Matchers}
 
 class SparkMetricsAggregatorTest extends FunSpec with Matchers {
@@ -47,8 +50,9 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
     }
 
     val executorSummaries = Seq(
-      newFakeExecutorSummary(id = "1", totalDuration = 1000000L),
-      newFakeExecutorSummary(id = "2", totalDuration = 3000000L)
+      newFakeExecutorSummary(id = "1", totalDuration = 1000000L, Map("jvmUsedMemory" -> 394567123)),
+      newFakeExecutorSummary(id = "2", totalDuration = 3000000L, Map("jvmUsedMemory" -> 23456834))
+
     )
     val restDerivedData = {
       SparkRestDerivedData(
@@ -60,7 +64,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
       )
     }
 
-    describe("when it has log-derived data") {
+    describe("when it has data") {
       val logDerivedData = {
         val environmentUpdate = newFakeSparkListenerEnvironmentUpdate(
           Map(
@@ -82,31 +86,20 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
 
       val result = aggregator.getResult
 
-      it("calculates resources used") {
-        val totalExecutorMemoryMb = 2 * 4096
-        val applicationDurationSeconds = 8000
-        val executorMemoryMb = 4096
-        val totalExecutorTaskTimeSeconds = 1000 + 3000
-        result.getResourceUsed should be(totalExecutorMemoryMb * applicationDurationSeconds)
+      it("calculates resources used (allocated)") {
+        result.getResourceUsed should be(4096000+12288000)
       }
 
       it("calculates resources wasted") {
-        val totalExecutorMemoryMb = 2 * 4096
-        val applicationDurationSeconds = 8000
-        val resourceAllocated = totalExecutorMemoryMb * applicationDurationSeconds;
-
-        val executorMemoryMb = 4096
-        val totalExecutorTaskTimeSeconds = 1000 + 3000
-        val resourceUsed = executorMemoryMb * totalExecutorTaskTimeSeconds;
-
-
-        result.getResourceWasted should be(resourceAllocated - resourceUsed * 1.5)
+        val resourceAllocated = 4096000+12288000
+        val resourceUsed = 676288+967110
+        result.getResourceWasted should be(resourceAllocated.toDouble - resourceUsed.toDouble * 1.5)
       }
 
       it("doesn't calculate total delay") {
         result.getTotalDelay should be(0L)
       }
-      it("sets resourceused as 0 when duration is negative") {
+      it("sets resource used as 0 when duration is negative") {
         //make the duration negative
         val applicationInfo = {
           val applicationAttemptInfo = {
@@ -180,7 +173,8 @@ object SparkMetricsAggregatorTest {
 
   def newFakeExecutorSummary(
     id: String,
-    totalDuration: Long
+    totalDuration: Long,
+    peakJvmUsedMemory: Map[String, Long]
   ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
@@ -199,7 +193,7 @@ object SparkMetricsAggregatorTest {
     totalGCTime = 0,
     totalMemoryBytesSpilled = 0,
     executorLogs = Map.empty,
-    peakJvmUsedMemory = Map.empty,
+    peakJvmUsedMemory,
     peakUnifiedMemory = Map.empty
   )
 }

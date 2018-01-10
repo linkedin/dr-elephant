@@ -24,6 +24,7 @@ import scala.util.Try
 import com.linkedin.drelephant.spark.fetchers.statusapiv1._
 import org.apache.spark.JobExecutionStatus
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
+
 /**
   * Converters for legacy SparkApplicationData to current SparkApplicationData.
   *
