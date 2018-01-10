@@ -94,6 +94,9 @@ public class MemoryFormatUtils {
       return 0L;
     }
 
+    //handling if the string has , for eg. 1,000MB
+    formattedString = formattedString.replace(",", "");
+
     Matcher matcher = REGEX_MATCHER.matcher(formattedString);
     if (!matcher.matches()) {
       throw new IllegalArgumentException(

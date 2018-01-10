@@ -199,5 +199,11 @@
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>
   </heuristic>
-
+  <heuristic>
+    <applicationtype>spark</applicationtype>
+    <heuristicname>Executor spill</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.ExecutorStorageSpillHeuristic</classname>
+    <viewname>views.html.help.spark.helpExecutorStorageSpillHeuristic</viewname>
+  </heuristic>
+  
 </heuristics>

@@ -24,76 +24,68 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, 
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-import scala.concurrent.duration.Duration
 
+class ExecutorStorageSpillHeuristicTest extends FunSpec with Matchers {
+  import ExecutorStorageSpillHeuristicTest._
 
-class ExecutorGcHeuristicTest extends FunSpec with Matchers {
-  import ExecutorGcHeuristicTest._
-
-  describe("ExecutorGcHeuristic") {
+  describe("ExecutorStorageSpillHeuristic") {
     val heuristicConfigurationData = newFakeHeuristicConfigurationData(
-      Map(
-        "max_to_median_ratio_severity_thresholds" -> "1.414,2,4,16",
-        "ignore_max_bytes_less_than_threshold" -> "4000000",
-        "ignore_max_millis_less_than_threshold" -> "4000001"
-      )
+      Map.empty
     )
-    val executorGcHeuristic = new ExecutorGcHeuristic(heuristicConfigurationData)
+    val executorStorageSpillHeuristic = new ExecutorStorageSpillHeuristic(heuristicConfigurationData)
+
+    val appConfigurationProperties = Map("spark.executor.memory" -> "4g", "spark.executor.cores"->"4", "spark.executor.instances"->"4")
 
     val executorSummaries = Seq(
       newFakeExecutorSummary(
         id = "1",
-        totalGCTime = Duration("2min").toMillis,
-        totalDuration = Duration("15min").toMillis
+        totalMemoryBytesSpilled = 200000L
       ),
       newFakeExecutorSummary(
         id = "2",
-        totalGCTime = Duration("6min").toMillis,
-        totalDuration = Duration("14min").toMillis
+        totalMemoryBytesSpilled = 100000L
       ),
       newFakeExecutorSummary(
         id = "3",
-        totalGCTime = Duration("4min").toMillis,
-        totalDuration = Duration("20min").toMillis
+        totalMemoryBytesSpilled = 300000L
       ),
       newFakeExecutorSummary(
         id = "4",
-        totalGCTime = Duration("8min").toMillis,
-        totalDuration = Duration("30min").toMillis
+        totalMemoryBytesSpilled = 200000L
       )
     )
 
     describe(".apply") {
-      val data1 = newFakeSparkApplicationData(executorSummaries)
-      val heuristicResult = executorGcHeuristic.apply(data1)
+      val data1 = newFakeSparkApplicationData(executorSummaries, appConfigurationProperties)
+      val heuristicResult = executorStorageSpillHeuristic.apply(data1)
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
       it("returns the severity") {
-        heuristicResult.getSeverity should be(Severity.CRITICAL)
+        heuristicResult.getSeverity should be(Severity.SEVERE)
       }
 
-      it("returns the JVM GC time to Executor Run time duration") {
+      it("returns the total memory spilled") {
         val details = heuristicResultDetails.get(0)
-        details.getName should include("GC time to Executor Run time ratio")
-        details.getValue should include("0.2531")
+        details.getName should include("Total memory spilled")
+        details.getValue should be("781.25 KB")
       }
 
-      it("returns the total GC time") {
+      it("returns the max memory spilled") {
         val details = heuristicResultDetails.get(1)
-        details.getName should include("Total GC time")
-        details.getValue should be("1200000")
+        details.getName should include("Max memory spilled")
+        details.getValue should be("292.97 KB")
       }
 
-      it("returns the executor's run time") {
+      it("returns the mean memory spilled") {
         val details = heuristicResultDetails.get(2)
-        details.getName should include("Total Executor Runtime")
-        details.getValue should be("4740000")
+        details.getName should include("Mean memory spilled")
+        details.getValue should be("195.31 KB")
       }
     }
   }
 }
 
-object ExecutorGcHeuristicTest {
+object ExecutorStorageSpillHeuristicTest {
   import JavaConverters._
 
   def newFakeHeuristicConfigurationData(params: Map[String, String] = Map.empty): HeuristicConfigurationData =
@@ -101,8 +93,7 @@ object ExecutorGcHeuristicTest {
 
   def newFakeExecutorSummary(
     id: String,
-    totalGCTime: Long,
-    totalDuration: Long
+    totalMemoryBytesSpilled: Long
   ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
@@ -113,18 +104,19 @@ object ExecutorGcHeuristicTest {
     failedTasks = 0,
     completedTasks = 0,
     totalTasks = 0,
-    totalDuration,
+    totalDuration=0,
     totalInputBytes=0,
     totalShuffleRead=0,
     totalShuffleWrite= 0,
-    maxMemory = 0,
-    totalGCTime,
-    totalMemoryBytesSpilled = 0,
+    maxMemory= 0,
+    totalGCTime = 0,
+    totalMemoryBytesSpilled,
     executorLogs = Map.empty
   )
 
   def newFakeSparkApplicationData(
-    executorSummaries: Seq[ExecutorSummaryImpl]
+    executorSummaries: Seq[ExecutorSummaryImpl],
+    appConfigurationProperties: Map[String, String]
   ): SparkApplicationData = {
     val appId = "application_1"
 
@@ -134,6 +126,11 @@ object ExecutorGcHeuristicTest {
       stageDatas = Seq.empty,
       executorSummaries = executorSummaries
     )
-    SparkApplicationData(appId, restDerivedData, None)
+
+    val logDerivedData = SparkLogDerivedData(
+      SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
+    )
+
+    SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
   }
 }

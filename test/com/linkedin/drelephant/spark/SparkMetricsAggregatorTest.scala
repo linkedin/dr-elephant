@@ -195,6 +195,7 @@ object SparkMetricsAggregatorTest {
     totalShuffleWrite = 0,
     maxMemory = 0,
     totalGCTime = 0,
+    totalMemoryBytesSpilled = 0,
     executorLogs = Map.empty
   )
 }

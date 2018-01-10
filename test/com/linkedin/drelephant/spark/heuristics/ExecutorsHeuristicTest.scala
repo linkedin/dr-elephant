@@ -250,6 +250,7 @@ object ExecutorsHeuristicTest {
     totalShuffleWrite,
     maxMemory,
     totalGCTime = 0,
+    totalMemoryBytesSpilled = 0,
     executorLogs = Map.empty
   )
 
