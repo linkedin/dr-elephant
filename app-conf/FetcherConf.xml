@@ -51,7 +51,7 @@
      To work properly, this fetcher should use the same timezone with the job history server.
      If not set, the local timezone will be used.
    -->
-  
+
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
@@ -61,7 +61,7 @@
       <history_server_time_zone>PST</history_server_time_zone>
     </params>
   </fetcher>
-  
+
 
   <!--
     FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties

@@ -195,6 +195,12 @@
   </heuristic>
   <heuristic>
     <applicationtype>spark</applicationtype>
+    <heuristicname>JVM Used Memory</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.JvmUsedMemoryHeuristic</classname>
+    <viewname>views.html.help.spark.helpJvmUsedMemoryHeuristic</viewname>
+  </heuristic>
+  <heuristic>
+    <applicationtype>spark</applicationtype>
     <heuristicname>Stages with failed tasks</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.StagesWithFailedTasksHeuristic</classname>
     <viewname>views.html.help.spark.helpStagesWithFailedTasks</viewname>
@@ -211,5 +217,5 @@
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorStorageSpillHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorStorageSpillHeuristic</viewname>
   </heuristic>
-  
+
 </heuristics>
