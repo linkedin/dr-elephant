@@ -178,7 +178,8 @@ object StagesHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = stageDatas,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     val logDerivedData = SparkLogDerivedData(

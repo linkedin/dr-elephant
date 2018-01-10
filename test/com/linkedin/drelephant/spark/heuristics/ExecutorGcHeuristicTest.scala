@@ -132,7 +132,8 @@ object ExecutorGcHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = executorSummaries
+      executorSummaries = executorSummaries,
+      stagesWithFailedTasks = Seq.empty
     )
     SparkApplicationData(appId, restDerivedData, None)
   }

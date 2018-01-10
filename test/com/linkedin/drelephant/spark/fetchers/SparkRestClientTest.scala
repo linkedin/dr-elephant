@@ -172,14 +172,13 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
               .register(classOf[FetchClientModeDataFixtures.StagesResource])
               .register(classOf[FetchClientModeDataFixtures.ExecutorsResource])
               .register(classOf[FetchClientModeDataFixtures.LogsResource])
+              .register(classOf[FetchClientModeDataFixtures.StagesWithFailedTasksResource])
           case config => config
         }
       }
-
       fakeJerseyServer.setUp()
 
       val historyServerUri = fakeJerseyServer.target.getUri
-
       val sparkConf = new SparkConf().set("spark.yarn.historyServer.address", s"${historyServerUri.getHost}:${historyServerUri.getPort}")
       val sparkRestClient = new SparkRestClient(sparkConf)
 
@@ -309,6 +308,9 @@ object SparkRestClientTest {
 
       @Path("applications/{appId}/{attemptId}/logs")
       def getLogs(): LogsResource = new LogsResource()
+
+      @Path("applications/{appId}/{attemptId}/stages/failedTasks")
+      def getStagesWithFailedTasks(): StagesWithFailedTasksResource = new StagesWithFailedTasksResource()
     }
 
     @Produces(Array(MediaType.APPLICATION_JSON))
@@ -359,6 +361,13 @@ object SparkRestClientTest {
         } else throw new Exception()
       }
     }
+
+    @Produces(Array(MediaType.APPLICATION_JSON))
+    class StagesWithFailedTasksResource {
+      @GET
+      def getStagesWithFailedTasks(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[StageDataImpl] =
+        if (attemptId == "2") Seq.empty else throw new Exception()
+    }
   }
 
   object FetchClientModeDataFixtures {
@@ -381,6 +390,9 @@ object SparkRestClientTest {
 
       @Path("applications/{appId}/logs")
       def getLogs(): LogsResource = new LogsResource()
+
+      @Path("applications/{appId}/stages/failedTasks")
+      def getStagesWithFailedTasks(): StagesWithFailedTasksResource = new StagesWithFailedTasksResource()
     }
 
     @Produces(Array(MediaType.APPLICATION_JSON))
@@ -428,6 +440,13 @@ object SparkRestClientTest {
       def getLogs(@PathParam("appId") appId: String): Response = {
         Response.ok(newFakeLog(appId, None)).build()
       }
+    }
+
+    @Produces(Array(MediaType.APPLICATION_JSON))
+    class StagesWithFailedTasksResource {
+      @GET
+      def getStagesWithFailedTasks(@PathParam("appId") appId: String): Seq[StageDataImpl] =
+        Seq.empty
     }
   }
 

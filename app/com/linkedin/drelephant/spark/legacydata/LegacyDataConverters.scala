@@ -34,6 +34,35 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 object LegacyDataConverters {
   import JavaConverters._
 
+  //Returns a default object. This default object is returned if logs are processed locally i.e. in case FS fetcher is being used.
+  def extractStagesWithFailedTasks(legacyData: SparkApplicationData): scala.Seq[StageData] = {
+    Seq(new StageData {
+      override def numCompleteTasks: Int = 0
+      override def inputRecords: Long = 0
+      override def shuffleReadBytes: Long = 0
+      override def shuffleWriteBytes: Long = 0
+      override def schedulingPool: String = ""
+      override def outputRecords: Long = 0
+      override def shuffleWriteRecords: Long = 0
+      override def inputBytes: Long = 0
+      override def details: String = ""
+      override def tasks: Option[collection.Map[Long, TaskData]] = None
+      override def attemptId: Int = 0
+      override def stageId: Int = 0
+      override def memoryBytesSpilled: Long = 0
+      override def executorRunTime: Long = 0
+      override def shuffleReadRecords: Long = 0
+      override def outputBytes: Long = 0
+      override def numActiveTasks: Int = 0
+      override def diskBytesSpilled: Long = 0
+      override def numFailedTasks: Int = 0
+      override def accumulatorUpdates: Seq[AccumulableInfo] = Seq.empty
+      override def name: String = ""
+      override def executorSummary: Option[collection.Map[String, ExecutorStageSummary]] = None
+      override def status = StageStatus.COMPLETE
+    })
+  }
+
   def convert(legacyData: SparkApplicationData): com.linkedin.drelephant.spark.data.SparkApplicationData = {
     com.linkedin.drelephant.spark.data.SparkApplicationData(
       legacyData.getAppId,
@@ -41,7 +70,8 @@ object LegacyDataConverters {
       extractApplicationInfo(legacyData),
       extractJobDatas(legacyData),
       extractStageDatas(legacyData),
-      extractExecutorSummaries(legacyData)
+      extractExecutorSummaries(legacyData),
+      extractStagesWithFailedTasks(legacyData)
     )
   }
 

@@ -195,6 +195,12 @@
   </heuristic>
   <heuristic>
     <applicationtype>spark</applicationtype>
+    <heuristicname>Stages with failed tasks</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.StagesWithFailedTasksHeuristic</classname>
+    <viewname>views.html.help.spark.helpStagesWithFailedTasks</viewname>
+  </heuristic>
+  <heuristic>
+    <applicationtype>spark</applicationtype>
     <heuristicname>Executor GC</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>

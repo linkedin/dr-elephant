@@ -81,7 +81,10 @@
   -->
   <fetcher>
     <applicationtype>spark</applicationtype>
-    <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+    <params>
+      <fetch_failed_tasks>true</fetch_failed_tasks>
+    </params>
   </fetcher>
 
   <!--

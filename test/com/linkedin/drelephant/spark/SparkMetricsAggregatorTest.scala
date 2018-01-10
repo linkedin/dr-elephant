@@ -55,7 +55,8 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
         applicationInfo,
         jobDatas = Seq.empty,
         stageDatas = Seq.empty,
-        executorSummaries = executorSummaries
+        executorSummaries = executorSummaries,
+        stagesWithFailedTasks = Seq.empty
       )
     }
 
@@ -119,7 +120,8 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
             applicationInfo,
             jobDatas = Seq.empty,
             stageDatas = Seq.empty,
-            executorSummaries = executorSummaries
+            executorSummaries = executorSummaries,
+            stagesWithFailedTasks = Seq.empty
           )
 
         val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))

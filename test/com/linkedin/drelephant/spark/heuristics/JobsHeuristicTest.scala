@@ -157,7 +157,8 @@ object JobsHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas,
       stageDatas = Seq.empty,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     SparkApplicationData(appId, restDerivedData, logDerivedData = None)

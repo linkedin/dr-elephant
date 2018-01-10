@@ -74,12 +74,11 @@ class SparkRestClient(sparkConf: SparkConf) {
 
   private val apiTarget: WebTarget = client.target(historyServerUri).path(API_V1_MOUNT_PATH)
 
-  def fetchData(appId: String, fetchLogs: Boolean = false)(
+  def fetchData(appId: String, fetchLogs: Boolean = false, fetchFailedTasks: Boolean = true)(
     implicit ec: ExecutionContext
   ): Future[SparkRestDerivedData] = {
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId)
 
-    // Limit the scope of async.
     Future {
       blocking {
         val futureJobDatas = Future {
@@ -236,6 +235,18 @@ class SparkRestClient(sparkConf: SparkConf) {
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading executorSummary ${target.getUri}", e)
+        throw e
+      }
+    }
+  }
+
+  private def getStagesWithFailedTasks(attemptTarget: WebTarget): Seq[StageDataImpl] = {
+    val target = attemptTarget.path("stages/failedTasks")
+    try {
+      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
+    } catch {
+      case NonFatal(e) => {
+        logger.error(s"error reading failedTasks ${target.getUri}", e)
         throw e
       }
     }

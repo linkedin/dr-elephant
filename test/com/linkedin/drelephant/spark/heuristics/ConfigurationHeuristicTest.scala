@@ -327,7 +327,8 @@ object ConfigurationHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", applicationAttempts),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     SparkApplicationData(appId, restDerivedData, Some(logDerivedData))

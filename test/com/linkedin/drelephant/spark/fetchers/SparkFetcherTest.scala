@@ -59,7 +59,8 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       ),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     val logDerivedData = SparkLogDerivedData(SparkListenerEnvironmentUpdate(Map.empty))

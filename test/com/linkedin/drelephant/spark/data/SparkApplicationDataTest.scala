@@ -42,7 +42,8 @@ class SparkApplicationDataTest extends FunSpec with Matchers {
       new ApplicationInfoImpl(appId, "app", Seq(applicationAttemptInfo)),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     val configurationProperties = Map(
