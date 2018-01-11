@@ -78,7 +78,7 @@ object ExecutorGcHeuristic {
   /** The ascending severity thresholds for the ratio of JVM GC Time and executor Run Time (checking whether ratio is above normal)
     * These thresholds are experimental and are likely to change */
   val DEFAULT_GC_SEVERITY_A_THRESHOLDS =
-    SeverityThresholds(low = 0.08D, moderate = 0.1D, severe = 0.15D, critical = 0.2D, ascending = true)
+    SeverityThresholds(low = 0.08D, moderate = 0.09D, severe = 0.1D, critical = 0.15D, ascending = true)
 
   /** The descending severity thresholds for the ratio of JVM GC Time and executor Run Time (checking whether ratio is below normal)
     * These thresholds are experimental and are likely to change */
@@ -90,7 +90,15 @@ object ExecutorGcHeuristic {
 
   class Evaluator(executorGcHeuristic: ExecutorGcHeuristic, data: SparkApplicationData) {
     lazy val executorAndDriverSummaries: Seq[ExecutorSummary] = data.executorSummaries
+    if (executorAndDriverSummaries == null) {
+      throw new Exception("Executors Summary is null.")
+    }
+
     lazy val executorSummaries: Seq[ExecutorSummary] = executorAndDriverSummaries.filterNot(_.id.equals("driver"))
+    if (executorSummaries.isEmpty) {
+      throw new Exception("No executor information available.")
+    }
+    
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
     var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries)

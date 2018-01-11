@@ -81,6 +81,7 @@ trait ExecutorSummary{
   def failedTasks: Int
   def completedTasks: Int
   def totalTasks: Int
+  def maxTasks: Int
   def totalDuration: Long
   def totalInputBytes: Long
   def totalShuffleRead: Long
@@ -291,6 +292,7 @@ class ExecutorSummaryImpl(
   var failedTasks: Int,
   var completedTasks: Int,
   var totalTasks: Int,
+  var maxTasks: Int,
   var totalDuration: Long,
   var totalInputBytes: Long,
   var totalShuffleRead: Long,

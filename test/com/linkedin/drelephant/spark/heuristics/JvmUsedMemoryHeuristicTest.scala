@@ -80,6 +80,7 @@ object JvmUsedMemoryHeuristicTest {
     failedTasks = 0,
     completedTasks = 0,
     totalTasks = 0,
+    maxTasks = 0,
     totalDuration = 0,
     totalInputBytes = 0,
     totalShuffleRead = 0,

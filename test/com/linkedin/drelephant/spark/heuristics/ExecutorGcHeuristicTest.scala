@@ -113,6 +113,7 @@ object ExecutorGcHeuristicTest {
     failedTasks = 0,
     completedTasks = 0,
     totalTasks = 0,
+    maxTasks = 0,
     totalDuration,
     totalInputBytes=0,
     totalShuffleRead=0,

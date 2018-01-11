@@ -244,6 +244,7 @@ object ExecutorsHeuristicTest {
     failedTasks = 0,
     completedTasks = 0,
     totalTasks = 0,
+    maxTasks = 0,
     totalDuration,
     totalInputBytes,
     totalShuffleRead,

@@ -39,6 +39,7 @@ public class SparkExecutorData {
     public int completedTasks = 0;
     public int failedTasks = 0;
     public int totalTasks = 0;
+    public int maxTasks = 0;
     public long duration = 0L;
     public long inputBytes = 0L;
     public long outputBytes = 0L;
@@ -49,7 +50,7 @@ public class SparkExecutorData {
 
     public String toString() {
       return "{execId: " + execId + ", hostPort:" + hostPort + " , rddBlocks: " + rddBlocks + ", memUsed: " + memUsed
-          + ", maxMem: " + maxMem + ", diskUsed: " + diskUsed + ", totalTasks" + totalTasks + ", tasksActive: "
+          + ", maxMem: " + maxMem + ", diskUsed: " + diskUsed + ", totalTasks" + totalTasks + ", maxTasks" + maxTasks + ", tasksActive: "
           + activeTasks + ", tasksComplete: " + completedTasks + ", tasksFailed: " + failedTasks + ", duration: "
           + duration + ", inputBytes: " + inputBytes + ", outputBytes:" + outputBytes + ", shuffleRead: " + shuffleRead
           + ", shuffleWrite: " + shuffleWrite + ", totalGCTime: " + totalGCTime + ", totalMemoryBytesSpilled: " + totalMemoryBytesSpilled + "}";

@@ -198,6 +198,7 @@ object LegacyDataConverters {
         executorInfo.failedTasks,
         executorInfo.completedTasks,
         executorInfo.totalTasks,
+        executorInfo.maxTasks,
         executorInfo.duration,
         executorInfo.inputBytes,
         executorInfo.shuffleRead,
