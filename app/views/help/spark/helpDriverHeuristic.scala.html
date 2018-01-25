@@ -1,0 +1,25 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+<p>This is a heuristic for checking whether driver is well tuned and the configurations are set to a good value.</p>
+<p>It checks the following properties</p>
+<h4>Driver Max Peak JVM Used Memory</h4>
+<p>This is to analyse whether the driver memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory by the driver is reasonably close to the blocked driver memory which is specified in spark.driver.memory. If the peak JVM memory is much smaller, then the driver memory should be reduced.</p>
+<h4>Driver Max Unified Memory</h4>
+<p>If the driver's Peak Unified Memory Consumption is much smaller than the allocated Unified Memory space, then we recommend decreasing the allocated Unified Memory Region. You can try decreasing <i>spark.driver.memory</i> which would decrease the unified memory space.</p>
+<h4>Time spent by driver in GC</h4>
+<p>This is the check whether you job spends too much time in GC. We recommend to increase spark.driver.memory if it does.</p>
+<h4>Checking configuration thresholds</h4>
+<p>The values of <i>spark.driver.memory</i>, <i>spark.driver.cores</i> and <i>spark.yarn.driver.memoryOverhead</i> is checked whether its within threshold values.</p>

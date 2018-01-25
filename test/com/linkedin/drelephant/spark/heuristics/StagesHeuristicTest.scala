@@ -81,13 +81,6 @@ class StagesHeuristicTest extends FunSpec with Matchers {
               |stage 4, attempt 0 (task failure rate: 0.800)""".stripMargin
         )
       }
-
-      it("returns the list of stages with long runtimes") {
-        heuristicResultDetails.get(4).getValue should be(
-          s"""|stage 8, attempt 0 (runtime: 45 min)
-              |stage 9, attempt 0 (runtime: 1 hr)""".stripMargin
-        )
-      }
     }
 
     describe(".Evaluator") {
@@ -113,15 +106,6 @@ class StagesHeuristicTest extends FunSpec with Matchers {
           evaluator.stagesWithHighTaskFailureRates.map { case (stageData, taskFailureRate) => (stageData.stageId, taskFailureRate) }
         stageIdsAndTaskFailureRates should contain theSameElementsInOrderAs(Seq((3, 0.6D), (4, 0.8D)))
       }
-
-      it("has the list of stages with long average executor runtimes") {
-        val stageIdsAndRuntimes =
-          evaluator.stagesWithLongAverageExecutorRuntimes.map { case (stageData, runtime) => (stageData.stageId, runtime) }
-        stageIdsAndRuntimes should contain theSameElementsInOrderAs(
-          Seq((8, Duration("45min").toMillis), (9, Duration("60min").toMillis))
-        )
-      }
-
       it("computes the overall severity") {
         evaluator.severity should be(Severity.CRITICAL)
       }

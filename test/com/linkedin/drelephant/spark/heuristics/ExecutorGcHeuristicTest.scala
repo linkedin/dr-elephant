@@ -31,13 +31,7 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
   import ExecutorGcHeuristicTest._
 
   describe("ExecutorGcHeuristic") {
-    val heuristicConfigurationData = newFakeHeuristicConfigurationData(
-      Map(
-        "max_to_median_ratio_severity_thresholds" -> "1.414,2,4,16",
-        "ignore_max_bytes_less_than_threshold" -> "4000000",
-        "ignore_max_millis_less_than_threshold" -> "4000001"
-      )
-    )
+    val heuristicConfigurationData = newFakeHeuristicConfigurationData()
     val executorGcHeuristic = new ExecutorGcHeuristic(heuristicConfigurationData)
 
     val executorSummaries = Seq(

@@ -60,59 +60,41 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
       it("returns the size of result details") {
-        heuristicResultDetails.size() should be(9)
+        heuristicResultDetails.size() should be(8)
       }
 
       it("returns the severity") {
         heuristicResult.getSeverity should be(Severity.NONE)
       }
 
-      it("returns the driver memory") {
-        val details = heuristicResultDetails.get(0)
-        details.getName should include("spark.driver.memory")
-        details.getValue should be("2 GB")
-      }
-
       it("returns the executor memory") {
-        val details = heuristicResultDetails.get(1)
+        val details = heuristicResultDetails.get(0)
         details.getName should include("spark.executor.memory")
         details.getValue should be("1 GB")
       }
 
       it("returns the executor instances") {
-        val details = heuristicResultDetails.get(2)
+        val details = heuristicResultDetails.get(1)
         details.getName should include("spark.executor.instances")
         details.getValue should be("900")
       }
 
       it("returns the executor cores") {
-        val details = heuristicResultDetails.get(3)
+        val details = heuristicResultDetails.get(2)
         details.getName should include("spark.executor.cores")
         details.getValue should include("default")
       }
 
       it("returns the application duration") {
-        val details = heuristicResultDetails.get(4)
+        val details = heuristicResultDetails.get(3)
         details.getName should include("spark.application.duration")
         details.getValue should include("10")
       }
 
       it("returns the dynamic allocation flag") {
-        val details = heuristicResultDetails.get(5)
+        val details = heuristicResultDetails.get(4)
         details.getName should include("spark.dynamicAllocation.enabled")
         details.getValue should be("true")
-      }
-
-      it("returns the driver cores") {
-        val details = heuristicResultDetails.get(6)
-        details.getName should include("spark.driver.cores")
-        details.getValue should include("default")
-      }
-
-      it("returns the driver overhead memory") {
-        val details = heuristicResultDetails.get(7)
-        details.getName should include("spark.yarn.driver.memoryOverhead")
-        details.getValue should include("500 MB")
       }
     }
 
@@ -128,7 +110,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
       it("returns the size of result details") {
-        heuristicResultDetails.size() should be(11)
+        heuristicResultDetails.size() should be(10)
       }
 
       it("returns the severity") {
@@ -136,20 +118,20 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       }
 
       it("returns the dynamic allocation flag") {
-        val details = heuristicResultDetails.get(5)
+        val details = heuristicResultDetails.get(4)
         details.getName should include("spark.dynamicAllocation.enabled")
         details.getValue should be("true")
       }
 
       it("returns the serializer") {
-        val details = heuristicResultDetails.get(9)
+        val details = heuristicResultDetails.get(8)
         details.getName should include("spark.serializer")
         details.getValue should be("dummySerializer")
         details.getDetails should be("KyroSerializer is Not Enabled.")
       }
 
       it("returns the shuffle service flag") {
-        val details = heuristicResultDetails.get(10)
+        val details = heuristicResultDetails.get(9)
         details.getName should include("spark.shuffle.service.enabled")
         details.getValue should be("false")
         details.getDetails should be("Spark shuffle service is not enabled.")
@@ -161,16 +143,6 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
 
       def newEvaluatorWithConfigurationProperties(configurationProperties: Map[String, String]): Evaluator = {
         new Evaluator(configurationHeuristic, newFakeSparkApplicationData(configurationProperties))
-      }
-
-      it("has the driver memory bytes when they're present") {
-        val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.driver.memory" -> "2G"))
-        evaluator.driverMemoryBytes should be(Some(2L * 1024 * 1024 * 1024))
-      }
-
-      it("has no driver memory bytes when they're absent") {
-        val evaluator = newEvaluatorWithConfigurationProperties(Map.empty)
-        evaluator.driverMemoryBytes should be(None)
       }
 
       it("has the executor memory bytes when they're present") {
@@ -198,19 +170,9 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.executorCores should be(Some(2))
       }
 
-      it("has the driver cores when they're present") {
-        val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.driver.cores" -> "3"))
-        evaluator.driverCores should be(Some(3))
-      }
-
       it("has no executor cores when they're absent") {
         val evaluator = newEvaluatorWithConfigurationProperties(Map.empty)
         evaluator.executorCores should be(None)
-      }
-
-      it("has no driver cores when they're absent") {
-        val evaluator = newEvaluatorWithConfigurationProperties(Map.empty)
-        evaluator.driverCores should be(None)
       }
 
       it("has the serializer when it's present") {

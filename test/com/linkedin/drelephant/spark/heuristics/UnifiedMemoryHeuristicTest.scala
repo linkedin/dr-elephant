@@ -2,8 +2,9 @@ package com.linkedin.drelephant.spark.heuristics
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
+import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.collection.JavaConverters
@@ -14,7 +15,9 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
 
   val heuristicConfigurationData = newFakeHeuristicConfigurationData()
 
-  val memoryFractionHeuristic = new UnifiedMemoryHeuristic(heuristicConfigurationData)
+  val unifiedMemoryHeuristic = new UnifiedMemoryHeuristic(heuristicConfigurationData)
+
+  val appConfigurationProperties = Map("spark.executor.memory"->"3147483647")
 
   val executorData = Seq(
     newDummyExecutorData("1", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
@@ -25,12 +28,24 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
     newDummyExecutorData("6", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94561))
   )
   describe(".apply") {
-    val data = newFakeSparkApplicationData(executorData)
-    val heuristicResult = memoryFractionHeuristic.apply(data)
+    val data = newFakeSparkApplicationData(appConfigurationProperties, executorData)
+    val heuristicResult = unifiedMemoryHeuristic.apply(data)
     val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
     it("has severity") {
       heuristicResult.getSeverity should be(Severity.CRITICAL)
+    }
+
+    it("has max value") {
+      val details = heuristicResult.getHeuristicResultDetails.get(2)
+      details.getName should be("Max peak unified memory")
+      details.getValue should be("385.32 KB")
+    }
+
+    it("has mean value") {
+      val details = heuristicResult.getHeuristicResultDetails.get(1)
+      details.getName should be("Mean peak unified memory")
+      details.getValue should be("263.07 KB")
     }
   }
 }
@@ -69,7 +84,10 @@ object UnifiedMemoryHeuristicTest {
     peakUnifiedMemory
   )
 
-  def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData = {
+  def newFakeSparkApplicationData(
+    appConfigurationProperties: Map[String, String],
+    executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData =
+  {
     val appId = "application_1"
     val restDerivedData = SparkRestDerivedData(
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
@@ -78,7 +96,9 @@ object UnifiedMemoryHeuristicTest {
       executorSummaries = executorSummaries,
       stagesWithFailedTasks = Seq.empty
     )
-
-    SparkApplicationData(appId, restDerivedData, logDerivedData = None)
+    val logDerivedData = SparkLogDerivedData(
+      SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
+    )
+    SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
   }
 }

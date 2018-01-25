@@ -215,7 +215,7 @@ class SparkRestClient(sparkConf: SparkConf) {
   }
 
   private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummaryImpl] = {
-    val target = attemptTarget.path("executors")
+    val target = attemptTarget.path("allexecutors")
     try {
       get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
     } catch {

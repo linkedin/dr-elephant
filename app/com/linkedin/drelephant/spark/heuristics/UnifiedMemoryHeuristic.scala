@@ -102,31 +102,36 @@ object UnifiedMemoryHeuristic {
 
     val sparkExecutorMemory: Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0L)
 
-    val sparkMemoryFraction: Double = appConfigurationProperties.getOrElse(SPARK_MEMORY_FRACTION_KEY, 0.6D).asInstanceOf[Number].doubleValue
+    lazy val sparkMemoryFraction: Double = appConfigurationProperties.getOrElse(SPARK_MEMORY_FRACTION_KEY, "0.6").toDouble
 
     lazy val meanUnifiedMemory: Long = (executorList.map {
       executorSummary => {
-        executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
-        +executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue
+        (executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
+          + executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue)
       }
     }.sum) / executorList.size
 
     lazy val maxUnifiedMemory: Long = executorList.map {
       executorSummary => {
-        executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
-        +executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue
+        (executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
+          + executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue)
       }
     }.max
 
-    lazy val severity: Severity = {
-      var severityPeakUnifiedMemoryVariable: Severity = Severity.NONE
-      for (executorSummary <- executorList) {
-        var peakUnifiedMemoryExecutorSeverity: Severity = getPeakUnifiedMemoryExecutorSeverity(executorSummary)
-        if (peakUnifiedMemoryExecutorSeverity.getValue > severityPeakUnifiedMemoryVariable.getValue) {
-          severityPeakUnifiedMemoryVariable = peakUnifiedMemoryExecutorSeverity
+
+    lazy val severity: Severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes("2G")) {
+      Severity.NONE
+    } else {
+      {
+        var severityPeakUnifiedMemoryVariable: Severity = Severity.NONE
+        for (executorSummary <- executorList) {
+          var peakUnifiedMemoryExecutorSeverity: Severity = getPeakUnifiedMemoryExecutorSeverity(executorSummary)
+          if (peakUnifiedMemoryExecutorSeverity.getValue > severityPeakUnifiedMemoryVariable.getValue) {
+            severityPeakUnifiedMemoryVariable = peakUnifiedMemoryExecutorSeverity
+          }
         }
+        severityPeakUnifiedMemoryVariable
       }
-      severityPeakUnifiedMemoryVariable
     }
   }
 

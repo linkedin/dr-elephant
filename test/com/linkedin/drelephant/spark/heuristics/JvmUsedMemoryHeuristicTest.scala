@@ -21,9 +21,9 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
 
   val executorData = Seq(
     newDummyExecutorData("1", Map("jvmUsedMemory" -> 394567123)),
-    newDummyExecutorData("2", Map("jvmUsedMemory" -> 23456834)),
-    newDummyExecutorData("3", Map("jvmUsedMemory" -> 334569)),
-    newDummyExecutorData("4", Map("jvmUsedMemory" -> 134563)),
+    newDummyExecutorData("2", Map("jvmUsedMemory" -> 2834)),
+    newDummyExecutorData("3", Map("jvmUsedMemory" -> 39)),
+    newDummyExecutorData("4", Map("jvmUsedMemory" -> 163)),
     newDummyExecutorData("5", Map("jvmUsedMemory" -> 234564)),
     newDummyExecutorData("driver", Map("jvmUsedMemory" -> 394561))
   )
@@ -32,7 +32,7 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
     val heuristicResult = peakJvmUsedMemoryHeuristic.apply(data)
 
     it("has severity") {
-      heuristicResult.getSeverity should be(Severity.CRITICAL)
+      heuristicResult.getSeverity should be(Severity.NONE)
     }
 
     describe(".Evaluator") {
@@ -42,19 +42,11 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
       val evaluator = new Evaluator(peakJvmUsedMemoryHeuristic, data)
 
       it("has severity executor") {
-        evaluator.severityExecutor should be(Severity.NONE)
-      }
-
-      it("has severity driver") {
-        evaluator.severityDriver should be(Severity.CRITICAL)
+        evaluator.severity should be(Severity.NONE)
       }
 
       it("has max peak jvm memory") {
         evaluator.maxExecutorPeakJvmUsedMemory should be (394567123)
-      }
-
-      it("has max driver peak jvm memory") {
-        evaluator.maxDriverPeakJvmUsedMemory should be (394561)
       }
     }
   }
