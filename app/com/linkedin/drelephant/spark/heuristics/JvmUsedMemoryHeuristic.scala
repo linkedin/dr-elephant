@@ -38,6 +38,7 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
   lazy val executorPeakJvmMemoryThresholdString: String = heuristicConfigurationData.getParamMap.get(MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLD_KEY)
+  lazy val sparkExecutorMemoryThreshold: String = heuristicConfigurationData.getParamMap.getOrDefault(SPARK_EXECUTOR_MEMORY_THRESHOLD_KEY, DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD)
 
   override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
@@ -66,10 +67,13 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
 object JvmUsedMemoryHeuristic {
   val JVM_USED_MEMORY = "jvmUsedMemory"
   val SPARK_EXECUTOR_MEMORY = "spark.executor.memory"
+  val SPARK_EXECUTOR_MEMORY_THRESHOLD_KEY = "spark_executor_memory_threshold"
+
   // 300 * FileUtils.ONE_MB (300 * 1024 * 1024)
   val reservedMemory: Long = 314572800
   val BUFFER_PERCENT: Int = 20
   val MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLD_KEY = "executor_peak_jvm_memory_threshold"
+  lazy val DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD = "2G"
 
   class Evaluator(jvmUsedMemoryHeuristic: JvmUsedMemoryHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
@@ -91,7 +95,7 @@ object JvmUsedMemoryHeuristic {
       SeverityThresholds.parse(jvmUsedMemoryHeuristic.executorPeakJvmMemoryThresholdString.split(",").map(_.toDouble * (maxExecutorPeakJvmUsedMemory + reservedMemory)).toString, ascending = false).getOrElse(DEFAULT_MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLDS)
     }
 
-    lazy val severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes("2G")) {
+    lazy val severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(jvmUsedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
       Severity.NONE
     } else {
       MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLDS.severityOf(sparkExecutorMemory)

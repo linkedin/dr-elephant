@@ -38,14 +38,8 @@ class DriverHeuristicTest extends FunSpec with Matchers {
 
     describe("Evaluator") {
       val evaluator = new Evaluator(driverHeuristic, data)
-      it("has max driver unified memory") {
-        evaluator.maxDriverUnifiedMemory should be(394561)
-      }
       it("has max driver peak JVM memory") {
         evaluator.maxDriverPeakJvmUsedMemory should be(394567123)
-      }
-      it("has allocated unified memory") {
-        evaluator.maxMemory should be(400000)
       }
       it("ratio of time spend in Gc to total duration") {
         evaluator.ratio should be(0.13333333333333333)

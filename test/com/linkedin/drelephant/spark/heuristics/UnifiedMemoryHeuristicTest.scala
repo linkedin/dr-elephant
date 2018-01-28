@@ -14,10 +14,9 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
   import UnifiedMemoryHeuristicTest._
 
   val heuristicConfigurationData = newFakeHeuristicConfigurationData()
-
   val unifiedMemoryHeuristic = new UnifiedMemoryHeuristic(heuristicConfigurationData)
-
   val appConfigurationProperties = Map("spark.executor.memory"->"3147483647")
+  val appConfigurationProperties1 = Map("spark.executor.memory"->"21474847")
 
   val executorData = Seq(
     newDummyExecutorData("1", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
@@ -27,10 +26,19 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
     newDummyExecutorData("5", 400000, Map("executionMemory" -> 200000, "storageMemory" -> 34564)),
     newDummyExecutorData("6", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94561))
   )
+
+  val executorData1 = Seq(
+    newDummyExecutorData("driver", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
+    newDummyExecutorData("2", 400000, Map("executionMemory" -> 200, "storageMemory" -> 200))
+  )
+
   describe(".apply") {
     val data = newFakeSparkApplicationData(appConfigurationProperties, executorData)
+    val data1 = newFakeSparkApplicationData(appConfigurationProperties1, executorData1)
     val heuristicResult = unifiedMemoryHeuristic.apply(data)
+    val heuristicResult1 = unifiedMemoryHeuristic.apply(data1)
     val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
+    val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
 
     it("has severity") {
       heuristicResult.getSeverity should be(Severity.CRITICAL)
@@ -46,6 +54,10 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
       val details = heuristicResult.getHeuristicResultDetails.get(1)
       details.getName should be("Mean peak unified memory")
       details.getValue should be("263.07 KB")
+    }
+
+    it("has severity NONE") {
+      val details = heuristicResult1.getSeverity should be(Severity.NONE)
     }
   }
 }

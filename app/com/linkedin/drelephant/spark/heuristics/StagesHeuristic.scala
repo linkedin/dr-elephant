@@ -192,11 +192,7 @@ object StagesHeuristic {
     }
 
     private def averageExecutorRuntimeAndSeverityOf(stageData: StageData): (Long, Severity) = {
-      val allTasks : Int = if((stageData.numActiveTasks + stageData.numCompleteTasks + stageData.numFailedTasks) == 0) {
-        1
-      } else {
-        (stageData.numActiveTasks + stageData.numCompleteTasks + stageData.numFailedTasks)
-      }
+      val allTasks : Int = Integer.max((stageData.numActiveTasks + stageData.numCompleteTasks + stageData.numFailedTasks), 1)
       val averageExecutorRuntime = stageData.executorRunTime / allTasks
       (averageExecutorRuntime, stageRuntimeMillisSeverityThresholds.severityOf(averageExecutorRuntime))
     }

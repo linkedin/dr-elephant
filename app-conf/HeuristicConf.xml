@@ -204,6 +204,7 @@
     <viewname>views.html.help.spark.helpUnifiedMemoryHeuristic</viewname>
     <!--<params>
       <peak_unified_memory_threshold>0.7,0.6,0.4,0.2</peak_unified_memory_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
     </params>-->
   </heuristic>
 
@@ -214,6 +215,7 @@
     <viewname>views.html.help.spark.helpJvmUsedMemoryHeuristic</viewname>
     <!--<params>
       <executor_peak_jvm_memory_threshold>1.25,1.5,2,3</executor_peak_jvm_memory_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
     </params>-->
   </heuristic>
 
@@ -256,7 +258,7 @@
     <!--<params>
       <driver_peak_jvm_memory_threshold>1.25,1.5,2,3</driver_peak_jvm_memory_threshold>
       <gc_severity_threshold>0.08,0.09,0.1,0.15</gc_severity_threshold>
-      <peak_unified_memory_threshold>0.7,0.6,0.4,0.2</peak_unified_memory_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
     </params>-->
   </heuristic>
 

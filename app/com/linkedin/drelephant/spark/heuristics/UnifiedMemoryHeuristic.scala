@@ -39,6 +39,7 @@ class UnifiedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
   lazy val peakUnifiedMemoryThresholdString: String = heuristicConfigurationData.getParamMap.get(PEAK_UNIFIED_MEMORY_THRESHOLD_KEY)
+  val sparkExecutorMemoryThreshold: String = heuristicConfigurationData.getParamMap.getOrDefault(SPARK_EXECUTOR_MEMORY_THRESHOLD_KEY, DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD)
 
   override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
@@ -69,6 +70,8 @@ object UnifiedMemoryHeuristic {
   val SPARK_EXECUTOR_MEMORY_KEY = "spark.executor.memory"
   val SPARK_MEMORY_FRACTION_KEY = "spark.memory.fraction"
   val PEAK_UNIFIED_MEMORY_THRESHOLD_KEY = "peak_unified_memory_threshold"
+  val SPARK_EXECUTOR_MEMORY_THRESHOLD_KEY = "spark_executor_memory_threshold"
+  val DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD = "2G"
 
   class Evaluator(unifiedMemoryHeuristic: UnifiedMemoryHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
@@ -118,8 +121,7 @@ object UnifiedMemoryHeuristic {
       }
     }.max
 
-
-    lazy val severity: Severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes("2G")) {
+    lazy val severity: Severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(unifiedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
       Severity.NONE
     } else {
       {
@@ -134,5 +136,4 @@ object UnifiedMemoryHeuristic {
       }
     }
   }
-
 }
