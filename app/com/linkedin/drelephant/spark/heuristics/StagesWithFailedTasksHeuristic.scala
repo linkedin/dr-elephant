@@ -43,7 +43,7 @@ class StagesWithFailedTasksHeuristic(private val heuristicConfigurationData: Heu
       new HeuristicResultDetails("Stages with Overhead memory errors", evaluator.stagesWithOverheadError.toString)
     )
     if (evaluator.severityOverheadStages.getValue >= Severity.MODERATE.getValue)
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Overhead memory errors", "Some tasks have failed due to overhead memory error. Please try increasing spark.yarn.executor.memoryOverhead by 500MB in spark.yarn.executor.memoryOverhead")
+      resultDetails = resultDetails :+ new HeuristicResultDetails("Overhead memory errors", "Some tasks have failed due to overhead memory error. Please try increasing spark.yarn.executor.memoryOverhead by " + increaseMemoryBy +" in spark.yarn.executor.memoryOverhead")
     //TODO: refine recommendations
     if (evaluator.severityOOMStages.getValue >= Severity.MODERATE.getValue)
       resultDetails = resultDetails :+ new HeuristicResultDetails("OOM errors", "Some tasks have failed due to OOM error. Try increasing spark.executor.memory or decreasing spark.memory.fraction (take a look at unified memory heuristic) or decreasing number of cores.")
@@ -63,6 +63,7 @@ object StagesWithFailedTasksHeuristic {
   val OOM_ERROR = "java.lang.OutOfMemoryError"
   val OVERHEAD_MEMORY_ERROR = "killed by YARN for exceeding memory limits"
   val ratioThreshold: Double = 2
+  val increaseMemoryBy: String = "1G"
 
   class Evaluator(memoryFractionHeuristic: StagesWithFailedTasksHeuristic, data: SparkApplicationData) {
     lazy val stagesWithFailedTasks: Seq[StageData] = data.stagesWithFailedTasks

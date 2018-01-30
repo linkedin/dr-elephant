@@ -102,7 +102,8 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       val configurationProperties = Map(
         "spark.serializer" -> "dummySerializer",
         "spark.shuffle.service.enabled" -> "false",
-        "spark.dynamicAllocation.enabled" -> "true"
+        "spark.dynamicAllocation.enabled" -> "true",
+        "spark.executor.cores" -> "5"
       )
 
       val data = newFakeSparkApplicationData(configurationProperties)
@@ -110,7 +111,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
       it("returns the size of result details") {
-        heuristicResultDetails.size() should be(10)
+        heuristicResultDetails.size() should be(11)
       }
 
       it("returns the severity") {
@@ -135,6 +136,12 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         details.getName should include("spark.shuffle.service.enabled")
         details.getValue should be("false")
         details.getDetails should be("Spark shuffle service is not enabled.")
+      }
+
+      it("returns executor cores") {
+        val details = heuristicResultDetails.get(10)
+        details.getName should include("Executor cores")
+        details.getValue should be("The number of executor cores should be <=4. Please change it in the field spark.executor.cores")
       }
     }
 

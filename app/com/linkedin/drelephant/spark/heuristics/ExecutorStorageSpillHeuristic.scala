@@ -109,7 +109,8 @@ object ExecutorStorageSpillHeuristic {
     val maxTasks: Int = executorSummaries.head.maxTasks
     val maxMemorySpilled: Long = executorSummaries.map(_.totalMemoryBytesSpilled).max
     val meanMemorySpilled = executorSummaries.map(_.totalMemoryBytesSpilled).sum / executorSummaries.size
-    val totalMemorySpilledPerTask = totalMemorySpilled/(executorSummaries.map(_.totalTasks).sum)
+    lazy val totalTasks = Integer.max(executorSummaries.map(_.totalTasks).sum, 1)
+    val totalMemorySpilledPerTask = totalMemorySpilled/totalTasks
     lazy val totalMemorySpilled = executorSummaries.map(_.totalMemoryBytesSpilled).sum
     val fractionOfExecutorsHavingBytesSpilled: Double = executorSummaries.count(_.totalMemoryBytesSpilled > 0).toDouble / executorSummaries.size.toDouble
     val severity: Severity = {

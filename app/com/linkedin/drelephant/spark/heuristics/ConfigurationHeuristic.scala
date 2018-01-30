@@ -106,10 +106,10 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
         "Spark shuffle service is not enabled.")
     }
     if (evaluator.severityMinExecutors != Severity.NONE) {
-      result.addResultDetail("Minimum Executors", "The minimum executors for Dynamic Allocation should be <=1. Please change it in the " + SPARK_DYNAMIC_ALLOCATION_MIN_EXECUTORS + " field.")
+      result.addResultDetail("Minimum Executors", "The minimum executors for Dynamic Allocation should be "+ THRESHOLD_MIN_EXECUTORS + ". Please change it in the " + SPARK_DYNAMIC_ALLOCATION_MIN_EXECUTORS + " field.")
     }
     if (evaluator.severityMaxExecutors != Severity.NONE) {
-      result.addResultDetail("Maximum Executors", "The maximum executors for Dynamic Allocation should be <=900. Please change it in the " + SPARK_DYNAMIC_ALLOCATION_MAX_EXECUTORS + " field.")
+      result.addResultDetail("Maximum Executors", "The maximum executors for Dynamic Allocation should be <=" + THRESHOLD_MAX_EXECUTORS + ". Please change it in the " + SPARK_DYNAMIC_ALLOCATION_MAX_EXECUTORS + " field.")
     }
     if (evaluator.jarsSeverity != Severity.NONE) {
       result.addResultDetail("Jars notation", "It is recommended to not use * notation while specifying jars in the field " + SPARK_YARN_JARS)
@@ -118,7 +118,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
       result.addResultDetail("Executor Overhead Memory", "Please do not specify excessive amount of overhead memory for Executors. Change it in the field " + SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD)
     }
     if(evaluator.severityExecutorCores != Severity.NONE) {
-      result.addResultDetail("Executor cores", "The number of executor cores should be <=4. Please change it in the field " + SPARK_EXECUTOR_CORES_KEY)
+      result.addResultDetail("Executor cores", "The number of executor cores should be <=" + evaluator.DEFAULT_SPARK_CORES_THRESHOLDS.low + ". Please change it in the field " + SPARK_EXECUTOR_CORES_KEY)
     }
     if(evaluator.severityExecutorMemory != Severity.NONE) {
       result.addResultDetail("Executor memory", "Please do not specify excessive amount of executor memory. Change it in the field " + SPARK_EXECUTOR_MEMORY_KEY)

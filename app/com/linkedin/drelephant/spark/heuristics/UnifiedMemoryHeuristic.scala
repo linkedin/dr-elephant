@@ -24,7 +24,6 @@ import com.linkedin.drelephant.util.MemoryFormatUtils
 
 import scala.collection.JavaConverters
 
-
 /**
   * A heuristic based on peak unified memory for the spark executors
   *
