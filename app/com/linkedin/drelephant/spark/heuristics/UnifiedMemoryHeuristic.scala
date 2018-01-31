@@ -24,6 +24,7 @@ import com.linkedin.drelephant.util.MemoryFormatUtils
 
 import scala.collection.JavaConverters
 
+
 /**
   * A heuristic based on peak unified memory for the spark executors
   *
@@ -97,11 +98,6 @@ object UnifiedMemoryHeuristic {
       SeverityThresholds.parse(unifiedMemoryHeuristic.peakUnifiedMemoryThresholdString.split(",").map(_.toDouble * maxMemory).toString, ascending = false).getOrElse(DEFAULT_PEAK_UNIFIED_MEMORY_THRESHOLD)
     }
 
-    def getPeakUnifiedMemoryExecutorSeverity(executorSummary: ExecutorSummary): Severity = {
-      return PEAK_UNIFIED_MEMORY_THRESHOLDS.severityOf(executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
-        + executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue)
-    }
-
     val sparkExecutorMemory: Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0L)
 
     lazy val sparkMemoryFraction: Double = appConfigurationProperties.getOrElse(SPARK_MEMORY_FRACTION_KEY, "0.6").toDouble
@@ -123,16 +119,7 @@ object UnifiedMemoryHeuristic {
     lazy val severity: Severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(unifiedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
       Severity.NONE
     } else {
-      {
-        var severityPeakUnifiedMemoryVariable: Severity = Severity.NONE
-        for (executorSummary <- executorList) {
-          var peakUnifiedMemoryExecutorSeverity: Severity = getPeakUnifiedMemoryExecutorSeverity(executorSummary)
-          if (peakUnifiedMemoryExecutorSeverity.getValue > severityPeakUnifiedMemoryVariable.getValue) {
-            severityPeakUnifiedMemoryVariable = peakUnifiedMemoryExecutorSeverity
-          }
-        }
-        severityPeakUnifiedMemoryVariable
-      }
+      PEAK_UNIFIED_MEMORY_THRESHOLDS.severityOf(maxUnifiedMemory)
     }
   }
 }

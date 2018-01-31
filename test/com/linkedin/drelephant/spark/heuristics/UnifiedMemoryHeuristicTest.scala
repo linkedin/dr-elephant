@@ -4,6 +4,7 @@ import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
+import com.linkedin.drelephant.spark.heuristics.UnifiedMemoryHeuristic.Evaluator
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
@@ -16,10 +17,10 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
   val heuristicConfigurationData = newFakeHeuristicConfigurationData()
   val unifiedMemoryHeuristic = new UnifiedMemoryHeuristic(heuristicConfigurationData)
   val appConfigurationProperties = Map("spark.executor.memory"->"3147483647")
-  val appConfigurationProperties1 = Map("spark.executor.memory"->"21474847")
+  val appConfigurationProperties1 = Map("spark.executor.memory"->"214567874847")
 
   val executorData = Seq(
-    newDummyExecutorData("1", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
+    newDummyExecutorData("1", 999999999, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
     newDummyExecutorData("2", 400000, Map("executionMemory" -> 200000, "storageMemory" -> 34568)),
     newDummyExecutorData("3", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 34569)),
     newDummyExecutorData("4", 400000, Map("executionMemory" -> 20000, "storageMemory" -> 3456)),
@@ -29,7 +30,7 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
 
   val executorData1 = Seq(
     newDummyExecutorData("driver", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
-    newDummyExecutorData("2", 400000, Map("executionMemory" -> 200, "storageMemory" -> 200))
+    newDummyExecutorData("2", 999999999, Map("executionMemory" -> 200, "storageMemory" -> 200))
   )
 
   describe(".apply") {
@@ -39,6 +40,7 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
     val heuristicResult1 = unifiedMemoryHeuristic.apply(data1)
     val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
     val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
+    val evaluator = new Evaluator(unifiedMemoryHeuristic, data1)
 
     it("has severity") {
       heuristicResult.getSeverity should be(Severity.CRITICAL)
@@ -56,8 +58,20 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
       details.getValue should be("263.07 KB")
     }
 
-    it("has severity NONE") {
-      val details = heuristicResult1.getSeverity should be(Severity.NONE)
+    it("data1 has severity") {
+      heuristicResult1.getSeverity should be(Severity.CRITICAL)
+    }
+
+    it("data1 has maxMemory") {
+      evaluator.maxMemory should be(999999999)
+    }
+
+    it("data1 has max memory") {
+      evaluator.maxUnifiedMemory should be(400)
+    }
+
+    it("data1 has mean memory") {
+      evaluator.meanUnifiedMemory should be(400)
     }
   }
 }
