@@ -16,7 +16,7 @@
 <p>This is a heuristic for checking whether the driver is well tuned and the configurations are set to a good value.</p>
 <p>It checks the following properties</p>
 <h4>Driver Max Peak JVM Used Memory</h4>
-<p>This analyses whether the driver memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory by the driver is reasonably close to the blocked driver memory (spark.driver.memory) which is specified in spark.driver.memory. If the peak JVM memory is much smaller, then the driver memory should be reduced.</p>
+<p>This analyses whether the driver memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory by the driver is reasonably close to the user allocated driver memory which is specified in spark.driver.memory. If the peak JVM memory is much smaller, then the driver memory should be reduced.</p>
 <h4>Time spent by driver in GC</h4>
 <p>This checks if your job spends too much time in GC. We recommend increasing spark.driver.memory if it does.</p>
 <h4>Checking configuration thresholds</h4>
