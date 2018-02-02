@@ -50,7 +50,7 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
 
     if (evaluator.severity != Severity.NONE) {
       resultDetails = resultDetails :+ new HeuristicResultDetails("Executor Memory", "The allocated memory for the executor (in " + SPARK_EXECUTOR_MEMORY + ") is much more than the peak JVM used memory by executors.")
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Reasonable size for executor memory", ((1 + BUFFER_PERCENT.toDouble / 100.0) * evaluator.maxExecutorPeakJvmUsedMemory).toString)
+      resultDetails = resultDetails :+ new HeuristicResultDetails("Reasonable size for executor memory", (MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION) * evaluator.maxExecutorPeakJvmUsedMemory).toLong)))
     }
 
     val result = new HeuristicResult(
@@ -71,7 +71,7 @@ object JvmUsedMemoryHeuristic {
 
   // 300 * FileUtils.ONE_MB (300 * 1024 * 1024)
   val reservedMemory: Long = 314572800
-  val BUFFER_PERCENT: Int = 20
+  val BUFFER_FRACTION: Double = 0.2
   val MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLD_KEY = "executor_peak_jvm_memory_threshold"
   lazy val DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD = "2G"
 

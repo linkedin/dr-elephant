@@ -44,6 +44,8 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
       import JvmUsedMemoryHeuristic.Evaluator
 
       val data = newFakeSparkApplicationData(appConfigurationProperties, executorData)
+      val heuristicResult = peakJvmUsedMemoryHeuristic.apply(data)
+      val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
       val evaluator = new Evaluator(peakJvmUsedMemoryHeuristic, data)
 
       it("has severity executor") {
@@ -52,6 +54,12 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
 
       it("has max peak jvm memory") {
         evaluator.maxExecutorPeakJvmUsedMemory should be (394567123)
+      }
+
+      it("has reasonable size") {
+        val details = heuristicResultDetails.get(3)
+        details.getName should be ("Reasonable size for executor memory")
+        details.getValue should be ("451.55 MB")
       }
     }
   }
