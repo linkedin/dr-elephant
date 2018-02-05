@@ -21,10 +21,13 @@ import com.linkedin.drelephant.analysis.{ApplicationType, Severity, SeverityThre
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl, StageDataImpl}
+import com.linkedin.drelephant.spark.heuristics.ExecutorStorageSpillHeuristic.Evaluator
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-
+/**
+  * Test class for Executor Storage Spill Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorStorageSpillHeuristicTest extends FunSpec with Matchers {
   import ExecutorStorageSpillHeuristicTest._
 
@@ -59,6 +62,7 @@ class ExecutorStorageSpillHeuristicTest extends FunSpec with Matchers {
       val data1 = newFakeSparkApplicationData(executorSummaries, appConfigurationProperties)
       val heuristicResult = executorStorageSpillHeuristic.apply(data1)
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
+      val evaluator = new Evaluator(executorStorageSpillHeuristic, data1)
 
       it("returns the severity") {
         heuristicResult.getSeverity should be(Severity.SEVERE)
@@ -80,6 +84,10 @@ class ExecutorStorageSpillHeuristicTest extends FunSpec with Matchers {
         val details = heuristicResultDetails.get(2)
         details.getName should include("Mean memory spilled")
         details.getValue should be("195.31 KB")
+      }
+
+      it("has the memory spilled per task") {
+        evaluator.totalMemorySpilledPerTask should be(800000)
       }
     }
   }
@@ -103,7 +111,7 @@ object ExecutorStorageSpillHeuristicTest {
     activeTasks = 0,
     failedTasks = 0,
     completedTasks = 0,
-    totalTasks = 10,
+    totalTasks = 0,
     maxTasks = 10,
     totalDuration=0,
     totalInputBytes=0,

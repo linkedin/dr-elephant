@@ -26,18 +26,14 @@ import org.scalatest.{FunSpec, Matchers}
 
 import scala.concurrent.duration.Duration
 
-
+/**
+  * Test class for Executor GC Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorGcHeuristicTest extends FunSpec with Matchers {
   import ExecutorGcHeuristicTest._
 
   describe("ExecutorGcHeuristic") {
-    val heuristicConfigurationData = newFakeHeuristicConfigurationData(
-      Map(
-        "max_to_median_ratio_severity_thresholds" -> "1.414,2,4,16",
-        "ignore_max_bytes_less_than_threshold" -> "4000000",
-        "ignore_max_millis_less_than_threshold" -> "4000001"
-      )
-    )
+    val heuristicConfigurationData = newFakeHeuristicConfigurationData()
     val executorGcHeuristic = new ExecutorGcHeuristic(heuristicConfigurationData)
 
     val executorSummaries = Seq(
@@ -63,10 +59,21 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       )
     )
 
+    val executorSummaries1 = Seq(
+      newFakeExecutorSummary(
+        id = "1",
+        totalGCTime = 500,
+        totalDuration = 700
+      )
+    )
+
     describe(".apply") {
-      val data1 = newFakeSparkApplicationData(executorSummaries)
-      val heuristicResult = executorGcHeuristic.apply(data1)
+      val data = newFakeSparkApplicationData(executorSummaries)
+      val data1 = newFakeSparkApplicationData(executorSummaries1)
+      val heuristicResult = executorGcHeuristic.apply(data)
+      val heuristicResult1 = executorGcHeuristic.apply(data1)
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
+      val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
 
       it("returns the severity") {
         heuristicResult.getSeverity should be(Severity.CRITICAL)
@@ -81,13 +88,25 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       it("returns the total GC time") {
         val details = heuristicResultDetails.get(1)
         details.getName should include("Total GC time")
-        details.getValue should be("1200000")
+        details.getValue should be("20 Minutes")
       }
 
       it("returns the executor's run time") {
         val details = heuristicResultDetails.get(2)
         details.getName should include("Total Executor Runtime")
-        details.getValue should be("4740000")
+        details.getValue should be("1 Hours 19 Minutes")
+      }
+
+      it("returns total Gc Time in millisec") {
+        val details = heuristicResultDetails1.get(1)
+        details.getName should include("Total GC time")
+        details.getValue should be("500 msec")
+      }
+
+      it("returns executor run Time in millisec") {
+        val details = heuristicResultDetails1.get(2)
+        details.getName should include("Total Executor Runtime")
+        details.getValue should be("700 msec")
       }
     }
   }

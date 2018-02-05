@@ -22,3 +22,4 @@
 <p>2. If your job's Executor Memory is high, then we recommend reducing the <i>spark.executor.memory</i> itself which will lower the Allocated Unified Memory space.</p>
 <p>Note:</p>
 <p><i>spark.memory.fraction</i>: This is the fraction of JVM Used Memory (Executor memory - Reserved memory) dedicated to the unified memory region (execution + storage). It basically partitions user memory from execution and storage memory.</p>
+<p> Note: Please note that for calculation purposes Dr. Elephant considers 1024 Bytes in 1 KB whereas the spark history server considers 1000 Bytes. So please don't get confused if you find discrepancy in values from these two places. </p>

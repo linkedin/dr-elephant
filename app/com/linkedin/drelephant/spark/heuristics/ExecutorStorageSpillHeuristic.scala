@@ -97,13 +97,20 @@ object ExecutorStorageSpillHeuristic {
 
   class Evaluator(executorStorageSpillHeuristic: ExecutorStorageSpillHeuristic, data: SparkApplicationData) {
     lazy val executorAndDriverSummaries: Seq[ExecutorSummary] = data.executorSummaries
+    if (executorAndDriverSummaries == null) {
+      throw new Exception("Executors Summary is null.")
+    }
     lazy val executorSummaries: Seq[ExecutorSummary] = executorAndDriverSummaries.filterNot(_.id.equals("driver"))
+    if (executorSummaries.isEmpty) {
+      throw new Exception("No executor information available.")
+    }
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
     val maxTasks: Int = executorSummaries.head.maxTasks
     val maxMemorySpilled: Long = executorSummaries.map(_.totalMemoryBytesSpilled).max
     val meanMemorySpilled = executorSummaries.map(_.totalMemoryBytesSpilled).sum / executorSummaries.size
-    val totalMemorySpilledPerTask = totalMemorySpilled/(executorSummaries.map(_.totalTasks).sum)
+    lazy val totalTasks = Integer.max(executorSummaries.map(_.totalTasks).sum, 1)
+    val totalMemorySpilledPerTask = totalMemorySpilled/totalTasks
     lazy val totalMemorySpilled = executorSummaries.map(_.totalMemoryBytesSpilled).sum
     val fractionOfExecutorsHavingBytesSpilled: Double = executorSummaries.count(_.totalMemoryBytesSpilled > 0).toDouble / executorSummaries.size.toDouble
     val severity: Severity = {

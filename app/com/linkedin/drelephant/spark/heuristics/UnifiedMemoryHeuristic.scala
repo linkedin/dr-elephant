@@ -39,6 +39,7 @@ class UnifiedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
   lazy val peakUnifiedMemoryThresholdString: String = heuristicConfigurationData.getParamMap.get(PEAK_UNIFIED_MEMORY_THRESHOLD_KEY)
+  val sparkExecutorMemoryThreshold: String = heuristicConfigurationData.getParamMap.getOrDefault(SPARK_EXECUTOR_MEMORY_THRESHOLD_KEY, DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD)
 
   override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
@@ -69,6 +70,8 @@ object UnifiedMemoryHeuristic {
   val SPARK_EXECUTOR_MEMORY_KEY = "spark.executor.memory"
   val SPARK_MEMORY_FRACTION_KEY = "spark.memory.fraction"
   val PEAK_UNIFIED_MEMORY_THRESHOLD_KEY = "peak_unified_memory_threshold"
+  val SPARK_EXECUTOR_MEMORY_THRESHOLD_KEY = "spark_executor_memory_threshold"
+  val DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD = "2G"
 
   class Evaluator(unifiedMemoryHeuristic: UnifiedMemoryHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
@@ -95,39 +98,28 @@ object UnifiedMemoryHeuristic {
       SeverityThresholds.parse(unifiedMemoryHeuristic.peakUnifiedMemoryThresholdString.split(",").map(_.toDouble * maxMemory).toString, ascending = false).getOrElse(DEFAULT_PEAK_UNIFIED_MEMORY_THRESHOLD)
     }
 
-    def getPeakUnifiedMemoryExecutorSeverity(executorSummary: ExecutorSummary): Severity = {
-      return PEAK_UNIFIED_MEMORY_THRESHOLDS.severityOf(executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
-        + executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue)
-    }
-
     val sparkExecutorMemory: Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0L)
 
-    val sparkMemoryFraction: Double = appConfigurationProperties.getOrElse(SPARK_MEMORY_FRACTION_KEY, 0.6D).asInstanceOf[Number].doubleValue
+    lazy val sparkMemoryFraction: Double = appConfigurationProperties.getOrElse(SPARK_MEMORY_FRACTION_KEY, "0.6").toDouble
 
     lazy val meanUnifiedMemory: Long = (executorList.map {
       executorSummary => {
-        executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
-        +executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue
+        (executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
+          + executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue)
       }
     }.sum) / executorList.size
 
     lazy val maxUnifiedMemory: Long = executorList.map {
       executorSummary => {
-        executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
-        +executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue
+        (executorSummary.peakUnifiedMemory.getOrElse(EXECUTION_MEMORY, 0).asInstanceOf[Number].longValue
+          + executorSummary.peakUnifiedMemory.getOrElse(STORAGE_MEMORY, 0).asInstanceOf[Number].longValue)
       }
     }.max
 
-    lazy val severity: Severity = {
-      var severityPeakUnifiedMemoryVariable: Severity = Severity.NONE
-      for (executorSummary <- executorList) {
-        var peakUnifiedMemoryExecutorSeverity: Severity = getPeakUnifiedMemoryExecutorSeverity(executorSummary)
-        if (peakUnifiedMemoryExecutorSeverity.getValue > severityPeakUnifiedMemoryVariable.getValue) {
-          severityPeakUnifiedMemoryVariable = peakUnifiedMemoryExecutorSeverity
-        }
-      }
-      severityPeakUnifiedMemoryVariable
+    lazy val severity: Severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(unifiedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
+      Severity.NONE
+    } else {
+      PEAK_UNIFIED_MEMORY_THRESHOLDS.severityOf(maxUnifiedMemory)
     }
   }
-
 }

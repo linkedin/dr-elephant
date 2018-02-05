@@ -28,7 +28,9 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, StageDataImpl, TaskDataImpl}
 
-
+/**
+  * Test class for Stages With Failed Tasks Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class StagesWithFailedTasksHeuristicTest extends FunSpec with Matchers {
   import StagesWithFailedTasksHeuristicTest._
 

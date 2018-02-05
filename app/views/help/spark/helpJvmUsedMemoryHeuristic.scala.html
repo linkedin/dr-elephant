@@ -15,6 +15,5 @@
 *@
 <p>This is a heuristic for peak JVM used memory.</p>
 <h4>Executor Max Peak JVM Used Memory</h4>
-<p>This is to analyse whether the executor memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory by the executor is reasonably close to the blocked executor memory which is specified in spark.executor.memory. If the peak JVM memory is much smaller, then the executor memory should be reduced.</p>
-<h4>Driver Max Peak JVM Used Memory</h4>
-<p>This is to analyse whether the driver memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory by the driver is reasonably close to the blocked driver memory which is specified in spark.driver.memory. If the peak JVM memory is much smaller, then the driver memory should be reduced.</p>
+<p>This is to analyse whether the executor memory is set to a good value. To avoid wasted memory, it checks if the peak JVM used memory by the executor is reasonably close to the user allocated executor memory which is specified in spark.executor.memory. If the peak JVM memory is much smaller, then the executor memory should be reduced.</p>
+<p> Note: Please note that for calculation purposes Dr. Elephant considers 1024 Bytes in 1 KB whereas the spark history server considers 1000 Bytes. So please don't get confused if you find discrepancy in values from these two places. </p>

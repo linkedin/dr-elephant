@@ -303,7 +303,7 @@ object SparkRestClientTest {
       @Path("applications/{appId}/{attemptId}/stages")
       def getStages(): StagesResource = new StagesResource()
 
-      @Path("applications/{appId}/{attemptId}/executors")
+      @Path("applications/{appId}/{attemptId}/allexecutors")
       def getExecutors(): ExecutorsResource = new ExecutorsResource()
 
       @Path("applications/{appId}/{attemptId}/logs")
@@ -385,7 +385,7 @@ object SparkRestClientTest {
       @Path("applications/{appId}/stages")
       def getStages(): StagesResource = new StagesResource()
 
-      @Path("applications/{appId}/executors")
+      @Path("applications/{appId}/allexecutors")
       def getExecutors(): ExecutorsResource = new ExecutorsResource()
 
       @Path("applications/{appId}/logs")

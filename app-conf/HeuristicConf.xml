@@ -175,53 +175,91 @@
     <classname>com.linkedin.drelephant.spark.heuristics.ConfigurationHeuristic</classname>
     <viewname>views.html.help.spark.helpConfigurationHeuristic</viewname>
   </heuristic>
-  <heuristic>
+
+  <!--<heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Spark Executor Metrics</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorsHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorsHeuristic</viewname>
-  </heuristic>
+  </heuristic>-->
+
   <heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Spark Job Metrics</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.JobsHeuristic</classname>
     <viewname>views.html.help.spark.helpJobsHeuristic</viewname>
   </heuristic>
+
   <heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Spark Stage Metrics</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.StagesHeuristic</classname>
     <viewname>views.html.help.spark.helpStagesHeuristic</viewname>
   </heuristic>
+
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Peak Unified Memory</heuristicname>
+    <heuristicname>Executor Peak Unified Memory</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.UnifiedMemoryHeuristic</classname>
     <viewname>views.html.help.spark.helpUnifiedMemoryHeuristic</viewname>
+    <!--<params>
+      <peak_unified_memory_threshold>0.7,0.6,0.4,0.2</peak_unified_memory_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
+    </params>-->
   </heuristic>
+
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>JVM Used Memory</heuristicname>
+    <heuristicname>Executor JVM Used Memory</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.JvmUsedMemoryHeuristic</classname>
     <viewname>views.html.help.spark.helpJvmUsedMemoryHeuristic</viewname>
+    <!--<params>
+      <executor_peak_jvm_memory_threshold>1.25,1.5,2,3</executor_peak_jvm_memory_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
+    </params>-->
   </heuristic>
+
   <heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Stages with failed tasks</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.StagesWithFailedTasksHeuristic</classname>
     <viewname>views.html.help.spark.helpStagesWithFailedTasks</viewname>
   </heuristic>
+
   <heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Executor GC</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>
+    <!--<params>
+      <gc_severity_A_threshold>0.08,0.09,0.1,0.15</gc_severity_A_threshold>
+      <gc_severity_D_threshold>0.05,0.04,0.03,0.01</gc_severity_D_threshold>
+    </params>-->
   </heuristic>
+
   <heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Executor spill</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.ExecutorStorageSpillHeuristic</classname>
     <viewname>views.html.help.spark.helpExecutorStorageSpillHeuristic</viewname>
+    <!--<params>
+      <spill_fraction_of_executors_threshold>0.2</spill_fraction_of_executors_threshold>
+      <spill_max_memory_threshold>0.05</spill_max_memory_threshold>
+      <spark_executor_cores_threshold>4</spark_executor_cores_threshold>
+      <spark_executor_memory_threshold>10GB</spark_executor_memory_threshold>
+    </params>-->
+  </heuristic>
+
+  <heuristic>
+    <applicationtype>spark</applicationtype>
+    <heuristicname>Driver Metrics</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.DriverHeuristic</classname>
+    <viewname>views.html.help.spark.helpDriverHeuristic</viewname>
+    <!--<params>
+      <driver_peak_jvm_memory_threshold>1.25,1.5,2,3</driver_peak_jvm_memory_threshold>
+      <gc_severity_threshold>0.08,0.09,0.1,0.15</gc_severity_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
+    </params>-->
   </heuristic>
 
 </heuristics>
