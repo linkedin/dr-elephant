@@ -62,7 +62,7 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
       it("has reasonable size") {
         val details = heuristicResultDetails.get(3)
         details.getName should be ("Suggested spark.executor.memory")
-        details.getValue should be ("451.55 MB")
+        details.getValue should be ("452 MB")
       }
     }
   }

@@ -124,4 +124,41 @@ public class MemoryFormatUtils {
         + "] does not match any unit. The supported units are (case-insensitive, and also the 'B' is ignorable): ["
         + StringUtils.join(UNITS) + "].");
   }
+
+  /**
+   * Given a memory value in string format, it rounds off the double value to next integer.
+   * @param formattedString
+   * @return : formatted String with int value to next integer.
+   */
+  public static String roundOffMemoryStringToNextInteger(String formattedString) {
+    if (formattedString == null) {
+      return "";
+    }
+
+    //handling if the string has , for eg. 1,000MB
+    formattedString = formattedString.replace(",", "");
+
+    Matcher matcher = REGEX_MATCHER.matcher(formattedString);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException(
+          "The formatted string [" + formattedString + "] does not match with the regex /" + REGEX_MATCHER.toString()
+              + "/");
+    }
+    if (matcher.groupCount() != 1 && matcher.groupCount() != 2) {
+      throw new IllegalArgumentException();
+    }
+
+    double numPart = Double.parseDouble(matcher.group(1));
+    if (numPart < 0) {
+      throw new IllegalArgumentException("The number part of the memory cannot be less than zero: [" + numPart + "].");
+    }
+
+    int numPartInt = (int) (numPart + 0.5);
+
+    String unitPart = matcher.groupCount() == 2 ? matcher.group(2).toUpperCase() : "";
+    if (!unitPart.endsWith("B")) {
+      unitPart += "B";
+    }
+    return (numPartInt + " " + unitPart);
+  }
 }
