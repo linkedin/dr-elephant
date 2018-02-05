@@ -153,7 +153,7 @@ public class MemoryFormatUtils {
       throw new IllegalArgumentException("The number part of the memory cannot be less than zero: [" + numPart + "].");
     }
 
-    int numPartInt = (int) (numPart + 0.5);
+    int numPartInt = (int) Math.ceil(numPart);
 
     String unitPart = matcher.groupCount() == 2 ? matcher.group(2).toUpperCase() : "";
     if (!unitPart.endsWith("B")) {
