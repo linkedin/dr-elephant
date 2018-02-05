@@ -199,7 +199,7 @@
 
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Peak Unified Memory</heuristicname>
+    <heuristicname>Executor Peak Unified Memory</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.UnifiedMemoryHeuristic</classname>
     <viewname>views.html.help.spark.helpUnifiedMemoryHeuristic</viewname>
     <!--<params>
