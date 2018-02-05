@@ -27,7 +27,9 @@ import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 import java.util.Date
 
-
+/**
+  * Test class for Configuration Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ConfigurationHeuristicTest extends FunSpec with Matchers {
   import ConfigurationHeuristicTest._
 

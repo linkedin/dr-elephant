@@ -10,6 +10,9 @@ import org.scalatest.{FunSpec, Matchers}
 import scala.collection.JavaConverters
 import scala.concurrent.duration.Duration
 
+/**
+  * Test class for Driver Metrics Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class DriverHeuristicTest extends FunSpec with Matchers {
 
   import DriverHeuristicTest._

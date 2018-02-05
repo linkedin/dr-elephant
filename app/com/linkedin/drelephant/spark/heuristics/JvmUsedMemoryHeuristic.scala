@@ -50,7 +50,7 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
 
     if (evaluator.severity != Severity.NONE) {
       resultDetails = resultDetails :+ new HeuristicResultDetails("Executor Memory", "The allocated memory for the executor (in " + SPARK_EXECUTOR_MEMORY + ") is much more than the peak JVM used memory by executors.")
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Reasonable size for executor memory", (MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION) * evaluator.maxExecutorPeakJvmUsedMemory).toLong)))
+      resultDetails = resultDetails :+ new HeuristicResultDetails("Suggested spark.executor.memory", (MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION) * evaluator.maxExecutorPeakJvmUsedMemory).toLong)))
     }
 
     val result = new HeuristicResult(

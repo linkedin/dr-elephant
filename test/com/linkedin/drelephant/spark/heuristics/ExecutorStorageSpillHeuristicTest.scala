@@ -25,7 +25,9 @@ import com.linkedin.drelephant.spark.heuristics.ExecutorStorageSpillHeuristic.Ev
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-
+/**
+  * Test class for Executor Storage Spill Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorStorageSpillHeuristicTest extends FunSpec with Matchers {
   import ExecutorStorageSpillHeuristicTest._
 

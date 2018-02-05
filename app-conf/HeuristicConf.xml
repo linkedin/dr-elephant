@@ -210,7 +210,7 @@
 
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>JVM Used Memory</heuristicname>
+    <heuristicname>Executor JVM Used Memory</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.JvmUsedMemoryHeuristic</classname>
     <viewname>views.html.help.spark.helpJvmUsedMemoryHeuristic</viewname>
     <!--<params>
@@ -252,7 +252,7 @@
 
   <heuristic>
     <applicationtype>spark</applicationtype>
-    <heuristicname>Driver</heuristicname>
+    <heuristicname>Driver Metrics</heuristicname>
     <classname>com.linkedin.drelephant.spark.heuristics.DriverHeuristic</classname>
     <viewname>views.html.help.spark.helpDriverHeuristic</viewname>
     <!--<params>

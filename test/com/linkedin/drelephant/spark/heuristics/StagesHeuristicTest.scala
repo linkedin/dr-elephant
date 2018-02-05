@@ -27,6 +27,9 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
+/**
+  * Test class for Stages Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class StagesHeuristicTest extends FunSpec with Matchers {
   import StagesHeuristicTest._
 

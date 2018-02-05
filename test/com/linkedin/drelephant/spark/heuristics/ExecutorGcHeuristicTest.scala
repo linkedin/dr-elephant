@@ -26,7 +26,9 @@ import org.scalatest.{FunSpec, Matchers}
 
 import scala.concurrent.duration.Duration
 
-
+/**
+  * Test class for Executor GC Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorGcHeuristicTest extends FunSpec with Matchers {
   import ExecutorGcHeuristicTest._
 

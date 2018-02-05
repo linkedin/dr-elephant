@@ -10,6 +10,9 @@ import org.scalatest.{FunSpec, Matchers}
 
 import scala.collection.JavaConverters
 
+/**
+  * Test class for Unified Memory Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
 
   import UnifiedMemoryHeuristicTest._

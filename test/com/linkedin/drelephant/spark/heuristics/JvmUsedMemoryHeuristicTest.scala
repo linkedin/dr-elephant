@@ -9,6 +9,9 @@ import org.scalatest.{FunSpec, Matchers}
 
 import scala.collection.JavaConverters
 
+/**
+  * Test class for JVM Used memory. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
 
   import JvmUsedMemoryHeuristicTest._
@@ -58,7 +61,7 @@ class JvmUsedMemoryHeuristicTest extends FunSpec with Matchers {
 
       it("has reasonable size") {
         val details = heuristicResultDetails.get(3)
-        details.getName should be ("Reasonable size for executor memory")
+        details.getName should be ("Suggested spark.executor.memory")
         details.getValue should be ("451.55 MB")
       }
     }

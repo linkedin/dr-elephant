@@ -25,7 +25,9 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, 
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-
+/**
+  * Test class for Executors Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorsHeuristicTest extends FunSpec with Matchers {
   import ExecutorsHeuristicTest._
 
