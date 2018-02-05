@@ -36,13 +36,18 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
     newDummyExecutorData("2", 999999999, Map("executionMemory" -> 200, "storageMemory" -> 200))
   )
 
+  val executorData2 = Seq(
+    newDummyExecutorData("driver", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
+    newDummyExecutorData("2", 999999999, Map("executionMemory" -> 999999990, "storageMemory" -> 9))
+  )
+
   describe(".apply") {
     val data = newFakeSparkApplicationData(appConfigurationProperties, executorData)
     val data1 = newFakeSparkApplicationData(appConfigurationProperties1, executorData1)
+    val data2 = newFakeSparkApplicationData(appConfigurationProperties1, executorData2)
     val heuristicResult = unifiedMemoryHeuristic.apply(data)
     val heuristicResult1 = unifiedMemoryHeuristic.apply(data1)
-    val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
-    val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
+    val heuristicResult2 = unifiedMemoryHeuristic.apply(data2)
     val evaluator = new Evaluator(unifiedMemoryHeuristic, data1)
 
     it("has severity") {
@@ -75,6 +80,10 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
 
     it("data1 has mean memory") {
       evaluator.meanUnifiedMemory should be(400)
+    }
+
+    it("has no severity when max and allocated memory are the same") {
+      heuristicResult2.getSeverity should be(Severity.NONE)
     }
   }
 }
