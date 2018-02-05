@@ -115,5 +115,6 @@ public class MemoryFormatUtilsTest extends TestCase {
     assertEquals("500 MB", MemoryFormatUtils.roundOffMemoryStringToNextInteger("500M"));
     assertEquals("600 GB", MemoryFormatUtils.roundOffMemoryStringToNextInteger("600 gb"));
     assertEquals("600 GB", MemoryFormatUtils.roundOffMemoryStringToNextInteger("600 g"));
+    assertEquals("", MemoryFormatUtils.roundOffMemoryStringToNextInteger(""));
   }
 }

@@ -90,7 +90,7 @@ public class MemoryFormatUtils {
    * @return The bytes value
    */
   public static long stringToBytes(String formattedString) {
-    if (formattedString == null) {
+    if (formattedString == null || formattedString.isEmpty()) {
       return 0L;
     }
 
@@ -131,7 +131,7 @@ public class MemoryFormatUtils {
    * @return : formatted String with int value to next integer.
    */
   public static String roundOffMemoryStringToNextInteger(String formattedString) {
-    if (formattedString == null) {
+    if (formattedString == null || formattedString.isEmpty()) {
       return "";
     }
 
