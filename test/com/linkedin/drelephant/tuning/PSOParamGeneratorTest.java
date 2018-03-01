@@ -18,6 +18,8 @@ package com.linkedin.drelephant.tuning;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.linkedin.drelephant.DrElephant;
+import com.linkedin.drelephant.ElephantContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,8 @@ import play.Application;
 import play.GlobalSettings;
 import play.libs.Json;
 import play.test.FakeApplication;
+import org.apache.hadoop.conf.Configuration;
+
 
 import static common.DBTestUtil.*;
 import static common.TestConstants.*;
@@ -64,6 +68,9 @@ public class PSOParamGeneratorTest {
     };
 
     fakeApp = fakeApplication(dbConn, gs);
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+    org.junit.Assume.assumeTrue(autoTuningEnabled);
   }
 
   private void populateTestData() {

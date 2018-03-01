@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.linkedin.drelephant.AutoTuner;
+import com.linkedin.drelephant.DrElephant;
+import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.tuning.BaselineComputeUtil;
 import com.linkedin.drelephant.tuning.FitnessComputeUtil;
 import com.linkedin.drelephant.tuning.JobCompleteDetector;
@@ -44,6 +46,7 @@ import models.TuningJobDefinition;
 import models.TuningJobExecution;
 import models.TuningJobExecution.ParamSetStatus;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,6 +131,10 @@ public class RestAPITest {
 
   @Test
   public void testRestGetCurrentRunParameters() {
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+    org.junit.Assume.assumeTrue(autoTuningEnabled);
+
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateAutoTuningTestData1();
@@ -178,6 +185,10 @@ public class RestAPITest {
 
   @Test
   public void testRestGetCurrentRunParametersNewJob() {
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+    org.junit.Assume.assumeTrue(autoTuningEnabled);
+
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateAutoTuningTestData1();

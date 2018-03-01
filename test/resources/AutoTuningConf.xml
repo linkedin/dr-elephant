@@ -19,7 +19,7 @@
 <configuration>
   <property>
     <name>autotuning.enabled</name>
-    <value>true</value>
+    <value>false</value>
     <description>Auto Tuning is enabled or not</description>
   </property>
   <property>
@@ -55,7 +55,7 @@
   <!--The below property is optional-->
   <!--<property>-->
   <!--<name>python.path</name>-->
-  <!--<value>/usr/bin/python</value>-->
+  <!--<value>/path/to/python/binary</value>-->
   <!--<description>Root directory for python</description>-->
   <!--</property>-->
 </configuration>
