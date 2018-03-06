@@ -24,7 +24,7 @@ moduleForComponent('single-heuristic-detail', 'Integration | Component | single 
 test('it renders', function(assert) {
 
   this.set("yarnappheuristicresult", {
-    name: "Mapper Data Skew",
+    name: "Mapper Skew",
     severity: "None",
     details: [
       {

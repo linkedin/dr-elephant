@@ -18,7 +18,7 @@ package controllers;
 
 import com.avaje.ebean.ExpressionList;
 import com.avaje.ebean.Query;
-
+import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.ElephantContext;
@@ -28,9 +28,11 @@ import com.linkedin.drelephant.util.Utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -46,41 +48,35 @@ import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import views.html.index;
 import views.html.help.metrics.helpRuntime;
 import views.html.help.metrics.helpWaittime;
 import views.html.help.metrics.helpUsedResources;
 import views.html.help.metrics.helpWastedResources;
-import views.html.index;
 import views.html.page.comparePage;
 import views.html.page.flowHistoryPage;
 import views.html.page.helpPage;
 import views.html.page.homePage;
 import views.html.page.jobHistoryPage;
-import views.html.page.searchPage;
-import views.html.results.compareResults;
-import views.html.results.flowDetails;
-import views.html.results.oldFlowHistoryResults;
-import views.html.results.jobDetails;
-import views.html.results.oldJobHistoryResults;
-import views.html.results.oldFlowMetricsHistoryResults;
-import views.html.results.oldJobMetricsHistoryResults;
-import views.html.results.searchResults;
-
 import views.html.page.oldFlowHistoryPage;
-import views.html.page.oldJobHistoryPage;
-import views.html.results.jobHistoryResults;
-import views.html.results.flowHistoryResults;
-import views.html.results.flowMetricsHistoryResults;
-import views.html.results.jobMetricsHistoryResults;
 import views.html.page.oldHelpPage;
+import views.html.page.oldJobHistoryPage;
+import views.html.page.searchPage;
+import views.html.results.*;
 
-import com.google.gson.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.linkedin.drelephant.tuning.AutoTuningAPIHelper;
+import com.linkedin.drelephant.tuning.TuningInput;
 
 
 public class Application extends Controller {
@@ -241,6 +237,9 @@ public class Application extends Controller {
     String partialFlowExecId = form.get(FLOW_EXEC_ID);
     partialFlowExecId = (partialFlowExecId != null) ? partialFlowExecId.trim() : null;
 
+    String jobDefId = form.get(JOB_DEF_ID);
+    jobDefId = jobDefId != null ? jobDefId.trim() : "";
+
     // Search and display job details when job id or flow execution url is provided.
     if (!appId.isEmpty()) {
       AppResult result = AppResult.find.select("*")
@@ -260,6 +259,19 @@ public class Application extends Controller {
           .findList();
       Map<IdUrlPair, List<AppResult>> map = ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.JOB_EXECUTION_ID);
       return ok(searchPage.render(null, flowDetails.render(flowExecPair, map)));
+    } else if (!jobDefId.isEmpty()) {
+      List<AppResult> results = AppResult.find
+          .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID)
+          .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
+          .where()
+          .eq(AppResult.TABLE.JOB_DEF_ID, jobDefId)
+          .findList();
+      Map<IdUrlPair, List<AppResult>> map = ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.FLOW_EXECUTION_ID);
+
+      String flowDefId = (results.isEmpty()) ? "" :  results.get(0).flowDefId;  // all results should have the same flow id
+      IdUrlPair flowDefIdPair = new IdUrlPair(flowDefId, AppResult.TABLE.FLOW_DEF_URL);
+
+      return ok(searchPage.render(null, flowDefinitionIdDetails.render(flowDefIdPair, map)));
     }
 
     // Prepare pagination of results
@@ -457,7 +469,7 @@ public class Application extends Controller {
    * @return A map of Job Urls to the list of jobs corresponding to the 2 flow execution urls
    */
   private static Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> compareFlows(List<AppResult> results1, List<AppResult> results2) {
-    
+
     Map<IdUrlPair, Map<IdUrlPair, List<AppResult>>> jobDefMap = new HashMap<IdUrlPair, Map<IdUrlPair, List<AppResult>>>();
 
     if (results1 != null && !results1.isEmpty() && results2 != null && !results2.isEmpty()) {
@@ -877,6 +889,100 @@ public class Application extends Controller {
   }
 
   /**
+   * Rest API for getting current run parameters from auto tuning framework
+   * @return
+   */
+  public static Result getCurrentRunParameters() {
+    final Timer.Context context = AutoTuningMetricsController.getCurrentRunParametersTimerContext();
+    String jsonString = request().body().asJson().toString();
+    logger.debug("Started processing getCurrentRunParameters request with following parameters " + jsonString);
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, String> paramValueMap = new HashMap<String, String>();
+    TuningInput tuningInput = new TuningInput();
+    try {
+      paramValueMap = (Map<String, String>) mapper.readValue(jsonString, Map.class);
+      String flowDefId = paramValueMap.get("flowDefId");
+      String jobDefId = paramValueMap.get("jobDefId");
+      String flowDefUrl = paramValueMap.get("flowDefUrl");
+      String jobDefUrl = paramValueMap.get("jobDefUrl");
+      String flowExecId = paramValueMap.get("flowExecId");
+      String jobExecId = paramValueMap.get("jobExecId");
+      String flowExecUrl = paramValueMap.get("flowExecUrl");
+      String jobExecUrl = paramValueMap.get("jobExecUrl");
+      String jobName = paramValueMap.get("jobName");
+      String userName = paramValueMap.get("userName");
+      String client = paramValueMap.get("client");
+      String scheduler = paramValueMap.get("scheduler");
+      String defaultParams = paramValueMap.get("defaultParams");
+      Boolean isRetry = false;
+      if (paramValueMap.containsKey("isRetry")) {
+        isRetry = Boolean.parseBoolean(paramValueMap.get("isRetry"));
+      }
+      Boolean skipExecutionForOptimization = false;
+      if (paramValueMap.containsKey("skipExecutionForOptimization")) {
+        skipExecutionForOptimization = Boolean.parseBoolean(paramValueMap.get("skipExecutionForOptimization"));
+      }
+      String jobType = paramValueMap.get("autoTuningJobType");
+      String optimizationAlgo = paramValueMap.get("optimizationAlgo");
+      String optimizationAlgoVersion = paramValueMap.get("optimizationAlgoVersion");
+      String optimizationMetric = paramValueMap.get("optimizationMetric");
+
+      Double allowedMaxExecutionTimePercent = null;
+      Double allowedMaxResourceUsagePercent = null;
+      if (paramValueMap.containsKey("allowedMaxResourceUsagePercent")) {
+        allowedMaxResourceUsagePercent = Double.parseDouble(paramValueMap.get("allowedMaxResourceUsagePercent"));
+      }
+      if (paramValueMap.containsKey("allowedMaxExecutionTimePercent")) {
+        allowedMaxExecutionTimePercent = Double.parseDouble(paramValueMap.get("allowedMaxExecutionTimePercent"));
+      }
+      tuningInput.setFlowDefId(flowDefId);
+      tuningInput.setJobDefId(jobDefId);
+      tuningInput.setFlowDefUrl(flowDefUrl);
+      tuningInput.setJobDefUrl(jobDefUrl);
+      tuningInput.setFlowExecId(flowExecId);
+      tuningInput.setJobExecId(jobExecId);
+      tuningInput.setFlowExecUrl(flowExecUrl);
+      tuningInput.setJobExecUrl(jobExecUrl);
+      tuningInput.setJobName(jobName);
+      tuningInput.setUserName(userName);
+      tuningInput.setClient(client);
+      tuningInput.setScheduler(scheduler);
+      tuningInput.setDefaultParams(defaultParams);
+      tuningInput.setRetry(isRetry);
+      tuningInput.setSkipExecutionForOptimization(skipExecutionForOptimization);
+      tuningInput.setJobType(jobType);
+      tuningInput.setOptimizationAlgo(optimizationAlgo);
+      tuningInput.setOptimizationAlgoVersion(optimizationAlgoVersion);
+      tuningInput.setOptimizationMetric(optimizationMetric);
+      tuningInput.setAllowedMaxExecutionTimePercent(allowedMaxExecutionTimePercent);
+      tuningInput.setAllowedMaxResourceUsagePercent(allowedMaxResourceUsagePercent);
+      return getCurrentRunParameters(tuningInput);
+    } catch (Exception e) {
+      AutoTuningMetricsController.markGetCurrentRunParametersFailures();
+      logger.error("Exception parsing input: ", e);
+      return notFound("Error parsing input ");
+    }finally{
+      if(context!=null)
+      {
+        context.stop();
+      }
+    }
+  }
+
+  private static Result getCurrentRunParameters(TuningInput tuningInput) {
+    AutoTuningAPIHelper autoTuningAPIHelper = new AutoTuningAPIHelper();
+    Map<String, Double> outputParams = autoTuningAPIHelper.getCurrentRunParameters(tuningInput);
+    if (outputParams != null) {
+      logger.info("Output params " + outputParams);
+      return ok(Json.toJson(outputParams));
+    } else {
+      AutoTuningMetricsController.markGetCurrentRunParametersFailures();
+      return notFound("Unable to find parameters. Job id: " + tuningInput.getJobDefId() + " Flow id: "
+          + tuningInput.getFlowDefId());
+    }
+  }
+
+  /**
    * Rest API for searching all jobs triggered by a particular Scheduler Job
    * E.g., localhost:8080/rest/jobexec?id=xyz
    */
@@ -1137,15 +1243,19 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("score", flowPerfScore);
       dataset.add("jobscores", jobScores);
 
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
+
+
 
   /**
    * The data for plotting the job history graph. While plotting the job history
@@ -1228,14 +1338,16 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("score", jobPerfScore);
       dataset.add("stagescores", stageScores);
 
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1330,7 +1442,7 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("runtime", Utils.getTotalRuntime(mrJobsList));
       dataset.addProperty("waittime", Utils.getTotalWaittime(mrJobsList));
       dataset.addProperty("resourceused", totalMemoryUsed);
@@ -1340,7 +1452,9 @@ public class Application extends Controller {
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**
@@ -1480,7 +1594,7 @@ public class Application extends Controller {
 
       // Execution record
       JsonObject dataset = new JsonObject();
-      dataset.addProperty("flowtime", mrJobsList.get(mrJobsList.size() - 1).finishTime);
+      dataset.addProperty("flowtime", Utils.getFlowTime(mrJobsList.get(mrJobsList.size() - 1)));
       dataset.addProperty("runtime", totalFlowRuntime);
       dataset.addProperty("waittime", totalFlowDelay);
       dataset.addProperty("resourceused", totalFlowMemoryUsed);
@@ -1490,7 +1604,9 @@ public class Application extends Controller {
       datasets.add(dataset);
     }
 
-    return ok(new Gson().toJson(datasets));
+    JsonArray sortedDatasets = Utils.sortJsonArray(datasets);
+
+    return ok(new Gson().toJson(sortedDatasets));
   }
 
   /**

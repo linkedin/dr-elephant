@@ -60,6 +60,7 @@ public class MetricsController extends Controller {
 
   private static int _queueSize = -1;
   private static int _retryQueueSize = -1;
+  private static int _secondRetryQueueSize = -1;
   private static Meter _skippedJobs;
   private static Meter _processedJobs;
   private static Histogram _jobProcessingTime;
@@ -238,5 +239,9 @@ public class MetricsController extends Controller {
     } else {
       return ok(Json.toJson(HEALTHCHECK_NOT_ENABLED));
     }
+  }
+
+  public static void setSecondRetryQueueSize(int secondRetryQueueSize) {
+    _secondRetryQueueSize = secondRetryQueueSize;
   }
 }

@@ -20,7 +20,7 @@ import java.util.Date
 
 import scala.collection.JavaConverters
 
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
@@ -39,7 +39,7 @@ class SparkApplicationDataTest extends FunSpec with Matchers {
     }
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(appId, "app", Seq(applicationAttemptInfo)),
+      new ApplicationInfoImpl(appId, "app", Seq(applicationAttemptInfo)),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = Seq.empty
@@ -72,7 +72,7 @@ object SparkApplicationDataTest {
     attemptId: Option[String],
     startTime: Date,
     endTime: Date
-  ): ApplicationAttemptInfo = new ApplicationAttemptInfo(
+  ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
     attemptId,
     startTime,
     endTime,

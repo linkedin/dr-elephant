@@ -30,9 +30,11 @@ function check_config() {
 }
 
 # Save project root dir
-script_path=`which $0`
-script_dir=`dirname $script_path`
-project_root=$script_dir/../
+project_root=$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )
+
+scripts_dir=$project_root/scripts
+echo "Scripts directory: $scripts_dir"
+export PSO_DIR_PATH=$scripts_dir/pso
 
 # User could set an environmental variable, ELEPHANT_CONF_DIR, or pass an optional argument(config file path)
 if [ -z "$1" ]; then
@@ -110,6 +112,10 @@ if [ -n "${keytab_location}" ]; then
   echo "keytab_location: " $keytab_location
   OPTS+=" -Dkeytab.location=$keytab_location"
 fi
+if [ -n "${krb_conf_file}" ]; then
+  echo "krb_conf_file: " $krb_conf_file
+  OPTS+=" -Djava.security.krb5.conf=$krb_conf_file"
+fi
 
 if [ -n "${application_secret}" ]; then
   OPTS+=" -Dapplication.secret=$application_secret"
@@ -156,7 +162,7 @@ then
 elif [[ $HADOOP_VERSION == 2* ]];
 then
   JAVA_LIB_PATH=$HADOOP_HOME"/lib/native"
-  echo "This is hadoop2.x grid. Add Java library path: "$JAVA_LIB_PATH
+  echo "This is hadoop2.x grid. Adding Java library to path: "$JAVA_LIB_PATH
 else
   echo "error: Hadoop isn't properly set on this machine. Could you verify cmd 'hadoop version'? "
   exit 1

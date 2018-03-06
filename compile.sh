@@ -28,6 +28,26 @@ function play_command() {
   fi
 }
 
+function require_programs() {
+  echo "Checking for required programs..."
+  missing_programs=""
+  
+  for program in $@; do
+    if ! command -v "$program" > /dev/null; then
+      missing_programs=$(printf "%s\n\t- %s" "$missing_programs" "$program")
+    fi
+  done 
+
+  if [ ! -z "$missing_programs" ]; then
+    echo "[ERROR] The following programs are required and are missing: $missing_programs"
+    exit 1
+  else
+    echo "[SUCCESS] Program requirement is fulfilled!"
+  fi
+}
+
+require_programs zip unzip
+
 # Default configurations
 HADOOP_VERSION="2.3.0"
 SPARK_VERSION="1.4.0"
@@ -121,6 +141,7 @@ trap "exit" SIGINT SIGTERM
 start_script=${project_root}/scripts/start.sh
 stop_script=${project_root}/scripts/stop.sh
 app_conf=${project_root}/app-conf
+pso_dir=${project_root}/scripts/pso
 
 # Echo the value of pwd in the script so that it is clear what is being removed.
 rm -rf ${project_root}/dist
@@ -145,6 +166,10 @@ cp $start_script ${DIST_NAME}/bin/
 cp $stop_script ${DIST_NAME}/bin/
 
 cp -r $app_conf ${DIST_NAME}
+
+mkdir ${DIST_NAME}/scripts/
+
+cp -r $pso_dir ${DIST_NAME}/scripts/
 
 zip -r ${DIST_NAME}.zip ${DIST_NAME}
 

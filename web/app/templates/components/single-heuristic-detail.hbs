@@ -30,10 +30,19 @@
                             </tr></thead>
                             <tbody>
                             {{#each yarnappheuristicresult.details as |yarnappheuristicresultdetail|}}
-                                <tr>
-                                    <td>{{yarnappheuristicresultdetail.name}}</td>
-                                    <td>{{yarnappheuristicresultdetail.value}}</td>
-                                </tr>
+                                {{#if (eq "Error" yarnappheuristicresultdetail.name) }}
+                                  <tr>
+                                      <td>{{yarnappheuristicresultdetail.value}}</td>
+                                  </tr>
+                                  <tr>
+                                    <td colspan="2"><div class="stacktrace">{{yarnappheuristicresultdetail.details}}</div></td>
+                                  </tr>
+                                {{else}}
+                                  <tr>
+                                      <td>{{yarnappheuristicresultdetail.name}}</td>
+                                      <td>{{yarnappheuristicresultdetail.value}}</td>
+                                  </tr>
+                                {{/if}}
                             {{/each}}
                             </tbody>
                         </table>

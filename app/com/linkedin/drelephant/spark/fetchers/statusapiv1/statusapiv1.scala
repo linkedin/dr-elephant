@@ -42,209 +42,420 @@ import java.util.Date
 import scala.collection.Map
 
 import org.apache.spark.JobExecutionStatus
-import org.apache.spark.status.api.v1.StageStatus
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type
+import com.fasterxml.jackson.annotation.{JsonSubTypes, JsonTypeInfo}
 
-class ApplicationInfo(
-  val id: String,
-  val name: String,
-  val attempts: Seq[ApplicationAttemptInfo])
+trait ApplicationInfo {
+  def id: String
+  def name: String
+  def attempts: Seq[ApplicationAttemptInfo]
+}
 
-class ApplicationAttemptInfo(
-  val attemptId: Option[String],
-  val startTime: Date,
-  val endTime: Date,
-  val sparkUser: String,
-  val completed: Boolean = false)
+trait ApplicationAttemptInfo{
+  def attemptId: Option[String]
+  def startTime: Date
+  def endTime: Date
+  def sparkUser: String
+  def completed: Boolean
+}
 
-class ExecutorStageSummary(
-  val taskTime : Long,
-  val failedTasks : Int,
-  val succeededTasks : Int,
-  val inputBytes : Long,
-  val outputBytes : Long,
-  val shuffleRead : Long,
-  val shuffleWrite : Long,
-  val memoryBytesSpilled : Long,
-  val diskBytesSpilled : Long)
+trait ExecutorStageSummary{
+  def taskTime : Long
+  def failedTasks : Int
+  def succeededTasks : Int
+  def inputBytes : Long
+  def outputBytes : Long
+  def shuffleRead : Long
+  def shuffleWrite : Long
+  def memoryBytesSpilled : Long
+  def diskBytesSpilled : Long
+}
 
-class ExecutorSummary(
-  val id: String,
-  val hostPort: String,
-  val rddBlocks: Int,
-  val memoryUsed: Long,
-  val diskUsed: Long,
-  val activeTasks: Int,
-  val failedTasks: Int,
-  val completedTasks: Int,
-  val totalTasks: Int,
-  val totalDuration: Long,
-  val totalInputBytes: Long,
-  val totalShuffleRead: Long,
-  val totalShuffleWrite: Long,
-  val maxMemory: Long,
-  val executorLogs: Map[String, String])
+trait ExecutorSummary{
+  def id: String
+  def hostPort: String
+  def rddBlocks: Int
+  def memoryUsed: Long
+  def diskUsed: Long
+  def activeTasks: Int
+  def failedTasks: Int
+  def completedTasks: Int
+  def totalTasks: Int
+  def totalDuration: Long
+  def totalInputBytes: Long
+  def totalShuffleRead: Long
+  def totalShuffleWrite: Long
+  def maxMemory: Long
+  def totalGCTime: Long
+  def executorLogs: Map[String, String]}
 
-class JobData(
-  val jobId: Int,
-  val name: String,
-  val description: Option[String],
-  val submissionTime: Option[Date],
-  val completionTime: Option[Date],
-  val stageIds: Seq[Int],
-  val jobGroup: Option[String],
-  val status: JobExecutionStatus,
-  val numTasks: Int,
-  val numActiveTasks: Int,
-  val numCompletedTasks: Int,
-  val numSkippedTasks: Int,
-  val numFailedTasks: Int,
-  val numActiveStages: Int,
-  val numCompletedStages: Int,
-  val numSkippedStages: Int,
-  val numFailedStages: Int)
+trait JobData{
+  def jobId: Int
+  def name: String
+  def description: Option[String]
+  def submissionTime: Option[Date]
+  def completionTime: Option[Date]
+  def stageIds: Seq[Int]
+  def jobGroup: Option[String]
+  def status: JobExecutionStatus
+  def numTasks: Int
+  def numActiveTasks: Int
+  def numCompletedTasks: Int
+  def numSkippedTasks: Int
+  def numFailedTasks: Int
+  def numActiveStages: Int
+  def numCompletedStages: Int
+  def numSkippedStages: Int
+  def numFailedStages: Int}
 
 // Q: should Tachyon size go in here as well?  currently the UI only shows it on the overall storage
 // page ... does anybody pay attention to it?
-class RDDStorageInfo(
-  val id: Int,
-  val name: String,
-  val numPartitions: Int,
-  val numCachedPartitions: Int,
-  val storageLevel: String,
-  val memoryUsed: Long,
-  val diskUsed: Long,
-  val dataDistribution: Option[Seq[RDDDataDistribution]],
-  val partitions: Option[Seq[RDDPartitionInfo]])
+trait RDDStorageInfo{
+  def id: Int
+  def name: String
+  def numPartitions: Int
+  def numCachedPartitions: Int
+  def storageLevel: String
+  def memoryUsed: Long
+  def diskUsed: Long
+  def dataDistribution: Option[Seq[RDDDataDistribution]]
+  def partitions: Option[Seq[RDDPartitionInfo]]}
 
-class RDDDataDistribution(
-  val address: String,
-  val memoryUsed: Long,
-  val memoryRemaining: Long,
-  val diskUsed: Long)
+trait RDDDataDistribution{
+  def address: String
+  def memoryUsed: Long
+  def memoryRemaining: Long
+  def diskUsed: Long}
 
-class RDDPartitionInfo(
-  val blockName: String,
-  val storageLevel: String,
-  val memoryUsed: Long,
-  val diskUsed: Long,
-  val executors: Seq[String])
+trait RDDPartitionInfo{
+  def blockName: String
+  def storageLevel: String
+  def memoryUsed: Long
+  def diskUsed: Long
+  def executors: Seq[String]}
 
-class StageData(
-  val status: StageStatus,
-  val stageId: Int,
-  val attemptId: Int,
-  val numActiveTasks: Int ,
-  val numCompleteTasks: Int,
-  val numFailedTasks: Int,
+trait StageData{
+  def status: StageStatus
+  def stageId: Int
+  def attemptId: Int
+  def numActiveTasks: Int
+  def numCompleteTasks: Int
+  def numFailedTasks: Int
 
-  val executorRunTime: Long,
+  def executorRunTime: Long
 
-  val inputBytes: Long,
-  val inputRecords: Long,
-  val outputBytes: Long,
-  val outputRecords: Long,
-  val shuffleReadBytes: Long,
-  val shuffleReadRecords: Long,
-  val shuffleWriteBytes: Long,
-  val shuffleWriteRecords: Long,
-  val memoryBytesSpilled: Long,
-  val diskBytesSpilled: Long,
+  def inputBytes: Long
+  def inputRecords: Long
+  def outputBytes: Long
+  def outputRecords: Long
+  def shuffleReadBytes: Long
+  def shuffleReadRecords: Long
+  def shuffleWriteBytes: Long
+  def shuffleWriteRecords: Long
+  def memoryBytesSpilled: Long
+  def diskBytesSpilled: Long
 
-  val name: String,
-  val details: String,
-  val schedulingPool: String,
+  def name: String
+  def details: String
+  def schedulingPool: String
 
-  val accumulatorUpdates: Seq[AccumulableInfo],
-  val tasks: Option[Map[Long, TaskData]],
-  val executorSummary: Option[Map[String, ExecutorStageSummary]])
+  def accumulatorUpdates: Seq[AccumulableInfo]
+  def tasks: Option[Map[Long, TaskData]]
+  def executorSummary: Option[Map[String, ExecutorStageSummary]]}
 
-class TaskData(
-  val taskId: Long,
-  val index: Int,
-  val attempt: Int,
-  val launchTime: Date,
-  val executorId: String,
-  val host: String,
-  val taskLocality: String,
-  val speculative: Boolean,
-  val accumulatorUpdates: Seq[AccumulableInfo],
-  val errorMessage: Option[String] = None,
-  val taskMetrics: Option[TaskMetrics] = None)
+trait TaskData{
+  def taskId: Long
+  def index: Int
+  def attempt: Int
+  def launchTime: Date
+  def executorId: String
+  def host: String
+  def taskLocality: String
+  def speculative: Boolean
+  def accumulatorUpdates: Seq[AccumulableInfo]
+  def errorMessage: Option[String]
+  def taskMetrics: Option[TaskMetrics]}
 
-class TaskMetrics(
-  val executorDeserializeTime: Long,
-  val executorRunTime: Long,
-  val resultSize: Long,
-  val jvmGcTime: Long,
-  val resultSerializationTime: Long,
-  val memoryBytesSpilled: Long,
-  val diskBytesSpilled: Long,
-  val inputMetrics: Option[InputMetrics],
-  val outputMetrics: Option[OutputMetrics],
-  val shuffleReadMetrics: Option[ShuffleReadMetrics],
-  val shuffleWriteMetrics: Option[ShuffleWriteMetrics])
+trait TaskMetrics{
+  def executorDeserializeTime: Long
+  def executorRunTime: Long
+  def resultSize: Long
+  def jvmGcTime: Long
+  def resultSerializationTime: Long
+  def memoryBytesSpilled: Long
+  def diskBytesSpilled: Long
+  def inputMetrics: Option[InputMetrics]
+  def outputMetrics: Option[OutputMetrics]
+  def shuffleReadMetrics: Option[ShuffleReadMetrics]
+  def shuffleWriteMetrics: Option[ShuffleWriteMetrics]}
 
-class InputMetrics(
-  val bytesRead: Long,
-  val recordsRead: Long)
+trait InputMetrics{
+  def bytesRead: Long
+  def recordsRead: Long}
 
-class OutputMetrics(
-  val bytesWritten: Long,
-  val recordsWritten: Long)
+trait OutputMetrics{
+  def bytesWritten: Long
+  def recordsWritten: Long}
 
-class ShuffleReadMetrics(
-  val remoteBlocksFetched: Int,
-  val localBlocksFetched: Int,
-  val fetchWaitTime: Long,
-  val remoteBytesRead: Long,
-  val totalBlocksFetched: Int,
-  val recordsRead: Long)
+trait ShuffleReadMetrics{
+  def remoteBlocksFetched: Int
+  def localBlocksFetched: Int
+  def fetchWaitTime: Long
+  def remoteBytesRead: Long
+  def totalBlocksFetched: Int
+  def recordsRead: Long}
 
-class ShuffleWriteMetrics(
-  val bytesWritten: Long,
-  val writeTime: Long,
-  val recordsWritten: Long)
+trait ShuffleWriteMetrics{
+  def bytesWritten: Long
+  def writeTime: Long
+  def recordsWritten: Long}
 
-class TaskMetricDistributions(
-  val quantiles: IndexedSeq[Double],
+trait TaskMetricDistributions{
+  def quantiles: IndexedSeq[Double]
 
-  val executorDeserializeTime: IndexedSeq[Double],
-  val executorRunTime: IndexedSeq[Double],
-  val resultSize: IndexedSeq[Double],
-  val jvmGcTime: IndexedSeq[Double],
-  val resultSerializationTime: IndexedSeq[Double],
-  val memoryBytesSpilled: IndexedSeq[Double],
-  val diskBytesSpilled: IndexedSeq[Double],
+  def executorDeserializeTime: IndexedSeq[Double]
+  def executorRunTime: IndexedSeq[Double]
+  def resultSize: IndexedSeq[Double]
+  def jvmGcTime: IndexedSeq[Double]
+  def resultSerializationTime: IndexedSeq[Double]
+  def memoryBytesSpilled: IndexedSeq[Double]
+  def diskBytesSpilled: IndexedSeq[Double]
 
-  val inputMetrics: Option[InputMetricDistributions],
-  val outputMetrics: Option[OutputMetricDistributions],
-  val shuffleReadMetrics: Option[ShuffleReadMetricDistributions],
-  val shuffleWriteMetrics: Option[ShuffleWriteMetricDistributions])
+  def inputMetrics: Option[InputMetricDistributions]
+  def outputMetrics: Option[OutputMetricDistributions]
+  def shuffleReadMetrics: Option[ShuffleReadMetricDistributions]
+  def shuffleWriteMetrics: Option[ShuffleWriteMetricDistributions]}
 
-class InputMetricDistributions(
-  val bytesRead: IndexedSeq[Double],
-  val recordsRead: IndexedSeq[Double])
+trait InputMetricDistributions{
+  def bytesRead: IndexedSeq[Double]
+  def recordsRead: IndexedSeq[Double]}
 
-class OutputMetricDistributions(
-  val bytesWritten: IndexedSeq[Double],
-  val recordsWritten: IndexedSeq[Double])
+trait OutputMetricDistributions{
+  def bytesWritten: IndexedSeq[Double]
+  def recordsWritten: IndexedSeq[Double]}
 
-class ShuffleReadMetricDistributions(
-  val readBytes: IndexedSeq[Double],
-  val readRecords: IndexedSeq[Double],
-  val remoteBlocksFetched: IndexedSeq[Double],
-  val localBlocksFetched: IndexedSeq[Double],
-  val fetchWaitTime: IndexedSeq[Double],
-  val remoteBytesRead: IndexedSeq[Double],
-  val totalBlocksFetched: IndexedSeq[Double])
+trait ShuffleReadMetricDistributions{
+  def readBytes: IndexedSeq[Double]
+  def readRecords: IndexedSeq[Double]
+  def remoteBlocksFetched: IndexedSeq[Double]
+  def localBlocksFetched: IndexedSeq[Double]
+  def fetchWaitTime: IndexedSeq[Double]
+  def remoteBytesRead: IndexedSeq[Double]
+  def totalBlocksFetched: IndexedSeq[Double]}
 
-class ShuffleWriteMetricDistributions(
-  val writeBytes: IndexedSeq[Double],
-  val writeRecords: IndexedSeq[Double],
-  val writeTime: IndexedSeq[Double])
+trait ShuffleWriteMetricDistributions{
+  def writeBytes: IndexedSeq[Double]
+  def writeRecords: IndexedSeq[Double]
+  def writeTime: IndexedSeq[Double]}
 
-class AccumulableInfo(
-  val id: Long,
-  val name: String,
-  val update: Option[String],
-  val value: String)
+trait AccumulableInfo{
+  def id: Long
+  def name: String
+  def update: Option[String]
+  def value: String}
+
+class ApplicationInfoImpl(
+  var id: String,
+  var name: String,
+  var attempts: Seq[ApplicationAttemptInfoImpl]) extends ApplicationInfo
+
+class ApplicationAttemptInfoImpl(
+  var attemptId: Option[String],
+  var startTime: Date,
+  var endTime: Date,
+  var sparkUser: String,
+  var completed: Boolean = false) extends ApplicationAttemptInfo
+
+class ExecutorStageSummaryImpl(
+  var taskTime : Long,
+  var failedTasks : Int,
+  var succeededTasks : Int,
+  var inputBytes : Long,
+  var outputBytes : Long,
+  var shuffleRead : Long,
+  var shuffleWrite : Long,
+  var memoryBytesSpilled : Long,
+  var diskBytesSpilled : Long) extends ExecutorStageSummary
+
+class ExecutorSummaryImpl(
+  var id: String,
+  var hostPort: String,
+  var rddBlocks: Int,
+  var memoryUsed: Long,
+  var diskUsed: Long,
+  var activeTasks: Int,
+  var failedTasks: Int,
+  var completedTasks: Int,
+  var totalTasks: Int,
+  var totalDuration: Long,
+  var totalInputBytes: Long,
+  var totalShuffleRead: Long,
+  var totalShuffleWrite: Long,
+  var maxMemory: Long,
+  var totalGCTime: Long,
+  var executorLogs: Map[String, String]) extends ExecutorSummary
+
+class JobDataImpl(
+  var jobId: Int,
+  var name: String,
+  var description: Option[String],
+  var submissionTime: Option[Date],
+  var completionTime: Option[Date],
+  var stageIds: Seq[Int],
+  var jobGroup: Option[String],
+  var status: JobExecutionStatus,
+  var numTasks: Int,
+  var numActiveTasks: Int,
+  var numCompletedTasks: Int,
+  var numSkippedTasks: Int,
+  var numFailedTasks: Int,
+  var numActiveStages: Int,
+  var numCompletedStages: Int,
+  var numSkippedStages: Int,
+  var numFailedStages: Int) extends JobData
+
+// Q: should Tachyon size go in here as well?  currently the UI only shows it on the overall storage
+// page ... does anybody pay attention to it?
+class RDDStorageInfoImpl(
+  var id: Int,
+  var name: String,
+  var numPartitions: Int,
+  var numCachedPartitions: Int,
+  var storageLevel: String,
+  var memoryUsed: Long,
+  var diskUsed: Long,
+  var dataDistribution: Option[Seq[RDDDataDistributionImpl]],
+  var partitions: Option[Seq[RDDPartitionInfoImpl]]) extends RDDStorageInfo
+
+class RDDDataDistributionImpl(
+  var address: String,
+  var memoryUsed: Long,
+  var memoryRemaining: Long,
+  var diskUsed: Long) extends RDDDataDistribution
+
+class RDDPartitionInfoImpl(
+  var blockName: String,
+  var storageLevel: String,
+  var memoryUsed: Long,
+  var diskUsed: Long,
+  var executors: Seq[String]) extends RDDPartitionInfo
+
+class StageDataImpl(
+  var status: StageStatus,
+  var stageId: Int,
+  var attemptId: Int,
+  var numActiveTasks: Int ,
+  var numCompleteTasks: Int,
+  var numFailedTasks: Int,
+
+  var executorRunTime: Long,
+
+  var inputBytes: Long,
+  var inputRecords: Long,
+  var outputBytes: Long,
+  var outputRecords: Long,
+  var shuffleReadBytes: Long,
+  var shuffleReadRecords: Long,
+  var shuffleWriteBytes: Long,
+  var shuffleWriteRecords: Long,
+  var memoryBytesSpilled: Long,
+  var diskBytesSpilled: Long,
+
+  var name: String,
+  var details: String,
+  var schedulingPool: String,
+
+  var accumulatorUpdates: Seq[AccumulableInfoImpl],
+  var tasks: Option[Map[Long, TaskData]],
+  var executorSummary: Option[Map[String, ExecutorStageSummaryImpl]]) extends StageData
+
+class TaskDataImpl(
+  var taskId: Long,
+  var index: Int,
+  var attempt: Int,
+  var launchTime: Date,
+  var executorId: String,
+  var host: String,
+  var taskLocality: String,
+  var speculative: Boolean,
+  var accumulatorUpdates: Seq[AccumulableInfoImpl],
+  var errorMessage: Option[String] = None,
+  var taskMetrics: Option[TaskMetricsImpl] = None) extends TaskData
+
+class TaskMetricsImpl(
+  var executorDeserializeTime: Long,
+  var executorRunTime: Long,
+  var resultSize: Long,
+  var jvmGcTime: Long,
+  var resultSerializationTime: Long,
+  var memoryBytesSpilled: Long,
+  var diskBytesSpilled: Long,
+  var inputMetrics: Option[InputMetricsImpl],
+  var outputMetrics: Option[OutputMetricsImpl],
+  var shuffleReadMetrics: Option[ShuffleReadMetricsImpl],
+  var shuffleWriteMetrics: Option[ShuffleWriteMetricsImpl]) extends TaskMetrics
+
+class InputMetricsImpl(
+  var bytesRead: Long,
+  var recordsRead: Long) extends InputMetrics
+
+class OutputMetricsImpl(
+  var bytesWritten: Long,
+  var recordsWritten: Long) extends OutputMetrics
+
+class ShuffleReadMetricsImpl(
+  var remoteBlocksFetched: Int,
+  var localBlocksFetched: Int,
+  var fetchWaitTime: Long,
+  var remoteBytesRead: Long,
+  var totalBlocksFetched: Int,
+  var recordsRead: Long) extends ShuffleReadMetrics
+
+class ShuffleWriteMetricsImpl(
+  var bytesWritten: Long,
+  var writeTime: Long,
+  var recordsWritten: Long) extends ShuffleWriteMetrics
+
+class TaskMetricDistributionsImpl(
+  var quantiles: IndexedSeq[Double],
+
+  var executorDeserializeTime: IndexedSeq[Double],
+  var executorRunTime: IndexedSeq[Double],
+  var resultSize: IndexedSeq[Double],
+  var jvmGcTime: IndexedSeq[Double],
+  var resultSerializationTime: IndexedSeq[Double],
+  var memoryBytesSpilled: IndexedSeq[Double],
+  var diskBytesSpilled: IndexedSeq[Double],
+
+  var inputMetrics: Option[InputMetricDistributionsImpl],
+  var outputMetrics: Option[OutputMetricDistributionsImpl],
+  var shuffleReadMetrics: Option[ShuffleReadMetricDistributionsImpl],
+  var shuffleWriteMetrics: Option[ShuffleWriteMetricDistributionsImpl]) extends TaskMetricDistributions
+
+class InputMetricDistributionsImpl(
+  var bytesRead: IndexedSeq[Double],
+  var recordsRead: IndexedSeq[Double]) extends InputMetricDistributions
+
+class OutputMetricDistributionsImpl(
+  var bytesWritten: IndexedSeq[Double],
+  var recordsWritten: IndexedSeq[Double]) extends OutputMetricDistributions
+
+class ShuffleReadMetricDistributionsImpl(
+  var readBytes: IndexedSeq[Double],
+  var readRecords: IndexedSeq[Double],
+  var remoteBlocksFetched: IndexedSeq[Double],
+  var localBlocksFetched: IndexedSeq[Double],
+  var fetchWaitTime: IndexedSeq[Double],
+  var remoteBytesRead: IndexedSeq[Double],
+  var totalBlocksFetched: IndexedSeq[Double]) extends ShuffleReadMetricDistributions
+
+class ShuffleWriteMetricDistributionsImpl(
+  var writeBytes: IndexedSeq[Double],
+  var writeRecords: IndexedSeq[Double],
+  var writeTime: IndexedSeq[Double]) extends ShuffleWriteMetricDistributions
+
+class AccumulableInfoImpl(
+  var id: Long,
+  var name: String,
+  var update: Option[String],
+  var value: String) extends AccumulableInfo

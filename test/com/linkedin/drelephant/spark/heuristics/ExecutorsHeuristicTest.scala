@@ -21,7 +21,7 @@ import scala.collection.JavaConverters
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity, SeverityThresholds}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
@@ -234,7 +234,7 @@ object ExecutorsHeuristicTest {
     totalShuffleRead: Long,
     totalShuffleWrite: Long,
     maxMemory: Long
-  ): ExecutorSummary = new ExecutorSummary(
+  ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
     rddBlocks = 0,
@@ -249,14 +249,15 @@ object ExecutorsHeuristicTest {
     totalShuffleRead,
     totalShuffleWrite,
     maxMemory,
+    totalGCTime = 0,
     executorLogs = Map.empty
   )
 
-  def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummary]): SparkApplicationData = {
+  def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(appId, name = "app", Seq.empty),
+      new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = executorSummaries

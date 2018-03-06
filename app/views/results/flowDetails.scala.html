@@ -34,7 +34,7 @@
   <ul class="list-group">
     @for( (jobExecPair, jobs) <- results) {
       <div class="list-group-item">
-        Job Execution URL: <a href=@jobExecPair.getUrl>@jobExecPair.getUrl</a>
+        Job Execution URL: <a href=@jobExecPair.getUrl>@jobExecPair.getId</a>
         <div class="list-group well-lg">
           @for(result <- jobs) {
             <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"

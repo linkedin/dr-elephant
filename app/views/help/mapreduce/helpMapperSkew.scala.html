@@ -1,0 +1,52 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis shows whether there is a data/time-skew for the data/time entering mapper tasks.
+</p>
+<p>
+    This result of the analysis shows two groups of the spectrum, where the first group has significantly less input data compared to the second group.
+</p>
+<h5>Example</h5>
+<p>
+<div class="list-group">
+    <a class="list-group-item list-group-item-danger" href="">
+        <h4 class="list-group-item-heading">Mapper Data Skew</h4>
+        <table class="list-group-item-text table table-condensed left-table">
+            <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Number of tasks</td>
+                <td>2205</td>
+            </tr>
+            <tr>
+                <td>Group A</td>
+                <td>953 tasks @@ 7 MB avg</td>
+            </tr>
+            <tr>
+                <td>Group B</td>
+                <td>1252 tasks @@ 512 MB avg</td>
+            </tr>
+            </tbody>
+        </table>
+    </a>
+</div>
+</p>
+<h3>Suggestions</h3>
+<p>
+    Try to make your input files strictly smaller than the HDFS block size to avoid the small excess pieces creating new map tasks.
+    Understand WHY there's skew, use CombinedFileInputFormat (or similar in the various languages), turn on slowstart to mitigate effects.
+</p>

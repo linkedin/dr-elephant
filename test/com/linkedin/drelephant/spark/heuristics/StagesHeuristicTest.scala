@@ -22,11 +22,10 @@ import scala.concurrent.duration.Duration
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, JobData, StageData}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, JobDataImpl, StageDataImpl}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
-import org.apache.spark.status.api.v1.StageStatus
 import org.scalatest.{FunSpec, Matchers}
-
 
 class StagesHeuristicTest extends FunSpec with Matchers {
   import StagesHeuristicTest._
@@ -143,7 +142,7 @@ object StagesHeuristicTest {
     numFailedTasks: Int,
     executorRunTime: Long,
     name: String
-  ): StageData = new StageData(
+  ): StageDataImpl = new StageDataImpl(
     status,
     stageId,
     attemptId = 0,
@@ -170,13 +169,13 @@ object StagesHeuristicTest {
   )
 
   def newFakeSparkApplicationData(
-    stageDatas: Seq[StageData],
+    stageDatas: Seq[StageDataImpl],
     appConfigurationProperties: Map[String, String]
   ): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(appId, name = "app", Seq.empty),
+      new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = stageDatas,
       executorSummaries = Seq.empty

@@ -59,4 +59,12 @@ public interface AnalyticJobGenerator {
    * @param job The job to add
    */
   public void addIntoRetries(AnalyticJob job);
+
+  /**
+   * Add an AnalyticJob into the second retry list. This queue fetches jobs on greater intervals of time. Those jobs will be provided again via #fetchAnalyticJobs under
+   * the generator's decision.
+   *
+   * @param job The job to add
+   */
+  public void addIntoSecondRetryQueue(AnalyticJob job);
 }

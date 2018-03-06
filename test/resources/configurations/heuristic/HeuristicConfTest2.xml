@@ -22,8 +22,8 @@
   <heuristic>
     <applicationtype>mapreduce</applicationtype>
     <heuristicname>Mapper Data Skew</heuristicname>
-    <class>com.linkedin.drelephant.mapreduce.heuristics.MapperDataSkewHeuristic</class>
-    <viewname>views.html.help.mapreduce.helpMapperDataSkew</viewname>
+    <class>com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic</class>
+    <viewname>views.html.help.mapreduce.helpMapperSkew</viewname>
     <params>
       <num_tasks_severity>10, 50, 100, 200</num_tasks_severity>
       <deviation_severity>2, 4, 8, 16</deviation_severity>

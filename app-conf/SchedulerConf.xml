@@ -34,6 +34,8 @@
           <!--<private_key>/home/key/private_key</private_key>-->
           <!--<userame>elephant</userame>-->
           <!--<password></password>-->
+          <!--<flowtimefield>flowExecId</flowtimefield>-->
+          <!--<flowtimetype>yyyy-MM-dd'T'HH:mm:ss</flowtimetype>-->
         </params>
 
     </scheduler>
@@ -62,6 +64,11 @@
             <oozie_app_name_uniqueness>false</oozie_app_name_uniqueness>
             -->
         </params>
+    </scheduler>
+
+    <scheduler>
+        <name>pinball</name>
+        <classname>com.linkedin.drelephant.schedulers.PinballScheduler</classname>
     </scheduler>
 
     <scheduler>

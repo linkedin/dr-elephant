@@ -69,6 +69,6 @@ test('Test for heuristic-details', function(assert) {
 
   this.render(hbs`{{heuristic-details-list heuristic-details=heuristic-details}}`);
 
-  assert.equal(this.$().text().trim().split("\n").join("").replace(/ /g, ''), 'MapperDataSkewSeverity:NoneGroupA4tasks@443MBavgGroupB53tasks@464MBavgNumberoftasks57MapperGCSeverity:NoneAvgtaskCPUtime(ms)27565AvgtaskGCtime(ms)885Avgtaskruntime(ms)40890Numberoftasks57TaskGC/CPUratio0.03210593143479049');
+  assert.equal(this.$().text().trim().split("\n").join("").replace(/ /g, ''), 'MapperSkewSeverity:NoneGroupA4tasks@443MBavgGroupB53tasks@464MBavgNumberoftasks57MapperGCSeverity:NoneAvgtaskCPUtime(ms)27565AvgtaskGCtime(ms)885Avgtaskruntime(ms)40890Numberoftasks57TaskGC/CPUratio0.03210593143479049');
 
 });

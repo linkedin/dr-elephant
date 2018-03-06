@@ -91,7 +91,10 @@ public class MapperTimeHeuristicTest extends TestCase {
     MapReduceTaskData[] mappers = new MapReduceTaskData[numTasks + 1];
 
     MapReduceCounterData taskCounter = new MapReduceCounterData();
-    taskCounter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, DUMMY_INPUT_SIZE);
+    taskCounter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, DUMMY_INPUT_SIZE / 4);
+    taskCounter.set(MapReduceCounterData.CounterName.S3_BYTES_READ, DUMMY_INPUT_SIZE / 4);
+    taskCounter.set(MapReduceCounterData.CounterName.S3A_BYTES_READ, DUMMY_INPUT_SIZE / 4);
+    taskCounter.set(MapReduceCounterData.CounterName.S3N_BYTES_READ, DUMMY_INPUT_SIZE / 4);
 
     int i = 0;
     for (; i < numTasks; i++) {

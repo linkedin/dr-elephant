@@ -20,13 +20,8 @@ import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
 import controllers.MetricsController;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import models.AppResult;
 import org.apache.hadoop.conf.Configuration;
@@ -67,7 +62,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private AuthenticatedURL _authenticatedURL;
   private final ObjectMapper _objectMapper = new ObjectMapper();
 
-  private final Queue<AnalyticJob> _retryQueue = new ConcurrentLinkedQueue<AnalyticJob>();
+  private final Queue<AnalyticJob> _firstRetryQueue = new ConcurrentLinkedQueue<AnalyticJob>();
+
+  private final ArrayList<AnalyticJob> _secondRetryQueue = new ArrayList<AnalyticJob>();
 
   public void updateResourceManagerAddresses() {
     if (Boolean.valueOf(configuration.get(IS_RM_HA_ENABLED))) {
@@ -114,7 +111,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     this.configuration = configuration;
     String initialFetchWindowString = configuration.get(FETCH_INITIAL_WINDOW_MS);
     if (initialFetchWindowString != null) {
-      long initialFetchWindow = Long.getLong(initialFetchWindowString);
+      long initialFetchWindow = Long.parseLong(initialFetchWindowString);
       _lastTime = System.currentTimeMillis() - FETCH_DELAY - initialFetchWindow;
       _fetchStartTime = _lastTime;
     }
@@ -160,8 +157,17 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     appList.addAll(failedApps);
 
     // Append promises from the retry queue at the end of the list
-    while (!_retryQueue.isEmpty()) {
-      appList.add(_retryQueue.poll());
+    while (!_firstRetryQueue.isEmpty()) {
+      appList.add(_firstRetryQueue.poll());
+    }
+
+    Iterator iteratorSecondRetry = _secondRetryQueue.iterator();
+    while (iteratorSecondRetry.hasNext()) {
+      AnalyticJob job = (AnalyticJob) iteratorSecondRetry.next();
+      if(job.readyForSecondRetry()) {
+        appList.add(job);
+        iteratorSecondRetry.remove();
+      }
     }
 
     _lastTime = _currentTime;
@@ -170,10 +176,18 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
   @Override
   public void addIntoRetries(AnalyticJob promise) {
-    _retryQueue.add(promise);
-    int retryQueueSize = _retryQueue.size();
+    _firstRetryQueue.add(promise);
+    int retryQueueSize = _firstRetryQueue.size();
     MetricsController.setRetryQueueSize(retryQueueSize);
     logger.info("Retry queue size is " + retryQueueSize);
+  }
+
+  @Override
+  public void addIntoSecondRetryQueue(AnalyticJob promise) {
+    _secondRetryQueue.add(promise.setTimeToSecondRetry());
+    int secondRetryQueueSize = _secondRetryQueue.size();
+    MetricsController.setSecondRetryQueueSize(secondRetryQueueSize);
+    logger.info("Second Retry queue size is " + secondRetryQueueSize);
   }
 
   /**
@@ -198,8 +212,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
    */
   private JsonNode readJsonNode(URL url)
       throws IOException, AuthenticationException {
-    HttpURLConnection conn = _authenticatedURL.openConnection(url, _token);
-    return _objectMapper.readTree(conn.getInputStream());
+    return _objectMapper.readTree(url.openStream());
   }
 
   /**

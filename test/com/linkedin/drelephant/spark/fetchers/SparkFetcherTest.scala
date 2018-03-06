@@ -16,7 +16,6 @@
 
 package com.linkedin.drelephant.spark.fetchers
 
-import java.io.InputStream
 import java.nio.file.Files
 import java.util.Date
 
@@ -24,16 +23,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ApplicationType}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.SparkFetcher.EventLogSource
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
-import com.linkedin.drelephant.spark.legacydata.{MockSparkApplicationData, SparkGeneralData}
-import com.linkedin.drelephant.spark.fetchers.FSFetcher
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl}
 import com.linkedin.drelephant.util.{SparkUtils, HadoopUtils}
-import org.apache.hadoop.fs.Path
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.deploy.history.SparkFSFetcher
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.mockito.Mockito
 import org.scalatest.{FunSpec, Matchers}
@@ -54,7 +49,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
     val duration = 8000000L
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(
+      new ApplicationInfoImpl(
         appId,
         "app",
         Seq(
@@ -100,6 +95,36 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       }
 
       an[Exception] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
+    }
+
+    it("returns SparkApplicationData when use_rest_for_eventlogs and should_process_logs_locally both are true") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "true", "should_process_logs_locally" -> "true"))
+      val mockSparkRestClient = Mockito.mock(classOf[SparkRestClient])
+      val mockSparkApplicationData = Mockito.mock(classOf[SparkApplicationData])
+      Mockito.when(mockSparkApplicationData.getAppId()).thenReturn(appId)
+      Mockito.when(mockSparkRestClient.fetchEventLogAndParse(appId)).thenReturn(mockSparkApplicationData)
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+        override lazy val sparkRestClient = mockSparkRestClient
+      }
+
+      sparkFetcher.fetchData(analyticJob).getAppId() should be(appId)
+    }
+
+    it("throws an exception when use_rest_for_eventlogs and should_process_logs_locally both are true, and fetchSparkApplicationData throws an excpetion") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "true", "should_process_logs_locally" -> "true"))
+      val mockSparkRestClient = Mockito.mock(classOf[SparkRestClient])
+      Mockito.when(mockSparkRestClient.fetchEventLogAndParse(appId)).thenThrow(new RuntimeException())
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+        override lazy val sparkRestClient = mockSparkRestClient
+      }
+
+      an[RuntimeException] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
     }
 
     it("gets its SparkConf when SPARK_CONF_DIR is set") {
@@ -212,6 +237,40 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
 
       sparkFetcher.eventLogSource should be(EventLogSource.None)
     }
+
+    it("processing log locally via rest is disabled when should_process_logs_locally is false") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "true", "should_process_logs_locally" -> "false"))
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+      }
+
+      sparkFetcher.eventLogSource should be(EventLogSource.Rest)
+      sparkFetcher.shouldProcessLogsLocally should be(false)
+    }
+
+    it("processing log locally via rest is disabled when use_rest_for_eventlogs is false") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "false", "should_process_logs_locally" -> "true"))
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
+      }
+
+      sparkFetcher.shouldProcessLogsLocally should be(false)
+    }
+
+    it("processing log locally via rest is disabled when spark.eventLog is false") {
+      val fetcherConfigurationData = newFakeFetcherConfigurationData(
+        Map("use_rest_for_eventlogs" -> "true", "should_process_logs_locally" -> "true"))
+      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
+        override lazy val sparkConf: SparkConf = new SparkConf()
+          .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "false")
+      }
+
+      sparkFetcher.shouldProcessLogsLocally should be(false)
+    }
   }
 }
 
@@ -225,7 +284,7 @@ object SparkFetcherTest {
     attemptId: Option[String],
     startTime: Date,
     endTime: Date
-  ): ApplicationAttemptInfo = new ApplicationAttemptInfo(
+  ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
     attemptId,
     startTime,
     endTime,

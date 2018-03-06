@@ -43,7 +43,7 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf, e
 
   private val logger: Logger = Logger.getLogger(classOf[SparkLogClient])
 
-  private lazy val security: HadoopSecurity = new HadoopSecurity()
+  private lazy val security: HadoopSecurity = HadoopSecurity.getInstance()
 
   protected lazy val sparkUtils: SparkUtils = SparkUtils
 
