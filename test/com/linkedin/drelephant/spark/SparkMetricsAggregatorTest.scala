@@ -23,7 +23,7 @@ import scala.collection.JavaConverters
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo, ExecutorSummary}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl, ExecutorSummaryImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
@@ -43,7 +43,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
         val duration = 8000000L
         newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(now - duration), endTime = new Date(now))
       }
-      new ApplicationInfo(appId, name = "app", Seq(applicationAttemptInfo))
+      new ApplicationInfoImpl(appId, name = "app", Seq(applicationAttemptInfo))
     }
 
     val executorSummaries = Seq(
@@ -113,7 +113,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
             val duration = -8000000L
             newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(now - duration), endTime = new Date(now))
           }
-          new ApplicationInfo(appId, name = "app", Seq(applicationAttemptInfo))
+          new ApplicationInfoImpl(appId, name = "app", Seq(applicationAttemptInfo))
         }
         val restDerivedData = SparkRestDerivedData(
             applicationInfo,
@@ -168,7 +168,7 @@ object SparkMetricsAggregatorTest {
     attemptId: Option[String],
     startTime: Date,
     endTime: Date
-  ): ApplicationAttemptInfo = new ApplicationAttemptInfo(
+  ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
     attemptId,
     startTime,
     endTime,
@@ -179,7 +179,7 @@ object SparkMetricsAggregatorTest {
   def newFakeExecutorSummary(
     id: String,
     totalDuration: Long
-  ): ExecutorSummary = new ExecutorSummary(
+  ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
     rddBlocks = 0,
@@ -194,6 +194,7 @@ object SparkMetricsAggregatorTest {
     totalShuffleRead = 0,
     totalShuffleWrite = 0,
     maxMemory = 0,
+    totalGCTime = 0,
     executorLogs = Map.empty
   )
 }

@@ -25,6 +25,7 @@ import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.util.Utils;
 
 import java.io.IOException;
+import java.lang.Integer;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -110,11 +111,26 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
       } else if (state.equals("FAILED")) {
 
         jobData.setSucceeded(false);
+        // Fetch job counter
+        MapReduceCounterData jobCounter = _jsonFactory.getJobCounter(_urlFactory.getJobCounterURL(jobId));
+
+        // Fetch task data
+        URL taskListURL = _urlFactory.getTaskListURL(jobId);
+        List<MapReduceTaskData> mapperList = new ArrayList<MapReduceTaskData>();
+        List<MapReduceTaskData> reducerList = new ArrayList<MapReduceTaskData>();
+        _jsonFactory.getTaskDataAll(taskListURL, jobId, mapperList, reducerList);
+
+        MapReduceTaskData[] mapperData = mapperList.toArray(new MapReduceTaskData[mapperList.size()]);
+        MapReduceTaskData[] reducerData = reducerList.toArray(new MapReduceTaskData[reducerList.size()]);
+
+        jobData.setCounters(jobCounter).setMapperData(mapperData).setReducerData(reducerData);
+
         String diagnosticInfo;
         try {
           diagnosticInfo = parseException(jobData.getJobId(),  _jsonFactory.getDiagnosticInfo(jobURL));
         } catch(Exception e) {
           diagnosticInfo = null;
+          logger.warn("Failed getting diagnostic info for failed job " + jobData.getJobId());
         }
         jobData.setDiagnosticInfo(diagnosticInfo);
       } else {
@@ -132,17 +148,12 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
                                                                             AuthenticationException {
     Matcher m = ThreadContextMR2.getDiagnosticMatcher(diagnosticInfo);
     if (m.matches()) {
-      if (Integer.parseInt(m.group(2)) == 0) {
-        // This is due to bug in hadoop 2.3 and shoufixed in 2.4
-        throw new RuntimeException("Error in diagnosticInfo");
-      }
       String taskId = m.group(1);
-      System.out.println("parse succedded. " + m.group(1) + " " + m.group(2));
       return _jsonFactory.getTaskFailedStackTrace(_urlFactory.getTaskAllAttemptsURL(jobId, taskId));
     }
-    logger.info("Does not match regex!!");
+    logger.warn("Does not match regex!!");
     // Diagnostic info not present in the job. Usually due to exception during AM setup
-    throw new RuntimeException("No sufficient diagnostic Info");
+    return "No sufficient diagnostic Info";
   }
 
   private URL getTaskCounterURL(String jobId, String taskId) throws MalformedURLException {
@@ -303,18 +314,23 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
 
       for (JsonNode task : tasks) {
         String state = task.get("state").getValueAsText();
-        if (!state.equals("SUCCEEDED")) {
-          // This is a failed task.
-          continue;
-        }
         String taskId = task.get("id").getValueAsText();
-        String attemptId = task.get("successfulAttempt").getValueAsText();
+        String attemptId = "";
+        if(state.equals("SUCCEEDED")) {
+           attemptId = task.get("successfulAttempt").getValueAsText();
+        } else {
+          JsonNode firstAttempt = getTaskFirstFailedAttempt(_urlFactory.getTaskAllAttemptsURL(jobId, taskId));
+          if( firstAttempt != null) {
+            attemptId = firstAttempt.get("id").getValueAsText();
+          }
+        }
+
         boolean isMapper = task.get("type").getValueAsText().equals("MAP");
 
         if (isMapper) {
-          mapperList.add(new MapReduceTaskData(taskId, attemptId));
+          mapperList.add(new MapReduceTaskData(taskId, attemptId, state));
         } else {
-          reducerList.add(new MapReduceTaskData(taskId, attemptId));
+          reducerList.add(new MapReduceTaskData(taskId, attemptId, state));
         }
       }
 
@@ -332,30 +348,42 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
         URL taskCounterURL = getTaskCounterURL(jobId, data.getTaskId());
         MapReduceCounterData taskCounter = getTaskCounter(taskCounterURL);
 
-        URL taskAttemptURL = getTaskAttemptURL(jobId, data.getTaskId(), data.getAttemptId());
-        long[] taskExecTime = getTaskExecTime(taskAttemptURL);
-
+        long[] taskExecTime = null;
+        if(!data.getAttemptId().isEmpty()) {
+          URL taskAttemptURL = getTaskAttemptURL(jobId, data.getTaskId(), data.getAttemptId());
+          taskExecTime = getTaskExecTime(taskAttemptURL);
+        }
         data.setTimeAndCounter(taskExecTime, taskCounter);
       }
     }
 
     private String getTaskFailedStackTrace(URL taskAllAttemptsUrl) throws IOException, AuthenticationException {
+      JsonNode firstAttempt = getTaskFirstFailedAttempt(taskAllAttemptsUrl);
+      if(firstAttempt != null) {
+        String stacktrace = firstAttempt.get("diagnostics").getValueAsText();
+        return stacktrace;
+      } else {
+        return null;
+      }
+    }
+
+    private JsonNode getTaskFirstFailedAttempt(URL taskAllAttemptsUrl) throws IOException, AuthenticationException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(taskAllAttemptsUrl);
-      JsonNode tasks = rootNode.path("taskAttempts").path("taskAttempt");
-      for (JsonNode task : tasks) {
-        String state = task.get("state").getValueAsText();
-        if (!state.equals("FAILED")) {
+      long firstAttemptFinishTime = Long.MAX_VALUE;
+      JsonNode firstAttempt = null;
+      JsonNode taskAttempts = rootNode.path("taskAttempts").path("taskAttempt");
+      for (JsonNode taskAttempt : taskAttempts) {
+        String state = taskAttempt.get("state").getValueAsText();
+        if (state.equals("SUCCEEDED")) {
           continue;
         }
-        String stacktrace = task.get("diagnostics").getValueAsText();
-        if (stacktrace.startsWith("Error:")) {
-          return stacktrace;
-        } else {
-          // This is not a valid stacktrace. Might due to a bug in hadoop2.3 and fixed in 2.4
-          throw new RuntimeException("This is not a valid stack trace.");
+        long finishTime = taskAttempt.get("finishTime").getLongValue();
+        if( finishTime < firstAttemptFinishTime) {
+          firstAttempt = taskAttempt;
+          firstAttemptFinishTime = finishTime;
         }
       }
-      throw new RuntimeException("No failed task attempt in this failed task.");
+      return firstAttempt;
     }
   }
 }
@@ -379,7 +407,7 @@ final class ThreadContextMR2 {
     public Pattern initialValue() {
       // Example: "Task task_1443068695259_9143_m_000475 failed 1 times"
       return Pattern.compile(
-          "Task[\\s\\u00A0]+(.*)[\\s\\u00A0]+failed[\\s\\u00A0]+([0-9])[\\s\\u00A0]+times[\\s\\u00A0]+");
+          ".*[\\s\\u00A0]+(task_[0-9]+_[0-9]+_[m|r]_[0-9]+)[\\s\\u00A0]+.*");
     }
   };
 

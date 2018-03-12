@@ -23,7 +23,7 @@ import scala.util.Try
 
 import com.linkedin.drelephant.spark.fetchers.statusapiv1._
 import org.apache.spark.JobExecutionStatus
-import org.apache.spark.status.api.v1.StageStatus
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 
 /**
   * Converters for legacy SparkApplicationData to current SparkApplicationData.
@@ -48,13 +48,13 @@ object LegacyDataConverters {
   def extractAppConfigurationProperties(legacyData: SparkApplicationData): Map[String, String] =
     legacyData.getEnvironmentData.getSparkProperties.asScala.toMap
 
-  def extractApplicationInfo(legacyData: SparkApplicationData): ApplicationInfo = {
+  def extractApplicationInfo(legacyData: SparkApplicationData): ApplicationInfoImpl = {
     val generalData = legacyData.getGeneralData
-    new ApplicationInfo(
+    new ApplicationInfoImpl(
       generalData.getApplicationId,
       generalData.getApplicationName,
       Seq(
-        new ApplicationAttemptInfo(
+        new ApplicationAttemptInfoImpl(
           Some("1"),
           new Date(generalData.getStartTime),
           new Date(generalData.getEndTime),
@@ -65,12 +65,12 @@ object LegacyDataConverters {
     )
   }
 
-  def extractJobDatas(legacyData: SparkApplicationData): Seq[JobData] = {
+  def extractJobDatas(legacyData: SparkApplicationData): Seq[JobDataImpl] = {
     val jobProgressData = legacyData.getJobProgressData
 
-    def extractJobData(jobId: Int): JobData = {
+    def extractJobData(jobId: Int): JobDataImpl = {
       val jobInfo = jobProgressData.getJobInfo(jobId)
-      new JobData(
+      new JobDataImpl(
         jobInfo.jobId,
         jobInfo.jobId.toString,
         description = None,
@@ -108,9 +108,9 @@ object LegacyDataConverters {
   def extractStageDatas(legacyData: SparkApplicationData): Seq[StageData] = {
     val jobProgressData = legacyData.getJobProgressData
 
-    def extractStageData(stageAttemptId: SparkJobProgressData.StageAttemptId): StageData = {
+    def extractStageData(stageAttemptId: SparkJobProgressData.StageAttemptId): StageDataImpl = {
       val stageInfo = jobProgressData.getStageInfo(stageAttemptId.stageId, stageAttemptId.attemptId)
-      new StageData(
+      new StageDataImpl(
         extractStageStatus(stageAttemptId),
         stageAttemptId.stageId,
         stageAttemptId.attemptId,
@@ -153,12 +153,12 @@ object LegacyDataConverters {
     sortedStageAttemptIds.map { stageAttemptId => extractStageData(stageAttemptId) }
   }
 
-  def extractExecutorSummaries(legacyData: SparkApplicationData): Seq[ExecutorSummary] = {
+  def extractExecutorSummaries(legacyData: SparkApplicationData): Seq[ExecutorSummaryImpl] = {
     val executorData = legacyData.getExecutorData
 
-    def extractExecutorSummary(executorId: String): ExecutorSummary = {
+    def extractExecutorSummary(executorId: String): ExecutorSummaryImpl = {
       val executorInfo = executorData.getExecutorInfo(executorId)
-      new ExecutorSummary(
+      new ExecutorSummaryImpl(
         executorInfo.execId,
         executorInfo.hostPort,
         executorInfo.rddBlocks,
@@ -173,6 +173,7 @@ object LegacyDataConverters {
         executorInfo.shuffleRead,
         executorInfo.shuffleWrite,
         executorInfo.maxMem,
+        executorInfo.totalGCTime,
         executorLogs = Map.empty
       )
     }

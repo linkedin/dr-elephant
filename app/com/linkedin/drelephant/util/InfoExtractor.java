@@ -17,9 +17,9 @@
 package com.linkedin.drelephant.util;
 
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
+import com.linkedin.drelephant.clients.WorkflowClient;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
-import com.linkedin.drelephant.exceptions.WorkflowClient;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.schedulers.Scheduler;
 import com.linkedin.drelephant.spark.data.SparkApplicationData;
@@ -254,10 +254,6 @@ public class InfoExtractor {
    * @return The Workflow cient based on the workflow url
    */
   public static WorkflowClient getWorkflowClientInstance(String scheduler, String url) {
-    if (!getSchedulersConfiguredForException().contains(scheduler)) {
-      throw new RuntimeException(String.format("Scheduler %s is not configured for Exception fingerprinting ", scheduler));
-    }
-
     for (SchedulerConfigurationData data : _configuredSchedulers) {
       if (data.getSchedulerName().equals(scheduler)) {
         try {

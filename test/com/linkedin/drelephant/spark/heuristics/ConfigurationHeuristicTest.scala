@@ -17,7 +17,7 @@
 package com.linkedin.drelephant.spark.heuristics
 
 import com.linkedin.drelephant.spark.data.SparkRestDerivedData
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl}
 import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
@@ -50,7 +50,9 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         "spark.executor.memory" -> "1g",
         "spark.shuffle.memoryFraction" -> "0.5",
         "spark.shuffle.service.enabled" -> "true",
-        "spark.dynamicAllocation.enabled" -> "true"
+        "spark.dynamicAllocation.enabled" -> "true",
+        "spark.yarn.secondary.jars" -> "something without star",
+        "spark.yarn.driver.memoryOverhead" -> "500"
       )
 
       val data = newFakeSparkApplicationData(configurationProperties)
@@ -58,7 +60,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
       it("returns the size of result details") {
-        heuristicResultDetails.size() should be(6)
+        heuristicResultDetails.size() should be(9)
       }
 
       it("returns the severity") {
@@ -100,6 +102,18 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         details.getName should include("spark.dynamicAllocation.enabled")
         details.getValue should be("true")
       }
+
+      it("returns the driver cores") {
+        val details = heuristicResultDetails.get(6)
+        details.getName should include("spark.driver.cores")
+        details.getValue should include("default")
+      }
+
+      it("returns the driver overhead memory") {
+        val details = heuristicResultDetails.get(7)
+        details.getName should include("spark.yarn.driver.memoryOverhead")
+        details.getValue should include("500 MB")
+      }
     }
 
     describe("apply with Severity") {
@@ -114,7 +128,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
       it("returns the size of result details") {
-        heuristicResultDetails.size() should be(8)
+        heuristicResultDetails.size() should be(11)
       }
 
       it("returns the severity") {
@@ -128,14 +142,14 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       }
 
       it("returns the serializer") {
-        val details = heuristicResultDetails.get(6)
+        val details = heuristicResultDetails.get(9)
         details.getName should include("spark.serializer")
         details.getValue should be("dummySerializer")
         details.getDetails should be("KyroSerializer is Not Enabled.")
       }
 
       it("returns the shuffle service flag") {
-        val details = heuristicResultDetails.get(7)
+        val details = heuristicResultDetails.get(10)
         details.getName should include("spark.shuffle.service.enabled")
         details.getValue should be("false")
         details.getDetails should be("Spark shuffle service is not enabled.")
@@ -184,14 +198,34 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.executorCores should be(Some(2))
       }
 
+      it("has the driver cores when they're present") {
+        val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.driver.cores" -> "3"))
+        evaluator.driverCores should be(Some(3))
+      }
+
       it("has no executor cores when they're absent") {
         val evaluator = newEvaluatorWithConfigurationProperties(Map.empty)
         evaluator.executorCores should be(None)
       }
 
+      it("has no driver cores when they're absent") {
+        val evaluator = newEvaluatorWithConfigurationProperties(Map.empty)
+        evaluator.driverCores should be(None)
+      }
+
       it("has the serializer when it's present") {
         val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.serializer" -> "org.apache.spark.serializer.KryoSerializer"))
         evaluator.serializer should be(Some("org.apache.spark.serializer.KryoSerializer"))
+      }
+
+      it("jars severity when NONE") {
+        val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.yarn.secondary.jars" -> "somethingWithoutStar"))
+        evaluator.jarsSeverity should be(Severity.NONE)
+      }
+
+      it("jars severity when CRITICAL") {
+        val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.yarn.secondary.jars" -> "somethingWith*.jar"))
+        evaluator.jarsSeverity should be(Severity.CRITICAL)
       }
 
       it("has no serializer, dynamic allocation flag, and shuffle flag when they are absent") {
@@ -254,6 +288,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.NONE)
         evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.SEVERE)
+        evaluator.severityConfThresholds should be(Severity.NONE)
         evaluator.severity should be(Severity.SEVERE)
       }
 
@@ -285,11 +320,11 @@ object ConfigurationHeuristicTest {
     val appId = "application_1"
     val startDate = new Date()
     val endDate = new Date(startDate.getTime() + 10000)
-    val applicationAttempt = new ApplicationAttemptInfo(Option("attempt1"),startDate, endDate, "sparkUser")
+    val applicationAttempt = new ApplicationAttemptInfoImpl(Option("attempt1"),startDate, endDate, "sparkUser")
     val applicationAttempts = Seq(applicationAttempt)
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(appId, name = "app", applicationAttempts),
+      new ApplicationInfoImpl(appId, name = "app", applicationAttempts),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = Seq.empty

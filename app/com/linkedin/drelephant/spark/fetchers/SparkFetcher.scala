@@ -67,6 +67,9 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     } else if (useRestForLogs) EventLogSource.Rest else EventLogSource.WebHdfs
   }
 
+  private[fetchers] lazy val shouldProcessLogsLocally = (eventLogSource == EventLogSource.Rest) &&
+    Option(fetcherConfigurationData.getParamMap.get("should_process_logs_locally")).exists(_.toLowerCase == "true")
+
   private[fetchers] lazy val sparkRestClient: SparkRestClient = new SparkRestClient(sparkConf)
 
   private[fetchers] lazy val sparkLogClient: SparkLogClient = {
@@ -84,7 +87,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     val appId = analyticJob.getAppId
     logger.info(s"Fetching data for ${appId}")
     Try {
-      Await.result(doFetchDataUsingRestAndLogClients(analyticJob), DEFAULT_TIMEOUT)
+      Await.result(doFetchSparkApplicationData(analyticJob), DEFAULT_TIMEOUT)
     }.transform(
       data => {
         logger.info(s"Succeeded fetching data for ${appId}")
@@ -95,6 +98,16 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
         Failure(e)
       }
     )
+  }
+
+  private def doFetchSparkApplicationData(analyticJob: AnalyticJob): Future[SparkApplicationData] = {
+    if (shouldProcessLogsLocally) {
+      async {
+        sparkRestClient.fetchEventLogAndParse(analyticJob.getAppId)
+      }
+    } else {
+      doFetchDataUsingRestAndLogClients(analyticJob)
+    }
   }
 
   private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = async {

@@ -39,8 +39,8 @@
     <params>
       <allocated_memory_waste_buffer_percentage>0.5</allocated_memory_waste_buffer_percentage>
     </params>
-  </aggregator> 
-<aggregator>
+  </aggregator>
+  <aggregator>
     <applicationtype>TEZ</applicationtype>
     <classname>com.linkedin.drelephant.tez.TezMetricsAggregator</classname>
   </aggregator>

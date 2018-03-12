@@ -55,10 +55,12 @@ GET        /rest/resourceusagedatabyuser        controllers.Application.restReso
 GET        /rest/user-details                   controllers.api.v1.Web.restGetUsersSummaryStats()
 GET        /rest/workflow-exceptions            controllers.api.v1.Web.restExceptions()
 GET        /rest/exception-statuses             controllers.api.v1.Web.restExceptionStatuses()
+POST       /rest/getCurrentRunParameters        controllers.Application.getCurrentRunParameters()
 
 # Metrics calls
 GET        /ping                                controllers.MetricsController.ping()
 GET        /metrics                             controllers.MetricsController.index()
+GET        /tuneinmetrics                       controllers.AutoTuningMetricsController.index()
 GET        /healthcheck                         controllers.MetricsController.healthcheck()
 
 # Map static resources from the /public folder to the /assets URL path

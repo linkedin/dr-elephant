@@ -169,10 +169,15 @@ public class MapReduceFSFetcherHadoop2Test {
 
       MapReduceTaskData[] taskList = fetcher.getTaskData(jobId, infoList);
       Assert.assertNotNull("taskList should not be null.", taskList);
+      int succeededTaskCount = 0;
       for (MapReduceTaskData task : taskList) {
         Assert.assertNotNull("Null pointer in taskList.", task);
+        if(task.getState().equals("SUCCEEDED")) {
+          succeededTaskCount++;
+        }
       }
-      Assert.assertEquals("Should have only one succeeded task.", 1, taskList.length);
+      Assert.assertEquals("Should have total two tasks.", 2, taskList.length);
+      Assert.assertEquals("Should have only one succeeded task.", 1, succeededTaskCount);
     } catch (IOException e) {
       Assert.assertNull("Failed to initialize FileSystem.", e);
     }

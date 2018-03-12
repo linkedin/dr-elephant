@@ -16,13 +16,17 @@
 
 package com.linkedin.drelephant.exceptions;
 
+import com.linkedin.drelephant.clients.WorkflowClient;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
 import com.linkedin.drelephant.security.HadoopSecurity;
 import com.linkedin.drelephant.util.InfoExtractor;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedAction;
+
 import javax.naming.AuthenticationException;
+
 import org.apache.log4j.Logger;
 
 import java.net.MalformedURLException;
@@ -67,9 +71,14 @@ public class ExceptionFinder {
     // get the schedulerData
     SchedulerConfigurationData schedulerData = InfoExtractor.getSchedulerData(scheduler);
 
-
     if(schedulerData==null) {
       throw new RuntimeException(String.format("Cannot find scheduler %s", scheduler));
+    }
+
+    if (schedulerData.getParamMap().containsKey("exception_enabled") == false
+        || schedulerData.getParamMap().get("exception_enabled").equals("false")) {
+      throw new RuntimeException(String.format("Scheduler %s is not configured for Exception fingerprinting ",
+          scheduler));
     }
 
     if(!schedulerData.getParamMap().containsKey(USERNAME)) {

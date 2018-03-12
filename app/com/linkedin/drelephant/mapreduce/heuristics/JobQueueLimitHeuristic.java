@@ -93,7 +93,7 @@ public class JobQueueLimitHeuristic implements Heuristic<MapReduceApplicationDat
   private Severity[] getTasksSeverity(MapReduceTaskData[] tasks, long queueTimeout) {
     List<Severity> taskSeverityList = new ArrayList<Severity>();
     for (MapReduceTaskData task : tasks) {
-      if (task.isTimeAndCounterDataPresent()) {
+      if (task.isTimeDataPresent()) {
         taskSeverityList.add(getQueueLimitSeverity(task.getTotalRunTimeMs(), queueTimeout));
       }
     }

@@ -95,7 +95,7 @@ public class HeuristicConfigurationTest {
   public void testParseFetcherConf3() {
     expectedEx.expect(RuntimeException.class);
     expectedEx.expectMessage("No tag 'heuristicname' in heuristic 1 classname"
-        + " com.linkedin.drelephant.mapreduce.heuristics.MapperDataSkewHeuristic");
+        + " com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic");
     HeuristicConfiguration heuristicConf = new HeuristicConfiguration(document3.getDocumentElement());
   }
 
@@ -106,7 +106,7 @@ public class HeuristicConfigurationTest {
   public void testParseFetcherConf4() {
     expectedEx.expect(RuntimeException.class);
     expectedEx.expectMessage("No tag 'viewname' in heuristic 1 classname"
-        + " com.linkedin.drelephant.mapreduce.heuristics.MapperDataSkewHeuristic");
+        + " com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic");
     HeuristicConfiguration heuristicConf = new HeuristicConfiguration(document4.getDocumentElement());
   }
 

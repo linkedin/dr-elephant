@@ -22,7 +22,7 @@ import com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceCounterData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
-import com.linkedin.drelephant.mapreduce.heuristics.MapperDataSkewHeuristic;
+import com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic;
 import common.TestUtil;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -160,40 +160,40 @@ public class AnalyticJobTest {
     List<Heuristic> heuristics = new ArrayList<Heuristic>();
     // dummy hash map
     Map<String, String> paramsMap = new HashMap<String, String>();
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Mapper Data Skew",
-        "com.linkedin.drelephant.mapreduce.heuristics.MapperDataSkewHeuristic",
-        "views.html.help.mapreduce.helpMapperDataSkew", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Mapper Skew",
+        "com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic",
+        "views.html.help.mapreduce.helpMapperSkew", new ApplicationType("mapreduce"), paramsMap)));
+    heuristics.add(new MapperSkewHeuristic(
         new HeuristicConfigurationData("Mapper GC", "com.linkedin.drelephant.mapreduce.heuristics.MapperGCHeuristic",
             "views.html.help.mapreduce.helpGC", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Mapper Time",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Mapper Time",
         "com.linkedin.drelephant.mapreduce.heuristics.MapperTimeHeuristic", "views.html.help.mapreduce.helpMapperTime",
         new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Mapper Speed",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Mapper Speed",
         "com.linkedin.drelephant.mapreduce.heuristics.MapperSpeedHeuristic",
         "views.html.help.mapreduce.helpMapperSpeed", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Mapper Spill",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Mapper Spill",
         "com.linkedin.drelephant.mapreduce.heuristics.MapperSpillHeuristic",
         "views.html.help.mapreduce.helpMapperSpill", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Mapper Memory",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Mapper Memory",
         "com.linkedin.drelephant.mapreduce.heuristics.MapperMemoryHeuristic",
         "views.html.help.mapreduce.helpMapperMemory", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Reducer Data Skew",
-        "com.linkedin.drelephant.mapreduce.heuristics.ReducerDataSkewHeuristic",
-        "views.html.help.mapreduce.helpReducerDataSkew", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Reducer Skew",
+        "com.linkedin.drelephant.mapreduce.heuristics.ReducerSkewHeuristic",
+        "views.html.help.mapreduce.helpReducerSkew", new ApplicationType("mapreduce"), paramsMap)));
+    heuristics.add(new MapperSkewHeuristic(
         new HeuristicConfigurationData("Reducer GC", "com.linkedin.drelephant.mapreduce.heuristics.ReducerGCHeuristic",
             "views.html.help.mapreduce.helpGC", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Reducer Time",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Reducer Time",
         "com.linkedin.drelephant.mapreduce.heuristics.ReducerTimeHeuristic",
         "views.html.help.mapreduce.helpReducerTime", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Reducer Memory",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Reducer Memory",
         "com.linkedin.drelephant.mapreduce.heuristics.ReducerMemoryHeuristic",
         "views.html.help.mapreduce.helpReducerMemory", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(new HeuristicConfigurationData("Shuffle &#38; Sort",
+    heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Shuffle &#38; Sort",
         "com.linkedin.drelephant.mapreduce.heuristics.ShuffleSortHeuristic",
         "views.html.help.mapreduce.helpShuffleSort", new ApplicationType("mapreduce"), paramsMap)));
-    heuristics.add(new MapperDataSkewHeuristic(
+    heuristics.add(new MapperSkewHeuristic(
         new HeuristicConfigurationData("Exception", "com.linkedin.drelephant.mapreduce.heuristics.ExceptionHeuristic",
             "views.html.help.mapreduce.helpException", new ApplicationType("mapreduce"), paramsMap)));
 

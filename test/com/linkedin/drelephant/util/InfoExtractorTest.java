@@ -26,8 +26,13 @@ import com.linkedin.drelephant.schedulers.OozieScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
 
 import com.linkedin.drelephant.spark.data.SparkApplicationData;
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationAttemptInfo;
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationAttemptInfoImpl;
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationInfoImpl;
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummaryImpl;
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.JobDataImpl;
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageDataImpl;
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationInfo;
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationAttemptInfo;
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary;
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.JobData;
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageData;
@@ -272,7 +277,7 @@ public class InfoExtractorTest {
 
     HadoopApplicationData data = new SparkApplicationData("application_5678",
             properties,
-            new ApplicationInfo("", "", new Vector<ApplicationAttemptInfo>(0,1,0)),
+        new ApplicationInfoImpl("", "", new Vector<ApplicationAttemptInfoImpl>(0,1,0)),
             new Vector<JobData>(0,1,0),
             new Vector<StageData>(0,1,0),
             new Vector<ExecutorSummary>(0,1,0));
@@ -293,7 +298,7 @@ public class InfoExtractorTest {
 
     HadoopApplicationData data = new SparkApplicationData("application_5678",
         properties,
-        new ApplicationInfo("", "", new Vector<ApplicationAttemptInfo>(0,1,0)),
+        new ApplicationInfoImpl("", "", new Vector<ApplicationAttemptInfoImpl>(0,1,0)),
         new Vector<JobData>(0,1,0),
         new Vector<StageData>(0,1,0),
         new Vector<ExecutorSummary>(0,1,0));

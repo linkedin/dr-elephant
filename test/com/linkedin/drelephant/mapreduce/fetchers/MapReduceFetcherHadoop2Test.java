@@ -16,6 +16,8 @@
 
 package com.linkedin.drelephant.mapreduce.fetchers;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,12 +26,11 @@ public class MapReduceFetcherHadoop2Test {
 
   @Test
   public void testDiagnosticMatcher() {
-    Assert.assertEquals("Task[\\s\\u00A0]+(.*)[\\s\\u00A0]+failed[\\s\\u00A0]+([0-9])[\\s\\u00A0]+times[\\s\\u00A0]+",
-        ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time")
-            .pattern().toString());
-
-    Assert.assertEquals(2, ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time")
-        .groupCount());
+    Matcher matcher = ThreadContextMR2.getDiagnosticMatcher("Task task_1443068695259_9143_m_000475 failed 1 time");
+    Assert.assertEquals(".*[\\s\\u00A0]+(task_[0-9]+_[0-9]+_[m|r]_[0-9]+)[\\s\\u00A0]+.*", matcher.pattern().toString());
+    Assert.assertEquals(true, matcher.matches());
+    Assert.assertEquals(1, matcher.groupCount());
+    Assert.assertEquals("task_1443068695259_9143_m_000475", matcher.group(1));
   }
 
 }

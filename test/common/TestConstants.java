@@ -22,6 +22,8 @@ public class TestConstants {
   public static final int TEST_SERVER_PORT = 9001;
   public static final String BASE_URL = "http://localhost:" + TEST_SERVER_PORT;
   public static final String TEST_DATA_FILE = "test/resources/test-init.sql";
+  public static final String TEST_AUTO_TUNING_DATA_FILE1 = "test/resources/tunein-test1.sql";
+
   public static final int RESPONSE_TIMEOUT = 3000; // milliseconds
 
   public static final String TEST_JOB_ID1 = "application_1458194917883_1453361";
@@ -69,6 +71,8 @@ public class TestConstants {
   public static final String REST_JOB_METRICS_GRAPH_DATA_PATH = "/rest/jobmetricsgraphdata";
   public static final String REST_FLOW_METRICS_GRAPH_DATA_PATH = "/rest/flowmetricsgraphdata";
   public static final String REST_USER_RESOURCE_USAGE_PATH = "/rest/resourceusagedatabyuser";
+  public static final String REST_GET_CURRENT_RUN_PARAMETERS = "/rest/getCurrentRunParameters";
+
   public static final String DEFAULT_ENCODING = "UTF-8";
 
   //Paths to the UI rest end points
@@ -92,5 +96,17 @@ public class TestConstants {
   public static final String TEST_SCHEDULER = "azkaban";
   public static final long TEST_SCORE = 0;
   public static final String TEST_SEVERITY = "NONE";
+
+  // Tuning constant
+  public static final String JSON_CURRENT_POPULATION_KEY = "current_population";
+  public static final String JSON_PREVIOUS_POPULATION_KEY = "prev_population";
+  public static final String JSON_ARCHIVE_KEY = "archive";
+  public static final String JSON_RND_STATE_KEY = "rnd_state";
+  public static final int SWARM_SIZE = 3;
+  public static final String JSON_PARTICLE_CANDIDATE_KEY = "_candidate";
+  public static final String JSON_PARTICLE_BIRTHDATE_KEY = "birthdate";
+  public static final String JSON_PARTICLE_MAXIMIZE_KEY = "maximize";
+  public static final String JSON_PARTICLE_FITNESS_KEY = "fitness";
+
 
 }

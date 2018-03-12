@@ -26,8 +26,7 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.math.Statistics
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageData
-import org.apache.spark.status.api.v1.StageStatus
-
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 
 /**
   * A heuristic based on metrics for a Spark app's stages.
