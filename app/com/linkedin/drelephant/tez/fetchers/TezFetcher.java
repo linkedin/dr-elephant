@@ -47,6 +47,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
   private static final Logger logger = Logger.getLogger(TezFetcher.class);
   private static final int MAX_SAMPLE_SIZE = 1000;
+  private static final String TIMELINE_SERVER_URL = "yarn.timeline-service.webapp.address";
 
   private URLFactory _urlFactory;
   private JSONFactory _jsonFactory;
@@ -56,7 +57,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
   public TezFetcher(FetcherConfigurationData fetcherConfData) throws IOException {
     this._fetcherConfigurationData = fetcherConfData;
-    final String applicationHistoryAddr = new Configuration().get("yarn.timeline-service.webapp.address");
+    final String applicationHistoryAddr = new Configuration().get(TIMELINE_SERVER_URL);
 
     //Connection validity checked using method verifyURL(_timelineWebAddr) inside URLFactory constructor;
     _urlFactory = new URLFactory(applicationHistoryAddr);
