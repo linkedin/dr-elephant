@@ -25,8 +25,7 @@ import java.util.{Calendar, SimpleTimeZone}
 import com.linkedin.drelephant.spark.legacydata.LegacyDataConverters
 import org.apache.spark.deploy.history.SparkDataCollection
 
-import scala.async.Async
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -41,6 +40,8 @@ import javax.ws.rs.core.MediaType
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 
+import scala.concurrent.duration.{Duration, SECONDS}
+
 /**
   * A client for getting data from the Spark monitoring REST API, e.g. <https://spark.apache.org/docs/1.4.1/monitoring.html#rest-api>.
   *
@@ -48,8 +49,8 @@ import org.apache.spark.SparkConf
   * or synchronous when needed.
   */
 class SparkRestClient(sparkConf: SparkConf) {
+
   import SparkRestClient._
-  import Async.{async, await}
 
   private val logger: Logger = Logger.getLogger(classOf[SparkRestClient])
 
@@ -58,8 +59,8 @@ class SparkRestClient(sparkConf: SparkConf) {
   private val historyServerUri: URI = sparkConf.getOption(HISTORY_SERVER_ADDRESS_KEY) match {
     case Some(historyServerAddress) =>
       val baseUri: URI =
-        // Latest versions of CDH include http in their history server address configuration.
-        // However, it is not recommended by Spark documentation(http://spark.apache.org/docs/latest/running-on-yarn.html)
+      // Latest versions of CDH include http in their history server address configuration.
+      // However, it is not recommended by Spark documentation(http://spark.apache.org/docs/latest/running-on-yarn.html)
         if (historyServerAddress.contains(s"http://")) {
           new URI(historyServerAddress)
         } else {
@@ -79,32 +80,54 @@ class SparkRestClient(sparkConf: SparkConf) {
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId)
 
     // Limit the scope of async.
-    async {
-      val futureJobDatas = async { getJobDatas(attemptTarget) }
-      val futureStageDatas = async { getStageDatas(attemptTarget) }
-      val futureExecutorSummaries = async { getExecutorSummaries(attemptTarget) }
-      val futureLogData = if (fetchLogs) {
-        async { getLogData(attemptTarget)}
-      } else Future.successful(None)
+    Future {
+      blocking {
+        val futureJobDatas = Future {
+          blocking {
+            getJobDatas(attemptTarget)
+          }
+        }
+        val futureStageDatas = Future {
+          blocking {
+            getStageDatas(attemptTarget)
+          }
+        }
+        val futureExecutorSummaries = Future {
+          blocking {
+            getExecutorSummaries(attemptTarget)
+          }
+        }
+        val futureLogData = if (fetchLogs) {
+          Future {
+            blocking {
+              getLogData(attemptTarget)
+            }
+          }
+        } else Future.successful(None)
 
-      if(fetchFailedTasks) {
-        val futureFailedTasksDatas = async { getStagesWithFailedTasks(attemptTarget) }
-        SparkRestDerivedData(
-          applicationInfo,
-          await(futureJobDatas),
-          await(futureStageDatas),
-          await(futureExecutorSummaries),
-          await(futureFailedTasksDatas),
-          await(futureLogData))
-      } else {
-        SparkRestDerivedData(
-          applicationInfo,
-          await(futureJobDatas),
-          await(futureStageDatas),
-          await(futureExecutorSummaries),
-          Seq.empty,
-          await(futureLogData)
-        )
+        if (fetchFailedTasks) {
+          val futureFailedTasksDatas = Future {
+            blocking {
+              getStagesWithFailedTasks(attemptTarget)
+            }
+          }
+          SparkRestDerivedData(
+            applicationInfo,
+            Await.result(futureJobDatas, DEFAULT_TIMEOUT),
+            Await.result(futureStageDatas, DEFAULT_TIMEOUT),
+            Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
+            Await.result(futureFailedTasksDatas, DEFAULT_TIMEOUT),
+            Await.result(futureLogData, DEFAULT_TIMEOUT))
+        } else {
+          SparkRestDerivedData(
+            applicationInfo,
+            Await.result(futureJobDatas, DEFAULT_TIMEOUT),
+            Await.result(futureStageDatas, DEFAULT_TIMEOUT),
+            Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
+            Seq.empty,
+            Await.result(futureLogData, DEFAULT_TIMEOUT)
+          )
+        }
       }
     }
   }
@@ -113,7 +136,9 @@ class SparkRestClient(sparkConf: SparkConf) {
     val (_, attemptTarget) = getApplicationMetaData(appId)
     val logTarget = attemptTarget.path("logs")
     logger.info(s"creating SparkApplication by calling REST API at ${logTarget.getUri} to get eventlogs")
-    resource.managed { getApplicationLogs(logTarget) }.acquireAndGet { zipInputStream =>
+    resource.managed {
+      getApplicationLogs(logTarget)
+    }.acquireAndGet { zipInputStream =>
       getLogInputStream(zipInputStream, logTarget) match {
         case (None, _) => throw new RuntimeException(s"Failed to read log for application ${appId}")
         case (Some(inputStream), fileName) => {
@@ -133,7 +158,9 @@ class SparkRestClient(sparkConf: SparkConf) {
 
     // These are pure and cannot fail, therefore it is safe to have
     // them outside of the async block.
-    val lastAttemptId = applicationInfo.attempts.maxBy {_.startTime}.attemptId
+    val lastAttemptId = applicationInfo.attempts.maxBy {
+      _.startTime
+    }.attemptId
     val attemptTarget = lastAttemptId.map(appTarget.path).getOrElse(appTarget)
     (applicationInfo, attemptTarget)
   }
@@ -152,7 +179,9 @@ class SparkRestClient(sparkConf: SparkConf) {
   private def getLogData(attemptTarget: WebTarget): Option[SparkLogDerivedData] = {
     val target = attemptTarget.path("logs")
     logger.info(s"calling REST API at ${target.getUri} to get eventlogs")
-    resource.managed { getApplicationLogs(target) }.acquireAndGet { zis =>
+    resource.managed {
+      getApplicationLogs(target)
+    }.acquireAndGet { zis =>
       val (inputStream, _) = getLogInputStream(zis, target)
       inputStream.map(SparkLogClient.findDerivedData(_))
     }
@@ -186,7 +215,9 @@ class SparkRestClient(sparkConf: SparkConf) {
         throw new RuntimeException(s"Application for the log ${entryName} has not finished yet.")
       }
       val codec = SparkUtils.compressionCodecForLogName(sparkConf, entryName)
-      (Some(codec.map { _.compressedInputStream(zis)}.getOrElse(zis)), entryName)
+      (Some(codec.map {
+        _.compressedInputStream(zis)
+      }.getOrElse(zis)), entryName)
     }
   }
 
@@ -243,6 +274,7 @@ object SparkRestClient {
   val HISTORY_SERVER_ADDRESS_KEY = "spark.yarn.historyServer.address"
   val API_V1_MOUNT_PATH = "api/v1"
   val IN_PROGRESS = ".inprogress"
+  val DEFAULT_TIMEOUT = Duration(5, SECONDS)
 
   val SparkRestObjectMapper = {
     val dateFormat = {
