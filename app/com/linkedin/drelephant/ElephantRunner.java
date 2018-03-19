@@ -192,11 +192,11 @@ public class ElephantRunner implements Runnable {
         logger.error(ExceptionUtils.getStackTrace(e));
 
         if (_analyticJob != null && _analyticJob.retry()) {
-          logger.error("Add analytic job id [" + _analyticJob.getAppId() + "] into the retry list.");
+          logger.warn("Add analytic job id [" + _analyticJob.getAppId() + "] into the retry list.");
           _analyticJobGenerator.addIntoRetries(_analyticJob);
         } else if (_analyticJob != null && _analyticJob.isSecondPhaseRetry()) {
           //Putting the job into a second retry queue which fetches jobs after some interval. Some spark jobs may need more time than usual to process, hence the queue.
-          logger.error("Add analytic job id [" + _analyticJob.getAppId() + "] into the second retry list.");
+          logger.warn("Add analytic job id [" + _analyticJob.getAppId() + "] into the second retry list.");
           _analyticJobGenerator.addIntoSecondRetryQueue(_analyticJob);
         } else {
           if (_analyticJob != null) {

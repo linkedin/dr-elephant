@@ -52,6 +52,7 @@
      If not set, the local timezone will be used.
    -->
 
+  
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
@@ -62,6 +63,7 @@
     </params>
   </fetcher>
 
+  
 
   <!--
     FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties

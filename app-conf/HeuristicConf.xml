@@ -156,20 +156,16 @@
     <viewname>views.html.help.mapreduce.helpException</viewname>
   </heuristic>
 
-  <heuristic>
+   <heuristic>
     <applicationtype>mapreduce</applicationtype>
     <heuristicname>Distributed Cache Limit</heuristicname>
-    <classname>com.linkedin.drelephant.mapreduce.heuristics.DistributedCacheLimitHeuristic
-    </classname>
+    <classname>com.linkedin.drelephant.mapreduce.heuristics.DistributedCacheLimitHeuristic</classname>
     <viewname>views.html.help.mapreduce.helpDistributedCacheLimit</viewname>
     <params>
-      <distributed.cache.file.size.limit.bytes>500000000
-      </distributed.cache.file.size.limit.bytes>
+      <distributed.cache.file.size.limit.bytes>500000000</distributed.cache.file.size.limit.bytes>
     </params>
-  </heuristic>
-
-
-  <!-- SPARK HEURISTICS -->
+  </heuristic> 
+<!-- SPARK HEURISTICS -->
 
   <heuristic>
     <applicationtype>spark</applicationtype>
@@ -323,4 +319,5 @@
       <num_tasks_severity>50, 100, 500, 1000</num_tasks_severity>
     </params>-->
   </heuristic>
+
 </heuristics>
