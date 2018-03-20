@@ -19,12 +19,7 @@ package com.linkedin.drelephant.spark.fetchers
 import java.io.InputStream
 import java.security.PrivilegedAction
 
-<<<<<<< HEAD
-import scala.async.Async
-import scala.concurrent.{ExecutionContext, Future}
-=======
 import scala.concurrent.{ExecutionContext, Future, blocking}
->>>>>>> upstream/master
 import scala.io.Source
 
 import com.linkedin.drelephant.security.HadoopSecurity
@@ -43,10 +38,6 @@ import org.json4s.jackson.JsonMethods
   */
 class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf, eventLogUri: Option[String]) {
   import SparkLogClient._
-<<<<<<< HEAD
-  import Async.async
-=======
->>>>>>> upstream/master
 
   private val logger: Logger = Logger.getLogger(classOf[SparkLogClient])
 
@@ -71,14 +62,9 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf, e
     val (eventLogPath, eventLogCodec) =
       sparkUtils.pathAndCodecforEventLog(sparkConf, eventLogFileSystem, baseEventLogPath, appId, attemptId)
 
-<<<<<<< HEAD
-    async {
-      sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec)(findDerivedData(_))
-=======
     Future { blocking {
         sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec)(findDerivedData(_))
       }
->>>>>>> upstream/master
     }
   }
 }
