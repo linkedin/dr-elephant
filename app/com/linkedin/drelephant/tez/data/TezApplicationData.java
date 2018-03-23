@@ -30,7 +30,7 @@ public class TezApplicationData implements HadoopApplicationData {
   private String _appId = "";
   private Properties _conf;
   private boolean _succeeded = true;
-  private TezTaskData[] _redudeTasks;
+  private TezTaskData[] _reduceTasks;
   private TezTaskData[] _mapTasks;
   private TezCounterData _counterHolder;
 
@@ -63,7 +63,7 @@ public class TezApplicationData implements HadoopApplicationData {
   }
 
   public TezTaskData[] getReduceTaskData() {
-    return _redudeTasks;
+    return _reduceTasks;
   }
 
   public TezTaskData[] getMapTaskData() {
@@ -107,7 +107,7 @@ public class TezApplicationData implements HadoopApplicationData {
   }
 
   public TezApplicationData setReduceTaskData(TezTaskData[] reduceTasks) {
-    this._redudeTasks = reduceTasks;
+    this._reduceTasks = reduceTasks;
     return this;
   }
 

@@ -18,6 +18,8 @@ package com.linkedin.drelephant.mapreduce.fetchers;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.linkedin.drelephant.util.ThreadContextMR2;
 import org.junit.Assert;
 import org.junit.Test;
 
