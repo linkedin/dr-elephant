@@ -14,11 +14,14 @@
  * the License.
  */
 
-package com.linkedin.drelephant.exceptions;
+package com.linkedin.drelephant.clients;
 
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
+
+import com.linkedin.drelephant.exceptions.JobState;
+import com.linkedin.drelephant.exceptions.LoggingEvent;
 
 
 /**

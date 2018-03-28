@@ -36,3 +36,5 @@ unmanagedClasspath in Compile ++= update.value.select(configurationFilter("compi
 playJavaSettings
 
 scalaVersion := "2.10.4"
+
+envVars in Test := Map("PSO_DIR_PATH" -> (baseDirectory.value / "scripts/pso").getAbsolutePath)

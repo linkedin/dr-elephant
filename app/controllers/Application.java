@@ -18,7 +18,7 @@ package controllers;
 
 import com.avaje.ebean.ExpressionList;
 import com.avaje.ebean.Query;
-
+import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.ElephantContext;
@@ -28,9 +28,11 @@ import com.linkedin.drelephant.util.Utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -46,30 +48,35 @@ import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import views.html.index;
 import views.html.help.metrics.helpRuntime;
 import views.html.help.metrics.helpWaittime;
 import views.html.help.metrics.helpUsedResources;
 import views.html.help.metrics.helpWastedResources;
-import views.html.index;
 import views.html.page.comparePage;
 import views.html.page.flowHistoryPage;
 import views.html.page.helpPage;
 import views.html.page.homePage;
 import views.html.page.jobHistoryPage;
+import views.html.page.oldFlowHistoryPage;
+import views.html.page.oldHelpPage;
+import views.html.page.oldJobHistoryPage;
 import views.html.page.searchPage;
 import views.html.results.*;
 
-import views.html.page.oldFlowHistoryPage;
-import views.html.page.oldJobHistoryPage;
-import views.html.page.oldHelpPage;
-
-import com.google.gson.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.linkedin.drelephant.tuning.AutoTuningAPIHelper;
+import com.linkedin.drelephant.tuning.TuningInput;
 
 
 public class Application extends Controller {
@@ -878,6 +885,100 @@ public class Application extends Controller {
       return ok(Json.toJson(result));
     } else {
       return notFound("Unable to find record on id: " + id);
+    }
+  }
+
+  /**
+   * Rest API for getting current run parameters from auto tuning framework
+   * @return
+   */
+  public static Result getCurrentRunParameters() {
+    final Timer.Context context = AutoTuningMetricsController.getCurrentRunParametersTimerContext();
+    String jsonString = request().body().asJson().toString();
+    logger.debug("Started processing getCurrentRunParameters request with following parameters " + jsonString);
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, String> paramValueMap = new HashMap<String, String>();
+    TuningInput tuningInput = new TuningInput();
+    try {
+      paramValueMap = (Map<String, String>) mapper.readValue(jsonString, Map.class);
+      String flowDefId = paramValueMap.get("flowDefId");
+      String jobDefId = paramValueMap.get("jobDefId");
+      String flowDefUrl = paramValueMap.get("flowDefUrl");
+      String jobDefUrl = paramValueMap.get("jobDefUrl");
+      String flowExecId = paramValueMap.get("flowExecId");
+      String jobExecId = paramValueMap.get("jobExecId");
+      String flowExecUrl = paramValueMap.get("flowExecUrl");
+      String jobExecUrl = paramValueMap.get("jobExecUrl");
+      String jobName = paramValueMap.get("jobName");
+      String userName = paramValueMap.get("userName");
+      String client = paramValueMap.get("client");
+      String scheduler = paramValueMap.get("scheduler");
+      String defaultParams = paramValueMap.get("defaultParams");
+      Boolean isRetry = false;
+      if (paramValueMap.containsKey("isRetry")) {
+        isRetry = Boolean.parseBoolean(paramValueMap.get("isRetry"));
+      }
+      Boolean skipExecutionForOptimization = false;
+      if (paramValueMap.containsKey("skipExecutionForOptimization")) {
+        skipExecutionForOptimization = Boolean.parseBoolean(paramValueMap.get("skipExecutionForOptimization"));
+      }
+      String jobType = paramValueMap.get("autoTuningJobType");
+      String optimizationAlgo = paramValueMap.get("optimizationAlgo");
+      String optimizationAlgoVersion = paramValueMap.get("optimizationAlgoVersion");
+      String optimizationMetric = paramValueMap.get("optimizationMetric");
+
+      Double allowedMaxExecutionTimePercent = null;
+      Double allowedMaxResourceUsagePercent = null;
+      if (paramValueMap.containsKey("allowedMaxResourceUsagePercent")) {
+        allowedMaxResourceUsagePercent = Double.parseDouble(paramValueMap.get("allowedMaxResourceUsagePercent"));
+      }
+      if (paramValueMap.containsKey("allowedMaxExecutionTimePercent")) {
+        allowedMaxExecutionTimePercent = Double.parseDouble(paramValueMap.get("allowedMaxExecutionTimePercent"));
+      }
+      tuningInput.setFlowDefId(flowDefId);
+      tuningInput.setJobDefId(jobDefId);
+      tuningInput.setFlowDefUrl(flowDefUrl);
+      tuningInput.setJobDefUrl(jobDefUrl);
+      tuningInput.setFlowExecId(flowExecId);
+      tuningInput.setJobExecId(jobExecId);
+      tuningInput.setFlowExecUrl(flowExecUrl);
+      tuningInput.setJobExecUrl(jobExecUrl);
+      tuningInput.setJobName(jobName);
+      tuningInput.setUserName(userName);
+      tuningInput.setClient(client);
+      tuningInput.setScheduler(scheduler);
+      tuningInput.setDefaultParams(defaultParams);
+      tuningInput.setRetry(isRetry);
+      tuningInput.setSkipExecutionForOptimization(skipExecutionForOptimization);
+      tuningInput.setJobType(jobType);
+      tuningInput.setOptimizationAlgo(optimizationAlgo);
+      tuningInput.setOptimizationAlgoVersion(optimizationAlgoVersion);
+      tuningInput.setOptimizationMetric(optimizationMetric);
+      tuningInput.setAllowedMaxExecutionTimePercent(allowedMaxExecutionTimePercent);
+      tuningInput.setAllowedMaxResourceUsagePercent(allowedMaxResourceUsagePercent);
+      return getCurrentRunParameters(tuningInput);
+    } catch (Exception e) {
+      AutoTuningMetricsController.markGetCurrentRunParametersFailures();
+      logger.error("Exception parsing input: ", e);
+      return notFound("Error parsing input ");
+    }finally{
+      if(context!=null)
+      {
+        context.stop();
+      }
+    }
+  }
+
+  private static Result getCurrentRunParameters(TuningInput tuningInput) {
+    AutoTuningAPIHelper autoTuningAPIHelper = new AutoTuningAPIHelper();
+    Map<String, Double> outputParams = autoTuningAPIHelper.getCurrentRunParameters(tuningInput);
+    if (outputParams != null) {
+      logger.info("Output params " + outputParams);
+      return ok(Json.toJson(outputParams));
+    } else {
+      AutoTuningMetricsController.markGetCurrentRunParametersFailures();
+      return notFound("Unable to find parameters. Job id: " + tuningInput.getJobDefId() + " Flow id: "
+          + tuningInput.getFlowDefId());
     }
   }
 

@@ -42,7 +42,6 @@ import java.util.Date
 import scala.collection.Map
 
 import org.apache.spark.JobExecutionStatus
-import org.apache.spark.status.api.v1.StageStatus
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
 import com.fasterxml.jackson.annotation.{JsonSubTypes, JsonTypeInfo}
 
@@ -87,6 +86,7 @@ trait ExecutorSummary{
   def totalShuffleRead: Long
   def totalShuffleWrite: Long
   def maxMemory: Long
+  def totalGCTime: Long
   def executorLogs: Map[String, String]}
 
 trait JobData{
@@ -292,6 +292,7 @@ class ExecutorSummaryImpl(
   var totalShuffleRead: Long,
   var totalShuffleWrite: Long,
   var maxMemory: Long,
+  var totalGCTime: Long,
   var executorLogs: Map[String, String]) extends ExecutorSummary
 
 class JobDataImpl(

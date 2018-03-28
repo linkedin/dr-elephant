@@ -14,5 +14,8 @@
 * the License.
 *@
 <p>The results from this heuristic primarily inform you about key app
-configuration settings, including driver memory, executor cores,
+configuration settings, including driver memory, driver cores, executor cores,
 executor instances, executor memory, and the serializer.</p>
+<p>It also checks the values of dynamically allocated min and max executors, the specified yarn jars, executor and driver memory overhead and whether other configuration values are within threshold.</p>
+<h3>Suggestions</h3>
+<p>Suggestions based on the configurations you have set are given in the heuristic result itself.</p>

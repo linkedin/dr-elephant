@@ -14,11 +14,13 @@
  * the License.
  */
 
-package com.linkedin.drelephant.exceptions.azkaban;
+package com.linkedin.drelephant.clients.azkaban;
 
+import com.linkedin.drelephant.clients.WorkflowClient;
 import com.linkedin.drelephant.exceptions.JobState;
 import com.linkedin.drelephant.exceptions.LoggingEvent;
-import com.linkedin.drelephant.exceptions.WorkflowClient;
+import com.linkedin.drelephant.exceptions.azkaban.AzkabanJobLogAnalyzer;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,10 +48,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -87,6 +91,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   private String _sessionId;
   private String _username;
   private String _password;
+  private long _sessionUpdatedTime = 0;
 
   private String AZKABAN_LOG_OFFSET = "0";
   private String AZKABAN_LOG_LENGTH_LIMIT = "9999999"; // limit the log limit to 10 mb
@@ -108,6 +113,22 @@ public class AzkabanWorkflowClient implements WorkflowClient {
     this.setExecutionId(url);
     this._workflowExecutionUrl = url;
     this.jobIdToLog = new HashMap<String, AzkabanJobLogAnalyzer>();
+  }
+
+  /**
+   * Making this client more usable by allowing to setURL runtime and get the status
+   * @param url
+   * @throws URISyntaxException
+   * @throws MalformedURLException
+   */
+  public void setURL(String url)
+      throws URISyntaxException, MalformedURLException {
+    if (url == null || url.isEmpty()) {
+      throw new MalformedURLException("The Azkaban url is malformed");
+    }
+    this.setAzkabanServerUrl(url);
+    this.setExecutionId(url);
+    this._workflowExecutionUrl = url;
   }
 
   /**
@@ -150,10 +171,17 @@ public class AzkabanWorkflowClient implements WorkflowClient {
       headlessChallenge = getHeadlessChallenge(username);
       decodedPwd = decodeHeadlessChallenge(headlessChallenge, _privateKey);
     } catch (Exception e) {
-      logger
-          .error("Unexpected error encountered while decoding headless challenge " + headlessChallenge + e.toString());
+      logger.error("Unexpected error encountered while decoding headless challenge " + headlessChallenge + e.toString());
     }
     login(username, decodedPwd);
+  }
+
+  public long getSessionUpdatedTime() {
+    return _sessionUpdatedTime;
+  }
+
+  public void setSessionUpdatedTime(long sessionUpdatedTime) {
+    _sessionUpdatedTime = sessionUpdatedTime;
   }
 
   /**
@@ -177,6 +205,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
         throw new RuntimeException("Login attempt failed. The session ID could not be obtained.");
       }
       this._sessionId = jsonObject.get("session.id").toString();
+      logger.debug("Session ID is " + this._sessionId);
     } catch (JSONException e) {
       e.printStackTrace();
     }
@@ -286,12 +315,15 @@ public class AzkabanWorkflowClient implements WorkflowClient {
     String encodedPassword = null;
 
     try {
+      logger.debug("Azkaban URL is " + _azkabanUrl);
+      logger.debug("Username  " + username);
       String userUrl = _azkabanUrl + "/restli/liuser?action=headlessChallenge";
       HttpPost request = new HttpPost(userUrl);
       StringEntity params = new StringEntity("{\"username\":\"" + username + "\"}");
       request.addHeader("content-type", "application/json");
       request.setEntity(params);
       HttpResponse response = httpClient.execute(request);
+      logger.debug("Response is " + response);
       String responseString = EntityUtils.toString(response.getEntity());
       JSONObject jobject = new JSONObject(responseString);
       encodedPassword = jobject.getString("value");

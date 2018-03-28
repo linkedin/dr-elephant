@@ -17,8 +17,20 @@
 package rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.linkedin.drelephant.AutoTuner;
+import com.linkedin.drelephant.DrElephant;
+import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.tuning.BaselineComputeUtil;
+import com.linkedin.drelephant.tuning.FitnessComputeUtil;
+import com.linkedin.drelephant.tuning.JobCompleteDetector;
 import com.linkedin.drelephant.util.Utils;
+
 import common.DBTestUtil;
+import controllers.AutoTuningMetricsController;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,13 +38,24 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import models.JobDefinition;
+import models.JobExecution;
+import models.JobExecution.ExecutionState;
+import models.TuningJobDefinition;
+import models.TuningJobExecution;
+import models.TuningJobExecution.ParamSetStatus;
+
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import play.Application;
 import play.GlobalSettings;
+import play.libs.Json;
 import play.libs.WS;
 import play.test.FakeApplication;
 
@@ -104,6 +127,179 @@ public class RestAPITest {
         assertTrue("Job type did not match", TEST_JOB_TYPE.equals(jsonResponse.path("jobType").asText()));
       }
     });
+  }
+
+  @Test
+  public void testRestGetCurrentRunParameters() {
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+    org.junit.Assume.assumeTrue(autoTuningEnabled);
+
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateAutoTuningTestData1();
+
+        JsonNode jsonNode = getTestGetCurrentRunParameterData();
+        final WS.Response response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
+            post(jsonNode).get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final JsonNode jsonResponse = response.asJson();
+
+        logger.info("Output of getCurrentRunParameters ");
+        logger.info(jsonResponse.toString());
+
+        assertTrue("Get current run param output did not match",
+            jsonResponse.path("mapreduce.map.memory.mb").asDouble() > 0);
+        assertTrue("Get current run param output did not match",
+            jsonResponse.path("mapreduce.reduce.memory.mb").asDouble() > 0);
+        assertTrue("Get current run param output size did not match", jsonResponse.size() == 9);
+
+        TuningJobExecution tuningJobExecution = TuningJobExecution.find.select("*")
+            .fetch(TuningJobExecution.TABLE.jobExecution, "*")
+            .fetch(TuningJobExecution.TABLE.jobExecution + "." + JobExecution.TABLE.job, "*")
+            .where()
+            .eq(TuningJobExecution.TABLE.jobExecution + "." + JobExecution.TABLE.jobExecId,
+                "https://elephant.linkedin.com:8443/executor?execid=5221700&job=countByCountryFlowSmall_countByCountry&attempt=0")
+            .findUnique();
+
+        tuningJobExecution.paramSetState = ParamSetStatus.EXECUTED;
+        tuningJobExecution.jobExecution.executionState = ExecutionState.SUCCEEDED;
+        tuningJobExecution.update();
+
+        FitnessComputeUtil fitnessComputeUtil = new FitnessComputeUtil();
+        fitnessComputeUtil.updateFitness();
+
+        tuningJobExecution = TuningJobExecution.find.select("*")
+            .fetch(TuningJobExecution.TABLE.jobExecution, "*")
+            .fetch(TuningJobExecution.TABLE.jobExecution + "." + JobExecution.TABLE.job, "*")
+            .where()
+            .eq(TuningJobExecution.TABLE.jobExecution + "." + JobExecution.TABLE.jobExecId,
+                "https://elephant.linkedin.com:8443/executor?execid=5221700&job=countByCountryFlowSmall_countByCountry&attempt=0")
+            .findUnique();
+
+        assertTrue("Fitness not computed", tuningJobExecution.paramSetState == ParamSetStatus.FITNESS_COMPUTED);
+        assertTrue("Fitness not computed and have zero value", tuningJobExecution.fitness > 0);
+      }
+    });
+  }
+
+  @Test
+  public void testRestGetCurrentRunParametersNewJob() {
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+    org.junit.Assume.assumeTrue(autoTuningEnabled);
+
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        populateAutoTuningTestData1();
+
+        JsonNode jsonNode = getTestGetCurrentRunParameterNewData();
+        final WS.Response response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
+            post(jsonNode).get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        final JsonNode jsonResponse = response.asJson();
+
+        assertTrue("Get current run param output did not match",
+            jsonResponse.path("mapreduce.map.memory.mb").asDouble() == 2048D);
+        assertTrue("Get current run param output did not match",
+            jsonResponse.path("mapreduce.reduce.memory.mb").asDouble() == 2048D);
+        assertTrue("Get current run param output size did not match", jsonResponse.size() == 2);
+
+        TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+            .where()
+            .eq(TuningJobDefinition.TABLE.job + "." + JobDefinition.TABLE.jobDefId,
+                "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmallNew&job=countByCountryFlowSmallNew_countByCountry")
+            .findUnique();
+
+        assertTrue("New Job Not created  ",
+            tuningJobDefinition.job.jobName.equals("countByCountryFlowSmallNew_countByCountry"));
+
+        BaselineComputeUtil baselineComputeUtil = new BaselineComputeUtil();
+        baselineComputeUtil.computeBaseline();
+
+        tuningJobDefinition = TuningJobDefinition.find.select("*")
+            .where()
+            .eq(TuningJobDefinition.TABLE.job + "." + JobDefinition.TABLE.jobDefId,
+                "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmallNew&job=countByCountryFlowSmallNew_countByCountry")
+            .findUnique();
+
+        assertTrue("Baseline not computed:averageResourceUsage  ", tuningJobDefinition.averageResourceUsage > 0);
+        assertTrue("Baseline not computed:averageInputSizeInBytes  ", tuningJobDefinition.averageInputSizeInBytes > 0);
+        assertTrue("Baseline not computed:averageExecutionTime  ", tuningJobDefinition.averageExecutionTime > 0);
+      }
+    });
+  }
+
+  private JsonNode getTestGetCurrentRunParameterNewData() {
+    Map<String, String> params = new HashMap<String, String>();
+    Map<String, Double> paramValueMap = new HashMap<String, Double>();
+    paramValueMap.put("mapreduce.map.memory.mb", 2048D);
+    paramValueMap.put("mapreduce.reduce.memory.mb", 2048D);
+    Gson gson = new Gson();
+    String jobParamsJson = gson.toJson(paramValueMap);
+
+    params.put("projectName", "AzkabanHelloPigTest");
+    params.put("flowDefId",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmallNew");
+    params.put("jobDefId",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmallNew&job=countByCountryFlowSmallNew_countByCountry");
+    params.put("flowExecId", "https://elephant.linkedin.com:8443/executor?execid=5221700");
+    params.put("jobExecId",
+        "https://elephant.linkedin.com:8443/executor?execid=5221700&job=countByCountryFlowSmallNew_countByCountry&attempt=0");
+    params.put("flowDefUrl",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmallNew");
+    params.put("jobDefUrl",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmallNew&job=countByCountryFlowSmallNew_countByCountry");
+    params.put("flowExecUrl", "https://elephant.linkedin.com:8443/executor?execid=5221700");
+    params.put("jobExecUrl",
+        "https://elephant.linkedin.com:8443/executor?execid=5221700&job=countByCountryFlowSmallNew_countByCountry&attempt=0");
+    params.put("jobName", "countByCountryFlowSmallNew_countByCountry");
+    params.put("defaultParams", jobParamsJson);
+    params.put("scheduler", "azkaban");
+    params.put("client", "azkaban");
+    params.put("autoTuningJobType", "PIG");
+    params.put("optimizationMetric", "RESOURCE");
+    params.put("userName", "mkumar1");
+    params.put("isRetry", "false");
+    params.put("skipExecutionForOptimization", "false");
+    JsonNode jsonNode = new ObjectMapper().valueToTree(params);
+    return jsonNode;
+  }
+
+  private JsonNode getTestGetCurrentRunParameterData() {
+    Map<String, String> params = new HashMap<String, String>();
+    Map<String, Double> paramValueMap = new HashMap<String, Double>();
+    paramValueMap.put("mapreduce.map.memory.mb", 2048D);
+    paramValueMap.put("mapreduce.reduce.memory.mb", 2048D);
+    Gson gson = new Gson();
+    String jobParamsJson = gson.toJson(paramValueMap);
+
+    params.put("projectName", "AzkabanHelloPigTest");
+    params.put("flowDefId",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmall");
+    params.put("jobDefId",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmall&job=countByCountryFlowSmall_countByCountry");
+    params.put("flowExecId", "https://elephant.linkedin.com:8443/executor?execid=5221700");
+    params.put("jobExecId",
+        "https://elephant.linkedin.com:8443/executor?execid=5221700&job=countByCountryFlowSmall_countByCountry&attempt=0");
+    params.put("flowDefUrl",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmall");
+    params.put("jobDefUrl",
+        "https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlowSmall&job=countByCountryFlowSmall_countByCountry");
+    params.put("flowExecUrl", "https://elephant.linkedin.com:8443/executor?execid=5221700");
+    params.put("jobExecUrl",
+        "https://elephant.linkedin.com:8443/executor?execid=5221700&job=countByCountryFlowSmall_countByCountry&attempt=0");
+    params.put("jobName", "countByCountryFlowSmall_countByCountry");
+    params.put("defaultParams", jobParamsJson);
+    params.put("scheduler", "azkaban");
+    params.put("client", "azkaban");
+    params.put("autoTuningJobType", "PIG");
+    params.put("optimizationMetric", "RESOURCE");
+    params.put("userName", "mkumar1");
+    params.put("isRetry", "false");
+    params.put("skipExecutionForOptimization", "false");
+    JsonNode jsonNode = new ObjectMapper().valueToTree(params);
+    return jsonNode;
   }
 
   /**
@@ -669,10 +865,14 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
-            setQueryParameter("username", "growth").setQueryParameter("finishTimeBegin", "1460980723925")
-            .setQueryParameter("finishTimeEnd", "1460980723928").
-                get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS)
+            .
+                setQueryParameter("username", "growth")
+            .setQueryParameter("finishTimeBegin", "1460980723925")
+            .setQueryParameter("finishTimeEnd", "1460980723928")
+            .
+                get()
+            .get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();
         testRestSearchGeneric(searchNode);
       }
@@ -815,6 +1015,14 @@ public class RestAPITest {
   private void populateTestData() {
     try {
       initDB();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void populateAutoTuningTestData1() {
+    try {
+      initAutoTuningDB1();
     } catch (Exception e) {
       e.printStackTrace();
     }

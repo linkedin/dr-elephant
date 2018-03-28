@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2016 LinkedIn Corp.
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License. You may obtain a copy of
+  the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+
+<!-- General configurations -->
+<configuration>
+  <property>
+    <name>autotuning.enabled</name>
+    <value>false</value>
+    <description>Enable or disable auto tuning</description>
+  </property>
+  <property>
+    <name>autotuning.default.allowed_max_resource_usage_percent</name>
+    <value>150</value>
+    <description>Default value for maximum allowed overheard in resource usage (in percent) as compared to the average
+      value
+    </description>
+  </property>
+  <property>
+    <name>autotuning.default.allowed_max_execution_time_percent</name>
+    <value>150</value>
+    <description>Default value for maximum allowed overheard in execution time (in percent) as compared to the average
+      value
+    </description>
+  </property>
+  <property>
+    <name>autotuning.daemon.wait.interval.ms</name>
+    <value>60000</value>
+    <description>Auto tuning daemon wait interval</description>
+  </property>
+  <property>
+    <name>baseline.execution.count</name>
+    <value>30</value>
+    <description>Baseline to be done on recent number of execution</description>
+  </property>
+  <property>
+    <name>fitness.compute.wait_interval.ms</name>
+    <value>1800000</value>
+    <description>Wait time after the job is completed for fitness computation</description>
+  </property>
+  <property>
+    <name>dr.elephant.api.url</name>
+    <value>http://ltx1-holdemdre01.grid.linkedin.com:8080</value>
+    <description>API URL for Dr Elephant. Optional. This is needed only if you are using APIFitnessComputeUtil to get
+      fitness from Dr Elephant APIs
+    </description>
+  </property>
+  <!--The below property is optional-->
+  <!--<property>-->
+  <!--<name>python.path</name>-->
+  <!--<value>/path/to/python/binary</value>-->
+  <!--<description>Root directory for python</description>-->
+  <!--</property>-->
+</configuration>

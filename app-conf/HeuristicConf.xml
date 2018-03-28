@@ -310,5 +310,11 @@
     <classname>com.linkedin.drelephant.spark.heuristics.StagesHeuristic</classname>
     <viewname>views.html.help.spark.helpStagesHeuristic</viewname>
   </heuristic>
+  <heuristic>
+    <applicationtype>spark</applicationtype>
+    <heuristicname>Executor GC</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic</classname>
+    <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>
+  </heuristic>
 
 </heuristics>

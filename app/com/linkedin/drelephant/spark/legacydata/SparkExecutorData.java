@@ -43,6 +43,7 @@ public class SparkExecutorData {
     public long inputBytes = 0L;
     public long outputBytes = 0L;
     public long shuffleRead = 0L;
+    public long totalGCTime = 0L;
     public long shuffleWrite = 0L;
 
     public String toString() {
@@ -50,7 +51,7 @@ public class SparkExecutorData {
           + ", maxMem: " + maxMem + ", diskUsed: " + diskUsed + ", totalTasks" + totalTasks + ", tasksActive: "
           + activeTasks + ", tasksComplete: " + completedTasks + ", tasksFailed: " + failedTasks + ", duration: "
           + duration + ", inputBytes: " + inputBytes + ", outputBytes:" + outputBytes + ", shuffleRead: " + shuffleRead
-          + ", shuffleWrite: " + shuffleWrite + "}";
+          + ", shuffleWrite: " + shuffleWrite + ", totalGCTime: " + totalGCTime + "}";
     }
   }
 

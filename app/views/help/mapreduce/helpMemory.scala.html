@@ -59,6 +59,8 @@
     <br>
     For example, see if there is any mapper/reducer input data skew (some task processes larger input than others).
     <br>
+    Also check if you are doing memory intensive operation at reducer side for e.g. count distinct. These operations can be rewritten using Secondary Sort concept (sort the values), which will reduce the memory consumption 
+    <br>
     <strong>This is a new heuristic. We are still working on that. Any feedback is welcomed!</strong>
     <br>
 
