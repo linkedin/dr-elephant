@@ -39,6 +39,7 @@ import javax.ws.rs.core.MediaType
 
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
+import org.glassfish.jersey.client.ClientProperties
 
 import scala.concurrent.duration.{Duration, SECONDS}
 
@@ -72,9 +73,9 @@ class SparkRestClient(sparkConf: SparkConf) {
       throw new IllegalArgumentException("spark.yarn.historyServer.address not provided; can't use Spark REST API")
   }
 
-  private val apiTarget: WebTarget = client.target(historyServerUri).path(API_V1_MOUNT_PATH)
+  private val apiTarget: WebTarget = client.property(ClientProperties.CONNECT_TIMEOUT, CONNECTION_TIMEOUT).property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT).target(historyServerUri).path(API_V1_MOUNT_PATH)
 
-  def fetchData(appId: String, fetchLogs: Boolean = false)(
+  def fetchData(appId: String, fetchLogs: Boolean = false, fetchFailedTasks: Boolean = true)(
     implicit ec: ExecutionContext
   ): Future[SparkRestDerivedData] = {
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId)
@@ -104,13 +105,29 @@ class SparkRestClient(sparkConf: SparkConf) {
           }
         } else Future.successful(None)
 
-        SparkRestDerivedData(
-          applicationInfo,
-          Await.result(futureJobDatas, DEFAULT_TIMEOUT),
-          Await.result(futureStageDatas, DEFAULT_TIMEOUT),
-          Await.result(futureExecutorSummaries, Duration(5, SECONDS)),
-          Await.result(futureLogData, Duration(5, SECONDS))
-        )
+        if (fetchFailedTasks) {
+          val futureFailedTasksDatas = Future {
+            blocking {
+              getStagesWithFailedTasks(attemptTarget)
+            }
+          }
+          SparkRestDerivedData(
+            applicationInfo,
+            Await.result(futureJobDatas, DEFAULT_TIMEOUT),
+            Await.result(futureStageDatas, DEFAULT_TIMEOUT),
+            Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
+            Await.result(futureFailedTasksDatas, DEFAULT_TIMEOUT),
+            Await.result(futureLogData, DEFAULT_TIMEOUT))
+        } else {
+          SparkRestDerivedData(
+            applicationInfo,
+            Await.result(futureJobDatas, DEFAULT_TIMEOUT),
+            Await.result(futureStageDatas, DEFAULT_TIMEOUT),
+            Await.result(futureExecutorSummaries, DEFAULT_TIMEOUT),
+            Seq.empty,
+            Await.result(futureLogData, DEFAULT_TIMEOUT)
+          )
+        }
       }
     }
   }
@@ -139,6 +156,8 @@ class SparkRestClient(sparkConf: SparkConf) {
 
     val applicationInfo = getApplicationInfo(appTarget)
 
+    // These are pure and cannot fail, therefore it is safe to have
+    // them outside of the async block.
     val lastAttemptId = applicationInfo.attempts.maxBy {
       _.startTime
     }.attemptId
@@ -227,12 +246,27 @@ class SparkRestClient(sparkConf: SparkConf) {
   }
 
   private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummaryImpl] = {
-    val target = attemptTarget.path("executors")
+    val target = attemptTarget.path("allexecutors")
     try {
       get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading executorSummary ${target.getUri}", e)
+        throw e
+      }
+    }q
+
+
+
+  }
+
+  private def getStagesWithFailedTasks(attemptTarget: WebTarget): Seq[StageDataImpl] = {
+    val target = attemptTarget.path("stages/failedTasks")
+    try {
+      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
+    } catch {
+      case NonFatal(e) => {
+        logger.error(s"error reading failedTasks ${target.getUri}", e)
         throw e
       }
     }
@@ -243,7 +277,9 @@ object SparkRestClient {
   val HISTORY_SERVER_ADDRESS_KEY = "spark.yarn.historyServer.address"
   val API_V1_MOUNT_PATH = "api/v1"
   val IN_PROGRESS = ".inprogress"
-  val DEFAULT_TIMEOUT = Duration(5, SECONDS);
+  val DEFAULT_TIMEOUT = Duration(5, SECONDS)
+  val CONNECTION_TIMEOUT = 5000
+  val READ_TIMEOUT = 5000
 
   val SparkRestObjectMapper = {
     val dateFormat = {

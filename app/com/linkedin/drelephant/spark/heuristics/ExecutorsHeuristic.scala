@@ -16,15 +16,15 @@
 
 package com.linkedin.drelephant.spark.heuristics
 
-import scala.collection.JavaConverters
-import scala.collection.mutable.ArrayBuffer
-
-import com.linkedin.drelephant.analysis.{Heuristic, HeuristicResult, HeuristicResultDetails, Severity, SeverityThresholds}
+import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.math.Statistics
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
 import com.linkedin.drelephant.util.MemoryFormatUtils
+
+import scala.collection.JavaConverters
+import scala.collection.mutable.ArrayBuffer
 
 
 /**
@@ -37,6 +37,7 @@ import com.linkedin.drelephant.util.MemoryFormatUtils
 class ExecutorsHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
     extends Heuristic[SparkApplicationData] {
   import ExecutorsHeuristic._
+
   import JavaConverters._
 
   val maxToMedianRatioSeverityThresholds: SeverityThresholds =

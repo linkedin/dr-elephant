@@ -19,14 +19,13 @@ package com.linkedin.drelephant.spark.fetchers
 import java.nio.file.Files
 import java.util.Date
 
-import scala.concurrent.{ExecutionContext, Future}
-
+import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 import com.linkedin.drelephant.analysis.{AnalyticJob, ApplicationType}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.SparkFetcher.EventLogSource
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl}
-import com.linkedin.drelephant.util.{SparkUtils, HadoopUtils}
+import com.linkedin.drelephant.util.{HadoopUtils, SparkUtils}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
@@ -59,7 +58,8 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       ),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     val logDerivedData = SparkLogDerivedData(SparkListenerEnvironmentUpdate(Map.empty))
@@ -124,7 +124,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
         override lazy val sparkRestClient = mockSparkRestClient
       }
 
-      an[RuntimeException] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
+      an[TimeoutException] should be thrownBy { sparkFetcher.fetchData(analyticJob) }
     }
 
     it("gets its SparkConf when SPARK_CONF_DIR is set") {

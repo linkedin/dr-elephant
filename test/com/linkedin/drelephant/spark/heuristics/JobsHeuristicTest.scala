@@ -26,7 +26,9 @@ import org.apache.spark.JobExecutionStatus
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-
+/**
+  * Test class for Jobs Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class JobsHeuristicTest extends FunSpec with Matchers {
   import JobsHeuristicTest._
 
@@ -157,7 +159,8 @@ object JobsHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas,
       stageDatas = Seq.empty,
-      executorSummaries = Seq.empty
+      executorSummaries = Seq.empty,
+      stagesWithFailedTasks = Seq.empty
     )
 
     SparkApplicationData(appId, restDerivedData, logDerivedData = None)

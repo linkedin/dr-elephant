@@ -1,0 +1,23 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+<p>Spark performs best when data is kept in memory. Spilled execution memory is tracked by memoryBytesSpilled, which is available executor level. If execution memory is being spilled, then the warnings are as follows:</p>
+<p>Low: memoryBytesSpilled is  non-zero for 1 or more executors, greater than zero for < 20% of executors, and max size is < .05 * <i>spark.executor.memory</i>.</p>
+<p>Moderate: memoryBytesSpilled is  non-zero for 1 or more executors, greater than zero for < 20% of executors, and avg size is < .05 * <i>spark.executor.memory</i>.</p>
+<p>Severe: memoryBytes Spilled is greater than zero for > 20% of executors and avg size is < .05 * <i>spark.executor.memory</i>.</p>
+<p>Critical: memoryBytes Spilled is greater than zero for > 20% of executors and/or avg size is >= .05 * <i>spark.executor.memory</i>.</p>
+<h3>Suggestions</h3>
+<p>If number of cores (spark.executor.cores) is more than 4 and executor memory is > 10GB : Try decreasing the number of cores which would decrese the number of tasks running in parallel, hence decreasing the number of bytes spilled.</p>
+<p>You can also try increasing the <i>spark.executor.memory</i> which will reduce memory spilled.</p>

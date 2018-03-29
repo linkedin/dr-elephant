@@ -21,6 +21,8 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1._
 import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
+import com.linkedin.drelephant.math.Statistics
+
 
 import scala.collection.JavaConverters
 
@@ -47,8 +49,8 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
     val evaluator = new Evaluator(this, data)
     var resultDetails = Seq(
       new HeuristicResultDetails("GC time to Executor Run time ratio", evaluator.ratio.toString),
-      new HeuristicResultDetails("Total GC time", evaluator.jvmTime.toString),
-      new HeuristicResultDetails("Total Executor Runtime", evaluator.executorRunTimeTotal.toString)
+      new HeuristicResultDetails("Total GC time",  evaluator.msecToString(evaluator.jvmTime)),
+      new HeuristicResultDetails("Total Executor Runtime", evaluator.msecToString(evaluator.executorRunTimeTotal))
     )
 
     //adding recommendations to the result, severityTimeA corresponds to the ascending severity calculation
@@ -78,7 +80,7 @@ object ExecutorGcHeuristic {
   /** The ascending severity thresholds for the ratio of JVM GC Time and executor Run Time (checking whether ratio is above normal)
     * These thresholds are experimental and are likely to change */
   val DEFAULT_GC_SEVERITY_A_THRESHOLDS =
-    SeverityThresholds(low = 0.08D, moderate = 0.1D, severe = 0.15D, critical = 0.2D, ascending = true)
+    SeverityThresholds(low = 0.08D, moderate = 0.09D, severe = 0.1D, critical = 0.15D, ascending = true)
 
   /** The descending severity thresholds for the ratio of JVM GC Time and executor Run Time (checking whether ratio is below normal)
     * These thresholds are experimental and are likely to change */
@@ -90,7 +92,15 @@ object ExecutorGcHeuristic {
 
   class Evaluator(executorGcHeuristic: ExecutorGcHeuristic, data: SparkApplicationData) {
     lazy val executorAndDriverSummaries: Seq[ExecutorSummary] = data.executorSummaries
+    if (executorAndDriverSummaries == null) {
+      throw new Exception("Executors Summary is null.")
+    }
+
     lazy val executorSummaries: Seq[ExecutorSummary] = executorAndDriverSummaries.filterNot(_.id.equals("driver"))
+    if (executorSummaries.isEmpty) {
+      throw new Exception("No executor information available.")
+    }
+
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
     var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries)
@@ -113,6 +123,25 @@ object ExecutorGcHeuristic {
         executorRunTimeTotal+=executorSummary.totalDuration
       })
       (jvmGcTimeTotal, executorRunTimeTotal)
+    }
+
+    //convert millisec to units
+    def msecToString (milliSec: Long): String = {
+      var value : Long = milliSec
+      if(value < Statistics.SECOND_IN_MS){
+        return value.toString + " msec"
+      } else if(value < Statistics.MINUTE_IN_MS) {
+        return (value/Statistics.SECOND_IN_MS).toString + " Seconds"
+      } else if(value < Statistics.HOUR_IN_MS) {
+        return (value/Statistics.MINUTE_IN_MS).toString + " Minutes"
+      }else {
+        var minutes = (value % Statistics.HOUR_IN_MS)/Statistics.MINUTE_IN_MS
+        if(minutes == 0) {
+          return (value/Statistics.HOUR_IN_MS).toString + " Hours"
+        } else {
+          return (value/Statistics.HOUR_IN_MS).toString + " Hours " + minutes.toString + " Minutes"
+        }
+      }
     }
   }
 }

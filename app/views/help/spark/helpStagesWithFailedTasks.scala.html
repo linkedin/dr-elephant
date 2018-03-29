@@ -1,0 +1,22 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+<p>Tasks (and stages and jobs) can fail if an error occurs while the task is executing.</p>
+
+<p>In Spark, each stage is divided into tasks which run individually. Now a task may fail due to more than one reasons. Out of memory and overhead memory issues are the most common reasons. </p>
+<p>Due to errors in tasks, their corresponding stages might also fail. The reasons for tasks failure are analysed and suggestions are given.</p>
+<h3>Suggestions</h3>
+<p>Failed due to Overhead Memory issues: Please try increasing spark.yarn.executor.memoryOverhead by 500MB in spark.yarn.executor.memoryOverhead.</p>
+<p>Failed due to OOM: Try increasing spark.executor.memory or decreasing spark.memory.fraction (take a look at unified memory heuristic) or decreasing number of cores.</p>

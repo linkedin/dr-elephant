@@ -19,10 +19,12 @@ package com.linkedin.drelephant.spark
 import com.linkedin.drelephant.analysis.{HadoopAggregatedData, HadoopApplicationData, HadoopMetricsAggregator}
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.math.Statistics
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
 import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
+
 import scala.util.Try
 
 
@@ -47,19 +49,13 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   }
 
   private def aggregate(data: SparkApplicationData): Unit = for {
-    executorInstances <- executorInstancesOf(data)
     executorMemoryBytes <- executorMemoryBytesOf(data)
   } {
     val applicationDurationMillis = applicationDurationMillisOf(data)
     if( applicationDurationMillis < 0) {
       logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
-    }  else {
-      val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
-
-      val resourcesAllocatedForUse =
-        aggregateresourcesAllocatedForUse(executorInstances, executorMemoryBytes, applicationDurationMillis)
-      val resourcesActuallyUsed = aggregateresourcesActuallyUsed(executorMemoryBytes, totalExecutorTaskTimeMillis)
-
+    } else {
+      var (resourcesActuallyUsed, resourcesAllocatedForUse) = calculateResourceUsage(data.executorSummaries, executorMemoryBytes)
       val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
       val resourcesWastedMBSeconds = (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
         case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
@@ -71,10 +67,8 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
       } else {
         logger.warn(s"resourcesAllocatedForUse/resourcesWasted exceeds Long.MaxValue")
         logger.warn(s"ResourceUsed: ${resourcesAllocatedForUse}")
-        logger.warn(s"executorInstances: ${executorInstances}")
         logger.warn(s"executorMemoryBytes:${executorMemoryBytes}")
         logger.warn(s"applicationDurationMillis:${applicationDurationMillis}")
-        logger.warn(s"totalExecutorTaskTimeMillis:${totalExecutorTaskTimeMillis}")
         logger.warn(s"resourcesActuallyUsedWithBuffer:${resourcesActuallyUsedWithBuffer}")
         logger.warn(s"resourcesWastedMBSeconds:${resourcesWastedMBSeconds}")
         logger.warn(s"allocatedMemoryWasteBufferPercentage:${allocatedMemoryWasteBufferPercentage}")
@@ -83,16 +77,28 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     }
   }
 
-  private def aggregateresourcesActuallyUsed(executorMemoryBytes: Long, totalExecutorTaskTimeMillis: BigInt): BigInt = {
-    val bytesMillis = BigInt(executorMemoryBytes) * totalExecutorTaskTimeMillis
-    (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
+  //calculates the resource usage by summing up the resources used per executor
+  private def calculateResourceUsage(executorSummaries: Seq[ExecutorSummary], executorMemoryBytes: Long): (BigInt, BigInt) = {
+    var sumResourceUsage: BigInt = 0
+    var sumResourcesAllocatedForUse : BigInt = 0
+    executorSummaries.foreach(
+      executorSummary => {
+        var memUsedBytes: Long = executorSummary.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0).asInstanceOf[Number].longValue + MemoryFormatUtils.stringToBytes(SPARK_RESERVED_MEMORY)
+        var timeSpent: Long = executorSummary.totalDuration
+        val bytesMillisUsed = BigInt(memUsedBytes) * timeSpent
+        val bytesMillisAllocated = BigInt(executorMemoryBytes) * timeSpent
+        sumResourcesAllocatedForUse += (bytesMillisAllocated / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
+        sumResourceUsage += (bytesMillisUsed / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
+      }
+    )
+    (sumResourceUsage, sumResourcesAllocatedForUse)
   }
 
   private def aggregateresourcesAllocatedForUse(
     executorInstances: Int,
     executorMemoryBytes: Long,
     applicationDurationMillis: Long
-  ): BigInt = {
+   ): BigInt = {
     val bytesMillis = BigInt(executorInstances) * BigInt(executorMemoryBytes) * BigInt(applicationDurationMillis)
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
@@ -121,9 +127,9 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
 object SparkMetricsAggregator {
   /** The percentage of allocated memory we expect to waste because of overhead. */
   val DEFAULT_ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE = 0.5D
-
   val ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE_KEY = "allocated_memory_waste_buffer_percentage"
-
+  val SPARK_RESERVED_MEMORY: String = "300M"
   val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
   val SPARK_EXECUTOR_MEMORY_KEY = "spark.executor.memory"
+  val JVM_USED_MEMORY = "jvmUsedMemory"
 }

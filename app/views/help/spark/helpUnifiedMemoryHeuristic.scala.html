@@ -1,0 +1,25 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+<p>Peak Unified Memory Heuristic identifies and flags jobs which have over allocated Unified Memory region.</p>
+<h4>Peak Unified Memory</h4>
+<p>If the job's Peak Unified Memory Consumption is much smaller than the allocated Unified Memory space, then we recommend decreasing the allocated Unified Memory Region for your job.</p>
+<h3>Action Items</h3>
+<p>The Allocated Unified Memory Region can be reduced in the following ways: </p>
+<p>1. If your job's Executor Memory is already low, then reduce <i>spark.memory.fraction</i> which will reduce the amount of space allocated to the Unified Memory Region.</p>
+<p>2. If your job's Executor Memory is high, then we recommend reducing the <i>spark.executor.memory</i> itself which will lower the Allocated Unified Memory space.</p>
+<p>Note:</p>
+<p><i>spark.memory.fraction</i>: This is the fraction of JVM Used Memory (Executor memory - Reserved memory) dedicated to the unified memory region (execution + storage). It basically partitions user memory from execution and storage memory.</p>
+<p> Note: Please note that for calculation purposes Dr. Elephant considers 1024 Bytes in 1 KB whereas the spark history server considers 1000 Bytes. So please don't get confused if you find discrepancy in values from these two places. </p>

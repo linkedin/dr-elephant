@@ -25,7 +25,9 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, 
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
-
+/**
+  * Test class for Executors Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorsHeuristicTest extends FunSpec with Matchers {
   import ExecutorsHeuristicTest._
 
@@ -244,13 +246,17 @@ object ExecutorsHeuristicTest {
     failedTasks = 0,
     completedTasks = 0,
     totalTasks = 0,
+    maxTasks = 0,
     totalDuration,
     totalInputBytes,
     totalShuffleRead,
     totalShuffleWrite,
     maxMemory,
     totalGCTime = 0,
-    executorLogs = Map.empty
+    totalMemoryBytesSpilled = 0,
+    executorLogs = Map.empty,
+    peakJvmUsedMemory = Map.empty,
+    peakUnifiedMemory = Map.empty
   )
 
   def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData = {
@@ -260,7 +266,8 @@ object ExecutorsHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = executorSummaries
+      executorSummaries = executorSummaries,
+      stagesWithFailedTasks = Seq.empty
     )
 
     SparkApplicationData(appId, restDerivedData, logDerivedData = None)

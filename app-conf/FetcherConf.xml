@@ -51,17 +51,16 @@
      To work properly, this fetcher should use the same timezone with the job history server.
      If not set, the local timezone will be used.
    -->
-  
+
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
     <params>
-      <sampling_enabled>false</sampling_enabled>
       <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
-      <history_server_time_zone>PST</history_server_time_zone>
+      <sampling_enabled>false</sampling_enabled>
+      <history_server_time_zone>UTC</history_server_time_zone>
     </params>
   </fetcher>
-  
 
   <!--
     FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties
@@ -81,7 +80,10 @@
   -->
   <fetcher>
     <applicationtype>spark</applicationtype>
-    <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+    <params>
+      <fetch_failed_tasks>true</fetch_failed_tasks>
+    </params>
   </fetcher>
 
   <!--
