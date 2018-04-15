@@ -22,7 +22,6 @@ import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
 
 import com.linkedin.drelephant.tez.data.TezApplicationData;
-import com.linkedin.drelephant.clients.WorkflowClient;
 
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.schedulers.Scheduler;

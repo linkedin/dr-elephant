@@ -30,10 +30,12 @@ public class ReducerMemoryHeuristic extends GenericMemoryHeuristic {
 
   private static final Logger logger = Logger.getLogger(ReducerMemoryHeuristic.class);
 
-  public static final String REDUCER_MEMORY_CONF = "mapreduce.reduce.memory.mb";
+  private static final String MAPRED_REDUCER_MEMORY_CONF = "mapreduce.reduce.memory.mb";
+  private static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
+  private static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
 
   public ReducerMemoryHeuristic(HeuristicConfigurationData __heuristicConfData){
-    super(REDUCER_MEMORY_CONF, __heuristicConfData);
+    super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, MAPRED_REDUCER_MEMORY_CONF, __heuristicConfData);
   }
 
   @Override
