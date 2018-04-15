@@ -34,7 +34,7 @@ public class ReducerMemoryHeuristic extends GenericMemoryHeuristic {
   private static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
   private static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
 
-  public ReducerMemoryHeuristic(HeuristicConfigurationData __heuristicConfData){
+  public ReducerMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
     super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, MAPRED_REDUCER_MEMORY_CONF, __heuristicConfData);
   }
 

@@ -15,6 +15,7 @@
  */
 package com.linkedin.drelephant.tez;
 
+
 import com.google.common.base.Strings;
 import com.linkedin.drelephant.analysis.*;
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData;
@@ -29,6 +30,7 @@ import org.apache.log4j.Logger;
 public class TezMetricsAggregator implements HadoopMetricsAggregator {
 
   private static final Logger logger = Logger.getLogger(TezMetricsAggregator.class);
+
 
   private static final String TEZ_CONTAINER_CONFIG = "tez.task.resource.memory.mb";
   private static final String HIVE_TEZ_CONTAINER_CONFIG = "hive.tez.container.size";
@@ -117,5 +119,6 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
       reducerContainerSize = CONTAINER_MEMORY_DEFAULT_BYTES;
     }
     return reducerContainerSize;
+
   }
 }

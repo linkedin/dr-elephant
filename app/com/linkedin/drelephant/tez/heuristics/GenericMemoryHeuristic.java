@@ -81,6 +81,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
 
   }
 
+
   public GenericMemoryHeuristic(String tezContainerMemConf, String hiveContainerMemConf, String mapredContainerMemConf, HeuristicConfigurationData heuristicConfData) {
     this._mapredContainerMemConf = mapredContainerMemConf;
     this._hiveContainerMemConf = hiveContainerMemConf;
@@ -134,14 +135,15 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
 
     String containerSizeStr;
 
+
     if(!Strings.isNullOrEmpty(data.getConf().getProperty(_tezContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_tezContainerMemConf)) > 0){
       containerSizeStr = data.getConf().getProperty(_tezContainerMemConf);
     }
     else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_hiveContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_hiveContainerMemConf)) > 0){
       containerSizeStr = data.getConf().getProperty(_hiveContainerMemConf);
     }
-    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_mapredContainerMemConf)) > 0){
-      containerSizeStr = data.getConf().getProperty(_mapredContainerMemConf);
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_mapredContainerMemConf)) > 0) {
+        containerSizeStr = data.getConf().getProperty(_mapredContainerMemConf);
     }
     else {
       containerSizeStr = getContainerMemDefaultMBytes();
