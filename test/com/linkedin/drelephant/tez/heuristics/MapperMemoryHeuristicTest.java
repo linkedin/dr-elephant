@@ -75,7 +75,7 @@ public class MapperMemoryHeuristicTest extends TestCase{
     counter.set(TezCounterData.CounterName.PHYSICAL_MEMORY_BYTES, taskAvgMemMB* FileUtils.ONE_MB);
 
     Properties p = new Properties();
-    p.setProperty(MapperMemoryHeuristic.MAPPER_MEMORY_CONF, Long.toString(containerMemMB));
+    p.setProperty(MapperMemoryHeuristic.MAPRED_MAPPER_MEMORY_CONF, Long.toString(containerMemMB));
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
