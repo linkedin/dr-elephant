@@ -49,8 +49,8 @@ function require_programs() {
 require_programs zip unzip
 
 # Default configurations
-HADOOP_VERSION="2.3.0"
-SPARK_VERSION="1.4.0"
+HADOOP_VERSION="2.7.0"
+SPARK_VERSION="2.2.1"
 
 # User should pass an optional argument which is a path to config file
 if [ -z "$1" ];
