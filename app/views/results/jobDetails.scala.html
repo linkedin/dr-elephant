@@ -62,12 +62,12 @@
               @if(!result.jobDefId.isEmpty){
                 @if(result.jobType.equals("Spark")) {
                   <tr>
-                    <td><a href="/jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)&select-graph-type=heuristics">
+                    <td><a href="./jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)&select-graph-type=heuristics">
                       Job History</a></td>
                   </tr>
                 } else {
                   <tr>
-                    <td><a href="/jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)&select-graph-type=resources">
+                    <td><a href="./jobhistory?job-def-id=@helper.urlEncode(result.jobDefId)&select-graph-type=resources">
                       Job History</a></td>
                   </tr>
                 }
@@ -75,11 +75,11 @@
               @if(!result.jobDefId.isEmpty){
                 @if(result.jobType.equals("Spark")) {
                   <tr>
-                    <td><a href="/flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)&select-graph-type=heuristics">Flow&nbsp;History</a></td>
+                    <td><a href="./flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)&select-graph-type=heuristics">Flow&nbsp;History</a></td>
                   </tr>
                 } else {
                   <tr>
-                    <td><a href="/flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)">Flow&nbsp;History</a></td>
+                    <td><a href="./flowhistory?flow-def-id=@helper.urlEncode(result.flowDefId)">Flow&nbsp;History</a></td>
                   </tr>
 
                 }

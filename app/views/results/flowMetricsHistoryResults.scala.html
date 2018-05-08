@@ -68,7 +68,7 @@
                 <th class="history-table-first-column">Flow Executions</th>
                 @for((jobDefPair, jobName) <- idPairToJobNameMap) {
                   <th class="history-table-metrics-column">
-                    <a href='/newjobhistory?job-def-id=@helper.urlEncode(jobDefPair.getUrl)&select-graph-type=@graphType' data-toggle='tooltip'
+                    <a href='./newjobhistory?job-def-id=@helper.urlEncode(jobDefPair.getUrl)&select-graph-type=@graphType' data-toggle='tooltip'
                     title='@jobDefPair.getUrl'>Job @{jobDefIndex = jobDefIndex + 1; jobDefIndex}<br>
                       @if(jobName.length > 45) { @jobName.substring(0, 41)... } else { @jobName }
                     </a>

@@ -147,7 +147,7 @@ pso_dir=${project_root}/scripts/pso
 rm -rf ${project_root}/dist
 mkdir dist
 
-play_command $OPTS clean test compile dist
+play_command $OPTS clean compile dist
 
 cd target/universal
 

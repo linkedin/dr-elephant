@@ -34,7 +34,7 @@
   }
 
   @if(paginationStats.getCurrentPage() == 1) {
-    <li class="disabled"><a href="/" onclick="return false;">Previous</a></li>
+    <li class="disabled"><a href="./" onclick="return false;">Previous</a></li>
   } else {
     <li><a href="@route?@(searchQuery())page=@(paginationStats.getCurrentPage() - 1)">Previous</a></li>
   }
@@ -50,7 +50,7 @@
   }
 
   @if(paginationStats.getCurrentPage() == paginationStats.getPaginationBarEndIndex()) {
-    <li class="disabled"><a href="/" onclick="return false;">Next</a></li>
+    <li class="disabled"><a href="./" onclick="return false;">Next</a></li>
   } else {
     <li><a href="@route?@(searchQuery())page=@(paginationStats.getCurrentPage() + 1)">Next</a></li>
   }
