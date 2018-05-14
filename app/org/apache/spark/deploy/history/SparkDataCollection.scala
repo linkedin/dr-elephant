@@ -49,32 +49,32 @@ class SparkDataCollection extends SparkApplicationData {
   lazy val applicationEventListener = new ApplicationEventListener()
   lazy val jobProgressListener = new JobProgressListener(new SparkConf())
   lazy val environmentListener = new EnvironmentListener()
-  lazy val storageStatusListener = new StorageStatusListener()
-  lazy val executorsListener = new ExecutorsListener(storageStatusListener)
+  lazy val storageStatusListener = new StorageStatusListener(new SparkConf())
+  lazy val executorsListener = new ExecutorsListener(storageStatusListener, new SparkConf())
   lazy val storageListener = new StorageListener(storageStatusListener)
 
   // This is a customized listener that tracks peak used memory
   // The original listener only tracks the current in use memory which is useless in offline scenario.
   lazy val storageStatusTrackingListener = new StorageStatusTrackingListener()
 
-  private var _applicationData: SparkGeneralData = null;
-  private var _jobProgressData: SparkJobProgressData = null;
-  private var _environmentData: SparkEnvironmentData = null;
-  private var _executorData: SparkExecutorData = null;
-  private var _storageData: SparkStorageData = null;
-  private var _isThrottled: Boolean = false;
+  private var _applicationData: SparkGeneralData = _
+  private var _jobProgressData: SparkJobProgressData = _
+  private var _environmentData: SparkEnvironmentData = _
+  private var _executorData: SparkExecutorData = _
+  private var _storageData: SparkStorageData = _
+  private var _isThrottled: Boolean = false
 
   def throttle(): Unit = {
     _isThrottled = true
   }
 
-  override def isThrottled(): Boolean = _isThrottled
+  override def isThrottled: Boolean = _isThrottled
 
   override def getApplicationType(): ApplicationType = APPLICATION_TYPE
 
-  override def getConf(): Properties = getEnvironmentData().getSparkProperties()
+  override def getConf(): Properties = getEnvironmentData().getSparkProperties
 
-  override def isEmpty(): Boolean = !isThrottled() && getExecutorData().getExecutors.isEmpty()
+  override def isEmpty(): Boolean = !isThrottled() && getExecutorData().getExecutors.isEmpty
 
   override def getGeneralData(): SparkGeneralData = {
     if (_applicationData == null) {
@@ -164,10 +164,13 @@ class SparkDataCollection extends SparkApplicationData {
     if (_executorData == null) {
       _executorData = new SparkExecutorData()
 
-      for (statusId <- 0 until executorsListener.storageStatusList.size) {
+      val storageStatusList = executorsListener.activeStorageStatusList ++ executorsListener.deadStorageStatusList
+
+      //      for (statusId <- 0 until executorsListener.storageStatusList.size) {
+      for (statusId <- 0 until storageStatusList.size) {
         val info = new ExecutorInfo()
 
-        val status = executorsListener.storageStatusList(statusId)
+        val status = storageStatusList(statusId)
 
         info.execId = status.blockManagerId.executorId
         info.hostPort = status.blockManagerId.hostPort
@@ -178,14 +181,26 @@ class SparkDataCollection extends SparkApplicationData {
         info.memUsed = storageStatusTrackingListener.executorIdToMaxUsedMem.getOrElse(info.execId, 0L)
         info.maxMem = status.maxMem
         info.diskUsed = status.diskUsed
-        info.activeTasks = executorsListener.executorToTasksActive.getOrElse(info.execId, 0)
-        info.failedTasks = executorsListener.executorToTasksFailed.getOrElse(info.execId, 0)
-        info.completedTasks = executorsListener.executorToTasksComplete.getOrElse(info.execId, 0)
-        info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
-        info.duration = executorsListener.executorToDuration.getOrElse(info.execId, 0L)
-        info.inputBytes = executorsListener.executorToInputBytes.getOrElse(info.execId, 0L)
-        info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
-        info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
+//        info.activeTasks = executorsListener.executorToTasksActive.getOrElse(info.execId, 0)
+//        info.failedTasks = executorsListener.executorToTasksFailed.getOrElse(info.execId, 0)
+//        info.completedTasks = executorsListener.executorToTasksComplete.getOrElse(info.execId, 0)
+//        info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
+//        info.duration = executorsListener.executorToDuration.getOrElse(info.execId, 0L)
+//        info.inputBytes = executorsListener.executorToInputBytes.getOrElse(info.execId, 0L)
+//        info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
+//        info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
+
+        if (!info.execId.equalsIgnoreCase("driver")) {
+          info.activeTasks = executorsListener.executorToTaskSummary(info.execId).tasksActive
+          info.failedTasks = executorsListener.executorToTaskSummary(info.execId).tasksFailed
+          info.completedTasks = executorsListener.executorToTaskSummary(info.execId).tasksComplete
+          info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
+          info.duration = executorsListener.executorToTaskSummary(info.execId).duration
+          info.inputBytes = executorsListener.executorToTaskSummary(info.execId).inputBytes
+          info.shuffleRead = executorsListener.executorToTaskSummary(info.execId).shuffleRead
+          info.shuffleWrite = executorsListener.executorToTaskSummary(info.execId).shuffleWrite
+        }
+
 
         _executorData.setExecutorInfo(info.execId, info)
       }

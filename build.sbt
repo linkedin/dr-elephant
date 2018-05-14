@@ -15,6 +15,7 @@
 //
 
 import play.Project._
+// import play.Play.autoImport._
 import Dependencies._
 
 name := "dr-elephant"
@@ -34,6 +35,7 @@ ivyConfigurations += config("compileonly").hide
 unmanagedClasspath in Compile ++= update.value.select(configurationFilter("compileonly"))
 
 playJavaSettings
+// lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 scalaVersion := "2.10.4"
 //scalaVersion := "2.11.8"

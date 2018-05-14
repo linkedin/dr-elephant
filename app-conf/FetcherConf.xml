@@ -86,11 +86,12 @@
       <event_log_location_uri>webhdfs://localhost:50070/system/spark-history</event_log_location_uri>
     </params>
   -->
+  <!--
   <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
   </fetcher>
-
+  -->
   <!--
   This is an experimental fetcher for Spark applications which uses SHS REST API to get application metrics
   and WebHDFS to get application properties from eventlogs.
@@ -105,6 +106,7 @@
   *should_process_logs_locally* if use_rest_for_eventlogs is true, then enabling this flag will enable fetcher to just
   get eventlogs via SHS REST API and derives application metrics and properties from eventlogs.
   Therefore, fetcher does not use other REST calls, which may have significant memory overhead on SHS.
+  -->
 
   <fetcher>
     <applicationtype>spark</applicationtype>
@@ -114,5 +116,4 @@
       <should_process_logs_locally>true</should_process_logs_locally>
     </params>
   </fetcher>
-  -->
 </fetchers>

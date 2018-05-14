@@ -15,6 +15,7 @@
 //
 
 import play.Project._
+//import play.Play.autoImport._
 import sbt._
 
 object Dependencies {
