@@ -143,7 +143,10 @@ public class FitnessComputeUtil {
   }
 
   /**
-   * Checks if the median gain from tuning on last n executions is negative
+   * Checks if the median gain (from tuning) during the last 6 executions is negative
+   * Last 6 executions constitutes 2 iterations of PSO (given the swarm size is three). Negative average gains in
+   * latest 2 algorithm iterations (after a fixed number of minimum iterations) imply that either the algorithm hasn't
+   * converged or there isn't enough scope for tuning. In both the cases, switching tuning off is desired
    * @param jobExecutions List of previous executions
    * @return true if the median gain is negative, else false
    */
@@ -196,6 +199,7 @@ public class FitnessComputeUtil {
         .eq(TuningJobDefinition.TABLE.job + '.' + JobDefinition.TABLE.id, jobDefinition.id)
         .findUnique();
     if (tuningJobDefinition.tuningEnabled == 1) {
+      logger.info("Disabling tuning for job: " + tuningJobDefinition.job.jobDefId);
       tuningJobDefinition.tuningEnabled = 0;
       tuningJobDefinition.tuningDisabledReason = reason;
       tuningJobDefinition.save();
@@ -291,6 +295,8 @@ public class FitnessComputeUtil {
    * @param completedExecutions List of completed executions
    */
   private void updateExecutionMetrics(List<TuningJobExecution> completedExecutions) {
+
+    //To artificially increase the cost function value 3 times (as a penalty) in case of metric value violation
     Integer penaltyConstant = 3;
 
     for (TuningJobExecution tuningJobExecution : completedExecutions) {

@@ -209,32 +209,6 @@ public abstract class ParamGenerator {
         logger.error("Error extracting default value of params for job " + tuningJobDefinition.job.jobDefId, e);
       }
 
-      // updating boundary constraints for the job
-      List<TuningParameterConstraint> tuningParameterConstraintList = new ArrayList<TuningParameterConstraint>();
-      try {
-        tuningParameterConstraintList = TuningParameterConstraint.find.where()
-            .eq("job_definition_id", job.id)
-            .eq(TuningParameterConstraint.TABLE.constraintType, TuningParameterConstraint.ConstraintType.BOUNDARY)
-            .findList();
-      } catch (NullPointerException e) {
-        logger.info("No boundary constraints found for job: " + job.jobName);
-      }
-
-      Map<Integer, Integer> paramConstrainIndexMap = new HashMap<Integer, Integer>();
-      int i = 0;
-      for (TuningParameterConstraint tuningParameterConstraint : tuningParameterConstraintList) {
-        paramConstrainIndexMap.put(tuningParameterConstraint.tuningParameter.id, i);
-        i += 1;
-      }
-
-      for (TuningParameter tuningParameter : tuningParameterList) {
-        if (paramConstrainIndexMap.containsKey(tuningParameter.id)) {
-          int index = paramConstrainIndexMap.get(tuningParameter.id);
-          tuningParameter.minValue = tuningParameterConstraintList.get(index).lowerBound;
-          tuningParameter.maxValue = tuningParameterConstraintList.get(index).upperBound;
-        }
-      }
-
       JobTuningInfo jobTuningInfo = new JobTuningInfo();
       jobTuningInfo.setTuningJob(job);
       jobTuningInfo.setJobType(tuningJobDefinition.tuningAlgorithm.jobType);
@@ -436,7 +410,7 @@ public abstract class ParamGenerator {
         tuningJobExecution.isDefaultExecution = false;
         if (isParamConstraintViolated(jobSuggestedParamValueList, tuningJobExecution.tuningAlgorithm.jobType, job.id)) {
           logger.info("Parameter constraint violated. Applying penalty.");
-          Integer penaltyConstant = 3;
+          int penaltyConstant = 3;
           Double averageResourceUsagePerGBInput =
                   tuningJobDefinition.averageResourceUsage * FileUtils.ONE_GB / tuningJobDefinition.averageInputSizeInBytes;
           Double maxDesiredResourceUsagePerGBInput =

@@ -39,11 +39,6 @@ PARAM_MAPREDUCE_INPUT_FILEINPUTFORMAT_SPLIT_MAXSIZE = 'mapreduce.input.fileinput
 PARAM_MAPREDUCE_MAP_JAVA_OPTS = 'mapreduce.map.java.opts'
 PARAM_MAPREDUCE_REDUCE_JAVA_OPTS = 'mapreduce.reduce.java.opts'
 
-PARAM_SPARK_EXECUTOR_MEMORY = "spark.executor.memory"
-PARAM_SPARK_MEMORY_STORAGE_FRACTION = "spark.memory.storageFraction"
-PARAM_SPARK_MEMORY_FRACTION = "spark.memory.fraction"
-PARAM_SPARK_EXECUTOR_CORES = "spark.executor.cores"
-
 ARG_TUNING_STATE_KEY = 'json_tuning_state'
 ARG_PARAMETERS_TO_TUNE_KEY = 'parameters_to_tune'
 ARG_JOB_TYPE = "job_type"
@@ -67,6 +62,7 @@ PARAMETER_MIN_VALUE_KEY = 'minValue'
 INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE = (0.5, 0.8)
 INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE = (1.05, 1.1)
 INITIAL_DERIVED_SORT_MEMORY_PARAM_RANGE = (0.0, 0.25)
+# POPULATION_SIZE = 3 performs the best as was found in the experimentation
 POPULATION_SIZE = 3
 
 
@@ -107,14 +103,6 @@ def initial_population_generator(random, args):
             mr_reduce_memory_index = i
         elif param_name[i] == PARAM_PIG_MAX_COMBINED_SPLIT_SIZE:
             pig_max_combined_split_size_index = i
-        elif param_name[i] == PARAM_SPARK_EXECUTOR_MEMORY:
-            spark_executor_memory_index = i
-        elif param_name[i] == PARAM_SPARK_MEMORY_FRACTION:
-            spark_memory_fraction = i
-        elif param_name[i] == PARAM_SPARK_MEMORY_STORAGE_FRACTION:
-            spark_memory_storage_fraction = i
-        elif param_name[i] == PARAM_SPARK_EXECUTOR_CORES:
-            spark_executor_cores = i
     global iteration
 
     if iteration == 0:
@@ -225,7 +213,7 @@ def generate_tuning_state(pso, pseudo_random_number_generator, population):
 
     data[TUNING_STATE_ARCHIVE_KEY] = archive
     data[TUNING_STATE_PREV_POPULATION_KEY] = prev_population
-    data[TUNING_STATE_CURRENT_POPULATION_KEY] = current_population  # todo: send 2 or 3?
+    data[TUNING_STATE_CURRENT_POPULATION_KEY] = current_population
     data[TUNING_STATE_RANDOM_STATE_KEY] = rnd_state
     data_dump = json.dumps(data)
     return data_dump
