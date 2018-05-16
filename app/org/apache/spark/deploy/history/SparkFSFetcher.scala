@@ -97,10 +97,12 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
       logger.info("The event log of Spark application: " + appId + " is over the limit size of "
         + eventLogSizeLimitMb + " MB, the parsing process gets throttled.")
     } else {
-      logger.info("Replaying Spark logs for application: " + appId +
+      if (eventLogCodec.nonEmpty) {
+        logger.info("Replaying Spark logs for application: " + appId +
                           " withlogPath: " + eventLogPath +
-                          " with codec:" + eventLogCodec)
+  			   " with codec:" + eventLogCodec)
 
+      }
       sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec) { in =>
         dataCollection.load(in, eventLogPath.toString())
       }
