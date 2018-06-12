@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 LinkedIn Corp.
+ * Copyright 2017 Electronic Arts Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -12,32 +12,30 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
  */
-
 package com.linkedin.drelephant.tez.heuristics;
 
-import com.linkedin.drelephant.tez.data.TezDAGApplicationData;
-import com.linkedin.drelephant.tez.data.TezDAGData;
-import com.linkedin.drelephant.tez.data.TezVertexTaskData;
-import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
-import com.linkedin.drelephant.tez.data.TezVertexData;
-import com.linkedin.drelephant.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.math.Statistics;
-
-import java.util.Map;
-
+import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezTaskData;
+import com.linkedin.drelephant.util.Utils;
 import org.apache.log4j.Logger;
 
+import com.linkedin.drelephant.math.Statistics;
 
-public class ReducerTimeHeuristic implements Heuristic<TezDAGApplicationData> {
+import java.util.*;
+
+/**
+ * Analyzes reducer task runtimes
+ */
+
+public class ReducerTimeHeuristic implements Heuristic<TezApplicationData> {
+
   private static final Logger logger = Logger.getLogger(ReducerTimeHeuristic.class);
 
   // Severity parameters.
@@ -46,9 +44,9 @@ public class ReducerTimeHeuristic implements Heuristic<TezDAGApplicationData> {
   private static final String NUM_TASKS_SEVERITY = "num_tasks_severity";
 
   // Default value of parameters
-  private double[] shortRuntimeLimits = {10, 4, 2, 1};       // Limits(ms) for tasks with shorter runtime
-  private double[] longRuntimeLimits = {15, 30, 60, 120};    // Limits(ms) for tasks with longer runtime
-  private double[] numTasksLimits = {50, 101, 500, 1000};    // Number of Reduce tasks.
+  private double[] shortRuntimeLimits = {10, 4, 2, 1};     // Limits(ms) for tasks with shorter runtime
+  private double[] longRuntimeLimits = {15, 30, 60, 120};  // Limits(ms) for tasks with longer runtime
+  private double[] numTasksLimits = {50, 101, 500, 1000};  // Number of Map tasks.
 
   private HeuristicConfigurationData _heuristicConfData;
 
@@ -56,9 +54,9 @@ public class ReducerTimeHeuristic implements Heuristic<TezDAGApplicationData> {
     Map<String, String> paramMap = _heuristicConfData.getParamMap();
     String heuristicName = _heuristicConfData.getHeuristicName();
 
-    double[] confShortRuntimeLimits = Utils.getParam(paramMap.get(SHORT_RUNTIME_SEVERITY), shortRuntimeLimits.length);
-    if (confShortRuntimeLimits != null) {
-      shortRuntimeLimits = confShortRuntimeLimits;
+    double[] confShortThreshold = Utils.getParam(paramMap.get(SHORT_RUNTIME_SEVERITY), shortRuntimeLimits.length);
+    if (confShortThreshold != null) {
+      shortRuntimeLimits = confShortThreshold;
     }
     logger.info(heuristicName + " will use " + SHORT_RUNTIME_SEVERITY + " with the following threshold settings: "
         + Arrays.toString(shortRuntimeLimits));
@@ -66,9 +64,9 @@ public class ReducerTimeHeuristic implements Heuristic<TezDAGApplicationData> {
       shortRuntimeLimits[i] = shortRuntimeLimits[i] * Statistics.MINUTE_IN_MS;
     }
 
-    double[] confLongRuntimeLimitss = Utils.getParam(paramMap.get(LONG_RUNTIME_SEVERITY), longRuntimeLimits.length);
-    if (confLongRuntimeLimitss != null) {
-      longRuntimeLimits = confLongRuntimeLimitss;
+    double[] confLongThreshold = Utils.getParam(paramMap.get(LONG_RUNTIME_SEVERITY), longRuntimeLimits.length);
+    if (confLongThreshold != null) {
+      longRuntimeLimits = confLongThreshold;
     }
     logger.info(heuristicName + " will use " + LONG_RUNTIME_SEVERITY + " with the following threshold settings: "
         + Arrays.toString(longRuntimeLimits));
@@ -76,12 +74,13 @@ public class ReducerTimeHeuristic implements Heuristic<TezDAGApplicationData> {
       longRuntimeLimits[i] = longRuntimeLimits[i] * Statistics.MINUTE_IN_MS;
     }
 
-    double[] confNumTasksLimits = Utils.getParam(paramMap.get(NUM_TASKS_SEVERITY), numTasksLimits.length);
-    if (confNumTasksLimits != null) {
-      numTasksLimits = confNumTasksLimits;
+    double[] confNumTasksThreshold = Utils.getParam(paramMap.get(NUM_TASKS_SEVERITY), numTasksLimits.length);
+    if (confNumTasksThreshold != null) {
+      numTasksLimits = confNumTasksThreshold;
     }
     logger.info(heuristicName + " will use " + NUM_TASKS_SEVERITY + " with the following threshold settings: " + Arrays
         .toString(numTasksLimits));
+
 
   }
 
@@ -90,84 +89,63 @@ public class ReducerTimeHeuristic implements Heuristic<TezDAGApplicationData> {
     loadParameters();
   }
 
-  @Override
   public HeuristicConfigurationData getHeuristicConfData() {
     return _heuristicConfData;
   }
 
-  @Override
-  public HeuristicResult apply(TezDAGApplicationData data) {
-
+  public HeuristicResult apply(TezApplicationData data) {
     if(!data.getSucceeded()) {
       return null;
     }
+    TezTaskData[] tasks = data.getReduceTaskData();
 
-    TezDAGData[] tezDAGsData = data.getTezDAGData();
-    TezVertexTaskData[] tasks = null;
- 
-    List<Long> runTimesMs = new ArrayList<Long>();
+    List<Long> runtimesMs = new ArrayList<Long>();
     long taskMinMs = Long.MAX_VALUE;
     long taskMaxMs = 0;
-    int i=0;
-    int taskLength = 0;
 
-for(TezDAGData tezDAGData:tezDAGsData){   	
-		
-    	TezVertexData tezVertexes[] = tezDAGData.getVertexData();
-    for (TezVertexData tezVertexData:tezVertexes){
-    	tasks = tezVertexData.getReducerData();
-    	taskLength+=tasks.length;
-    	
-    for (TezVertexTaskData task : tasks) {
-    	  
+    for (TezTaskData task : tasks) {
 
       if (task.isSampled()) {
         long taskTime = task.getTotalRunTimeMs();
-        runTimesMs.add(taskTime);     
+        runtimesMs.add(taskTime);
         taskMinMs = Math.min(taskMinMs, taskTime);
         taskMaxMs = Math.max(taskMaxMs, taskTime);
-
-      
       }
     }
-
-    i++;
-    }
-	}
 
     if(taskMinMs == Long.MAX_VALUE) {
       taskMinMs = 0;
     }
 
-    //Analyze data
-    long averageRuntimeMs = Statistics.average(runTimesMs);
 
-    Severity shortTimeSeverity = shortTimeSeverity(averageRuntimeMs, tasks.length);
-    Severity longTimeSeverity = longTimeSeverity(averageRuntimeMs, tasks.length);
-    Severity severity = Severity.max(shortTimeSeverity, longTimeSeverity);
+    long averageTimeMs = Statistics.average(runtimesMs);
+
+    Severity shortTaskSeverity = shortTaskSeverity(tasks.length, averageTimeMs);
+    Severity longTaskSeverity = longTaskSeverity(tasks.length, averageTimeMs);
+    Severity severity = Severity.max(shortTaskSeverity, longTaskSeverity);
 
     HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
         _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
 
+    result.addResultDetail("Number of tasks", Integer.toString(tasks.length));
+    result.addResultDetail("Average task runtime", tasks.length == 0  ? "0" : (Statistics.readableTimespan(averageTimeMs).equals("") ? "0 sec" : Statistics.readableTimespan(averageTimeMs)));
+    result.addResultDetail("Max task runtime", tasks.length == 0 ? "0" : (Statistics.readableTimespan(taskMaxMs).equals("") ? "0 sec" : Statistics.readableTimespan(taskMaxMs)) );
+    result.addResultDetail("Min task runtime", tasks.length == 0 ? "0" : (Statistics.readableTimespan(taskMinMs).equals("") ? "0 sec" :Statistics.readableTimespan(taskMinMs))) ;
 
-    
-    result.addResultDetail("Number of output tasks", Integer.toString(tasks.length));
-    result.addResultDetail("Average task runtime", Statistics.readableTimespan(averageRuntimeMs));
-    result.addResultDetail("Max task runtime", Statistics.readableTimespan(taskMaxMs));
-    result.addResultDetail("Min task runtime", Statistics.readableTimespan(taskMinMs));
     return result;
   }
 
-  private Severity shortTimeSeverity(long runtimeMs, long numTasks) {
-    Severity timeSeverity = getShortRuntimeSeverity(runtimeMs);
-    // Severity is adjusted based on number of tasks
-    Severity taskSeverity = getNumTasksSeverity(numTasks);
-    return Severity.min(timeSeverity, taskSeverity);
+  private Severity shortTaskSeverity(long numTasks, long averageTimeMs) {
+    // We want to identify jobs with short task runtime
+    Severity severity = getShortRuntimeSeverity(averageTimeMs);
+    // Severity is reduced if number of tasks is small.
+    Severity numTaskSeverity = getNumTasksSeverity(numTasks);
+    return Severity.min(severity, numTaskSeverity);
   }
 
-  private Severity longTimeSeverity(long runtimeMs, long numTasks) {
-    // Severity is NOT adjusted based on number of tasks
-    return getLongRuntimeSeverity(runtimeMs);
+  private Severity longTaskSeverity(long numTasks, long averageTimeMs) {
+    // We want to identify jobs with long task runtime. Severity is NOT reduced if num of tasks is large
+    return getLongRuntimeSeverity(averageTimeMs);
   }
 
   private Severity getShortRuntimeSeverity(long runtimeMs) {
@@ -184,4 +162,6 @@ for(TezDAGData tezDAGData:tezDAGsData){
     return Severity.getSeverityAscending(
         numTasks, numTasksLimits[0], numTasksLimits[1], numTasksLimits[2], numTasksLimits[3]);
   }
+
 }
+

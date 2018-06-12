@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 LinkedIn Corp.
+ * Copyright 2017 Electronic Arts Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -12,34 +12,31 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
  */
-
 package com.linkedin.drelephant.tez.heuristics;
 
-import com.linkedin.drelephant.tez.data.TezDAGApplicationData;
-import com.linkedin.drelephant.tez.data.TezCounterData;
-import com.linkedin.drelephant.tez.data.TezDAGData;
-import com.linkedin.drelephant.tez.data.TezVertexData;
-import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
-import com.linkedin.drelephant.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.tez.data.TezVertexTaskData;
-import com.linkedin.drelephant.math.Statistics;
-
-import java.util.Map;
-
+import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezCounterData;
+import com.linkedin.drelephant.tez.data.TezTaskData;
+import com.linkedin.drelephant.util.Utils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import com.linkedin.drelephant.math.Statistics;
 
-public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
+import java.util.*;
+
+/**
+ * Analyzes mapper task runtimes
+ */
+public class MapperTimeHeuristic implements Heuristic<TezApplicationData> {
+
   private static final Logger logger = Logger.getLogger(MapperTimeHeuristic.class);
 
   // Severity parameters.
@@ -51,6 +48,12 @@ public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
   private double[] shortRuntimeLimits = {10, 4, 2, 1};     // Limits(ms) for tasks with shorter runtime
   private double[] longRuntimeLimits = {15, 30, 60, 120};  // Limits(ms) for tasks with longer runtime
   private double[] numTasksLimits = {50, 101, 500, 1000};  // Number of Map tasks.
+
+  private List<TezCounterData.CounterName> _counterNames = Arrays.asList(
+      TezCounterData.CounterName.HDFS_BYTES_READ,
+      TezCounterData.CounterName.S3A_BYTES_READ,
+      TezCounterData.CounterName.S3N_BYTES_READ
+  );
 
   private HeuristicConfigurationData _heuristicConfData;
 
@@ -84,6 +87,8 @@ public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
     }
     logger.info(heuristicName + " will use " + NUM_TASKS_SEVERITY + " with the following threshold settings: " + Arrays
         .toString(numTasksLimits));
+
+
   }
 
   public MapperTimeHeuristic(HeuristicConfigurationData heuristicConfData) {
@@ -91,66 +96,41 @@ public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
     loadParameters();
   }
 
-  @Override
   public HeuristicConfigurationData getHeuristicConfData() {
     return _heuristicConfData;
   }
 
-  @Override
-  public HeuristicResult apply(TezDAGApplicationData data) {
-
+  public HeuristicResult apply(TezApplicationData data) {
     if(!data.getSucceeded()) {
       return null;
     }
+    TezTaskData[] tasks = data.getMapTaskData();
 
-    TezVertexTaskData[] tasks = null;
-    TezDAGData[] tezDAGsData = data.getTezDAGData();
-    ArrayList<TezVertexTaskData> tasksList = new ArrayList<TezVertexTaskData>();
-   
-    List<Long> inputBytes = new ArrayList<Long>();
+    List<Long> inputSizes = new ArrayList<Long>();
     List<Long> runtimesMs = new ArrayList<Long>();
-
-
     long taskMinMs = Long.MAX_VALUE;
     long taskMaxMs = 0;
-    
- 
-    
-    int i=0;
-    int taskLength = 0;
-    for(TezDAGData tezDAGData:tezDAGsData){   	
-		
-    	TezVertexData tezVertexes[] = tezDAGData.getVertexData();
-   	
-    for (TezVertexData tezVertexData:tezVertexes){
-    	tasks = tezVertexData.getMapperData();
-    	 taskLength+=tasks.length;
-    	
-    for (TezVertexTaskData task : tasks) {
-  	 
-  
-    
+
+    for (TezTaskData task : tasks) {
+
       if (task.isSampled()) {
-        inputBytes.add(task.getCounters().get(TezCounterData.CounterName.HDFS_BYTES_READ));
+        long inputByte = 0;
+        for (TezCounterData.CounterName counterName: _counterNames) {
+          inputByte += task.getCounters().get(counterName);
+        }
+        inputSizes.add(inputByte);
         long taskTime = task.getTotalRunTimeMs();
         runtimesMs.add(taskTime);
         taskMinMs = Math.min(taskMinMs, taskTime);
         taskMaxMs = Math.max(taskMaxMs, taskTime);
-
       }
-     
-    }
-    i++;
-    }
- 
-	
     }
 
     if(taskMinMs == Long.MAX_VALUE) {
       taskMinMs = 0;
     }
 
-    long averageSize = Statistics.average(inputBytes);
+    long averageSize = Statistics.average(inputSizes);
     long averageTimeMs = Statistics.average(runtimesMs);
 
     Severity shortTaskSeverity = shortTaskSeverity(tasks.length, averageTimeMs);
@@ -159,11 +139,8 @@ public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
 
     HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
         _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
-    
- 
-    		
-    result.addResultDetail("Number of input vertices", Integer.toString(i));
-    result.addResultDetail("Number of input tasks", Integer.toString(taskLength));
+
+    result.addResultDetail("Number of tasks", Integer.toString(tasks.length));
     result.addResultDetail("Average task input size", FileUtils.byteCountToDisplaySize(averageSize));
     result.addResultDetail("Average task runtime", Statistics.readableTimespan(averageTimeMs));
     result.addResultDetail("Max task runtime", Statistics.readableTimespan(taskMaxMs));
@@ -187,7 +164,7 @@ public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
 
   private Severity getShortRuntimeSeverity(long runtimeMs) {
     return Severity.getSeverityDescending(
-            runtimeMs, shortRuntimeLimits[0], shortRuntimeLimits[1], shortRuntimeLimits[2], shortRuntimeLimits[3]);
+        runtimeMs, shortRuntimeLimits[0], shortRuntimeLimits[1], shortRuntimeLimits[2], shortRuntimeLimits[3]);
   }
 
   private Severity getLongRuntimeSeverity(long runtimeMs) {
@@ -199,4 +176,7 @@ public class MapperTimeHeuristic implements Heuristic<TezDAGApplicationData> {
     return Severity.getSeverityAscending(
         numTasks, numTasksLimits[0], numTasksLimits[1], numTasksLimits[2], numTasksLimits[3]);
   }
+
+
+
 }
