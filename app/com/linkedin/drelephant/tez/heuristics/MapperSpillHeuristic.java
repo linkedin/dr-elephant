@@ -1,6 +1,4 @@
 /*
- * Copyright 2016 LinkedIn Corp.
- *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -12,29 +10,28 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
  */
-
 package com.linkedin.drelephant.tez.heuristics;
 
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.tez.data.TezCounterData;
-import com.linkedin.drelephant.tez.data.TezDAGData;
-import com.linkedin.drelephant.tez.data.TezVertexTaskData;
-import com.linkedin.drelephant.tez.data.TezDAGApplicationData;
-import com.linkedin.drelephant.tez.data.TezVertexData;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+import com.linkedin.drelephant.tez.data.TezCounterData;
+import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezTaskData;
 import com.linkedin.drelephant.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 
-public class MapperSpillHeuristic implements Heuristic<TezDAGApplicationData> {
+import java.util.Arrays;
+import java.util.Map;
+
+/**
+ * Analyzes mapper task data spill rates
+ */
+public class MapperSpillHeuristic implements Heuristic<TezApplicationData> {
   private static final Logger logger = Logger.getLogger(MapperSpillHeuristic.class);
   private static final long THRESHOLD_SPILL_FACTOR = 10000;
 
@@ -81,44 +78,23 @@ public class MapperSpillHeuristic implements Heuristic<TezDAGApplicationData> {
   }
 
   @Override
-  public HeuristicResult apply(TezDAGApplicationData data) {
-
+  public HeuristicResult apply(TezApplicationData data) {
     if(!data.getSucceeded()) {
       return null;
     }
-    
-    TezDAGData[] tezDAGsData = data.getTezDAGData();
-    ArrayList<TezVertexTaskData> tasksList = new ArrayList<TezVertexTaskData>();
-    int i=0;
-    for(TezDAGData tezDAGData:tezDAGsData){   	
-    		
-    		for(TezVertexData tezVertexData:tezDAGData.getVertexData()){
-    			if(tezVertexData.getMapperData()!=null && tezVertexData.getMapperData().length>0)
-    			tasksList.addAll(Arrays.asList(tezVertexData.getMapperData()));
-    		}
-    	}
+    TezTaskData[] tasks = data.getMapTaskData();
 
-  
-    TezVertexTaskData[] tasks = new TezVertexTaskData[tasksList.size()];
     long totalSpills = 0;
     long totalOutputRecords = 0;
     double ratioSpills = 0.0;
-    
-    
-    int taskLength = 0;
-    tasksList.toArray(tasks);
-    	//tasks = tezVertexData.getMapperData();
-    	
-    for (TezVertexTaskData task : tasks) {
-  	  taskLength+=tasks.length;
+
+    for (TezTaskData task : tasks) {
+
       if (task.isSampled()) {
         totalSpills += task.getCounters().get(TezCounterData.CounterName.SPILLED_RECORDS);
-        totalOutputRecords += task.getCounters().get(TezCounterData.CounterName.MAP_OUTPUT_RECORDS);
+        totalOutputRecords += task.getCounters().get(TezCounterData.CounterName.OUTPUT_RECORDS);
       }
-      i++;
     }
-    
-    
 
     //If both totalSpills and totalOutputRecords are zero then set ratioSpills to zero.
     if (totalSpills == 0) {
@@ -135,8 +111,8 @@ public class MapperSpillHeuristic implements Heuristic<TezDAGApplicationData> {
 
     HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
         _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
-   
-    result.addResultDetail("Number of input tasks", Integer.toString(i));
+
+    result.addResultDetail("Number of tasks", Integer.toString(tasks.length));
     result.addResultDetail("Avg spilled records per task",
         tasks.length == 0 ? "0" : Long.toString(totalSpills / tasks.length));
     result.addResultDetail("Avg output records per task",
@@ -161,4 +137,6 @@ public class MapperSpillHeuristic implements Heuristic<TezDAGApplicationData> {
     return Severity.getSeverityAscending(
         numTasks, numTasksLimits[0], numTasksLimits[1], numTasksLimits[2], numTasksLimits[3]);
   }
+
+
 }

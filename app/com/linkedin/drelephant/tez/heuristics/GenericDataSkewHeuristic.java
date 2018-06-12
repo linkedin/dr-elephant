@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 LinkedIn Corp.
+ * Copyright 2017 Electronic Arts Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -12,39 +12,39 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
  */
-
 package com.linkedin.drelephant.tez.heuristics;
+
 
 import com.google.common.primitives.Longs;
 import com.linkedin.drelephant.analysis.HDFSContext;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.tez.data.TezCounterData;
-import com.linkedin.drelephant.tez.data.TezDAGApplicationData;
-import com.linkedin.drelephant.tez.data.TezDAGData;
-import com.linkedin.drelephant.tez.data.TezVertexTaskData;
-import com.linkedin.drelephant.tez.data.TezVertexData;
 import com.linkedin.drelephant.math.Statistics;
+
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezCounterData;
+import com.linkedin.drelephant.tez.data.TezTaskData;
 import com.linkedin.drelephant.util.Utils;
 
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 
 
 /**
- * This Heuristic analyses the skewness in the task input data.
- * In Tez data is usually grouped into splits. So in this case it is to decide the size of the groups 
- * and also to ensure the number of reduce tasks for Tez and appropriately chosen
+ * This Heuristic analyses the skewness in the task input data
  */
-public abstract class GenericDataSkewHeuristic implements Heuristic<TezDAGApplicationData> {
+public abstract class GenericDataSkewHeuristic implements Heuristic<TezApplicationData> {
   private static final Logger logger = Logger.getLogger(GenericDataSkewHeuristic.class);
 
   // Severity Parameters
@@ -53,12 +53,12 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<TezDAGApplic
   private static final String FILES_SEVERITY = "files_severity";
 
   // Default value of parameters
-  private double[] numTasksLimits = {10, 50, 100, 200};   // Number of  tasks
+  private double[] numTasksLimits = {10, 50, 100, 200};   // Number of map or reduce tasks
   private double[] deviationLimits = {2, 4, 8, 16};       // Deviation in i/p bytes btw 2 groups
-  private double[] filesLimits = {1d/8, 1d/4, 1d/2, 1d};  // Fraction of HDFS Block Size
+  private double[] filesLimits = {1d / 8, 1d / 4, 1d / 2, 1d};  // Fraction of HDFS Block Size
 
-  private TezCounterData.CounterName _counterName;
   private HeuristicConfigurationData _heuristicConfData;
+  private List<TezCounterData.CounterName> _counterNames;
 
   private void loadParameters() {
     Map<String, String> paramMap = _heuristicConfData.getParamMap();
@@ -82,78 +82,79 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<TezDAGApplic
     if (confFilesThreshold != null) {
       filesLimits = confFilesThreshold;
     }
-    logger.info(heuristicName + " will use " + FILES_SEVERITY + " with the following threshold settings: "
-        + Arrays.toString(filesLimits));
+    logger.info(
+        heuristicName + " will use " + FILES_SEVERITY + " with the following threshold settings: " + Arrays.toString(
+            filesLimits));
     for (int i = 0; i < filesLimits.length; i++) {
       filesLimits[i] = filesLimits[i] * HDFSContext.HDFS_BLOCK_SIZE;
     }
   }
 
-  protected GenericDataSkewHeuristic(TezCounterData.CounterName counterName,
-      HeuristicConfigurationData heuristicConfData) {
-    this._counterName = counterName;
+  public GenericDataSkewHeuristic(List<TezCounterData.CounterName> counterNames, HeuristicConfigurationData heuristicConfData) {
+    this._counterNames = counterNames;
     this._heuristicConfData = heuristicConfData;
-
     loadParameters();
   }
 
-  protected abstract String getTaskType();
+  protected abstract TezTaskData[] getTasks(TezApplicationData data);
 
-  @Override
   public HeuristicConfigurationData getHeuristicConfData() {
     return _heuristicConfData;
   }
 
-  @Override
-  public HeuristicResult apply(TezDAGApplicationData data) {
+  public HeuristicResult apply(TezApplicationData data) {
 
-    if(!data.getSucceeded()) {
+    if (!data.getSucceeded()) {
       return null;
     }
 
-   // TezVertexData[] tasks = getTaskType(vertexType);
-    String vertexType = getTaskType();
-    TezDAGData[] tezDAGsData = data.getTezDAGData();
-    ArrayList<TezVertexTaskData> tasksList = new ArrayList<TezVertexTaskData>();
-    for(TezDAGData tezDAGData:tezDAGsData){
-    	if("map".equals(vertexType)){
-    		
-    		for(TezVertexData tezVertexData:tezDAGData.getVertexData()){
-    			if(tezVertexData.getMapperData()!=null && tezVertexData.getMapperData().length>0)
-    			tasksList.addAll(Arrays.asList(tezVertexData.getMapperData()));
-    		}
-    		
-    		
-    	}else if("reduce".equals(vertexType)){
-    		for(TezVertexData tezVertexData:tezDAGData.getVertexData()){
-    			if(tezVertexData.getReducerData()!=null && tezVertexData.getReducerData().length>0)
-    			tasksList.addAll(Arrays.asList(tezVertexData.getReducerData()));
-    		}
-    	}else if("scope".equals(vertexType)){
-    		for(TezVertexData tezVertexData:tezDAGData.getVertexData()){
-    			if(tezVertexData.getScopeTaskData()!=null && tezVertexData.getScopeTaskData().length>0)
-    			tasksList.addAll(Arrays.asList(tezVertexData.getScopeTaskData()));
-    		}
-    	}
-    	
-    }
-    
+    TezTaskData[] tasks = getTasks(data);
 
-    //Gather data
-    List<Long> inputBytes = new ArrayList<Long>();
-    TezVertexTaskData tasks[] = new TezVertexTaskData[tasksList.size()];
-     tasksList.toArray(tasks);
+    //Gathering data for checking time skew
+    List<Long> timeTaken = new ArrayList<Long>();
 
-    for (int i = 0; i < tasks.length; i++) {
+    for(int i = 0; i < tasks.length; i++) {
       if (tasks[i].isSampled()) {
-        inputBytes.add(tasks[i].getCounters().get(_counterName));
+        timeTaken.add(tasks[i].getTotalRunTimeMs());
       }
     }
 
-    // Ratio of total tasks / sampled tasks
-    double scale = ((double)tasks.length) / inputBytes.size();
-    //Analyze data. 
-    long[][] groups = Statistics.findTwoGroups(Longs.toArray(inputBytes));
+    long[][] groupsTime = Statistics.findTwoGroups(Longs.toArray(timeTaken));
+
+    long timeAvg1 = Statistics.average(groupsTime[0]);
+    long timeAvg2 = Statistics.average(groupsTime[1]);
+
+    //seconds are used for calculating deviation as they provide a better idea than millisecond.
+    long timeAvgSec1 = TimeUnit.MILLISECONDS.toSeconds(timeAvg1);
+    long timeAvgSec2 = TimeUnit.MILLISECONDS.toSeconds(timeAvg2);
+
+    long minTime = Math.min(timeAvgSec1, timeAvgSec2);
+    long diffTime = Math.abs(timeAvgSec1 - timeAvgSec2);
+
+    //using the same deviation limits for time skew as for data skew. It can be changed in the fututre.
+    Severity severityTime = getDeviationSeverity(minTime, diffTime);
+
+    //This reduces severity if number of tasks is insignificant
+    severityTime = Severity.min(severityTime,
+        Severity.getSeverityAscending(groupsTime[0].length, numTasksLimits[0], numTasksLimits[1], numTasksLimits[2],
+            numTasksLimits[3]));
+
+    //Gather data
+    List<Long> inputSizes = new ArrayList<Long>();
+
+    for (int i = 0; i < tasks.length; i++) {
+      if (tasks[i].isSampled()) {
+
+        long inputByte = 0;
+        for (TezCounterData.CounterName counterName : _counterNames) {
+          inputByte += tasks[i].getCounters().get(counterName);
+        }
+
+        inputSizes.add(inputByte);
+      }
+    }
+
+    long[][] groups = Statistics.findTwoGroups(Longs.toArray(inputSizes));
 
     long avg1 = Statistics.average(groups[0]);
     long avg2 = Statistics.average(groups[1]);
@@ -161,23 +162,42 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<TezDAGApplic
     long min = Math.min(avg1, avg2);
     long diff = Math.abs(avg2 - avg1);
 
-    Severity severity = getDeviationSeverity(min, diff);
+    Severity severityData = getDeviationSeverity(min, diff);
 
     //This reduces severity if the largest file sizes are insignificant
-    severity = Severity.min(severity, getFilesSeverity(avg2));
+    severityData = Severity.min(severityData, getFilesSeverity(avg2));
 
     //This reduces severity if number of tasks is insignificant
-    severity = Severity.min(severity, Severity.getSeverityAscending(
-        groups[0].length, numTasksLimits[0], numTasksLimits[1], numTasksLimits[2], numTasksLimits[3]));
+    severityData = Severity.min(severityData,
+        Severity.getSeverityAscending(groups[0].length, numTasksLimits[0], numTasksLimits[1], numTasksLimits[2],
+            numTasksLimits[3]));
 
-    HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
-        _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
+    Severity severity = Severity.max(severityData, severityTime);
 
-    result.addResultDetail("Number of "+vertexType+" tasks", Integer.toString(tasks.length));
-    result.addResultDetail("Group A", groups[0].length + " tasks @ " + FileUtils.byteCountToDisplaySize(avg1) + " avg");
-    result.addResultDetail("Group B", groups[1].length + " tasks @ " + FileUtils.byteCountToDisplaySize(avg2) + " avg");
+    HeuristicResult result =
+        new HeuristicResult(_heuristicConfData.getClassName(), _heuristicConfData.getHeuristicName(), severity,
+            Utils.getHeuristicScore(severityData, tasks.length));
+
+    result.addResultDetail("Data skew (Number of tasks)", Integer.toString(tasks.length));
+    result.addResultDetail("Data skew (Group A)",
+        groups[0].length + " tasks @ " + FileUtils.byteCountToDisplaySize(avg1) + " avg");
+    result.addResultDetail("Data skew (Group B)",
+        groups[1].length + " tasks @ " + FileUtils.byteCountToDisplaySize(avg2) + " avg");
+
+    result.addResultDetail("Time skew (Number of tasks)", Integer.toString(tasks.length));
+    result.addResultDetail("Time skew (Group A)",
+        groupsTime[0].length + " tasks @ " + convertTimeMs(timeAvg1) + " avg");
+    result.addResultDetail("Time skew (Group B)",
+        groupsTime[1].length + " tasks @ " + convertTimeMs(timeAvg2) + " avg");
 
     return result;
+  }
+
+  private String convertTimeMs(long timeMs) {
+    if (timeMs < 1000) {
+      return Long.toString(timeMs) + " msec";
+    }
+    return DurationFormatUtils.formatDuration(timeMs, "HH:mm:ss") + " HH:MM:SS";
   }
 
   private Severity getDeviationSeverity(long averageMin, long averageDiff) {
@@ -185,13 +205,11 @@ public abstract class GenericDataSkewHeuristic implements Heuristic<TezDAGApplic
       averageMin = 1;
     }
     long value = averageDiff / averageMin;
-    return Severity.getSeverityAscending(
-        value, deviationLimits[0], deviationLimits[1], deviationLimits[2], deviationLimits[3]);
+    return Severity.getSeverityAscending(value, deviationLimits[0], deviationLimits[1], deviationLimits[2],
+        deviationLimits[3]);
   }
 
   private Severity getFilesSeverity(long value) {
-    return Severity.getSeverityAscending(
-        value, filesLimits[0], filesLimits[1], filesLimits[2], filesLimits[3]);
+    return Severity.getSeverityAscending(value, filesLimits[0], filesLimits[1], filesLimits[2], filesLimits[3]);
   }
-
 }
