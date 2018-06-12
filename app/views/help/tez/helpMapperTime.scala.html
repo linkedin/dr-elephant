@@ -1,0 +1,71 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis shows how well the number of input tasks in Tez job is adjusted.<br>
+    This should allow you to better tweak the number of input tasks for your job.<br>
+    
+</p>
+<h5>Example</h5>
+<p>
+<div class="list-group">
+    <a class="list-group-item list-group-item-danger" href="#">
+        <h4 class="list-group-item-heading">Mapper Input Size</h4>
+        <table class="list-group-item-text table table-condensed left-table">
+            <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Number of tasks</td>
+                <td>1516</td>
+            </tr>
+            <tr>
+                <td>Average task input size</td>
+                <td>19 KB</td>
+            </tr>
+            <tr>
+                <td>Average task runtime</td>
+                <td>1min 32s</td>
+            </tr>
+            </tbody>
+        </table>
+    </a>
+</div>
+</p>
+<h4>Suggestions</h4>
+<p>
+    You should tune mapper split size to reduce number of mappers and let each mapper process larger data <br>
+    The parameters for changing split size are: <br>
+    <ul>
+    <li>pig.splitCombination to true (Pig Only)</li>
+    <li>pig.maxCombinedSplitSize (Pig Only)</li>
+    </ul>
+    Examples on how to set them:
+    <ul>
+    
+    <li>Pig: set pig.maxCombinedSplitSize XXXXX </li>
+    <li>Hive: set tez.grouping.min-size=XXXXX</li>
+    <li>set tez.grouping.max-size=XXXXX</li>
+     </ul>
+
+    The split size is controlled by formula <b>max(minSplitSize, min(maxSplitSize, blockSize))</b>. By default,
+    blockSize=512MB and minSplit < blockSize < maxSplit. <br>
+    You should always refer to this formula.<br>
+    In the case above, try <b>increasing min split size</b> and let each mapper process larger data.<br>
+    
+   <br>
+    See <a href="https://github.com/linkedin/dr-elephant/wiki/Tuning-Tips">Hadoop Tuning Tips</a> for further information.<br>
+</p>
+
