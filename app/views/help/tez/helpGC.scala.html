@@ -1,0 +1,60 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis gauges your job's GC efficiency. It shows the ratio between the task GC time and task CPU time.
+</p>
+<h5>Example</h5>
+<p>
+<div class="list-group">
+    <a class="list-group-item list-group-item-danger" href="">
+        <h4 class="list-group-item-heading">Vertex Task GC</h4>
+        <table class="list-group-item-text table table-condensed left-table">
+            <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Number of tasks</td>
+                <td>2205</td>
+            </tr>
+            <tr>
+                <td>Avg task runtime (ms)</td>
+                <td>4832</td>
+            </tr>
+            <tr>
+                <td>Avg task CPU time (ms)</td>
+                <td>2321</td>
+            </tr>
+            <tr>
+                <td>Avg task GC time (ms)</td>
+                <td>55</td>
+            </tr>
+            <tr>
+                <td>Task GC/CPU ratio</td>
+                <td>0.023423</td>
+            </tr>
+            </tbody>
+        </table>
+    </a>
+</div>
+</p>
+<h3>Suggestions</h3>
+<p>
+   If your task spends a lot time on GC, your job generally needs some code optimization. Check the hive.auto.convert.join.noconditionaltask.size
+   size to see if large hash tables are being used for map joins. If large number of columns are being inserted, then try 
+   reducing hive.exec.orc.default.buffer.size. If your job is inserting multiple partitions, then set the setting hive.optimize.sort.dynamic.partition
+   to true
+   
+  </p>

@@ -1,0 +1,63 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis shows the efficiency of your reducers.<br>
+    This should allow you to better adjust the number of reducers for your job.<br>
+</p>
+
+<p>
+    This happens when the Hadoop job has:
+    <ul>
+        <li>A <b>large/small</b> number of reducers</li>
+        <li><b>Short/Long</b> reducer runtime</li>
+    </ul>
+</p>
+<h5>Example</h5>
+<p>
+    <div class="list-group">
+        <a class="list-group-item list-group-item-danger" href="#">
+            <h4 class="list-group-item-heading">Reducer Time</h4>
+            <table class="list-group-item-text table table-condensed left-table">
+                <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+                <tbody>
+                <tr>
+                    <td>Number of tasks</td>
+                    <td>1000</td>
+                </tr>
+                <tr>
+                    <td>Average task time</td>
+                    <td>25sec</td>
+                </tr>
+                </tbody>
+            </table>
+        </a>
+    </div>
+</p>
+
+<h3>Suggestions</h3>
+<p>
+    Set the number of reducers by specifying a better number in your Hadoop job.<br>
+    <br>
+    for Hive jobs this can be done using set mapred.reduce.tasks = 38;<br>
+    For Apache-Pig jobs: Use PARALLEL [num] clause on the operator which caused this job (Though this will probably be hard for people to understand without Lipstick)<br>
+  	It is better to let Tez determine the number of reducers. set mapred.reduce.tasks = -1;
+  	<br>
+  	set the bytes per reducer property to control the size of the data sent to each reducer. 
+  	hive.exec.reducers.bytes.per.reducer=XXXX for hive or pig.exec.reducers.bytes.per.reducer for pig
+    Generally, Dr. Elephant(and Hadoop team) advises the ideal task time to be 5-10 minutes.<br>
+    See <a href="https://github.com/linkedin/dr-elephant/wiki/Tuning-Tips">Hadoop Tuning Tips</a> for further information.
+</p>
