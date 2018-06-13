@@ -16,10 +16,11 @@
 
 package com.linkedin.drelephant.spark.fetchers
 
-import scala.concurrent.{Await, ExecutionContext, Future, blocking}
-import scala.concurrent.duration.{Duration, SECONDS}
-import scala.util.{Try, Success, Failure}
+import java.util.concurrent.TimeoutException
 
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.{Duration, SECONDS}
+import scala.util.{Failure, Success, Try}
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
@@ -77,7 +78,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     doFetchData(analyticJob) match {
       case Success(data) => data
-      case Failure(e) => throw e
+      case Failure(e) => throw new TimeoutException()
     }
   }
 
@@ -109,24 +110,20 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   }
 
   private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = Future {
-    blocking {
-      val appId = analyticJob.getAppId
-      val restDerivedData = Await.result(sparkRestClient.fetchData(appId, eventLogSource == EventLogSource.Rest), DEFAULT_TIMEOUT)
+    val appId = analyticJob.getAppId
+    val restDerivedData = Await.result(sparkRestClient.fetchData(appId, eventLogSource == EventLogSource.Rest), DEFAULT_TIMEOUT)
 
-      val logDerivedData = eventLogSource match {
-        case EventLogSource.None => None
-        case EventLogSource.Rest => restDerivedData.logDerivedData
-        case EventLogSource.WebHdfs =>
-          val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy {
-            _.startTime
-          }.attemptId
-          Some(Await.result(sparkLogClient.fetchData(appId, lastAttemptId), DEFAULT_TIMEOUT))
-      }
-
-      SparkApplicationData(appId, restDerivedData, logDerivedData)
+    val logDerivedData = eventLogSource match {
+      case EventLogSource.None => None
+      case EventLogSource.Rest => restDerivedData.logDerivedData
+      case EventLogSource.WebHdfs =>
+        val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy {
+          _.startTime
+        }.attemptId
+        Some(Await.result(sparkLogClient.fetchData(appId, lastAttemptId), DEFAULT_TIMEOUT))
     }
+    SparkApplicationData(appId, restDerivedData, logDerivedData)
   }
-
 }
 
 object SparkFetcher {
@@ -134,12 +131,16 @@ object SparkFetcher {
   sealed trait EventLogSource
 
   object EventLogSource {
+
     /** Fetch event logs through REST API. */
     case object Rest extends EventLogSource
+
     /** Fetch event logs through WebHDFS. */
     case object WebHdfs extends EventLogSource
+
     /** Event logs are not available. */
     case object None extends EventLogSource
+
   }
 
   val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"

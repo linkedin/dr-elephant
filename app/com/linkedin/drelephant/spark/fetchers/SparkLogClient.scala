@@ -19,7 +19,7 @@ package com.linkedin.drelephant.spark.fetchers
 import java.io.InputStream
 import java.security.PrivilegedAction
 
-import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 import com.linkedin.drelephant.security.HadoopSecurity
@@ -62,9 +62,8 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf, e
     val (eventLogPath, eventLogCodec) =
       sparkUtils.pathAndCodecforEventLog(sparkConf, eventLogFileSystem, baseEventLogPath, appId, attemptId)
 
-    Future { blocking {
+    Future {
         sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec)(findDerivedData(_))
-      }
     }
   }
 }

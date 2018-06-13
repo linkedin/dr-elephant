@@ -105,6 +105,7 @@ public class PSOParamGeneratorTest {
         jobTuningInfo.setTuningJob(jobDefinition);
         jobTuningInfo.setParametersToTune(tuningParameterList);
         jobTuningInfo.setTunerState("{}");
+        jobTuningInfo.setJobType(TuningAlgorithm.JobType.PIG);
 
         PSOParamGenerator psoParamGenerator = new PSOParamGenerator();
 

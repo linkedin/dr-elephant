@@ -28,12 +28,10 @@ import com.linkedin.drelephant.security.HadoopSecurity;
 
 import controllers.MetricsController;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.security.PrivilegedAction;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.linkedin.drelephant.util.Utils;
@@ -187,23 +185,29 @@ public class ElephantRunner implements Runnable {
         logger.info(ExceptionUtils.getStackTrace(e));
 
         Thread.currentThread().interrupt();
-      } catch (Exception e) {
+      } catch (TimeoutException e){
+        logger.warn("Timed out while fetching data. Exception message is: " + e.getMessage());
+        jobFate();
+      }catch (Exception e) {
         logger.error(e.getMessage());
         logger.error(ExceptionUtils.getStackTrace(e));
+        jobFate();
+      }
+    }
 
-        if (_analyticJob != null && _analyticJob.retry()) {
-          logger.warn("Add analytic job id [" + _analyticJob.getAppId() + "] into the retry list.");
-          _analyticJobGenerator.addIntoRetries(_analyticJob);
-        } else if (_analyticJob != null && _analyticJob.isSecondPhaseRetry()) {
-          //Putting the job into a second retry queue which fetches jobs after some interval. Some spark jobs may need more time than usual to process, hence the queue.
-          logger.warn("Add analytic job id [" + _analyticJob.getAppId() + "] into the second retry list.");
-          _analyticJobGenerator.addIntoSecondRetryQueue(_analyticJob);
-        } else {
-          if (_analyticJob != null) {
-            MetricsController.markSkippedJob();
-            logger.error("Drop the analytic job. Reason: reached the max retries for application id = ["
-                    + _analyticJob.getAppId() + "].");
-          }
+    private void jobFate () {
+      if (_analyticJob != null && _analyticJob.retry()) {
+        logger.warn("Add analytic job id [" + _analyticJob.getAppId() + "] into the retry list.");
+        _analyticJobGenerator.addIntoRetries(_analyticJob);
+      } else if (_analyticJob != null && _analyticJob.isSecondPhaseRetry()) {
+        //Putting the job into a second retry queue which fetches jobs after some interval. Some spark jobs may need more time than usual to process, hence the queue.
+        logger.warn("Add analytic job id [" + _analyticJob.getAppId() + "] into the second retry list.");
+        _analyticJobGenerator.addIntoSecondRetryQueue(_analyticJob);
+      } else {
+        if (_analyticJob != null) {
+          MetricsController.markSkippedJob();
+          logger.error("Drop the analytic job. Reason: reached the max retries for application id = ["
+                  + _analyticJob.getAppId() + "].");
         }
       }
     }

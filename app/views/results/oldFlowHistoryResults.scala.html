@@ -59,7 +59,7 @@
               <th style="width:200px">Flow Executions</th>
               @for((jobDefPair, jobName) <- idPairToJobNameMap) {
                 <th>
-                  <a href='/jobhistory?job-def-id=@helper.urlEncode(jobDefPair.getId)&select-graph-type=heuristics' data-toggle='tooltip'
+                  <a href='./jobhistory?job-def-id=@helper.urlEncode(jobDefPair.getId)&select-graph-type=heuristics' data-toggle='tooltip'
                   title='@jobDefPair.getId'>Job @{jobDefIndex = jobDefIndex + 1; jobDefIndex}<br>
                   @if(jobName.length > 45) { @jobName.substring(0, 41)... } else { @jobName }
                   </a>

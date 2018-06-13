@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 LinkedIn Corp.
+ * Copyright 2017 Electronic Arts Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -12,32 +12,27 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
  */
-
 package com.linkedin.drelephant.tez.heuristics;
 
-import com.linkedin.drelephant.analysis.ApplicationType;
-import com.linkedin.drelephant.analysis.HDFSContext;
-import com.linkedin.drelephant.analysis.Heuristic;
-import com.linkedin.drelephant.analysis.HeuristicResult;
-import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.tez.data.TezCounterData;
-import com.linkedin.drelephant.tez.data.TezDAGApplicationData;
-import com.linkedin.drelephant.tez.data.TezDAGData;
-import com.linkedin.drelephant.tez.data.TezVertexData;
-import com.linkedin.drelephant.tez.data.TezVertexTaskData;
+import com.linkedin.drelephant.analysis.*;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezCounterData;
+import com.linkedin.drelephant.tez.data.TezTaskData;
 import junit.framework.TestCase;
 
 
 public class MapperDataSkewHeuristicTest extends TestCase {
 
   private static final long UNITSIZE = HDFSContext.HDFS_BLOCK_SIZE / 64; //1MB
+  private static final long UNITSIZETIME = 1000000; //1000sec
 
   private static Map<String, String> paramsMap = new HashMap<String, String>();
   private static Heuristic _heuristic = new MapperDataSkewHeuristic(new HeuristicConfigurationData("test_heuristic",
@@ -71,41 +66,79 @@ public class MapperDataSkewHeuristicTest extends TestCase {
     assertEquals(Severity.NONE, analyzeJob(5, 5, 10 * UNITSIZE, 100 * UNITSIZE));
   }
 
+  public void testCriticalTime() throws IOException {
+    assertEquals(Severity.CRITICAL, analyzeJobTime(200, 200, 1 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testSevereTime() throws IOException {
+    assertEquals(Severity.SEVERE, analyzeJobTime(200, 200, 10 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testModerateTime() throws IOException {
+    assertEquals(Severity.MODERATE, analyzeJobTime(200, 200, 20 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testLowTime() throws IOException {
+    assertEquals(Severity.LOW, analyzeJobTime(200, 200, 30 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testNoneTime() throws IOException {
+    assertEquals(Severity.NONE, analyzeJobTime(200, 200, 50 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
+  public void testSmallTasksTime() throws IOException {
+    assertEquals(Severity.NONE, analyzeJobTime(5, 5, 10 * UNITSIZETIME, 100 * UNITSIZETIME));
+  }
+
   private Severity analyzeJob(int numSmallTasks, int numLargeTasks, long smallInputSize, long largeInputSize)
       throws IOException {
     TezCounterData jobCounter = new TezCounterData();
-    TezVertexTaskData[] mappers = new TezVertexTaskData[numSmallTasks + numLargeTasks + 1];
+    TezTaskData[] mappers = new TezTaskData[numSmallTasks + numLargeTasks + 1];
 
     TezCounterData smallCounter = new TezCounterData();
     smallCounter.set(TezCounterData.CounterName.HDFS_BYTES_READ, smallInputSize);
 
     TezCounterData largeCounter = new TezCounterData();
-    largeCounter.set(TezCounterData.CounterName.HDFS_BYTES_READ, largeInputSize);
+    largeCounter.set(TezCounterData.CounterName.S3A_BYTES_READ, largeInputSize);
 
     int i = 0;
     for (; i < numSmallTasks; i++) {
-      mappers[i] = new TezVertexTaskData("task-id-"+i, "task-attempt-id-"+i);
-      mappers[i].setTime(new long[5]);
-      mappers[i].setCounter(smallCounter);
+      mappers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTimeAndCounter(new long[5], smallCounter);
     }
     for (; i < numSmallTasks + numLargeTasks; i++) {
-      mappers[i] = new TezVertexTaskData("task-id-"+i, "task-attempt-id-"+i);
-      mappers[i].setTime(new long[5] );
-      mappers[i].setCounter(largeCounter);
+      mappers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTimeAndCounter(new long[5], largeCounter);
     }
     // Non-sampled task, which does not contain time and counter data
-    mappers[i] = new TezVertexTaskData("task-id-"+i, "task-attempt-id-"+i);
-    TezDAGData tezDags[] = new TezDAGData[1];
-    TezDAGData tezDAGData = new TezDAGData(smallCounter);
-    TezVertexData tezVertexes[] = new TezVertexData[1];
-    TezVertexData tezVertexData = new TezVertexData("new vertex");
-    tezVertexes[0]=tezVertexData;
-    tezVertexData.setMapperData(mappers);
-    tezDags[0]=tezDAGData;
-    tezDAGData.setVertexData(tezVertexes);
+    mappers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
 
-    TezDAGApplicationData data = new TezDAGApplicationData();
-    data.setCounters(smallCounter).setTezDAGData(tezDags);
+    TezApplicationData data = new TezApplicationData().setCounters(jobCounter).setMapTaskData(mappers);
+    HeuristicResult result = _heuristic.apply(data);
+    return result.getSeverity();
+
+  }
+
+  private Severity analyzeJobTime(int numSmallTasks, int numLongTasks, long smallTimeTaken, long longTimeTaken)
+      throws IOException {
+    TezCounterData jobCounter = new TezCounterData();
+    TezTaskData[] mappers = new TezTaskData[numSmallTasks + numLongTasks + 1];
+
+    int i = 0;
+    for (; i < numSmallTasks; i++) {
+      mappers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTotalTimeMs(smallTimeTaken, true);
+      mappers[i].setCounter(jobCounter);
+    }
+    for (; i < numSmallTasks + numLongTasks; i++) {
+      mappers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
+      mappers[i].setTotalTimeMs(longTimeTaken, true);
+      mappers[i].setCounter(jobCounter);
+    }
+    // Non-sampled task, which does not contain time data
+    mappers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
+
+    TezApplicationData data = new TezApplicationData().setCounters(jobCounter).setMapTaskData(mappers);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();
 

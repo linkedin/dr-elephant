@@ -50,7 +50,7 @@ public class JobDefinition extends Model {
     public static final String username = "username";
     public static final String jobName = "jobName";
     public static final String jobDefUrl = "jobDefUrl";
-    public static final String flowDefinitionId = "flowDefinitionId";
+    public static final String flowDefinition = "flowDefinition";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
   }

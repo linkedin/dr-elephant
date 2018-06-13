@@ -37,6 +37,8 @@ import play.libs.Json;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.*;
+
 
 /**
  * This is an abstract class for generating parameter suggestions for jobs
@@ -88,7 +90,6 @@ public abstract class ParamGenerator {
     List<TuningJobDefinition> jobsForParamSuggestion = new ArrayList<TuningJobDefinition>();
 
     List<TuningJobExecution> pendingParamExecutionList = new ArrayList<TuningJobExecution>();
-    //Todo: Check if the find works correctly?
     try {
       pendingParamExecutionList = TuningJobExecution.find.select("*")
           .fetch(TuningJobExecution.TABLE.jobExecution, "*")
@@ -128,7 +129,7 @@ public abstract class ParamGenerator {
     }
     if (jobsForParamSuggestion.size() > 0) {
       for (TuningJobDefinition tuningJobDefinition : jobsForParamSuggestion) {
-        logger.info("New parameter suggestion needed for job:" + tuningJobDefinition.job.jobName);
+        logger.info("New parameter suggestion needed for job: " + tuningJobDefinition.job.jobName);
       }
     } else {
       logger.info("None of the jobs need new parameter suggestion");
@@ -207,8 +208,10 @@ public abstract class ParamGenerator {
       } catch (NullPointerException e) {
         logger.error("Error extracting default value of params for job " + tuningJobDefinition.job.jobDefId, e);
       }
+
       JobTuningInfo jobTuningInfo = new JobTuningInfo();
       jobTuningInfo.setTuningJob(job);
+      jobTuningInfo.setJobType(tuningJobDefinition.tuningAlgorithm.jobType);
       jobTuningInfo.setParametersToTune(tuningParameterList);
       JobSavedState jobSavedState = JobSavedState.find.byId(job.id);
 
@@ -310,7 +313,6 @@ public abstract class ParamGenerator {
    * @param jobTuningInfoList JobTuningInfo List
    */
   private void updateDatabase(List<JobTuningInfo> jobTuningInfoList) {
-
     logger.info("Updating new parameter suggestion in database");
     if (jobTuningInfoList == null) {
       logger.info("No new parameter suggestion to update");
@@ -338,11 +340,18 @@ public abstract class ParamGenerator {
           .eq(TuningJobDefinition.TABLE.tuningEnabled, 1)
           .findUnique();
 
-      List<TuningParameter> derivedParameterList = TuningParameter.find.where()
-          .eq(TuningParameter.TABLE.tuningAlgorithm + "." + TuningAlgorithm.TABLE.id,
-              tuningJobDefinition.tuningAlgorithm.id)
-          .eq(TuningParameter.TABLE.isDerived, 1)
-          .findList();
+      List<TuningParameter> derivedParameterList = new ArrayList<TuningParameter>();
+      try {
+        derivedParameterList = TuningParameter.find.where()
+            .eq(TuningParameter.TABLE.tuningAlgorithm + "." + TuningAlgorithm.TABLE.id,
+                tuningJobDefinition.tuningAlgorithm.id)
+            .eq(TuningParameter.TABLE.isDerived, 1)
+            .findList();
+      } catch (NullPointerException e) {
+        logger.info("No derived parameters for job: " + job.jobName);
+      }
+      logger.info("No. of derived tuning params for job " + tuningJobDefinition.job.jobName + ": "
+          + derivedParameterList.size());
 
       JsonNode jsonTunerState = Json.parse(stringTunerState);
       JsonNode jsonSuggestedPopulation = jsonTunerState.get(JSON_CURRENT_POPULATION_KEY);
@@ -399,11 +408,15 @@ public abstract class ParamGenerator {
         tuningJobExecution.jobExecution = jobExecution;
         tuningJobExecution.tuningAlgorithm = tuningJobDefinition.tuningAlgorithm;
         tuningJobExecution.isDefaultExecution = false;
-        if (isParamConstraintViolated(jobSuggestedParamValueList)) {
+        if (isParamConstraintViolated(jobSuggestedParamValueList, tuningJobExecution.tuningAlgorithm.jobType, job.id)) {
           logger.info("Parameter constraint violated. Applying penalty.");
+          int penaltyConstant = 3;
+          Double averageResourceUsagePerGBInput =
+                  tuningJobDefinition.averageResourceUsage * FileUtils.ONE_GB / tuningJobDefinition.averageInputSizeInBytes;
+          Double maxDesiredResourceUsagePerGBInput =
+                  averageResourceUsagePerGBInput * tuningJobDefinition.allowedMaxResourceUsagePercent / 100.0;
+          tuningJobExecution.fitness = penaltyConstant * maxDesiredResourceUsagePerGBInput;
           tuningJobExecution.paramSetState = TuningJobExecution.ParamSetStatus.FITNESS_COMPUTED;
-          tuningJobExecution.fitness =
-              3 * tuningJobDefinition.averageResourceUsage * tuningJobDefinition.allowedMaxResourceUsagePercent / 100.0;
         } else {
           tuningJobExecution.paramSetState = TuningJobExecution.ParamSetStatus.CREATED;
         }
@@ -435,40 +448,43 @@ public abstract class ParamGenerator {
    * @param jobSuggestedParamValueList
    * @return true if the constraint is violated, false otherwise
    */
-  private boolean isParamConstraintViolated(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
+  private boolean isParamConstraintViolated(List<JobSuggestedParamValue> jobSuggestedParamValueList,
+      TuningAlgorithm.JobType jobType, Integer jobDefinitionId) {
+
     logger.info("Checking whether parameter values are within constraints");
-
     Integer violations = 0;
-    Double mrSortMemory = null;
-    Double mrMapMemory = null;
-    Double pigMaxCombinedSplitSize = null;
 
-    for (JobSuggestedParamValue jobSuggestedParamValue : jobSuggestedParamValueList) {
-      if (jobSuggestedParamValue.tuningParameter.paramName.equals("mapreduce.task.io.sort.mb")) {
-        mrSortMemory = jobSuggestedParamValue.paramValue;
-      } else if (jobSuggestedParamValue.tuningParameter.paramName.equals("mapreduce.map.memory.mb")) {
-        mrMapMemory = jobSuggestedParamValue.paramValue;
-      } else if (jobSuggestedParamValue.tuningParameter.paramName.equals("pig.maxCombinedSplitSize")) {
-        pigMaxCombinedSplitSize = jobSuggestedParamValue.paramValue / FileUtils.ONE_MB;
+    if (jobType.equals(TuningAlgorithm.JobType.PIG)) {
+      Double mrSortMemory = null;
+      Double mrMapMemory = null;
+      Double pigMaxCombinedSplitSize = null;
+
+      for (JobSuggestedParamValue jobSuggestedParamValue : jobSuggestedParamValueList) {
+        if (jobSuggestedParamValue.tuningParameter.paramName.equals("mapreduce.task.io.sort.mb")) {
+          mrSortMemory = jobSuggestedParamValue.paramValue;
+        } else if (jobSuggestedParamValue.tuningParameter.paramName.equals("mapreduce.map.memory.mb")) {
+          mrMapMemory = jobSuggestedParamValue.paramValue;
+        } else if (jobSuggestedParamValue.tuningParameter.paramName.equals("pig.maxCombinedSplitSize")) {
+          pigMaxCombinedSplitSize = jobSuggestedParamValue.paramValue / FileUtils.ONE_MB;
+        }
       }
-    }
 
-    if (mrSortMemory != null && mrMapMemory != null) {
-      if (mrSortMemory > 0.6 * mrMapMemory) {
-        logger.info("Constraint violated: Sort memory > 60% of map memory");
+      if (mrSortMemory != null && mrMapMemory != null) {
+        if (mrSortMemory > 0.6 * mrMapMemory) {
+          logger.info("Constraint violated: Sort memory > 60% of map memory");
+          violations++;
+        }
+        if (mrMapMemory - mrSortMemory < 768) {
+          logger.info("Constraint violated: Map memory - sort memory < 768 mb");
+          violations++;
+        }
+      }
+
+      if (pigMaxCombinedSplitSize != null && mrMapMemory != null && (pigMaxCombinedSplitSize > 1.8 * mrMapMemory)) {
+        logger.info("Constraint violated: Pig max combined split size > 1.8 * map memory");
         violations++;
       }
-      if (mrMapMemory - mrSortMemory < 768) {
-        logger.info("Constraint violated: Map memory - sort memory < 768 mb");
-        violations++;
-      }
     }
-
-    if (pigMaxCombinedSplitSize != null && mrMapMemory != null && (pigMaxCombinedSplitSize > 1.8 * mrMapMemory)) {
-      logger.info("Constraint violated: Pig max combined split size > 1.8 * map memory");
-      violations++;
-    }
-
     if (violations == 0) {
       return false;
     } else {

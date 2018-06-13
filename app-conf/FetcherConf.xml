@@ -30,6 +30,13 @@
 -->
 <fetchers>
   <!--
+     REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
+   -->
+  <fetcher>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
+  </fetcher>
+  <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
@@ -51,7 +58,6 @@
      To work properly, this fetcher should use the same timezone with the job history server.
      If not set, the local timezone will be used.
    -->
-
   
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
@@ -62,7 +68,6 @@
       <history_server_time_zone>PST</history_server_time_zone>
     </params>
   </fetcher>
-
   
 
   <!--
@@ -110,11 +115,4 @@
     </params>
   </fetcher>
   -->
-  <fetcher>
-    <applicationtype>TEZ</applicationtype>
-    <classname>com.linkedin.drelephant.tez.fetchers.TezDataFetcherHadoop2</classname>
-    <params>
-      <sampling_enabled>false</sampling_enabled>
-    </params>
-  </fetcher>
 </fetchers>

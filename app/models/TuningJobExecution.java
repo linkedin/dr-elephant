@@ -42,12 +42,12 @@ public class TuningJobExecution extends Model {
 
   public static class TABLE {
     public static final String TABLE_NAME = "tuning_job_execution";
-    public static final String jobExecutionId = "jobExecutionId";
-    public static final String tuningAlgorithmId = "tuningAlgorithmId";
     public static final String paramSetState = "paramSetState";
     public static final String isDefaultExecution = "isDefaultExecution";
     public static final String fitness = "fitness";
+    public static final String isParamSetBest = "isParamSetBest";
     public static final String jobExecution = "jobExecution";
+    public static final String tuningAlgorithm = "tuningAlgorithm";
   }
 
   @OneToOne(cascade = CascadeType.ALL)
@@ -65,6 +65,8 @@ public class TuningJobExecution extends Model {
   public Boolean isDefaultExecution;
 
   public Double fitness;
+
+  public Boolean isParamSetBest;
 
   public static Model.Finder<Long, TuningJobExecution> find =
       new Model.Finder<Long, TuningJobExecution>(Long.class, TuningJobExecution.class);

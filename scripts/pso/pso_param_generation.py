@@ -25,6 +25,7 @@ param_step_size = []
 param_default_value = []
 param_name = []
 iteration = 0
+job_type = ""
 
 LARGE_DUMMY_FITNESS = 10000
 
@@ -40,6 +41,7 @@ PARAM_MAPREDUCE_REDUCE_JAVA_OPTS = 'mapreduce.reduce.java.opts'
 
 ARG_TUNING_STATE_KEY = 'json_tuning_state'
 ARG_PARAMETERS_TO_TUNE_KEY = 'parameters_to_tune'
+ARG_JOB_TYPE = "job_type"
 
 TUNING_STATE_ARCHIVE_KEY = 'archive'
 TUNING_STATE_PREV_POPULATION_KEY = 'prev_population'
@@ -60,36 +62,8 @@ PARAMETER_MIN_VALUE_KEY = 'minValue'
 INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE = (0.5, 0.8)
 INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE = (1.05, 1.1)
 INITIAL_DERIVED_SORT_MEMORY_PARAM_RANGE = (0.0, 0.25)
+# POPULATION_SIZE = 3 performs the best as was found in the experimentation
 POPULATION_SIZE = 3
-
-
-# The below method is intentionally commented
-# Todo: Update the below method to implement step size
-# def fix_data_type(params):
-#     """
-#     :param params:
-#     :return:
-#     """
-#     params_as_json = {}
-#
-#     for i in xrange(0, len(params)):
-#         params[i] = int(round(params[i]))
-#         params[i] *= param_step_size[i]
-#         params_as_json[param_name[i]] = float(params[i])
-#
-#         if param_name[i] == PARAM_PIG_MAX_COMBINED_SPLIT_SIZE:
-#             params_as_json[PARAM_PIG_MAX_COMBINED_SPLIT_SIZE] = int(params[i]) * 1024 * 1024
-#             if PARAM_MAPREDUCE_INPUT_FILEINPUTFORMAT_SPLIT_MAXSIZE not in param_name:
-#                 params_as_json[PARAM_MAPREDUCE_INPUT_FILEINPUTFORMAT_SPLIT_MAXSIZE] = int(params[i]) * 1024 * 1024
-#
-#         elif param_name[i] == PARAM_MAPREDUCE_MAP_MEMORY_MB:
-#             if PARAM_MAPREDUCE_MAP_JAVA_OPTS not in param_name:
-#                 params_as_json[PARAM_MAPREDUCE_MAP_JAVA_OPTS] = '-Xmx%dm' % (0.75 * int(params[i]))
-#
-#         elif param_name[i] == PARAM_MAPREDUCE_REDUCE_MEMORY_MB:
-#             if PARAM_MAPREDUCE_REDUCE_JAVA_OPTS not in param_name:
-#                 params_as_json[PARAM_MAPREDUCE_REDUCE_JAVA_OPTS] = '-Xmx%dm' % (0.75 * int(params[i]))
-#     return params_as_json
 
 
 def initialize_params(parameters_to_tune):
@@ -118,52 +92,56 @@ def initial_population_generator(random, args):
 
     for i in range(0, len(param_name)):
         if param_name[i] == PARAM_MAPREDUCE_TASK_IO_SORT_FACTOR:
-            sort_factor_index = i
+            mr_sort_factor_index = i
         elif param_name[i] == PARAM_MAPREDUCE_TASK_IO_SORT_MB:
-            sort_memory_index = i
+            mr_sort_memory_index = i
         elif param_name[i] == PARAM_MAPREDUCE_MAP_SORT_SPILL_PERCENT:
-            spill_percent_index = i
+            mr_spill_percent_index = i
         elif param_name[i] == PARAM_MAPREDUCE_MAP_MEMORY_MB:
-            map_memory_index = i
+            mr_map_memory_index = i
         elif param_name[i] == PARAM_MAPREDUCE_REDUCE_MEMORY_MB:
-            reduce_memory_index = i
+            mr_reduce_memory_index = i
         elif param_name[i] == PARAM_PIG_MAX_COMBINED_SPLIT_SIZE:
-            max_combined_split_size_index = i
+            pig_max_combined_split_size_index = i
     global iteration
 
     if iteration == 0:
         iteration += 1
         initial_population = param_default_value
 
-
     else:
         initial_population = [random.uniform(x, y) for x, y in param_value_range]
-        if iteration % 2 == 1:
-            initial_population[map_memory_index] = random.uniform(INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[0],
-                                                                  INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[1]) * \
-                                                   param_default_value[map_memory_index]
-            initial_population[reduce_memory_index] = random.uniform(INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[0],
-                                                                     INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[1]) * \
-                                                      param_default_value[
-                                                          reduce_memory_index]
 
-        if iteration % 2 == 0:
-            initial_population[map_memory_index] = random.uniform(INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[0],
-                                                                  INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[1]) * \
-                                                   param_default_value[map_memory_index]
-            initial_population[reduce_memory_index] = random.uniform(INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[0],
-                                                                     INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[1]) * \
-                                                      param_default_value[
-                                                          reduce_memory_index]
+        if job_type == 'PIG':
+            if iteration % 2 == 1:
+                initial_population[mr_map_memory_index] = random.uniform(INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[0],
+                                                                         INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[1]) * \
+                                                          param_default_value[mr_map_memory_index]
+                initial_population[mr_reduce_memory_index] = random.uniform(INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[0],
+                                                                            INITIAL_DERIVED_LOWER_MEMORY_PARAM_RANGE[
+                                                                                1]) * param_default_value[
+                                                                 mr_reduce_memory_index]
 
-        initial_population[sort_memory_index] = random.uniform(INITIAL_DERIVED_SORT_MEMORY_PARAM_RANGE[0],
-                                                               INITIAL_DERIVED_SORT_MEMORY_PARAM_RANGE[1]) * initial_population[
-                                                    map_memory_index]
-        initial_population[max_combined_split_size_index] = param_default_value[max_combined_split_size_index]
-        iteration += 1
+            if iteration % 2 == 0:
+                initial_population[mr_map_memory_index] = random.uniform(INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[0],
+                                                                         INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[1]) * \
+                                                          param_default_value[mr_map_memory_index]
+                initial_population[mr_reduce_memory_index] = random.uniform(INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[0],
+                                                                            INITIAL_DERIVED_UPPER_MEMORY_PARAM_RANGE[
+                                                                                1]) * param_default_value[
+                                                                 mr_reduce_memory_index]
+
+            initial_population[mr_sort_memory_index] = random.uniform(INITIAL_DERIVED_SORT_MEMORY_PARAM_RANGE[0],
+                                                                      INITIAL_DERIVED_SORT_MEMORY_PARAM_RANGE[1]) * \
+                                                       initial_population[mr_map_memory_index]
+            initial_population[pig_max_combined_split_size_index] = param_default_value[
+                pig_max_combined_split_size_index]
+            iteration += 1
 
     for i in range(0, len(param_name)):
         (min_val, max_val) = param_value_range[i]
+        step = param_step_size[i]
+        initial_population[i] = int(round(initial_population[i] * 1.0 / step)) * step
         initial_population[i] = max(min_val, min(max_val, initial_population[i]))
 
     return initial_population
@@ -192,8 +170,9 @@ def bounder(candidate, args):
     param_value_lower_bound = get_params_lower_bound()
     param_value_upper_bound = get_params_upper_bound()
     bounded_candidate = candidate
-    for i, (c, lo, hi) in enumerate(zip(candidate, param_value_lower_bound,
-                                        param_value_upper_bound)):
+    for i, (c, lo, hi, step) in enumerate(
+            zip(candidate, param_value_lower_bound, param_value_upper_bound, param_step_size)):
+        c = int(round(c * 1.0 / step)) * step
         bounded_candidate[i] = max(min(c, hi), lo)
     return bounded_candidate
 
@@ -234,7 +213,7 @@ def generate_tuning_state(pso, pseudo_random_number_generator, population):
 
     data[TUNING_STATE_ARCHIVE_KEY] = archive
     data[TUNING_STATE_PREV_POPULATION_KEY] = prev_population
-    data[TUNING_STATE_CURRENT_POPULATION_KEY] = current_population  # todo: send 2 or 3?
+    data[TUNING_STATE_CURRENT_POPULATION_KEY] = current_population
     data[TUNING_STATE_RANDOM_STATE_KEY] = rnd_state
     data_dump = json.dumps(data)
     return data_dump
@@ -313,9 +292,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(ARG_TUNING_STATE_KEY, help='Saved tuning state object')
     parser.add_argument(ARG_PARAMETERS_TO_TUNE_KEY)
+    parser.add_argument(ARG_JOB_TYPE)
     args = parser.parse_args()
     json_tuning_state = args.json_tuning_state
     parameters_to_tune = args.parameters_to_tune
+    job_type = args.job_type
     parameters_to_tune = json.loads(parameters_to_tune)
     initialize_params(parameters_to_tune)
     main(json_tuning_state)

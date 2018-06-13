@@ -1319,7 +1319,7 @@ public class Application extends Controller {
       int jobPerfScore = 0;
       JsonArray stageScores = new JsonArray();
       List<AppResult> mrJobsList = Lists.reverse(flowExecIdToJobsMap.get(flowExecPair));
-      for (AppResult appResult : flowExecIdToJobsMap.get(flowExecPair)) {
+      for (AppResult appResult : mrJobsList) {
 
         // Each MR job triggered by jobDefId for flowExecId
         int mrPerfScore = 0;

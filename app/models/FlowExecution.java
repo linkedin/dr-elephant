@@ -41,7 +41,6 @@ public class FlowExecution extends Model {
     public static final String id = "id";
     public static final String flowExecId = "flowExecId";
     public static final String flowExecUrl = "flowExecUrl";
-    public static final String flowDefinitionId = "flowDefinitionId";
     public static final String flowDefinition = "flowDefinition";
   }
 

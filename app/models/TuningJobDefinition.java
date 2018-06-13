@@ -42,7 +42,7 @@ public class TuningJobDefinition extends Model {
   public static class TABLE {
     public static final String TABLE_NAME = "tuning_job_definition";
     public static final String client = "client";
-    public static final String tuningAlgorithmId = "tuningAlgorithmId";
+    public static final String tuningAlgorithm = "tuningAlgorithm";
     public static final String tuningEnabled = "tuningEnabled";
     public static final String averageResourceUsage = "averageResourceUsage";
     public static final String averageExecutionTime = "averageExecutionTime";
@@ -52,6 +52,7 @@ public class TuningJobDefinition extends Model {
     public static final String job = "job";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
+    public static final String tuningDisabledReason = "tuningDisabledReason";
   }
 
   @ManyToOne(cascade = CascadeType.ALL)
@@ -100,4 +101,8 @@ public class TuningJobDefinition extends Model {
   @Column(nullable = false)
   @UpdatedTimestamp
   public Timestamp updatedTs;
+
+
+  @Column(nullable = true)
+  public String tuningDisabledReason;
 }

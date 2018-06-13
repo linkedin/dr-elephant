@@ -75,6 +75,7 @@ public class PSOParamGenerator extends ParamGenerator {
     JobTuningInfo newJobTuningInfo = new JobTuningInfo();
     newJobTuningInfo.setTuningJob(jobTuningInfo.getTuningJob());
     newJobTuningInfo.setParametersToTune(jobTuningInfo.getParametersToTune());
+    newJobTuningInfo.setJobType(jobTuningInfo.getJobType());
 
     JsonNode jsonJobTuningInfo = Json.toJson(jobTuningInfo);
     logger.info("Job Tuning Info for " + jobTuningInfo.getTuningJob().jobName + ": " + jsonJobTuningInfo);
@@ -82,14 +83,15 @@ public class PSOParamGenerator extends ParamGenerator {
     logger.info("Parameters to tune for job: " + parametersToTune);
     String stringTunerState = jobTuningInfo.getTunerState();
     stringTunerState = stringTunerState.replaceAll("\\s+", "");
+    String jobType = jobTuningInfo.getJobType().toString();
 
     List<String> error = new ArrayList<String>();
 
     try {
       logger.info(
-          "Calling PSO with StringTunerState= " + stringTunerState + "\nand Parameters to tune: " + parametersToTune);
+          "Calling PSO with Job type = " + jobType + " StringTunerState= " + stringTunerState + "\nand Parameters to tune: " + parametersToTune);
       Process p = Runtime.getRuntime()
-          .exec(PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune);
+          .exec(PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune + " " + jobType);
       BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
       BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream()));
       String updatedStringTunerState = inputStream.readLine();

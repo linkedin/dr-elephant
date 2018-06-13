@@ -43,9 +43,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
   private static final String MEM_RATIO_SEVERITY = "memory_ratio_severity";
   private static final String DEFAULT_MAPPER_CONTAINER_SIZE = "2048";
   private static final String CONTAINER_MEM_DEFAULT_MB = "container_memory_default_mb";
-  private String _mapredContainerMemConf;
-  private String _hiveContainerMemConf;
-  private String _tezContainerMemConf;
+  private String _containerMemConf;
 
   //Default Value of parameters
 
@@ -76,16 +74,13 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
       memoryRatioLimits = confSuccessRatioLimits;
     }
     logger.info(heuristicName + " will use " + MEM_RATIO_SEVERITY + " with the following threshold settings: "
-            + Arrays.toString(memoryRatioLimits));
+        + Arrays.toString(memoryRatioLimits));
 
 
   }
 
-
-  public GenericMemoryHeuristic(String tezContainerMemConf, String hiveContainerMemConf, String mapredContainerMemConf, HeuristicConfigurationData heuristicConfData) {
-    this._mapredContainerMemConf = mapredContainerMemConf;
-    this._hiveContainerMemConf = hiveContainerMemConf;
-    this._tezContainerMemConf = tezContainerMemConf;
+  public GenericMemoryHeuristic(String containerMemConf, HeuristicConfigurationData heuristicConfData) {
+    this._containerMemConf = containerMemConf;
     this._heuristicConfData = heuristicConfData;
     loadParameters();
   }
@@ -100,23 +95,21 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     if(!data.getSucceeded()) {
       return null;
     }
-   
-  
     TezTaskData[] tasks = getTasks(data);
 
 
     List<Long> totalPhysicalMemory = new LinkedList<Long>();
     List<Long> totalVirtualMemory = new LinkedList<Long>();
     List<Long> runTime = new LinkedList<Long>();
-  
+
     for (TezTaskData task : tasks) {
-    	 
+
       if (task.isSampled()) {
         totalPhysicalMemory.add(task.getCounters().get(TezCounterData.CounterName.PHYSICAL_MEMORY_BYTES));
         totalVirtualMemory.add(task.getCounters().get(TezCounterData.CounterName.VIRTUAL_MEMORY_BYTES));
         runTime.add(task.getTotalRunTimeMs());
       }
-   
+
 
     }
 
@@ -127,7 +120,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     try{
       maxPMem = Collections.max(totalPhysicalMemory);
       minPMem = Collections.min(totalPhysicalMemory);
-      
+
     }
     catch(Exception exception){
       maxPMem = 0;
@@ -137,20 +130,13 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
 
     String containerSizeStr;
 
-
-    if(!Strings.isNullOrEmpty(data.getConf().getProperty(_tezContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_tezContainerMemConf)) > 0){
-      containerSizeStr = data.getConf().getProperty(_tezContainerMemConf);
-    }
-    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_hiveContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_hiveContainerMemConf)) > 0){
-      containerSizeStr = data.getConf().getProperty(_hiveContainerMemConf);
-    }
-    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_mapredContainerMemConf)) > 0) {
-      containerSizeStr = data.getConf().getProperty(_mapredContainerMemConf);
+    if(!Strings.isNullOrEmpty(data.getConf().getProperty(_containerMemConf))){
+      containerSizeStr = data.getConf().getProperty(_containerMemConf);
     }
     else {
       containerSizeStr = getContainerMemDefaultMBytes();
     }
-   
+
     long containerSize = Long.valueOf(containerSizeStr) * FileUtils.ONE_MB;
 
     double averageMemMb = (double)((averagePMem) /FileUtils.ONE_MB) ;
@@ -167,30 +153,30 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     }
 
     HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
-            _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
+        _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
 
     result.addResultDetail("Number of tasks", Integer.toString(tasks.length));
     result.addResultDetail("Maximum Physical Memory (MB)",
-            tasks.length == 0 ? "0" : Long.toString(maxPMem/FileUtils.ONE_MB));
+        tasks.length == 0 ? "0" : Long.toString(maxPMem/FileUtils.ONE_MB));
     result.addResultDetail("Minimum Physical memory (MB)",
-            tasks.length == 0 ? "0" : Long.toString(minPMem/FileUtils.ONE_MB));
+        tasks.length == 0 ? "0" : Long.toString(minPMem/FileUtils.ONE_MB));
     result.addResultDetail("Average Physical Memory (MB)",
-            tasks.length == 0 ? "0" : Long.toString(averagePMem/FileUtils.ONE_MB));
+        tasks.length == 0 ? "0" : Long.toString(averagePMem/FileUtils.ONE_MB));
     result.addResultDetail("Average Virtual Memory (MB)",
-            tasks.length == 0 ? "0" : Long.toString(averageVMem/FileUtils.ONE_MB));
+        tasks.length == 0 ? "0" : Long.toString(averageVMem/FileUtils.ONE_MB));
     result.addResultDetail("Average Task RunTime",
-            tasks.length == 0 ? "0" : Statistics.readableTimespan(averageRunTime));
+        tasks.length == 0 ? "0" : Statistics.readableTimespan(averageRunTime));
     result.addResultDetail("Requested Container Memory (MB)",
-            (tasks.length == 0 || containerSize == 0 || containerSize == -1) ? "0" : String.valueOf(containerSize / FileUtils.ONE_MB));
+        (tasks.length == 0 || containerSize == 0 || containerSize == -1) ? "0" : String.valueOf(containerSize / FileUtils.ONE_MB));
 
-   
+
     return result;
 
   }
 
   private Severity getMemoryRatioSeverity(double ratio) {
     return Severity.getSeverityDescending(
-            ratio, memoryRatioLimits[0], memoryRatioLimits[1], memoryRatioLimits[2], memoryRatioLimits[3]);
+        ratio, memoryRatioLimits[0], memoryRatioLimits[1], memoryRatioLimits[2], memoryRatioLimits[3]);
   }
 
 

@@ -146,7 +146,7 @@ public class BaselineComputeUtil {
         + "FROM yarn_app_result yar INNER JOIN yarn_app_heuristic_result yahr " + "ON yar.id=yahr.yarn_app_result_id "
         + "INNER JOIN yarn_app_heuristic_result_details yahrd " + "ON yahr.id=yahrd.yarn_app_heuristic_result_id "
         + "WHERE job_def_id=:jobDefId AND yahr.heuristic_name='" + CommonConstantsHeuristic.MAPPER_SPEED + "' "
-        + "AND yahrd.name='Total input size in MB' "
+        + "AND yahrd.name='" + CommonConstantsHeuristic.TOTAL_INPUT_SIZE_IN_MB + "' "
         + "GROUP BY job_exec_id ORDER BY start_time DESC LIMIT :num ) temp";
 
     logger.debug("Running query for average input size computation " + sql);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 LinkedIn Corp.
+ * Copyright 2017 Electronic Arts Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -12,29 +12,24 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
+ *
  */
-
 package com.linkedin.drelephant.tez.heuristics;
 
 import com.linkedin.drelephant.analysis.ApplicationType;
-import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
-
-import java.io.IOException;
-
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
-import com.linkedin.drelephant.tez.data.TezCounterData;
-import com.linkedin.drelephant.tez.data.TezDAGApplicationData;
-import com.linkedin.drelephant.tez.data.TezDAGData;
-import com.linkedin.drelephant.tez.data.TezVertexData;
-import com.linkedin.drelephant.tez.data.TezVertexTaskData;
+import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 import com.linkedin.drelephant.math.Statistics;
+import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezCounterData;
+import com.linkedin.drelephant.tez.data.TezTaskData;
+import junit.framework.TestCase;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 
 public class ReducerTimeHeuristicTest extends TestCase {
@@ -84,27 +79,18 @@ public class ReducerTimeHeuristicTest extends TestCase {
 
   private Severity analyzeJob(long runtimeMs, int numTasks) throws IOException {
     TezCounterData dummyCounter = new TezCounterData();
-    TezVertexTaskData[] reducers = new TezVertexTaskData[numTasks + 1];
+    TezTaskData[] reducers = new TezTaskData[numTasks + 1];
 
     int i = 0;
     for (; i < numTasks; i++) {
-      reducers[i] = new TezVertexTaskData("task-id-"+i, "task-attempt-id-"+i);
+      reducers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
       reducers[i].setTime(new long[] { runtimeMs, 0, 0, 0, 0 });
       reducers[i].setCounter(dummyCounter);
     }
     // Non-sampled task, which does not contain time and counter data
-    reducers[i] = new TezVertexTaskData("task-id-"+i, "task-attempt-id-"+i);
-    TezDAGData tezDags[] = new TezDAGData[1];
-    TezDAGData tezDAGData = new TezDAGData(dummyCounter);
-    TezVertexData tezVertexes[] = new TezVertexData[1];
-    TezVertexData tezVertexData = new TezVertexData("new vertex");
-    tezVertexes[0]=tezVertexData;
-    tezVertexData.setReducerData(reducers);
-    tezDags[0]=tezDAGData;
-    tezDAGData.setVertexData(tezVertexes);
+    reducers[i] = new TezTaskData("task-id-"+i, "task-attempt-id-"+i);
 
-    TezDAGApplicationData data = new TezDAGApplicationData();
-    data.setCounters(dummyCounter).setTezDAGData(tezDags);
+    TezApplicationData data = new TezApplicationData().setCounters(dummyCounter).setReduceTaskData(reducers);
     HeuristicResult result = _heuristic.apply(data);
     return result.getSeverity();
   }

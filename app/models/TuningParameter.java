@@ -48,7 +48,6 @@ public class TuningParameter extends Model {
     public static final String TABLE_NAME = "tuning_parameter";
     public static final String id = "id";
     public static final String paramName = "paramName";
-    public static final String tuningAlgorithmId = "tuningAlgorithmId";
     public static final String defaultValue = "defaultValue";
     public static final String minValue = "minValue";
     public static final String maxValue = "maxValue";

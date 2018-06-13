@@ -42,7 +42,7 @@ public class JobSuggestedParamValue extends Model {
     public static final String TABLE_NAME = "job_suggested_param_value";
     public static final String id = "id";
     public static final String jobExecution = "jobExecution";
-    public static final String tuningParameterId = "tuningParameterId";
+    public static final String tuningParameter = "tuningParameter";
     public static final String paramValue = "paramValue";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";

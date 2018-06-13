@@ -34,14 +34,14 @@
     <classname>com.linkedin.drelephant.mapreduce.MapReduceMetricsAggregator</classname>
   </aggregator>
   <aggregator>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.TezMetricsAggregator</classname>
+  </aggregator>
+  <aggregator>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.SparkMetricsAggregator</classname>
     <params>
       <allocated_memory_waste_buffer_percentage>0.5</allocated_memory_waste_buffer_percentage>
     </params>
-  </aggregator>
-  <aggregator>
-    <applicationtype>TEZ</applicationtype>
-    <classname>com.linkedin.drelephant.tez.TezMetricsAggregator</classname>
   </aggregator>
 </aggregators>

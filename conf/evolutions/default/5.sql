@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS flow_definition (
 
 /**
  * This table represent the job to be optimized. This table contains general info other than auto tuning related
- * information. Broken job defintion info in two table, as this can be used for Dr Elephant basic info.
+ * information. Broken job definition info in two table, as this can be used for Dr Elephant basic info.
  * As not all jobs will be enabled for auto tuning.
  */
 CREATE TABLE IF NOT EXISTS job_definition (

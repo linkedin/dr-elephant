@@ -43,6 +43,12 @@
     <conf>pig.script</conf>
   </jobType>
   <jobType>
+    <name>Tez</name>
+    <applicationtype>tez</applicationtype>
+    <conf>hive.mapred.mode</conf>
+    <isDefault/>
+  </jobType>
+  <jobType>
     <name>Hive</name>
     <applicationtype>mapreduce</applicationtype>
     <conf>hive.mapred.mode</conf>

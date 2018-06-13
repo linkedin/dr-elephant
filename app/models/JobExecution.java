@@ -53,10 +53,9 @@ public class JobExecution extends Model {
     public static final String executionState = "executionState";
     public static final String resourceUsage = "resourceUsage";
     public static final String executionTime = "executionTime";
-    public static final String inputSizeInMb = "inputSizeInMb";
+    public static final String inputSizeInBytes = "inputSizeInBytes";
     public static final String jobExecUrl = "jobExecUrl";
-    public static final String flowExecutionId = "flowExecutionId";
-    public static final String jobDefinitionId = "jobDefinitionId";
+    public static final String jobDefinition = "jobDefinition";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
     public static final String flowExecution = "flowExecution";
