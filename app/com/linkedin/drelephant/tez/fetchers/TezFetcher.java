@@ -49,6 +49,10 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
   private FetcherConfigurationData _fetcherConfigurationData;
 
+  private enum VertexType{
+    MAPPER, REDUCER, SCOPE
+  }
+
   public TezFetcher(FetcherConfigurationData fetcherConfData) throws IOException {
     this._fetcherConfigurationData = fetcherConfData;
     final String applicationHistoryAddr = new Configuration().get(TIMELINE_SERVER_URL);
@@ -76,6 +80,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
     List<TezTaskData> mapperListAggregate = new ArrayList<TezTaskData>();
     List<TezTaskData> reducerListAggregate = new ArrayList<TezTaskData>();
+    List<TezTaskData> scopeListAggregate = new ArrayList<TezTaskData>();
 
     //Iterate over dagIds and choose the dagId with the highest no. of tasks/highest impact as settings changes can be made only at DAG level.
     for(String dagId : dagIdsByApplicationId){
@@ -93,15 +98,17 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
           List<TezTaskData> mapperList = new ArrayList<TezTaskData>();
           List<TezTaskData> reducerList = new ArrayList<TezTaskData>();
+          List<TezTaskData> scopeTaskList = new ArrayList<TezTaskData>();
 
           // Fetch task data
           URL vertexListUrl = _urlFactory.getVertexListURL(dagId);
-          _jsonFactory.getTaskDataAll(vertexListUrl, dagId, mapperList, reducerList);
+          _jsonFactory.getTaskDataAll(vertexListUrl, dagId, mapperList, reducerList, scopeTaskList);
 
-          if(mapperList.size() + reducerList.size() > maxSize){
+          if(mapperList.size() + reducerList.size()+scopeTaskList.size() > maxSize){
             mapperListAggregate = mapperList;
             reducerListAggregate = reducerList;
-            maxSize = mapperList.size() + reducerList.size();
+            scopeListAggregate = scopeTaskList;
+            maxSize = mapperList.size() + reducerList.size()+scopeTaskList.size();
           }
         }
         if (state.equals("FAILED")) {
@@ -115,10 +122,11 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
     TezTaskData[] mapperData = mapperListAggregate.toArray(new TezTaskData[mapperListAggregate.size()]);
     TezTaskData[] reducerData = reducerListAggregate.toArray(new TezTaskData[reducerListAggregate.size()]);
+    TezTaskData[] scopeTaskData = scopeListAggregate.toArray(new TezTaskData[scopeListAggregate.size()]);
 
     TezCounterData dagCounter = _jsonFactory.getDagCounter(_urlFactory.getDagURL(_jsonFactory.getDagIdsByApplicationId(dagIdsUrl).get(0)));
 
-    jobData.setCounters(dagCounter).setMapTaskData(mapperData).setReduceTaskData(reducerData);
+    jobData.setCounters(dagCounter).setMapTaskData(mapperData).setReduceTaskData(reducerData).setScopeTasks(scopeTaskData);
 
     return jobData;
   }
@@ -169,7 +177,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
     private URL getTaskListByVertexURL(String dagId, String vertexId) throws MalformedURLException {
       return new URL(_timelineWebAddr + "/TEZ_TASK_ID?primaryFilter=TEZ_DAG_ID:" + dagId +
-          "&secondaryFilter=TEZ_VERTEX_ID:" + vertexId + "&limit=500000");
+              "&secondaryFilter=TEZ_VERTEX_ID:" + vertexId + "&limit=500000");
     }
 
     private URL getTasksURL(String taskId) throws MalformedURLException {
@@ -178,7 +186,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
     private URL getTaskAllAttemptsURL(String dagId, String taskId) throws MalformedURLException {
       return new URL(_timelineWebAddr + "/TEZ_TASK_ATTEMPT_ID?primaryFilter=TEZ_DAG_ID:" + dagId +
-          "&secondaryFilter=TEZ_TASK_ID:" + taskId);
+              "&secondaryFilter=TEZ_TASK_ID:" + taskId);
     }
 
     private URL getTaskAttemptURL(String dagId, String taskId, String attemptId) throws MalformedURLException {
@@ -255,31 +263,35 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
     }
 
     private void getTaskDataAll(URL vertexListUrl, String dagId, List<TezTaskData> mapperList,
-                  List<TezTaskData> reducerList) throws IOException, AuthenticationException {
+                                List<TezTaskData> reducerList, List<TezTaskData> scopeTaskList) throws IOException, AuthenticationException {
 
       JsonNode rootVertexNode = ThreadContextMR2.readJsonNode(vertexListUrl);
       JsonNode vertices = rootVertexNode.path("entities");
       boolean isMapVertex = false;
-
+      String vertexType = null;
       for (JsonNode vertex : vertices) {
         String vertexId = vertex.get("entity").getTextValue();
         String vertexClass = vertex.path("otherinfo").path("processorClassName").getTextValue();
 
         if (vertexClass.equals("org.apache.hadoop.hive.ql.exec.tez.MapTezProcessor"))
-          isMapVertex = true;
+          vertexType = VertexType.MAPPER.name();
         else if (vertexClass.equals("org.apache.hadoop.hive.ql.exec.tez.ReduceTezProcessor"))
-          isMapVertex = false;
+          vertexType = VertexType.REDUCER.name();
+        else if (vertexClass.equals("org.apache.pig.backend.hadoop.executionengine.tez.runtime.PigProcessor"))
+          vertexType = VertexType.SCOPE.name();
 
         URL tasksByVertexURL = getTaskListByVertexURL(dagId, vertexId);
-        if(isMapVertex)
-          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, mapperList, true);
-        else
-          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, reducerList, false);
+        if(vertexType.equals(VertexType.MAPPER.name()))
+          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, mapperList,vertexType);
+        else if (vertexType.equals(VertexType.REDUCER.name()))
+          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, reducerList, vertexType);
+        else if (vertexType.equals(VertexType.SCOPE.name()))
+          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, scopeTaskList, vertexType);
       }
     }
 
     private void getTaskDataByVertexId(URL url, String dagId, String vertexId, List<TezTaskData> taskList,
-                       boolean isMapVertex) throws IOException, AuthenticationException {
+                                       String  vertexType) throws IOException, AuthenticationException {
 
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode tasks = rootNode.path("entities");
@@ -300,7 +312,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
         taskList.add(new TezTaskData(taskId, attemptId));
       }
 
-      getTaskData(dagId, taskList, isMapVertex);
+      getTaskData(dagId, taskList, vertexType);
 
     }
 
@@ -325,8 +337,8 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
 
 
-    private void getTaskData(String dagId, List<TezTaskData> taskList, boolean isMapTask)
-        throws IOException, AuthenticationException {
+    private void getTaskData(String dagId, List<TezTaskData> taskList, String vertexType)
+            throws IOException, AuthenticationException {
 
       for(int i=0; i<taskList.size(); i++) {
         TezTaskData data = taskList.get(i);
@@ -334,7 +346,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
         TezCounterData taskCounter = getTaskCounter(taskCounterURL);
 
         URL taskAttemptURL = getTaskAttemptURL(dagId, data.getTaskId(), data.getAttemptId());
-        long[] taskExecTime = getTaskExecTime(taskAttemptURL, isMapTask);
+        long[] taskExecTime = getTaskExecTime(taskAttemptURL, vertexType);
 
         data.setCounter(taskCounter);
         data.setTime(taskExecTime);
@@ -360,7 +372,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
       return holder;
     }
 
-    private long[] getTaskExecTime(URL url, boolean isMapTask) throws IOException, AuthenticationException {
+    private long[] getTaskExecTime(URL url, String vertexType) throws IOException, AuthenticationException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode groups = rootNode.path("otherinfo").path("counters").path("counterGroups");
 
@@ -373,10 +385,10 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
       for (JsonNode group : groups) {
         for (JsonNode counter : group.path("counters")) {
           String name = counter.get("counterName").getTextValue();
-          if (!isMapTask && name.equals("MERGE_PHASE_TIME")) {
+          if (!VertexType.MAPPER.toString().equals(vertexType) && name.equals("MERGE_PHASE_TIME")) {
             mergeTime = counter.get("counterValue").getLongValue();
           }
-          else if (!isMapTask && name.equals("SHUFFLE_PHASE_TIME")){
+          else if (!VertexType.MAPPER.toString().equals(vertexType) && name.equals("SHUFFLE_PHASE_TIME")){
             shuffleTime = counter.get("counterValue").getLongValue();
           }
 

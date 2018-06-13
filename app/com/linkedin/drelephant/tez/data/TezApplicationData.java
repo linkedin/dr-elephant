@@ -32,6 +32,7 @@ public class TezApplicationData implements HadoopApplicationData {
   private boolean _succeeded = true;
   private TezTaskData[] _reduceTasks;
   private TezTaskData[] _mapTasks;
+  private TezTaskData[] _scopeTasks;
   private TezCounterData _counterHolder;
 
   private long _submitTime = 0;
@@ -114,6 +115,14 @@ public class TezApplicationData implements HadoopApplicationData {
   public TezApplicationData setMapTaskData(TezTaskData[] mapTasks) {
     this._mapTasks = mapTasks;
     return this;
+  }
+
+  public TezTaskData[] getScopeTasks() {
+    return _scopeTasks;
+  }
+
+  public void setScopeTasks(TezTaskData[] _scopeTasks) {
+    this._scopeTasks = _scopeTasks;
   }
 
   public TezApplicationData setSubmitTime(long submitTime) {

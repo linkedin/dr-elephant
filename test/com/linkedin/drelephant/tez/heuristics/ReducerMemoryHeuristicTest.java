@@ -36,7 +36,7 @@ public class ReducerMemoryHeuristicTest extends TestCase {
 
   private static Map<String, String> paramsMap = new HashMap<String, String>();
   private static Heuristic _heuristic = new ReducerMemoryHeuristic(new HeuristicConfigurationData("test_heuristic",
-      "test_class", "test_view", new ApplicationType("test_apptype"), paramsMap));
+          "test_class", "test_view", new ApplicationType("test_apptype"), paramsMap));
 
   private int NUMTASKS = 100;
 
@@ -75,7 +75,7 @@ public class ReducerMemoryHeuristicTest extends TestCase {
     counter.set(TezCounterData.CounterName.PHYSICAL_MEMORY_BYTES, taskAvgMemMB* FileUtils.ONE_MB);
 
     Properties p = new Properties();
-    p.setProperty(com.linkedin.drelephant.mapreduce.heuristics.ReducerMemoryHeuristic.REDUCER_MEMORY_CONF, Long.toString(containerMemMB));
+    p.setProperty(ReducerMemoryHeuristic.MAPRED_REDUCER_MEMORY_CONF, Long.toString(containerMemMB));
 
     int i = 0;
     for (; i < NUMTASKS; i++) {
