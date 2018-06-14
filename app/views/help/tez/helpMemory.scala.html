@@ -1,0 +1,64 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis shows the task memory utilization. <br>
+    We check the ratio between your task's consumed memory AND the requested container memory. <br>
+    The consumed memory is the average of each task's [max consumed physical memory snapshot]. <br>
+    The requested container memory is the "hive.tez.container.size" config for hive/tez.am.resource.memory.mb for pig, is the max physical memory the job can request. <br>
+    If this heuristic is above MODERATE, it means your used memory is relatively low compared with the requested max memory.
+</p>
+
+<h5>Example</h5>
+<p>
+<div class="list-group">
+    <a class="list-group-item list-group-item-danger" href="#">
+        <h4 class="list-group-item-heading">Mapper Memory</h4>
+        <table class="list-group-item-text table table-condensed left-table">
+            <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Number of tasks</td>
+                <td>1000</td>
+            </tr>
+            <tr>
+                <td>Avg Physical Memory (MB)</td>
+                <td>512</td>
+            </tr>
+            <tr>
+                <td>Requested Containter Memory</td>
+                <td>4G</td>
+            </tr>
+            </tbody>
+        </table>
+    </a>
+</div>
+</p>
+<h4>Suggestions</h4>
+<p>
+
+   <br>
+    The problem indicates you requested large task memory (set <strong>hive.tez.container.size</strong> > 2048), but the task average used physical memory is low.
+   <br>
+    You should try to decrease <strong>hive.tez.container.size/tez.am.resource.memory.mb</strong> and  <strong>hive.tez.java.opts (80% of container size)</strong>.
+   <br>
+    If you get OutOfMemory error, think about why such error happens before increasing the memory back again.
+    <br>
+
+ 
+
+   <br>
+    See <a href="https://github.com/linkedin/dr-elephant/wiki/Tuning-Tips">Hadoop Tuning Tips</a> for further information.<br>

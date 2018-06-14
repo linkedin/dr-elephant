@@ -16,35 +16,32 @@
  */
 package com.linkedin.drelephant.tez.heuristics;
 
-
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
+
 import com.linkedin.drelephant.tez.data.TezApplicationData;
+
 import com.linkedin.drelephant.tez.data.TezTaskData;
+
 import org.apache.log4j.Logger;
 
+
 /**
- * Analyzes reducer memory allocation and requirements
+ * Analyzes mapper memory allocation and requirements
  */
+public class TezScopeMemoryHeuristic extends GenericMemoryHeuristic {
 
-public class ReducerMemoryHeuristic extends GenericMemoryHeuristic {
-
-  private static final Logger logger = Logger.getLogger(ReducerMemoryHeuristic.class);
-
-  public static final String MAPRED_REDUCER_MEMORY_CONF = "mapreduce.reduce.memory.mb";
+  private static final Logger logger = Logger.getLogger(MapperMemoryHeuristic.class);
   public static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
   public static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
-
-  public ReducerMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
-    super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, MAPRED_REDUCER_MEMORY_CONF, __heuristicConfData);
+  public static final String TEZ_AM_MEMORY_CONF = "tez.am.resource.memory.mb";
+  public TezScopeMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
+    super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, TEZ_AM_MEMORY_CONF, __heuristicConfData);
   }
 
   @Override
   protected TezTaskData[] getTasks(TezApplicationData data) {
-	  
-    return data.getReduceTaskData();
-  } 
-
-
+    return data.getScopeTasks();
+  }
 
 
 }

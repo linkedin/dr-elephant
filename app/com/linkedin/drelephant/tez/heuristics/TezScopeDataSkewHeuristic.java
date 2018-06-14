@@ -19,32 +19,29 @@ package com.linkedin.drelephant.tez.heuristics;
 
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 import com.linkedin.drelephant.tez.data.TezApplicationData;
+import com.linkedin.drelephant.tez.data.TezCounterData;
 import com.linkedin.drelephant.tez.data.TezTaskData;
+
+import java.util.Arrays;
 import org.apache.log4j.Logger;
 
+
 /**
- * Analyzes reducer memory allocation and requirements
+ * This Heuristic analyses the skewness in the task input data
  */
+public class TezScopeDataSkewHeuristic extends GenericDataSkewHeuristic {
+  private static final Logger logger = Logger.getLogger(MapperDataSkewHeuristic.class);
 
-public class ReducerMemoryHeuristic extends GenericMemoryHeuristic {
-
-  private static final Logger logger = Logger.getLogger(ReducerMemoryHeuristic.class);
-
-  public static final String MAPRED_REDUCER_MEMORY_CONF = "mapreduce.reduce.memory.mb";
-  public static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
-  public static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
-
-  public ReducerMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
-    super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, MAPRED_REDUCER_MEMORY_CONF, __heuristicConfData);
+  public TezScopeDataSkewHeuristic(HeuristicConfigurationData heuristicConfData) {
+    super(Arrays.asList(
+        TezCounterData.CounterName.HDFS_BYTES_READ,
+        TezCounterData.CounterName.S3A_BYTES_READ,
+        TezCounterData.CounterName.S3N_BYTES_READ
+    ), heuristicConfData);
   }
 
   @Override
   protected TezTaskData[] getTasks(TezApplicationData data) {
-	  
-    return data.getReduceTaskData();
-  } 
-
-
-
-
+    return data.getScopeTasks();
+  }
 }
