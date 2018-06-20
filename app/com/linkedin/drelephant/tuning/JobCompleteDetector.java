@@ -19,7 +19,6 @@ package com.linkedin.drelephant.tuning;
 import controllers.AutoTuningMetricsController;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import models.JobExecution;
 import models.JobExecution.ExecutionState;
@@ -67,18 +66,12 @@ public abstract class JobCompleteDetector {
    */
   private List<TuningJobExecutionParamSet> getExecutionsInProgress() {
     logger.info("Fetching the executions which are in progress");
-
-    List<TuningJobExecutionParamSet> tuningJobExecutionParamSets = new ArrayList<TuningJobExecutionParamSet>();
-    try {
-      tuningJobExecutionParamSets = TuningJobExecutionParamSet.find.fetch(TuningJobExecutionParamSet.TABLE.jobExecution)
-          .fetch(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet)
-          .where()
-          .eq(TuningJobExecutionParamSet.TABLE.jobExecution + '.' + JobExecution.TABLE.executionState,
-              ExecutionState.IN_PROGRESS)
-          .findList();
-    } catch (NullPointerException e) {
-      logger.info("None of the executions are in progress ", e);
-    }
+    List<TuningJobExecutionParamSet> tuningJobExecutionParamSets = TuningJobExecutionParamSet.find.fetch(TuningJobExecutionParamSet.TABLE.jobExecution)
+        .fetch(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet)
+        .where()
+        .eq(TuningJobExecutionParamSet.TABLE.jobExecution + '.' + JobExecution.TABLE.executionState,
+            ExecutionState.IN_PROGRESS)
+        .findList();
     logger.info("Number of executions which are in progress: " + tuningJobExecutionParamSets.size());
     return tuningJobExecutionParamSets;
   }

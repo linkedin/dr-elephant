@@ -39,11 +39,6 @@ PARAM_MAPREDUCE_INPUT_FILEINPUTFORMAT_SPLIT_MAXSIZE = 'mapreduce.input.fileinput
 PARAM_MAPREDUCE_MAP_JAVA_OPTS = 'mapreduce.map.java.opts'
 PARAM_MAPREDUCE_REDUCE_JAVA_OPTS = 'mapreduce.reduce.java.opts'
 
-PARAM_SPARK_EXECUTOR_MEMORY = "spark.executor.memory"
-PARAM_SPARK_MEMORY_STORAGE_FRACTION = "spark.memory.storageFraction"
-PARAM_SPARK_MEMORY_FRACTION = "spark.memory.fraction"
-PARAM_SPARK_EXECUTOR_CORES = "spark.executor.cores"
-
 ARG_TUNING_STATE_KEY = 'json_tuning_state'
 ARG_PARAMETERS_TO_TUNE_KEY = 'parameters_to_tune'
 ARG_JOB_TYPE = "job_type"

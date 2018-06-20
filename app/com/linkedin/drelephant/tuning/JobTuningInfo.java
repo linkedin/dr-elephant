@@ -18,9 +18,7 @@ package com.linkedin.drelephant.tuning;
 
 import models.TuningParameter;
 import models.JobDefinition;
-
 import java.util.List;
-
 import models.TuningAlgorithm.JobType;
 
 /**

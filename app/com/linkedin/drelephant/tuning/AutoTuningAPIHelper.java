@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.util.Utils;
 import controllers.AutoTuningMetricsController;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,14 +82,9 @@ public class AutoTuningAPIHelper {
    * @return List<JobSuggestedParamValue> list of parameters
    */
   private List<JobSuggestedParamValue> getParamSetValues(Long paramSetId) {
-    List<JobSuggestedParamValue> jobSuggestedParamValues = new ArrayList<JobSuggestedParamValue>();
-    try {
-      jobSuggestedParamValues = JobSuggestedParamValue.find.where()
-          .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id, paramSetId)
-          .findList();
-    } catch (NullPointerException e) {
-      logger.info("No param values found corresponding to param set id: " + paramSetId);
-    }
+    List<JobSuggestedParamValue> jobSuggestedParamValues = JobSuggestedParamValue.find.where()
+        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id, paramSetId)
+        .findList();
     return jobSuggestedParamValues;
   }
 
@@ -231,7 +226,7 @@ public class AutoTuningAPIHelper {
     Map<String, Double> defaultParams = null;
     try {
       defaultParams = tuningInput.getDefaultParams();
-    } catch (Exception e) {
+    } catch (IOException e) {
       logger.error("Error in getting default parameters from request. ", e);
     }
     TuningJobDefinition tuningJobDefinition = new TuningJobDefinition();
@@ -444,7 +439,7 @@ public class AutoTuningAPIHelper {
   /**
    * Inserts parameter values in database
    * @param jobSuggestedParamSet Set of the parameters which is to be inserted
-   * @param paramValues Map of parameter values as string
+   * @param paramValueMap Map of parameter values as string
    */
   @SuppressWarnings("unchecked")
   private void insertParameterValues(JobSuggestedParamSet jobSuggestedParamSet, Map<String, Double> paramValueMap) {

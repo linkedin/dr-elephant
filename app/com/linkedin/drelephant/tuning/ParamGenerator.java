@@ -85,21 +85,14 @@ public abstract class ParamGenerator {
     logger.info("Checking which jobs need new parameter suggestion");
     List<TuningJobDefinition> jobsForParamSuggestion = new ArrayList<TuningJobDefinition>();
 
-    List<JobSuggestedParamSet> pendingParamSetList = new ArrayList<JobSuggestedParamSet>();
-
-    try {
-      pendingParamSetList = JobSuggestedParamSet.find.select("*")
-          .fetch(JobSuggestedParamSet.TABLE.jobDefinition, "*")
-          .where()
-          .or(Expr.or(Expr.eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.CREATED),
-              Expr.eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.SENT)),
-              Expr.eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.EXECUTED))
-          .eq(JobSuggestedParamSet.TABLE.isParamSetDefault, 0)
-          .eq(JobSuggestedParamSet.TABLE.isParamSetBest, 0)
-          .findList();
-    } catch (NullPointerException e) {
-      logger.info("None of the non-default executions are in CREATED, SENT OR EXECUTED state");
-    }
+    List<JobSuggestedParamSet> pendingParamSetList = JobSuggestedParamSet.find.select("*")
+        .fetch(JobSuggestedParamSet.TABLE.jobDefinition, "*")
+        .where()
+        .or(Expr.or(Expr.eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.CREATED),
+            Expr.eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.SENT)),
+            Expr.eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.EXECUTED))
+        .eq(JobSuggestedParamSet.TABLE.isParamSetDefault, 0)
+        .eq(JobSuggestedParamSet.TABLE.isParamSetBest, 0).findList();
 
     List<JobDefinition> pendingParamJobList = new ArrayList<JobDefinition>();
     for (JobSuggestedParamSet pendingParamSet : pendingParamSetList) {
@@ -108,15 +101,13 @@ public abstract class ParamGenerator {
       }
     }
 
-    List<TuningJobDefinition> tuningJobDefinitionList = new ArrayList<TuningJobDefinition>();
+    List<TuningJobDefinition> tuningJobDefinitionList = TuningJobDefinition.find.select("*")
+        .fetch(TuningJobDefinition.TABLE.job, "*")
+        .where()
+        .eq(TuningJobDefinition.TABLE.tuningEnabled, 1)
+        .findList();
 
-    try {
-      tuningJobDefinitionList = TuningJobDefinition.find.select("*")
-          .fetch(TuningJobDefinition.TABLE.job, "*")
-          .where()
-          .eq(TuningJobDefinition.TABLE.tuningEnabled, 1)
-          .findList();
-    } catch (NullPointerException e) {
+    if (tuningJobDefinitionList.size() == 0) {
       logger.error("No auto-tuning enabled jobs found");
     }
 
@@ -164,16 +155,15 @@ public abstract class ParamGenerator {
           .eq(TuningParameter.TABLE.isDerived, 0)
           .findList();
 
-      try {
         logger.info("Fetching default parameter values for job " + tuningJobDefinition.job.jobDefId);
         JobSuggestedParamSet defaultJobParamSet = JobSuggestedParamSet.find.where()
             .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id, tuningJobDefinition.job.id)
             .eq(JobSuggestedParamSet.TABLE.isParamSetDefault, 1)
-            //todo: Test the line below
             .order()
             .desc(JobSuggestedParamSet.TABLE.id)
             .setMaxRows(1)
             .findUnique();
+
         if (defaultJobParamSet != null) {
           List<JobSuggestedParamValue> jobSuggestedParamValueList = JobSuggestedParamValue.find.where()
               .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + "." + JobExecution.TABLE.id,
@@ -199,9 +189,6 @@ public abstract class ParamGenerator {
             }
           }
         }
-      } catch (NullPointerException e) {
-        logger.error("Error extracting default value of params for job " + tuningJobDefinition.job.jobDefId, e);
-      }
 
       JobTuningInfo jobTuningInfo = new JobTuningInfo();
       jobTuningInfo.setTuningJob(job);
@@ -328,15 +315,12 @@ public abstract class ParamGenerator {
           .findUnique();
 
       List<TuningParameter> derivedParameterList = new ArrayList<TuningParameter>();
-      try {
         derivedParameterList = TuningParameter.find.where()
             .eq(TuningParameter.TABLE.tuningAlgorithm + "." + TuningAlgorithm.TABLE.id,
                 tuningJobDefinition.tuningAlgorithm.id)
             .eq(TuningParameter.TABLE.isDerived, 1)
             .findList();
-      } catch (NullPointerException e) {
-        logger.info("No derived parameters for job: " + job.jobName);
-      }
+
       logger.info("No. of derived tuning params for job " + tuningJobDefinition.job.jobName + ": "
           + derivedParameterList.size());
 

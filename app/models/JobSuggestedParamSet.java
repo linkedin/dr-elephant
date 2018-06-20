@@ -70,7 +70,6 @@ public class JobSuggestedParamSet extends Model {
   @JoinTable(name = "job_definition", joinColumns = {@JoinColumn(name = "job_definition_id", referencedColumnName = "id")})
   public JobDefinition jobDefinition;
 
-
   @OneToOne(cascade = CascadeType.ALL)
   @JoinTable(name = "job_execution", joinColumns = {@JoinColumn(name = "fitness_job_execution_id", referencedColumnName = "id")})
   public JobExecution fitnessJobExecution;
