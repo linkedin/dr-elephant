@@ -166,10 +166,10 @@ public class RestAPITest {
         FitnessComputeUtil fitnessComputeUtil = new FitnessComputeUtil();
         fitnessComputeUtil.updateFitness();
 
-        jobSuggestedParamSet = tuningJobExecutionParamSet.jobSuggestedParamSet;
+        jobSuggestedParamSet = JobSuggestedParamSet.find.byId(jobSuggestedParamSet.id);
 
-        assertTrue("Fitness not computed", jobSuggestedParamSet.paramSetState == ParamSetStatus.FITNESS_COMPUTED);
-        assertTrue("Fitness not computed and have zero value", jobSuggestedParamSet.fitness > 0);
+        assertTrue("Fitness not computed", jobSuggestedParamSet.paramSetState.equals(ParamSetStatus.FITNESS_COMPUTED));
+        assertTrue("Fitness is non-positive", jobSuggestedParamSet.fitness > 0);
       }
     });
   }

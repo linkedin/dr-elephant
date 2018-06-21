@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS tuning_algorithm (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
-INSERT INTO tuning_algorithm VALUES (1, 'PIG', 'PSO', '1', 'RESOURCE', current_timestamp(0), current_timestamp(0));
+INSERT INTO tuning_algorithm(id, job_type, optimization_algo, optimization_algo_version, optimization_metric, created_ts, updated_ts)
+VALUES (1, 'PIG', 'PSO', '1', 'RESOURCE', current_timestamp(0), current_timestamp(0));
 
 /**
  * This table represents hadoop parameters to be optimized for each algo in tuning_algorithm.
@@ -52,15 +53,16 @@ CREATE TABLE IF NOT EXISTS tuning_parameter (
   CONSTRAINT tuning_parameter_ibfk_1 FOREIGN KEY (tuning_algorithm_id) REFERENCES tuning_algorithm (id)
 ) ENGINE=InnoDB;
 
-INSERT INTO tuning_parameter VALUES (1,'mapreduce.task.io.sort.mb',1,100,50,1920,50, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (2,'mapreduce.map.memory.mb',1,2048,1536,8192,128, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (3,'mapreduce.task.io.sort.factor',1,10,10,150,10 ,0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (4,'mapreduce.map.sort.spill.percent',1,0.8,0.6,0.9,0.1, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (5,'mapreduce.reduce.memory.mb',1,2048,1536,8192,128, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (6,'pig.maxCombinedSplitSize',1,536870912,536870912,536870912,128, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (7,'mapreduce.reduce.java.opts',1,1536,1152,6144,128, 1, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (8,'mapreduce.map.java.opts',1,1536,1152,6144,128, 1, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (9,'mapreduce.input.fileinputformat.split.maxsize',1,536870912,536870912,536870912,128, 1, current_timestamp(0), current_timestamp(0));
+INSERT INTO tuning_parameter (id, param_name, tuning_algorithm_id, default_value, min_value, max_value, step_size, is_derived, created_ts, updated_ts) VALUES
+(1,'mapreduce.task.io.sort.mb',1,100,50,1920,50, 0, current_timestamp(0), current_timestamp(0)),
+(2,'mapreduce.map.memory.mb',1,2048,1536,8192,128, 0, current_timestamp(0), current_timestamp(0)),
+(3,'mapreduce.task.io.sort.factor',1,10,10,150,10 ,0, current_timestamp(0), current_timestamp(0)),
+(4,'mapreduce.map.sort.spill.percent',1,0.8,0.6,0.9,0.1, 0, current_timestamp(0), current_timestamp(0)),
+(5,'mapreduce.reduce.memory.mb',1,2048,1536,8192,128, 0, current_timestamp(0), current_timestamp(0)),
+(6,'pig.maxCombinedSplitSize',1,536870912,536870912,536870912,128, 0, current_timestamp(0), current_timestamp(0)),
+(7,'mapreduce.reduce.java.opts',1,1536,1152,6144,128, 1, current_timestamp(0), current_timestamp(0)),
+(8,'mapreduce.map.java.opts',1,1536,1152,6144,128, 1, current_timestamp(0), current_timestamp(0)),
+(9,'mapreduce.input.fileinputformat.split.maxsize',1,536870912,536870912,536870912,128, 1, current_timestamp(0), current_timestamp(0));
 
 create index index_tp_algo_id on tuning_parameter (tuning_algorithm_id);
 
