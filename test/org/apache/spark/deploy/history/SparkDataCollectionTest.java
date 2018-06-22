@@ -44,7 +44,7 @@ public class SparkDataCollectionTest {
         SparkDataCollection dataCollection = new SparkDataCollection();
 
         InputStream in = new BufferedInputStream(
-                SparkDataCollectionTest.class.getClassLoader().getResourceAsStream(event_log_dir + "event_log_1"));
+                SparkDataCollectionTest.class.getClassLoader().getResourceAsStream(event_log_dir + "event_log_230"));
         dataCollection.load(in, in.toString());
         in.close();
 
