@@ -169,6 +169,7 @@ class SparkDataCollection extends SparkApplicationData {
 
         val status = executorsListener.activeStorageStatusList(statusId)
 
+        println(status.blockManagerId.executorId + ":::" + status)
         info.execId = status.blockManagerId.executorId
         info.hostPort = status.blockManagerId.hostPort
         info.rddBlocks = status.numBlocks
@@ -198,6 +199,8 @@ class SparkDataCollection extends SparkApplicationData {
           info.shuffleRead = 0
           info.shuffleWrite = 0
         }
+
+        info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
 
         _executorData.setExecutorInfo(info.execId, info)
       }
