@@ -224,7 +224,7 @@ public class InfoExtractorTest {
 
     assertEquals(result.scheduler, "azkaban");
 
-    // CHECKME-20180623
+    // CHECKME
     // assertFalse(StringUtils.isEmpty(result.getJobExecId()));
     // assertFalse(StringUtils.isEmpty(result.getJobDefId()));
     // assertFalse(StringUtils.isEmpty(result.getFlowExecId()));

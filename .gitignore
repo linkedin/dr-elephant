@@ -58,3 +58,4 @@ public/assets/ember/
 public/assets/fonts/
 web/bower_components/
 web/node_modules/
+web/package-lock.json

@@ -308,7 +308,7 @@ class SparkDataCollection extends SparkApplicationData {
     replayBus.addListener(storageListener)
     replayBus.addListener(storageStatusTrackingListener)
 
-    // filter only for spark 2.x event log
+    // CHECKME filter only for spark 2.x event log
     // ex. {"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionStart"
     //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionEnd"
     //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerDriverAccumUpdates" ...
