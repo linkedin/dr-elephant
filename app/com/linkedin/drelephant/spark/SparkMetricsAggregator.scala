@@ -46,10 +46,9 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     case _ => throw new IllegalArgumentException("data should be SparkApplicationData")
   }
 
-  private def aggregate(data: SparkApplicationData): Unit = for {
-    executorInstances <- executorInstancesOf(data)
-    executorMemoryBytes <- executorMemoryBytesOf(data)
-  } {
+  private def aggregate(data: SparkApplicationData): Unit = {
+    val executorInstances = executorInstancesOf(data)
+    val executorMemoryBytes = executorMemoryBytesOf(data)
     val applicationDurationMillis = applicationDurationMillisOf(data)
     if( applicationDurationMillis < 0) {
       logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
@@ -97,14 +96,14 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
 
-  private def executorInstancesOf(data: SparkApplicationData): Option[Int] = {
+  private def executorInstancesOf(data: SparkApplicationData): Int = {
     val appConfigurationProperties = data.appConfigurationProperties
-    appConfigurationProperties.get(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)
+    appConfigurationProperties.getOrElse(SPARK_EXECUTOR_INSTANCES_KEY, "2").toInt
   }
 
-  private def executorMemoryBytesOf(data: SparkApplicationData): Option[Long] = {
+  private def executorMemoryBytesOf(data: SparkApplicationData): Long = {
     val appConfigurationProperties = data.appConfigurationProperties
-    appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)
+    MemoryFormatUtils.stringToBytes(appConfigurationProperties.getOrElse(SPARK_EXECUTOR_MEMORY_KEY, "1g"))
   }
 
   private def applicationDurationMillisOf(data: SparkApplicationData): Long = {
