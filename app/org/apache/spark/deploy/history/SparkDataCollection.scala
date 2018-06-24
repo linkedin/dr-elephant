@@ -17,15 +17,13 @@
 package org.apache.spark.deploy.history
 
 import java.io.InputStream
-import java.util.{Set => JSet, Properties, List => JList, HashSet => JHashSet, ArrayList => JArrayList}
+import java.util.{Properties, ArrayList => JArrayList, HashSet => JHashSet, List => JList, Set => JSet}
 
 import scala.collection.mutable
-
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.spark.legacydata._
 import com.linkedin.drelephant.spark.legacydata.SparkExecutorData.ExecutorInfo
 import com.linkedin.drelephant.spark.legacydata.SparkJobProgressData.JobInfo
-
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{ApplicationEventListener, ReplayListenerBus, StageInfo}
 import org.apache.spark.storage.{RDDInfo, StorageStatus, StorageStatusListener, StorageStatusTrackingListener}
@@ -34,6 +32,8 @@ import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.util.collection.OpenHashSet
+import org.json4s.{DefaultFormats, JValue}
+import org.json4s.jackson.JsonMethods.parse
 
 /**
  * This class wraps the logic of collecting the data in SparkEventListeners into the
@@ -310,13 +310,15 @@ class SparkDataCollection extends SparkApplicationData {
 
     // CHECKME filter only for spark 2.x event log
     // ex. {"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionStart"
-    //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionEnd"
-    //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerDriverAccumUpdates" ...
+    //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerDriverAccumUpdates"
+    //     {"Event":"org.apache.spark.sql.streaming.StreamingQueryListener$QueryProgress" ...
+    implicit val formats = DefaultFormats
     replayBus.replay(in, sourceName, maybeTruncated = false, { (eventString: String) => {
-      if (eventString.contains("\"Event\":\"org.apache.spark.")) {
-        false
-      } else {
-        true
+      val json = parse(eventString)
+
+      (json \ "Event").extract[String] match {
+        case valueStrig if valueStrig.contains("org.apache.spark.") => false
+        case _ => true
       }
     }
     })
