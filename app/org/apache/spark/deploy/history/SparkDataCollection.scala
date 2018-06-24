@@ -313,7 +313,7 @@ class SparkDataCollection extends SparkApplicationData {
     //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerSQLExecutionEnd"
     //     {"Event":"org.apache.spark.sql.execution.ui.SparkListenerDriverAccumUpdates" ...
     replayBus.replay(in, sourceName, maybeTruncated = false, { (eventString: String) => {
-      if (eventString.contains("\"Event\":\"org.apache.spark.sql.execution.ui.")) {
+      if (eventString.contains("\"Event\":\"org.apache.spark.")) {
         false
       } else {
         true
