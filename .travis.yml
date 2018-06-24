@@ -11,5 +11,5 @@ install:
 # only build PRs and master (not all branch pushes)
 branches:
   only:
-    - master
+    - feature/support_spark_2.x
 
