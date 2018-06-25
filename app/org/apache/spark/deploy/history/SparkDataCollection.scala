@@ -197,8 +197,10 @@ class SparkDataCollection extends SparkApplicationData {
           info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
           info.duration = executorsListener.executorToTaskSummary(info.execId).duration
           info.inputBytes = executorsListener.executorToTaskSummary(info.execId).inputBytes
+          info.outputBytes = executorsListener.executorToTaskSummary(info.execId).outputBytes
           info.shuffleRead = executorsListener.executorToTaskSummary(info.execId).shuffleRead
           info.shuffleWrite = executorsListener.executorToTaskSummary(info.execId).shuffleWrite
+          info.totalGCTime = executorsListener.executorToTaskSummary(info.execId).jvmGCTime
         }
 
 
