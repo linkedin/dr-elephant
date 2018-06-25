@@ -37,6 +37,7 @@ ALTER TABLE job_suggested_param_set ADD CONSTRAINT job_suggested_param_set_f1 FO
 ALTER TABLE job_suggested_param_set CHANGE job_execution_id fitness_job_execution_id int(10) unsigned NULL;
 -- The following command is commented because it does not work in h2 database
 -- UPDATE job_suggested_param_set jsps INNER JOIN job_execution je on jsps.fitness_job_execution_id = je.id set jsps.fitness_job_execution_id = NULL where je.job_exec_id is NULL;
+ALTER TABLE job_suggested_param_value DROP FOREIGN KEY job_suggested_param_values_f1;
 DELETE from job_execution where job_exec_id is null;
 ALTER TABLE job_suggested_param_set CHANGE param_set_state param_set_state enum('CREATED','SENT','EXECUTED','FITNESS_COMPUTED','DISCARDED') NOT NULL COMMENT 'state of this execution parameter set';
 ALTER TABLE job_execution CHANGE job_exec_id job_exec_id varchar(700) NOT NULL COMMENT 'unique job execution id from schedulers like azkaban, oozie etc';
@@ -59,7 +60,7 @@ CREATE TABLE IF NOT EXISTS tuning_job_execution_param_set (
 
 ALTER TABLE job_suggested_param_value ADD COLUMN job_suggested_param_set_id int(10) unsigned NOT NULL COMMENT 'foreign key from job_suggested_param_set table' after id;
 UPDATE job_suggested_param_value SET job_suggested_param_set_id = job_execution_id;
-ALTER TABLE job_suggested_param_value DROP FOREIGN KEY job_suggested_param_values_f1;
+
 -- For h2 bases:
 ALTER TABLE job_suggested_param_value DROP CONSTRAINT job_execution_id;
 -- For MySQL:
