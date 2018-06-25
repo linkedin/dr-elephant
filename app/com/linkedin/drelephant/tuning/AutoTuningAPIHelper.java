@@ -19,11 +19,14 @@ package com.linkedin.drelephant.tuning;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.util.Utils;
+
 import controllers.AutoTuningMetricsController;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import models.FlowDefinition;
 import models.FlowExecution;
 import models.JobDefinition;
@@ -36,6 +39,7 @@ import models.TuningAlgorithm;
 import models.TuningJobDefinition;
 import models.TuningJobExecutionParamSet;
 import models.TuningParameter;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
@@ -110,7 +114,7 @@ public class AutoTuningAPIHelper {
    * Sets the tuning algorithm based on the job type and optimization metric
    * @param tuningInput TuningInput for which tuning algorithm is to be set
    */
-  private void setTuningAlgorithm(TuningInput tuningInput) throws Exception {
+  private void setTuningAlgorithm(TuningInput tuningInput) throws IllegalArgumentException {
     //Todo: Handle algorithm version later
     TuningAlgorithm tuningAlgorithm = TuningAlgorithm.find.select("*")
         .where()
@@ -118,7 +122,7 @@ public class AutoTuningAPIHelper {
         .eq(TuningAlgorithm.TABLE.optimizationMetric, tuningInput.getOptimizationMetric())
         .findUnique();
     if (tuningAlgorithm == null) {
-      throw new Exception(
+      throw new IllegalArgumentException(
           "Wrong job type or optimization metric. Job Type " + tuningInput.getJobType() + ". Optimization Metrics: "
               + tuningInput.getOptimizationMetric());
     }

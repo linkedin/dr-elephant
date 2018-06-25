@@ -986,12 +986,12 @@ public class Application extends Controller {
 
       for (Map.Entry<String, Double> param : outputParams.entrySet()) {
         if (param.getKey().equals("mapreduce.map.sort.spill.percent")) {
-          outputParamFormatted.put(param.getKey(), param.getValue() + "");
+          outputParamFormatted.put(param.getKey(), String.valueOf(param.getValue()));
         } else if (param.getKey().equals("mapreduce.map.java.opts")
             || param.getKey().equals("mapreduce.reduce.java.opts")) {
           outputParamFormatted.put(param.getKey(), "-Xmx" + Math.round(param.getValue()) + "m");
         } else {
-          outputParamFormatted.put(param.getKey(), Math.round(param.getValue()) + "");
+          outputParamFormatted.put(param.getKey(), String.valueOf(Math.round(param.getValue())));
         }
       }
       return Json.toJson(outputParamFormatted);
