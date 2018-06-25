@@ -15,6 +15,7 @@
 //
 
 import play.Project._
+import sbt.ExclusionRule
 //import play.Play.autoImport._
 import sbt._
 
@@ -62,6 +63,23 @@ object Dependencies {
       )
   }
 
+  val sparkSqlExclusion = if (sparkVersion >= "1.5.0") {
+    "org.apache.spark" % "spark-sql_2.10" % sparkVersion excludeAll(
+      ExclusionRule(organization = "com.typesafe.akka"),
+      ExclusionRule(organization = "org.apache.avro"),
+      ExclusionRule(organization = "org.apache.hadoop"),
+      ExclusionRule(organization = "net.razorvine"),
+      ExclusionRule(artifact = "spark-catalyst_2.10")
+    )
+  } else {
+    "org.apache.spark" % "spark-sql_2.10" % sparkVersion excludeAll(
+      ExclusionRule(organization = "org.apache.avro"),
+      ExclusionRule(organization = "org.apache.hadoop"),
+      ExclusionRule(organization = "net.razorvine"),
+      ExclusionRule(artifact = "spark-catalyst_2.10")
+    )
+  }
+
   // Dependency coordinates
   var requiredDep = Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
@@ -98,7 +116,7 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % "3.0.0" % Test,
     "com.h2database" % "h2" % "1.4.196" % Test
 
-  ) :+ sparkExclusion
+  ) :+ sparkExclusion :+ sparkSqlExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
   dependencies ++= requiredDep
