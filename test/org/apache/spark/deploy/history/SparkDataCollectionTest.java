@@ -44,13 +44,11 @@ public class SparkDataCollectionTest {
         SparkDataCollection dataCollection = new SparkDataCollection();
 
         InputStream in = new BufferedInputStream(
-                SparkDataCollectionTest.class.getClassLoader().getResourceAsStream(event_log_dir + "event_log_230"));
+                SparkDataCollectionTest.class.getClassLoader().getResourceAsStream(event_log_dir + "event_log_1"));
         dataCollection.load(in, in.toString());
         in.close();
 
         SparkJobProgressData jobProgressData = dataCollection.getJobProgressData();
-        System.out.println(dataCollection.getEnvironmentData());
-        System.out.println(dataCollection.getExecutorData());
         assertNotNull("can't get job progress data", jobProgressData);
     }
 
