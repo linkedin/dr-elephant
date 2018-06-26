@@ -34,6 +34,12 @@ ALTER TABLE job_suggested_param_set ADD COLUMN job_definition_id int(10) unsigne
 -- The following command is commented because it does not work in h2 database
 -- UPDATE job_suggested_param_set a INNER JOIN job_execution b on a.job_execution_id = b.id set a.job_definition_id = b.job_definition_id;
 ALTER TABLE job_suggested_param_set ADD CONSTRAINT job_suggested_param_set_f1 FOREIGN KEY (job_definition_id) REFERENCES job_definition (id);
+
+-- For h2 bases:
+ALTER TABLE job_suggested_param_set DROP CONSTRAINT job_execution_id_2;
+-- For MySQL:
+-- ALTER TABLE job_suggested_param_set DROP INDEX job_execution_id_2;
+
 ALTER TABLE job_suggested_param_set CHANGE job_execution_id fitness_job_execution_id int(10) unsigned NULL;
 -- The following command is commented because it does not work in h2 database
 -- UPDATE job_suggested_param_set jsps INNER JOIN job_execution je on jsps.fitness_job_execution_id = je.id set jsps.fitness_job_execution_id = NULL where je.job_exec_id is NULL;
@@ -83,6 +89,7 @@ ALTER TABLE job_suggested_param_value DROP COLUMN job_suggested_param_set_id;
 DROP TABLE tuning_job_execution_param_set;
 ALTER TABLE job_suggested_param_set DROP FOREIGN KEY job_suggested_param_set_f2;
 ALTER TABLE job_suggested_param_set CHANGE fitness_job_execution_id job_execution_id int(10) unsigned NOT NULL;
+ALTER TABLE job_suggested_param_value ADD UNIQUE KEY job_execution_id_2 (job_execution_id);
 ALTER TABLE job_suggested_param_set CHANGE id id int(10) unsigned NOT NULL;
 ALTER TABLE job_suggested_param_set DROP PRIMARY KEY;
 ALTER TABLE job_suggested_param_set DROP COLUMN id;
