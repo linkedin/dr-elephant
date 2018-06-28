@@ -18,29 +18,23 @@ INSERT INTO `job_execution`(id, job_exec_id, job_exec_url, job_definition_id, fl
 (1624,'https://elephant.linkedin.com:8443/executor?execid=5158194&job=score-all-images_generate-impression-action&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5158194&job=score-all-images_generate-impression-action&attempt=0',51,847,'SUCCEEDED',196.53583333333333,43.996566666666666,3990998122525,parsedatetime('2018-01-15 03:03:05','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 05:08:44','dd-MM-yyyy hh:mm:ss')),
 (1625,'https://elephant.linkedin.com:8443/executor?execid=5157830&job=score-all-images_generate-impression-action&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5157830&job=score-all-images_generate-impression-action&attempt=0',51,846,'SUCCEEDED',169.09791666666666,34.86125,3990827471029,parsedatetime('2018-01-15 03:03:05','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 03:58:41','dd-MM-yyyy hh:mm:ss')),
 (1626,'https://elephant.linkedin.com:8443/executor?execid=5158533&job=score-all-images_generate-impression-action&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5158533&job=score-all-images_generate-impression-action&attempt=0',51,848,'SUCCEEDED',166.11400634765624,33.7234,3990138654674,parsedatetime('2018-01-15 03:03:05','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss')),
-(1627,NULL,NULL,51,NULL,NULL,NULL,NULL,NULL,parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss')),
-(1628,NULL,NULL,51,NULL,NULL,NULL,NULL,NULL,parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss')),
-(1629,NULL,NULL,51,NULL,NULL,NULL,NULL,NULL,parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 05:59:21','dd-MM-yyyy hh:mm:ss')),
 (1719,'https://elephant.linkedin.com:8443/executor?execid=5356366&job=countByCountryFlowSmall_countByCountry&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5356366&job=countByCountryFlowSmall_countByCountry&attempt=0',54,2035,'FAILED',0,0,0,parsedatetime('2018-01-23 04:06:41','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-09 05:52:42','dd-MM-yyyy hh:mm:ss')),
 (1720,'https://elephant.linkedin.com:8443/executor?execid=5356377&job=countByCountryFlowSmall_countByCountry&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5356377&job=countByCountryFlowSmall_countByCountry&attempt=0',54,2036,'SUCCEEDED',0.07686197916666666,3.5777,540598828,parsedatetime('2018-01-23 04:06:41','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-09 05:52:42','dd-MM-yyyy hh:mm:ss')),
-(1721,'https://elephant.linkedin.com:8443/executor?execid=5356853&job=countByCountryFlowSmall_countByCountry&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5356853&job=countByCountryFlowSmall_countByCountry&attempt=0',54,2047,'SUCCEEDED',0.21555555555555556,3.5456666666666665,540598828,parsedatetime('2018-01-23 04:06:41','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss')),
-(2833,NULL,NULL,54,NULL,NULL,NULL,NULL,NULL,parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss')),
-(2834,NULL,NULL,54,NULL,NULL,NULL,NULL,NULL,parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss')),
-(2835,NULL,NULL,54,NULL,NULL,NULL,NULL,NULL,parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-13 18:02:56','dd-MM-yyyy hh:mm:ss'));
+(1721,'https://elephant.linkedin.com:8443/executor?execid=5356853&job=countByCountryFlowSmall_countByCountry&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5356853&job=countByCountryFlowSmall_countByCountry&attempt=0',54,2047,'SUCCEEDED',0.21555555555555556,3.5456666666666665,540598828,parsedatetime('2018-01-23 04:06:41','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-02-13 18:02:55','dd-MM-yyyy hh:mm:ss'));
 
 INSERT INTO `job_suggested_param_set`(fitness_job_execution_id, tuning_algorithm_id, param_set_state, is_param_set_default, fitness, is_param_set_best, are_constraints_violated, job_definition_id,id) VALUES
 (1624,1,'FITNESS_COMPUTED',0,0.05287618226970775,0,0,51,1624),
 (1625,1,'FITNESS_COMPUTED',0,0.04549620518409709,0,0,51,1625),
 (1626,1,'FITNESS_COMPUTED',0,0.044701092268747876,0,0,51,1626),
-(1627,1,'CREATED',0,NULL,0,0,51,1627),
-(1628,1,'CREATED',0,NULL,0,0,51,1628),
-(1629,1,'CREATED',0,NULL,0,0,51,1629),
+(NULL,1,'CREATED',0,NULL,0,0,51,1627),
+(NULL,1,'CREATED',0,NULL,0,0,51,1628),
+(NULL,1,'CREATED',0,NULL,0,0,51,1629),
 (1719,1,'FITNESS_COMPUTED',0,1.0960015760903588,0,0,54,1719),
 (1720,1,'FITNESS_COMPUTED',0,0.15266389313494158,0,0,54,1720),
 (1721,1,'FITNESS_COMPUTED',0,1.079813530812908,0,0,54,1721),
 (2833,1,'FITNESS_COMPUTED',0,0.54365576171875,0,0,54,2833),
-(2834,1,'CREATED',0,NULL,0,0,54,2834),
-(2835,1,'CREATED',0,NULL,0,0,54,2835);
+(NULL,1,'CREATED',0,NULL,0,0,54,2834),
+(NULL,1,'CREATED',0,NULL,0,0,54,2835);
 
 INSERT INTO `job_suggested_param_value`(id, job_suggested_param_set_id, tuning_parameter_id, param_value, created_ts, updated_ts) VALUES
 (12569,1624,1,218.6447449212757,parsedatetime('2018-01-15 03:03:05','dd-MM-yyyy hh:mm:ss'),parsedatetime('2018-01-15 03:03:05','dd-MM-yyyy hh:mm:ss')),
