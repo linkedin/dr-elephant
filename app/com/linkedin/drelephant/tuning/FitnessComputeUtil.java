@@ -333,7 +333,7 @@ public class FitnessComputeUtil {
         if (diff < fitnessComputeWaitInterval) {
           logger.info("Delaying fitness compute for execution: " + jobExecution.jobExecId);
         } else {
-          logger.info("Adding execution " + jobExecution.jobExecId + " for fitness computation");
+          logger.info("Adding execution " + jobExecution.jobExecId + " to fitness computation queue");
           completedJobExecutionParamSet.add(tuningJobExecutionParamSet);
         }
       }
@@ -409,13 +409,13 @@ public class FitnessComputeUtil {
               logger.info("Execution id: " + jobExecution.id + " succeeded");
               updateJobSuggestedParamSetSucceededExecution(jobExecution, jobSuggestedParamSet, tuningJobDefinition);
             } else {
-              // Resetting param set to created state because in case captures the scenarios when
+              // Resetting param set to created state because this case captures the scenarios when
               // either the job failed for reasons other than auto tuning or was killed/cancelled/skipped etc.
               // In all the above scenarios, fitness cannot be computed for the param set correctly.
               // Note that the penalty on failures caused by auto tuning is applied when the job execution is retried
               // after failure.
               logger.info("Execution id: " + jobExecution.id + " was not successful for reason other than tuning."
-                  + "Resetting param set to created");
+                  + "Resetting param set: " + jobSuggestedParamSet.id + " to CREATED state");
               resetParamSetToCreated(jobSuggestedParamSet);
             }
           }
@@ -424,8 +424,9 @@ public class FitnessComputeUtil {
           logger.debug("Current Time in millis: " + System.currentTimeMillis() + ", job execution last updated time "
               + jobExecution.updatedTs.getTime());
           if (diff > ignoreExecutionWaitInterval) {
-            logger.info("Execution id: " + jobExecution.id + " not updated since two hours. "
-                + "Resetting param set to created");
+            logger.info("Fitness of param set " + jobSuggestedParamSet.id  + " corresponding to execution id: " +
+                jobExecution.id + " not computed for more than the maximum duration specified to compute fitness. "
+                + "Resetting the param set to CREATED state");
             resetParamSetToCreated(jobSuggestedParamSet);
           }
         }
@@ -488,8 +489,7 @@ public class FitnessComputeUtil {
    */
   private JobSuggestedParamSet updateBestJobSuggestedParamSet(JobSuggestedParamSet jobSuggestedParamSet) {
     logger.info("Checking if a new best param set is found for job: " + jobSuggestedParamSet.jobDefinition.jobDefId);
-    JobSuggestedParamSet currentBestJobSuggestedParamSet;
-    currentBestJobSuggestedParamSet = JobSuggestedParamSet.find.where()
+    JobSuggestedParamSet currentBestJobSuggestedParamSet = JobSuggestedParamSet.find.where()
         .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id,
             jobSuggestedParamSet.jobDefinition.id)
         .eq(JobSuggestedParamSet.TABLE.isParamSetBest, 1)
