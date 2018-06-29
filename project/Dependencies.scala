@@ -68,15 +68,13 @@ object Dependencies {
       ExclusionRule(organization = "com.typesafe.akka"),
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
-      ExclusionRule(organization = "net.razorvine"),
-      ExclusionRule(artifact = "spark-catalyst_2.10")
+      ExclusionRule(organization = "net.razorvine")
     )
   } else {
     "org.apache.spark" % "spark-sql_2.10" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
-      ExclusionRule(organization = "net.razorvine"),
-      ExclusionRule(artifact = "spark-catalyst_2.10")
+      ExclusionRule(organization = "net.razorvine")
     )
   }
 
@@ -115,7 +113,6 @@ object Dependencies {
     "org.apache.httpcomponents" % "httpcore" % "4.4.4",
     "org.scalatest" %% "scalatest" % "3.0.0" % Test,
     "com.h2database" % "h2" % "1.4.196" % Test
-
   ) :+ sparkExclusion :+ sparkSqlExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
