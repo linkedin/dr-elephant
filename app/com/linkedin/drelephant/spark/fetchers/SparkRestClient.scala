@@ -101,6 +101,7 @@ class SparkRestClient(sparkConf: SparkConf) {
         Await.result(futureJobDatas, DEFAULT_TIMEOUT),
         Await.result(futureStageDatas, DEFAULT_TIMEOUT),
         Await.result(futureExecutorSummaries, Duration(5, SECONDS)),
+        Seq.empty,
         Await.result(futureLogData, Duration(5, SECONDS))
       )
 

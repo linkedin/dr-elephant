@@ -118,7 +118,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
       result.addResultDetail("Executor Overhead Memory", "Please do not specify excessive amount of overhead memory for Executors. Change it in the field " + SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD)
     }
     if(evaluator.severityExecutorCores != Severity.NONE) {
-      result.addResultDetail("Executor cores", "The number of executor cores should be <=" + evaluator.DEFAULT_SPARK_CORES_THRESHOLDS.low + ". Please change it in the field " + SPARK_EXECUTOR_CORES_KEY)
+      result.addResultDetail("Executor cores", "The number of executor cores should be <" + evaluator.DEFAULT_SPARK_CORES_THRESHOLDS.low + ". Please change it in the field " + SPARK_EXECUTOR_CORES_KEY)
     }
     if(evaluator.severityExecutorMemory != Severity.NONE) {
       result.addResultDetail("Executor memory", "Please do not specify excessive amount of executor memory. Change it in the field " + SPARK_EXECUTOR_MEMORY_KEY)
@@ -204,7 +204,7 @@ object ConfigurationHeuristic {
       SeverityThresholds(low = MemoryFormatUtils.stringToBytes("10G"), MemoryFormatUtils.stringToBytes("15G"),
         severe = MemoryFormatUtils.stringToBytes("20G"), critical = MemoryFormatUtils.stringToBytes("25G"), ascending = true)
     val DEFAULT_SPARK_CORES_THRESHOLDS =
-      SeverityThresholds(low = 4, moderate = 6, severe = 8, critical = 10, ascending = true)
+      SeverityThresholds(low = 5, moderate = 6, severe = 8, critical = 10, ascending = true)
 
     val severityExecutorMemory = DEFAULT_SPARK_MEMORY_THRESHOLDS.severityOf(executorMemoryBytes.getOrElse(0).asInstanceOf[Number].longValue)
     val severityExecutorCores = DEFAULT_SPARK_CORES_THRESHOLDS.severityOf(executorCores.getOrElse(0).asInstanceOf[Number].intValue)

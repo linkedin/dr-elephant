@@ -67,16 +67,51 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       )
     )
 
+    val executorSummaries2 = Seq(
+      newFakeExecutorSummary(
+        id = "1",
+        totalGCTime = 12000,
+        totalDuration = Duration("4min").toMillis
+      ),
+      newFakeExecutorSummary(
+        id = "2",
+        totalGCTime = 13000,
+        totalDuration = Duration("1min").toMillis
+      )
+    )
+
+    val executorSummaries3 = Seq(
+      newFakeExecutorSummary(
+        id = "1",
+        totalGCTime = 9000,
+        totalDuration = Duration("2min").toMillis
+      )
+    )
+
     describe(".apply") {
       val data = newFakeSparkApplicationData(executorSummaries)
       val data1 = newFakeSparkApplicationData(executorSummaries1)
+      val data2 = newFakeSparkApplicationData(executorSummaries2)
+      val data3 = newFakeSparkApplicationData(executorSummaries3)
       val heuristicResult = executorGcHeuristic.apply(data)
       val heuristicResult1 = executorGcHeuristic.apply(data1)
+      val heuristicResult2 = executorGcHeuristic.apply(data2)
+      val heuristicResult3 = executorGcHeuristic.apply(data3)
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
       val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
+      val heuristicResultDetails2 = heuristicResult2.getHeuristicResultDetails
+      val heuristicResultDetails3 = heuristicResult3.getHeuristicResultDetails
 
       it("returns the severity") {
         heuristicResult.getSeverity should be(Severity.CRITICAL)
+      }
+
+      it("return the low severity") {
+        heuristicResult2.getSeverity should be(Severity.LOW)
+      }
+
+      it("return NONE severity for runtime less than 5 min") {
+        heuristicResult2.getSeverity should be(Severity.LOW)
       }
 
       it("returns the JVM GC time to Executor Run time duration") {

@@ -143,7 +143,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       it("returns executor cores") {
         val details = heuristicResultDetails.get(10)
         details.getName should include("Executor cores")
-        details.getValue should be("The number of executor cores should be <=4. Please change it in the field spark.executor.cores")
+        details.getValue should be("The number of executor cores should be <5. Please change it in the field spark.executor.cores")
       }
     }
 

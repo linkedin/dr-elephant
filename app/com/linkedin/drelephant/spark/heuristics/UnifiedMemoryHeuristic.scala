@@ -116,10 +116,14 @@ object UnifiedMemoryHeuristic {
       }
     }.max
 
-    lazy val severity: Severity = if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(unifiedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
-      Severity.NONE
+     lazy val severity: Severity = if (sparkMemoryFraction > 0.05D || maxMemory > 268435456L) {
+      if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(unifiedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
+        Severity.NONE
+      } else {
+        PEAK_UNIFIED_MEMORY_THRESHOLDS.severityOf(maxUnifiedMemory)
+      }
     } else {
-      PEAK_UNIFIED_MEMORY_THRESHOLDS.severityOf(maxUnifiedMemory)
+      Severity.NONE
     }
   }
 }
