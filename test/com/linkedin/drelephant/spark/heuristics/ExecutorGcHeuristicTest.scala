@@ -114,6 +114,10 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
         heuristicResult2.getSeverity should be(Severity.LOW)
       }
 
+      it("return none severity") {
+        heuristicResult3.getSeverity should be(Severity.NONE)
+      }
+
       it("returns the JVM GC time to Executor Run time duration") {
         val details = heuristicResultDetails.get(0)
         details.getName should include("GC time to Executor Run time ratio")

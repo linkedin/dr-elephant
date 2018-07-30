@@ -21,6 +21,7 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
   val unifiedMemoryHeuristic = new UnifiedMemoryHeuristic(heuristicConfigurationData)
   val appConfigurationProperties = Map("spark.executor.memory"->"3147483647")
   val appConfigurationProperties1 = Map("spark.executor.memory"->"214567874847")
+  val appConfigurationProperties2 = Map("spark.executor.memory"->"214567874847", "spark.memory.fraction"->"0.06")
 
   val executorData = Seq(
     newDummyExecutorData("1", 999999999, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
@@ -41,13 +42,27 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
     newDummyExecutorData("2", 999999999, Map("executionMemory" -> 999999990, "storageMemory" -> 9))
   )
 
+  val executorData3 = Seq(
+    newDummyExecutorData("1", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
+    newDummyExecutorData("2", 500000, Map("executionMemory" -> 5000, "storageMemory" -> 9))
+  )
+
+  val executorData4 = Seq(
+    newDummyExecutorData("1", 268435460L, Map("executionMemory" -> 300000, "storageMemory" -> 94567)),
+    newDummyExecutorData("2", 268435460L, Map("executionMemory" -> 900000, "storageMemory" -> 500000))
+  )
+
   describe(".apply") {
     val data = newFakeSparkApplicationData(appConfigurationProperties, executorData)
     val data1 = newFakeSparkApplicationData(appConfigurationProperties1, executorData1)
     val data2 = newFakeSparkApplicationData(appConfigurationProperties1, executorData2)
+    val data3 = newFakeSparkApplicationData(appConfigurationProperties1, executorData3)
+    val data4 = newFakeSparkApplicationData(appConfigurationProperties2, executorData4)
     val heuristicResult = unifiedMemoryHeuristic.apply(data)
     val heuristicResult1 = unifiedMemoryHeuristic.apply(data1)
     val heuristicResult2 = unifiedMemoryHeuristic.apply(data2)
+    val heuristicResult3 = unifiedMemoryHeuristic.apply(data3)
+    val heuristicResult4 = unifiedMemoryHeuristic.apply(data4)
     val evaluator = new Evaluator(unifiedMemoryHeuristic, data1)
 
     it("has severity") {
@@ -84,6 +99,14 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
 
     it("has no severity when max and allocated memory are the same") {
       heuristicResult2.getSeverity should be(Severity.NONE)
+    }
+
+    it("has no severity when maxMemory is less than 256Mb") {
+      heuristicResult3.getSeverity should be(Severity.NONE)
+    }
+
+    it("has critical severity when maxMemory is greater than 256Mb and spark memory fraction is greater than 0.05") {
+      heuristicResult4.getSeverity should be(Severity.CRITICAL)
     }
   }
 }

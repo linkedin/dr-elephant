@@ -61,6 +61,10 @@ class DriverHeuristic(private val heuristicConfigurationData: HeuristicConfigura
         SPARK_DRIVER_MEMORY_KEY,
         formatProperty(evaluator.driverMemoryBytes.map(MemoryFormatUtils.bytesToString))
       ),
+      //Removing driver GC heuristics for now
+//      new HeuristicResultDetails(
+//        "Ratio of time spent in GC to total time", evaluator.ratio.toString
+//      ),
       new HeuristicResultDetails(
         SPARK_DRIVER_CORES_KEY,
         formatProperty(evaluator.driverCores.map(_.toString))
