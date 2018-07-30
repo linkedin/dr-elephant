@@ -107,7 +107,7 @@ object ExecutorGcHeuristic {
 
     var ratio: Double = jvmTime.toDouble / executorRunTimeTotal.toDouble
 
-    //If the total Executor Runtime is less then 5 minutes then we dongit 't consider for the severity due to GC
+    //If the total Executor Runtime is less then 5 minutes then we won't consider for the severity due to GC
     lazy val severityTimeA: Severity = if ((executorRunTimeTotal/Statistics.MINUTE_IN_MS) >= 5.0D)
         executorGcHeuristic.gcSeverityAThresholds.severityOf(ratio)
     else
