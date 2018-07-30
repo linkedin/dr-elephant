@@ -116,7 +116,7 @@ object UnifiedMemoryHeuristic {
       }
     }.max
 
-     lazy val severity: Severity = if (sparkMemoryFraction > 0.05D || maxMemory > 268435456L) {
+     lazy val severity: Severity = if (sparkMemoryFraction > 0.05D && maxMemory > 268435456L) {
       if (sparkExecutorMemory <= MemoryFormatUtils.stringToBytes(unifiedMemoryHeuristic.sparkExecutorMemoryThreshold)) {
         Severity.NONE
       } else {
