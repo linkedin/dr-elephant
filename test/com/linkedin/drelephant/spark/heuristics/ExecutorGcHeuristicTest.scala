@@ -26,18 +26,14 @@ import org.scalatest.{FunSpec, Matchers}
 
 import scala.concurrent.duration.Duration
 
-
+/**
+  * Test class for Executor GC Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
+  */
 class ExecutorGcHeuristicTest extends FunSpec with Matchers {
   import ExecutorGcHeuristicTest._
 
   describe("ExecutorGcHeuristic") {
-    val heuristicConfigurationData = newFakeHeuristicConfigurationData(
-      Map(
-        "max_to_median_ratio_severity_thresholds" -> "1.414,2,4,16",
-        "ignore_max_bytes_less_than_threshold" -> "4000000",
-        "ignore_max_millis_less_than_threshold" -> "4000001"
-      )
-    )
+    val heuristicConfigurationData = newFakeHeuristicConfigurationData()
     val executorGcHeuristic = new ExecutorGcHeuristic(heuristicConfigurationData)
 
     val executorSummaries = Seq(
@@ -63,13 +59,63 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       )
     )
 
+    val executorSummaries1 = Seq(
+      newFakeExecutorSummary(
+        id = "1",
+        totalGCTime = 500,
+        totalDuration = 700
+      )
+    )
+
+    val executorSummaries2 = Seq(
+      newFakeExecutorSummary(
+        id = "1",
+        totalGCTime = 12000,
+        totalDuration = Duration("4min").toMillis
+      ),
+      newFakeExecutorSummary(
+        id = "2",
+        totalGCTime = 13000,
+        totalDuration = Duration("1min").toMillis
+      )
+    )
+
+    val executorSummaries3 = Seq(
+      newFakeExecutorSummary(
+        id = "1",
+        totalGCTime = 9000,
+        totalDuration = Duration("2min").toMillis
+      )
+    )
+
     describe(".apply") {
-      val data1 = newFakeSparkApplicationData(executorSummaries)
-      val heuristicResult = executorGcHeuristic.apply(data1)
+      val data = newFakeSparkApplicationData(executorSummaries)
+      val data1 = newFakeSparkApplicationData(executorSummaries1)
+      val data2 = newFakeSparkApplicationData(executorSummaries2)
+      val data3 = newFakeSparkApplicationData(executorSummaries3)
+      val heuristicResult = executorGcHeuristic.apply(data)
+      val heuristicResult1 = executorGcHeuristic.apply(data1)
+      val heuristicResult2 = executorGcHeuristic.apply(data2)
+      val heuristicResult3 = executorGcHeuristic.apply(data3)
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
+      val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
+      val heuristicResultDetails2 = heuristicResult2.getHeuristicResultDetails
+      val heuristicResultDetails3 = heuristicResult3.getHeuristicResultDetails
 
       it("returns the severity") {
         heuristicResult.getSeverity should be(Severity.CRITICAL)
+      }
+
+      it("return the low severity") {
+        heuristicResult2.getSeverity should be(Severity.LOW)
+      }
+
+      it("return NONE severity for runtime less than 5 min") {
+        heuristicResult2.getSeverity should be(Severity.LOW)
+      }
+
+      it("return none severity") {
+        heuristicResult3.getSeverity should be(Severity.NONE)
       }
 
       it("returns the JVM GC time to Executor Run time duration") {
@@ -81,13 +127,25 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       it("returns the total GC time") {
         val details = heuristicResultDetails.get(1)
         details.getName should include("Total GC time")
-        details.getValue should be("1200000")
+        details.getValue should be("20 Minutes")
       }
 
       it("returns the executor's run time") {
         val details = heuristicResultDetails.get(2)
         details.getName should include("Total Executor Runtime")
-        details.getValue should be("4740000")
+        details.getValue should be("1 Hours 19 Minutes")
+      }
+
+      it("returns total Gc Time in millisec") {
+        val details = heuristicResultDetails1.get(1)
+        details.getName should include("Total GC time")
+        details.getValue should be("500 msec")
+      }
+
+      it("returns executor run Time in millisec") {
+        val details = heuristicResultDetails1.get(2)
+        details.getName should include("Total Executor Runtime")
+        details.getValue should be("700 msec")
       }
     }
   }
@@ -113,13 +171,17 @@ object ExecutorGcHeuristicTest {
     failedTasks = 0,
     completedTasks = 0,
     totalTasks = 0,
+    maxTasks = 0,
     totalDuration,
     totalInputBytes=0,
     totalShuffleRead=0,
     totalShuffleWrite= 0,
-    maxMemory= 0,
+    maxMemory = 0,
     totalGCTime,
-    executorLogs = Map.empty
+    totalMemoryBytesSpilled = 0,
+    executorLogs = Map.empty,
+    peakJvmUsedMemory = Map.empty,
+    peakUnifiedMemory = Map.empty
   )
 
   def newFakeSparkApplicationData(
@@ -131,7 +193,8 @@ object ExecutorGcHeuristicTest {
       new ApplicationInfoImpl(appId, name = "app", Seq.empty),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
-      executorSummaries = executorSummaries
+      executorSummaries = executorSummaries,
+      stagesWithFailedTasks = Seq.empty
     )
     SparkApplicationData(appId, restDerivedData, None)
   }

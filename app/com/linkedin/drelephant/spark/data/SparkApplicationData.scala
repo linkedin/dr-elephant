@@ -30,7 +30,8 @@ case class SparkApplicationData(
   applicationInfo: ApplicationInfo,
   jobDatas: Seq[JobData],
   stageDatas: Seq[StageData],
-  executorSummaries: Seq[ExecutorSummary]
+  executorSummaries: Seq[ExecutorSummary],
+  stagesWithFailedTasks: Seq[StageData]
 ) extends HadoopApplicationData {
   import SparkApplicationData._
   import JavaConverters._
@@ -65,6 +66,7 @@ object SparkApplicationData {
     val jobDatas = restDerivedData.jobDatas
     val stageDatas = restDerivedData.stageDatas
     val executorSummaries = restDerivedData.executorSummaries
-    apply(appId, appConfigurationProperties, applicationInfo, jobDatas, stageDatas, executorSummaries)
+    val stagesWithFailedTasks = restDerivedData.stagesWithFailedTasks
+    apply(appId, appConfigurationProperties, applicationInfo, jobDatas, stageDatas, executorSummaries, stagesWithFailedTasks)
   }
 }

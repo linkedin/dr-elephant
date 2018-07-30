@@ -75,7 +75,7 @@ class SparkRestClient(sparkConf: SparkConf) {
 
   private val apiTarget: WebTarget = client.property(ClientProperties.CONNECT_TIMEOUT, CONNECTION_TIMEOUT).property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT).target(historyServerUri).path(API_V1_MOUNT_PATH)
 
-  def fetchData(appId: String, fetchLogs: Boolean = false)(
+  def fetchData(appId: String, fetchLogs: Boolean = false, fetchFailedTasks: Boolean = true)(
     implicit ec: ExecutionContext
   ): Future[SparkRestDerivedData] = {
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId)
@@ -101,6 +101,7 @@ class SparkRestClient(sparkConf: SparkConf) {
         Await.result(futureJobDatas, DEFAULT_TIMEOUT),
         Await.result(futureStageDatas, DEFAULT_TIMEOUT),
         Await.result(futureExecutorSummaries, Duration(5, SECONDS)),
+        Seq.empty,
         Await.result(futureLogData, Duration(5, SECONDS))
       )
 
@@ -223,13 +224,25 @@ class SparkRestClient(sparkConf: SparkConf) {
   }
 
   private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummaryImpl] = {
-    val target = attemptTarget.path("executors")
+    val target = attemptTarget.path("allexecutors")
     try {
       get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading executorSummary ${target.getUri}. Exception Message = " + e.getMessage)
         logger.debug(e)
+        throw e
+      }
+    }
+  }
+
+  private def getStagesWithFailedTasks(attemptTarget: WebTarget): Seq[StageDataImpl] = {
+    val target = attemptTarget.path("stages/failedTasks")
+    try {
+      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
+    } catch {
+      case NonFatal(e) => {
+        logger.error(s"error reading failedTasks ${target.getUri}", e)
         throw e
       }
     }

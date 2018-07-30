@@ -81,13 +81,18 @@ trait ExecutorSummary{
   def failedTasks: Int
   def completedTasks: Int
   def totalTasks: Int
+  def maxTasks: Int
   def totalDuration: Long
   def totalInputBytes: Long
   def totalShuffleRead: Long
   def totalShuffleWrite: Long
   def maxMemory: Long
   def totalGCTime: Long
-  def executorLogs: Map[String, String]}
+  def totalMemoryBytesSpilled: Long
+  def executorLogs: Map[String, String]
+  def peakJvmUsedMemory: Map[String, Long]
+  def peakUnifiedMemory: Map[String, Long]
+}
 
 trait JobData{
   def jobId: Int
@@ -160,7 +165,7 @@ trait StageData{
   def schedulingPool: String
 
   def accumulatorUpdates: Seq[AccumulableInfo]
-  def tasks: Option[Map[Long, TaskData]]
+  def tasks: Option[Map[Long, TaskDataImpl]]
   def executorSummary: Option[Map[String, ExecutorStageSummary]]}
 
 trait TaskData{
@@ -287,13 +292,17 @@ class ExecutorSummaryImpl(
   var failedTasks: Int,
   var completedTasks: Int,
   var totalTasks: Int,
+  var maxTasks: Int,
   var totalDuration: Long,
   var totalInputBytes: Long,
   var totalShuffleRead: Long,
   var totalShuffleWrite: Long,
   var maxMemory: Long,
   var totalGCTime: Long,
-  var executorLogs: Map[String, String]) extends ExecutorSummary
+  var totalMemoryBytesSpilled: Long,
+  var executorLogs: Map[String, String],
+  var peakJvmUsedMemory: Map[String, Long],
+  var peakUnifiedMemory: Map[String, Long]) extends ExecutorSummary
 
 class JobDataImpl(
   var jobId: Int,
@@ -366,7 +375,7 @@ class StageDataImpl(
   var schedulingPool: String,
 
   var accumulatorUpdates: Seq[AccumulableInfoImpl],
-  var tasks: Option[Map[Long, TaskData]],
+  var tasks: Option[Map[Long, TaskDataImpl]],
   var executorSummary: Option[Map[String, ExecutorStageSummaryImpl]]) extends StageData
 
 class TaskDataImpl(

@@ -110,7 +110,6 @@ public class ElephantContext {
     loadFetchers();
     loadHeuristics();
     loadJobTypes();
-
     loadGeneralConf();
     loadAutoTuningConf();
 

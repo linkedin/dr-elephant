@@ -280,7 +280,8 @@ public class InfoExtractorTest {
         new ApplicationInfoImpl("", "", new Vector<ApplicationAttemptInfoImpl>(0,1,0)),
             new Vector<JobData>(0,1,0),
             new Vector<StageData>(0,1,0),
-            new Vector<ExecutorSummary>(0,1,0));
+            new Vector<ExecutorSummary>(0,1,0),
+            new Vector<StageData>(0,1,0));
 
     InfoExtractor.loadInfo(result, data);
 
@@ -301,7 +302,8 @@ public class InfoExtractorTest {
         new ApplicationInfoImpl("", "", new Vector<ApplicationAttemptInfoImpl>(0,1,0)),
         new Vector<JobData>(0,1,0),
         new Vector<StageData>(0,1,0),
-        new Vector<ExecutorSummary>(0,1,0));
+        new Vector<ExecutorSummary>(0,1,0),
+        new Vector<StageData>(0,1,0));
 
     // test to make sure loadInfo does not throw exception if properties are not defined
     InfoExtractor.loadInfo(result, data);

@@ -21,6 +21,7 @@ package com.linkedin.drelephant.analysis;
  */
 public class HadoopAggregatedData {
 
+  //variable resourceUsed is actually the resource blocked on the cluster. 
   private long resourceUsed = 0;
   private long resourceWasted = 0;
   private long totalDelay = 0;

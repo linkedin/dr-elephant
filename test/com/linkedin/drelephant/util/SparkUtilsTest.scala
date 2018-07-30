@@ -287,7 +287,7 @@ object SparkUtilsTest extends MockitoSugar {
         BDDMockito.given(fileStatus.getPath()).willReturn(expectedPath)
         fileStatus
       }
-      val expectedStatusArray =  Array(expectedFileStatus)
+      val expectedStatusArray = Array(expectedFileStatus)
 
       val filter = new PathFilter() {
         override def accept(file: Path): Boolean = {
@@ -298,7 +298,7 @@ object SparkUtilsTest extends MockitoSugar {
       BDDMockito.given(fs.getUri).willReturn(fileSystemUri)
       BDDMockito.given(fs.exists(expectedPath)).willReturn(true)
       BDDMockito.given(fs.getFileStatus(expectedPath)).willReturn(expectedFileStatus)
-      BDDMockito.given(fs.listStatus(org.mockito.Matchers.refEq(new Path( new Path(fileSystemUri), basePath)),
+      BDDMockito.given(fs.listStatus(org.mockito.Matchers.refEq(new Path(new Path(fileSystemUri), basePath)),
         org.mockito.Matchers.any(filter.getClass))).
         willReturn(expectedStatusArray)
       BDDMockito.given(fs.open(expectedPath)).willReturn(
