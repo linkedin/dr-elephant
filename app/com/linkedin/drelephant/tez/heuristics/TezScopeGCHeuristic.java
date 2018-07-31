@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 /**
  * Analyses garbage collection efficiency
  */
-public class TezScopeGCHeuristic extends GenericGCHeuristic{
+public class TezScopeGCHeuristic extends GenericGCHeuristic {
   private static final Logger logger = Logger.getLogger(MapperGCHeuristic.class);
 
   public TezScopeGCHeuristic(HeuristicConfigurationData heuristicConfData) {
