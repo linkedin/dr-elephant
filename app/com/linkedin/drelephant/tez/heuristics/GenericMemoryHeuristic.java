@@ -43,9 +43,9 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
   private static final String MEM_RATIO_SEVERITY = "memory_ratio_severity";
   private static final String DEFAULT_MAPPER_CONTAINER_SIZE = "2048";
   private static final String CONTAINER_MEM_DEFAULT_MB = "container_memory_default_mb";
+  public static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
+  public static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
   private String _mapredContainerMemConf;
-  private String _hiveContainerMemConf;
-  private String _tezContainerMemConf;
 
   //Default Value of parameters
 
@@ -82,10 +82,8 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
   }
 
 
-  public GenericMemoryHeuristic(String tezContainerMemConf, String hiveContainerMemConf, String mapredContainerMemConf, HeuristicConfigurationData heuristicConfData) {
+  public GenericMemoryHeuristic(String mapredContainerMemConf, HeuristicConfigurationData heuristicConfData) {
     this._mapredContainerMemConf = mapredContainerMemConf;
-    this._hiveContainerMemConf = hiveContainerMemConf;
-    this._tezContainerMemConf = tezContainerMemConf;
     this._heuristicConfData = heuristicConfData;
     loadParameters();
   }
@@ -138,11 +136,11 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     String containerSizeStr;
 
 
-    if(!Strings.isNullOrEmpty(data.getConf().getProperty(_tezContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_tezContainerMemConf)) > 0){
-      containerSizeStr = data.getConf().getProperty(_tezContainerMemConf);
+    if(!Strings.isNullOrEmpty(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) && Long.valueOf(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) > 0){
+      containerSizeStr = data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF);
     }
-    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_hiveContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_hiveContainerMemConf)) > 0){
-      containerSizeStr = data.getConf().getProperty(_hiveContainerMemConf);
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF)) && Long.valueOf(data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF)) > 0){
+      containerSizeStr = data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF);
     }
     else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_mapredContainerMemConf)) > 0) {
       containerSizeStr = data.getConf().getProperty(_mapredContainerMemConf);

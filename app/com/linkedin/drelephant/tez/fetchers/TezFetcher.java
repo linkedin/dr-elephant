@@ -49,9 +49,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
   private FetcherConfigurationData _fetcherConfigurationData;
 
-  private enum VertexType{
-    MAPPER, REDUCER, SCOPE
-  }
+
 
   public TezFetcher(FetcherConfigurationData fetcherConfData) throws IOException {
     this._fetcherConfigurationData = fetcherConfData;
@@ -104,11 +102,11 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
           URL vertexListUrl = _urlFactory.getVertexListURL(dagId);
           _jsonFactory.getTaskDataAll(vertexListUrl, dagId, mapperList, reducerList, scopeTaskList);
 
-          if(mapperList.size() + reducerList.size()+scopeTaskList.size() > maxSize){
+          if(mapperList.size() + reducerList.size() + scopeTaskList.size() > maxSize){
             mapperListAggregate = mapperList;
             reducerListAggregate = reducerList;
             scopeListAggregate = scopeTaskList;
-            maxSize = mapperList.size() + reducerList.size()+scopeTaskList.size();
+            maxSize = mapperList.size() + reducerList.size() + scopeTaskList.size();
           }
         }
         if (state.equals("FAILED")) {
@@ -272,26 +270,25 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
       for (JsonNode vertex : vertices) {
         String vertexId = vertex.get("entity").getTextValue();
         String vertexClass = vertex.path("otherinfo").path("processorClassName").getTextValue();
-
-        if (vertexClass.equals("org.apache.hadoop.hive.ql.exec.tez.MapTezProcessor"))
-          vertexType = VertexType.MAPPER.name();
-        else if (vertexClass.equals("org.apache.hadoop.hive.ql.exec.tez.ReduceTezProcessor"))
-          vertexType = VertexType.REDUCER.name();
-        else if (vertexClass.equals("org.apache.pig.backend.hadoop.executionengine.tez.runtime.PigProcessor"))
-          vertexType = VertexType.SCOPE.name();
-
         URL tasksByVertexURL = getTaskListByVertexURL(dagId, vertexId);
-        if(vertexType.equals(VertexType.MAPPER.name()))
-          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, mapperList,vertexType);
-        else if (vertexType.equals(VertexType.REDUCER.name()))
-          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, reducerList, vertexType);
-        else if (vertexType.equals(VertexType.SCOPE.name()))
-          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, scopeTaskList, vertexType);
+        if (vertexClass.equals("org.apache.hadoop.hive.ql.exec.tez.MapTezProcessor")) {
+          isMapVertex = true;
+          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, mapperList,isMapVertex);
+        }
+        else if (vertexClass.equals("org.apache.hadoop.hive.ql.exec.tez.ReduceTezProcessor")) {
+          isMapVertex = false;
+          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, reducerList, isMapVertex);
+        }
+        else if (vertexClass.equals("org.apache.pig.backend.hadoop.executionengine.tez.runtime.PigProcessor")) {
+          isMapVertex = false;
+          getTaskDataByVertexId(tasksByVertexURL, dagId, vertexId, scopeTaskList, isMapVertex);
+        }
+
       }
     }
 
     private void getTaskDataByVertexId(URL url, String dagId, String vertexId, List<TezTaskData> taskList,
-                                       String  vertexType) throws IOException, AuthenticationException {
+                                       boolean isMapTask) throws IOException, AuthenticationException {
 
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode tasks = rootNode.path("entities");
@@ -312,7 +309,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
         taskList.add(new TezTaskData(taskId, attemptId));
       }
 
-      getTaskData(dagId, taskList, vertexType);
+      getTaskData(dagId, taskList, isMapTask);
 
     }
 
@@ -337,7 +334,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
 
 
 
-    private void getTaskData(String dagId, List<TezTaskData> taskList, String vertexType)
+    private void getTaskData(String dagId, List<TezTaskData> taskList, boolean isMapTask)
             throws IOException, AuthenticationException {
 
       for(int i=0; i<taskList.size(); i++) {
@@ -346,7 +343,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
         TezCounterData taskCounter = getTaskCounter(taskCounterURL);
 
         URL taskAttemptURL = getTaskAttemptURL(dagId, data.getTaskId(), data.getAttemptId());
-        long[] taskExecTime = getTaskExecTime(taskAttemptURL, vertexType);
+        long[] taskExecTime = getTaskExecTime(taskAttemptURL, isMapTask);
 
         data.setCounter(taskCounter);
         data.setTime(taskExecTime);
@@ -372,7 +369,7 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
       return holder;
     }
 
-    private long[] getTaskExecTime(URL url, String vertexType) throws IOException, AuthenticationException {
+    private long[] getTaskExecTime(URL url, boolean isMapTask) throws IOException, AuthenticationException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode groups = rootNode.path("otherinfo").path("counters").path("counterGroups");
 
@@ -385,10 +382,10 @@ public class TezFetcher implements ElephantFetcher<TezApplicationData> {
       for (JsonNode group : groups) {
         for (JsonNode counter : group.path("counters")) {
           String name = counter.get("counterName").getTextValue();
-          if (!VertexType.MAPPER.toString().equals(vertexType) && name.equals("MERGE_PHASE_TIME")) {
+          if (!isMapTask && name.equals("MERGE_PHASE_TIME")) {
             mergeTime = counter.get("counterValue").getLongValue();
           }
-          else if (!VertexType.MAPPER.toString().equals(vertexType) && name.equals("SHUFFLE_PHASE_TIME")){
+          else if (!isMapTask && name.equals("SHUFFLE_PHASE_TIME")){
             shuffleTime = counter.get("counterValue").getLongValue();
           }
 

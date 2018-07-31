@@ -31,11 +31,9 @@ import org.apache.log4j.Logger;
 public class TezScopeMemoryHeuristic extends GenericMemoryHeuristic {
 
   private static final Logger logger = Logger.getLogger(MapperMemoryHeuristic.class);
-  public static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
-  public static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
   public static final String TEZ_AM_MEMORY_CONF = "tez.am.resource.memory.mb";
   public TezScopeMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
-    super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, TEZ_AM_MEMORY_CONF, __heuristicConfData);
+    super(TEZ_AM_MEMORY_CONF, __heuristicConfData);
   }
 
   @Override
