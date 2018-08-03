@@ -204,7 +204,7 @@ object ConfigurationHeuristic {
       SeverityThresholds(low = MemoryFormatUtils.stringToBytes("10G"), MemoryFormatUtils.stringToBytes("15G"),
         severe = MemoryFormatUtils.stringToBytes("20G"), critical = MemoryFormatUtils.stringToBytes("25G"), ascending = true)
     val DEFAULT_SPARK_CORES_THRESHOLDS =
-      SeverityThresholds(low = 5, moderate = 6, severe = 8, critical = 10, ascending = true)
+      SeverityThresholds(low = 5, moderate = 7, severe = 9, critical = 11, ascending = true)
 
     val severityExecutorMemory = DEFAULT_SPARK_MEMORY_THRESHOLDS.severityOf(executorMemoryBytes.getOrElse(0).asInstanceOf[Number].longValue)
     val severityExecutorCores = DEFAULT_SPARK_CORES_THRESHOLDS.severityOf(executorCores.getOrElse(0).asInstanceOf[Number].intValue)
