@@ -44,13 +44,15 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
     val evaluator = new Evaluator(this, data)
 
     var resultDetails = Seq(
-      new HeuristicResultDetails("Max executor peak JVM used memory", MemoryFormatUtils.bytesToString(evaluator.maxExecutorPeakJvmUsedMemory)),
+      new HeuristicResultDetails("Max executor peak JVM used memory", MemoryFormatUtils.bytesToString(evaluator
+        .maxExecutorPeakJvmUsedMemory)),
       new HeuristicResultDetails("spark.executor.memory", MemoryFormatUtils.bytesToString(evaluator.sparkExecutorMemory))
     )
 
     if (evaluator.severity != Severity.NONE) {
       resultDetails = resultDetails :+ new HeuristicResultDetails("Executor Memory", "The allocated memory for the executor (in " + SPARK_EXECUTOR_MEMORY + ") is much more than the peak JVM used memory by executors.")
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Suggested spark.executor.memory", MemoryFormatUtils.roundOffMemoryStringToNextInteger((MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION) * evaluator.maxExecutorPeakJvmUsedMemory).toLong))))
+      resultDetails = resultDetails :+ new HeuristicResultDetails("Suggested spark.executor.memory", MemoryFormatUtils.roundOffMemoryStringToNextInteger(
+        (MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION) * evaluator.maxExecutorPeakJvmUsedMemory).toLong))))
     }
 
     val result = new HeuristicResult(
@@ -81,7 +83,8 @@ object JvmUsedMemoryHeuristic {
 
     lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
     val executorList: Seq[ExecutorSummary] = executorSummaries.filterNot(_.id.equals("driver"))
-    val sparkExecutorMemory: Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0L)
+    val sparkExecutorMemory: Long = appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY).map(MemoryFormatUtils.stringToBytes)
+      .getOrElse(0L)
     lazy val maxExecutorPeakJvmUsedMemory: Long = if (executorList.isEmpty) 0L else executorList.map {
       _.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0).asInstanceOf[Number].longValue
     }.max
