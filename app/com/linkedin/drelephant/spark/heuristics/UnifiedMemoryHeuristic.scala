@@ -54,11 +54,12 @@ class UnifiedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
 
     val executorMemorySeverity = new JvmUsedMemoryHeuristic(heuristicConfigurationData).apply(data).getSeverity
     if(evaluator.severity != Severity.NONE) {
-        if(executorMemorySeverity == Severity.SEVERE || executorMemorySeverity == Severity.CRITICAL) {
-          resultDetails = resultDetails :+ new HeuristicResultDetails("Executor Memory", "Decrease the executor memory as it is much higher than the PEAK jvm memory used by the executors")
+        if(executorMemorySeverity == Severity.NONE || executorMemorySeverity == Severity.LOW ) {
+          resultDetails = resultDetails :+ new HeuristicResultDetails("Unified Memory", "Decrease the value of spark.memory.fraction")
+
         }
         else {
-          resultDetails = resultDetails :+ new HeuristicResultDetails("Unified Memory", "Decrease the value of spark.memory.fraction")
+          resultDetails = resultDetails :+ new HeuristicResultDetails("Executor Memory", "Decrease the executor memory as it is much higher than the PEAK jvm memory used by the executors")
         }
     }
 
