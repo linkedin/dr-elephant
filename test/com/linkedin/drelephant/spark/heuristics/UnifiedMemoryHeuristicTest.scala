@@ -133,14 +133,6 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
       heuristicResult6.getHeuristicResultDetails.size() should be(6)
       heuristicResult6.getHeuristicResultDetails.get(5).getName should be("Unified Memory")
     }
-
-    it("has no severity when maxMemory is less than 256Mb") {
-      heuristicResult3.getSeverity should be(Severity.NONE)
-    }
-
-    it("has critical severity when maxMemory is greater than 256Mb and spark memory fraction is greater than 0.05") {
-      heuristicResult4.getSeverity should be(Severity.CRITICAL)
-    }
   }
 }
 
