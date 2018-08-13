@@ -44,14 +44,22 @@ import org.codehaus.jackson.JsonNode;
  */
 public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
   private static final Logger logger = Logger.getLogger(MapReduceFetcherHadoop2.class);
+  private static final String HTTP_POLICY = "mapreduce.jobhistory.http.policy";
   // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
 
+  private String _protocol = "http";
   private URLFactory _urlFactory;
   private JSONFactory _jsonFactory;
   private String _jhistoryWebAddr;
 
   public MapReduceFetcherHadoop2(FetcherConfigurationData fetcherConfData) throws IOException {
     super(fetcherConfData);
+
+
+    String httpPolicy = new Configuration().get(HTTP_POLICY);
+    if (httpPolicy != null && httpPolicy == "HTTPS_ONLY") {
+      _protocol = "https";
+    }
 
     final String jhistoryAddr = new Configuration().get("mapreduce.jobhistory.webapp.address");
 
@@ -60,7 +68,7 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
     logger.info("Connection success.");
 
     _jsonFactory = new JSONFactory();
-    _jhistoryWebAddr = "http://" + jhistoryAddr + "/jobhistory/job/";
+    _jhistoryWebAddr =  _protocol + "://" + jhistoryAddr + "/jobhistory/job/";
   }
 
   @Override
@@ -162,7 +170,7 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
     private String _restRoot;
 
     private URLFactory(String hserverAddr) throws IOException {
-      _restRoot = "http://" + hserverAddr + "/ws/v1/history/mapreduce/jobs";
+      _restRoot = _protocol + "://" + hserverAddr + "/ws/v1/history/mapreduce/jobs";
       verifyURL(_restRoot);
     }
 
