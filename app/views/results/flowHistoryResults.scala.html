@@ -62,7 +62,7 @@
               <th class="history-table-first-column">Flow Executions</th>
               @for((jobDefPair, jobName) <- idPairToJobNameMap) {
                 <th>
-                  <a href='/newjobhistory?job-def-id=@helper.urlEncode(jobDefPair.getId)&select-graph-type=heuristics' data-toggle='tooltip'
+                  <a href='./newjobhistory?job-def-id=@helper.urlEncode(jobDefPair.getId)&select-graph-type=heuristics' data-toggle='tooltip'
                   title='@jobDefPair.getId'>Job @{jobDefIndex = jobDefIndex + 1; jobDefIndex}<br>
                     @if(jobName.length > 45) { @jobName.substring(0, 41)... } else { @jobName }
                   </a>
@@ -85,7 +85,7 @@
                 <td>
                 @if(jobMap.get(jobDefPair) != null) {
                   @for((result,jobCount) <- jobMap.get(jobDefPair).zipWithIndex) {
-                    <a class="hasTooltip" href='/new#/app?applicationid=@result.id'
+                    <a class="hasTooltip" href='./new#/app?applicationid=@result.id'
                     style='color: @getSeverityColor(result.severity);'>&#9673;
                       <!-- Table Tooltip Content -->
                       <div id="tooltip-div">

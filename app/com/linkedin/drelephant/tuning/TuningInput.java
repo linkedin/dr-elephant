@@ -16,6 +16,12 @@
 
 package com.linkedin.drelephant.tuning;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import models.TuningAlgorithm;
 
 
@@ -46,6 +52,15 @@ public class TuningInput {
   private Double _allowedMaxResourceUsagePercent;
   private Double _allowedMaxExecutionTimePercent;
   private TuningAlgorithm _tuningAlgorithm;
+  private Integer version;
+
+  public Integer getVersion() {
+    return version;
+  }
+
+  public void setVersion(Integer version) {
+    this.version = version;
+  }
 
   public TuningAlgorithm getTuningAlgorithm() {
     return _tuningAlgorithm;
@@ -274,9 +289,36 @@ public class TuningInput {
   /**
    * Returns the default parameters
    * @return default parameters
+   * @throws IOException
+   * @throws JsonMappingException
+   * @throws JsonParseException
    */
-  public String getDefaultParams() {
-    return _defaultParams;
+  @SuppressWarnings("unchecked")
+  public Map<String, Double> getDefaultParams() throws JsonParseException, JsonMappingException, IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, Double> paramValueMap;
+    if (version == 1) {
+      paramValueMap = (Map<String, Double>) mapper.readValue(this._defaultParams, Map.class);
+    } else {
+      paramValueMap = new HashMap<String, Double>();
+      Map<String, String> paramsStringMap = (Map<String, String>) mapper.readValue(this._defaultParams, Map.class);
+      for (Map.Entry<String, String> entry : paramsStringMap.entrySet()) {
+        String confKey = entry.getKey();
+        String confVal = entry.getValue();
+        Double confValDouble = null;
+        try {
+          if (confVal != null) {
+            confValDouble = Double.parseDouble(confVal);
+          }
+        } catch (NumberFormatException nfe) {
+          //Do Nothing
+        }
+        if (confValDouble != null) {
+          paramValueMap.put(confKey, confValDouble);
+        }
+      }
+    }
+    return paramValueMap;
   }
 
   /**

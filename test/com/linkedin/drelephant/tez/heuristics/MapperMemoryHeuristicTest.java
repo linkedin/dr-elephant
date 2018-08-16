@@ -36,7 +36,7 @@ public class MapperMemoryHeuristicTest extends TestCase{
 
   private static Map<String, String> paramsMap = new HashMap<String, String>();
   private static Heuristic _heuristic = new MapperMemoryHeuristic(new HeuristicConfigurationData("test_heuristic",
-      "test_class", "test_view", new ApplicationType("test_apptype"), paramsMap));
+          "test_class", "test_view", new ApplicationType("test_apptype"), paramsMap));
 
   private int NUMTASKS = 100;
 

@@ -44,8 +44,8 @@
   </property>
   <property>
     <name>fitness.compute.wait_interval.ms</name>
-    <value>180</value>
-    <description>Wait time after the job is completed for fitness computation</description>
+    <value>0</value>
+    <description>Wait time after the job is completed till fitness is computer</description>
   </property>
   <property>
     <name>dr.elephant.api.url</name>

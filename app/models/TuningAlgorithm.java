@@ -18,6 +18,7 @@ package models;
 
 import java.sql.Timestamp;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -42,7 +43,7 @@ public class TuningAlgorithm extends Model {
   }
 
   public enum OptimizationAlgo {
-    PSO
+    PSO, PSO_IPSO
   }
 
   public enum OptimizationMetric {
@@ -75,11 +76,25 @@ public class TuningAlgorithm extends Model {
   @Enumerated(EnumType.STRING)
   public OptimizationMetric optimizationMetric;
 
+  @Column(nullable = false)
   public Timestamp createdTs;
 
+  @Column(nullable = false)
   @UpdatedTimestamp
   public Timestamp updatedTs;
 
   public static Finder<Integer, TuningAlgorithm> find =
       new Finder<Integer, TuningAlgorithm>(Integer.class, TuningAlgorithm.class);
+
+  @Override
+  public void save() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.save();
+  }
+
+  @Override
+  public void update() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.update();
+  }
 }

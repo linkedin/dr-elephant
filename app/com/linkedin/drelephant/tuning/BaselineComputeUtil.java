@@ -22,7 +22,6 @@ import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.mapreduce.heuristics.CommonConstantsHeuristic;
 import com.linkedin.drelephant.util.Utils;
 import controllers.AutoTuningMetricsController;
-import java.util.ArrayList;
 import java.util.List;
 import models.TuningJobDefinition;
 import org.apache.commons.io.FileUtils;
@@ -37,9 +36,8 @@ import org.apache.log4j.Logger;
 public class BaselineComputeUtil {
 
   private static final Integer NUM_JOBS_FOR_BASELINE_DEFAULT = 30;
-  private final Logger logger = Logger.getLogger(getClass());
   private static final String BASELINE_EXECUTION_COUNT = "baseline.execution.count";
-
+  private final Logger logger = Logger.getLogger(getClass());
   private Integer _numJobsForBaseline = null;
 
   public BaselineComputeUtil() {
@@ -90,13 +88,8 @@ public class BaselineComputeUtil {
    */
   private List<TuningJobDefinition> getJobForBaselineComputation() {
     logger.info("Fetching jobs for which baseline metrics need to be computed");
-    List<TuningJobDefinition> tuningJobDefinitions = new ArrayList<TuningJobDefinition>();
-    try {
-      tuningJobDefinitions =
-          TuningJobDefinition.find.where().eq(TuningJobDefinition.TABLE.averageResourceUsage, null).findList();
-    } catch (NullPointerException e) {
-      logger.info("There are no jobs for which baseline has to be computed", e);
-    }
+    List<TuningJobDefinition> tuningJobDefinitions =
+        TuningJobDefinition.find.where().eq(TuningJobDefinition.TABLE.averageResourceUsage, null).findList();
     return tuningJobDefinitions;
   }
 
@@ -146,7 +139,7 @@ public class BaselineComputeUtil {
         + "FROM yarn_app_result yar INNER JOIN yarn_app_heuristic_result yahr " + "ON yar.id=yahr.yarn_app_result_id "
         + "INNER JOIN yarn_app_heuristic_result_details yahrd " + "ON yahr.id=yahrd.yarn_app_heuristic_result_id "
         + "WHERE job_def_id=:jobDefId AND yahr.heuristic_name='" + CommonConstantsHeuristic.MAPPER_SPEED + "' "
-        + "AND yahrd.name='Total input size in MB' "
+        + "AND yahrd.name='" + CommonConstantsHeuristic.TOTAL_INPUT_SIZE_IN_MB + "' "
         + "GROUP BY job_exec_id ORDER BY start_time DESC LIMIT :num ) temp";
 
     logger.debug("Running query for average input size computation " + sql);

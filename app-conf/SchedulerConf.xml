@@ -30,7 +30,7 @@
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
         <params>
           <!--<exception_enabled>true</exception_enabled>-->
-          <!--<exception_class>com.linkedin.drelephant.exceptions.azkaban.AzkabanWorkflowClient</exception_class>-->
+          <!--<workflow_client>com.linkedin.drelephant.exceptions.azkaban.AzkabanWorkflowClient</workflow_client>-->
           <!--<private_key>/home/key/private_key</private_key>-->
           <!--<userame>elephant</userame>-->
           <!--<password></password>-->

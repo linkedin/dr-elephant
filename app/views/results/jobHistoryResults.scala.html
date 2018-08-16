@@ -76,7 +76,7 @@
                 <td>
                 @if(i <= jobs.length) {
                   @for((appHeuristicResult, jobCount) <- jobs(i-1).yarnAppHeuristicResults.zipWithIndex) {
-                    <a class="hasTooltip" href='/new#/app?applicationid=@appHeuristicResult.yarnAppResult.id'
+                    <a class="hasTooltip" href='./new#/app?applicationid=@appHeuristicResult.yarnAppResult.id'
                     style='color: @getSeverityColor(appHeuristicResult.severity);'>&#9673;
                       <!-- Table Tooltip Content -->
                       <div id="tooltip-div">

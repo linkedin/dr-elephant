@@ -53,40 +53,32 @@ public class JobExecution extends Model {
     public static final String executionState = "executionState";
     public static final String resourceUsage = "resourceUsage";
     public static final String executionTime = "executionTime";
-    public static final String inputSizeInMb = "inputSizeInMb";
+    public static final String inputSizeInBytes = "inputSizeInBytes";
     public static final String jobExecUrl = "jobExecUrl";
-    public static final String flowExecutionId = "flowExecutionId";
-    public static final String jobDefinitionId = "jobDefinitionId";
-    public static final String createdTs = "createdTs";
-    public static final String updatedTs = "updatedTs";
+    public static final String jobDefinition = "jobDefinition";
     public static final String flowExecution = "flowExecution";
     public static final String job = "job";
+    public static final String createdTs = "createdTs";
+    public static final String updatedTs = "updatedTs";
   }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   public Long id;
 
-  @Column(nullable = true)
   public String jobExecId;
 
-  @Column(nullable = true)
+  public String jobExecUrl;
+
   @Enumerated(EnumType.STRING)
   public ExecutionState executionState;
 
-  @Column(nullable = true)
   public Double resourceUsage;
 
-  @Column(nullable = true)
   public Double executionTime;
 
-  @Column(nullable = true)
   public Double inputSizeInBytes;
 
-  @Column(nullable = true)
-  public String jobExecUrl;
-
-  @Column(nullable = true)
   @ManyToOne(cascade = CascadeType.ALL)
   @JoinTable(name = "flow_execution", joinColumns = {@JoinColumn(name = "flow_execution_id", referencedColumnName = "id")})
   public FlowExecution flowExecution;
@@ -96,12 +88,24 @@ public class JobExecution extends Model {
   @JoinTable(name = "job_definition", joinColumns = {@JoinColumn(name = "job_definition_id", referencedColumnName = "id")})
   public JobDefinition job;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   public Timestamp createdTs;
 
-  @Column(nullable = true)
+  @Column(nullable = false)
   @UpdatedTimestamp
   public Timestamp updatedTs;
+
+  @Override
+  public void save() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.save();
+  }
+
+  @Override
+  public void update() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.update();
+  }
 
   public static Finder<Long, JobExecution> find = new Finder<Long, JobExecution>(Long.class, JobExecution.class);
 }

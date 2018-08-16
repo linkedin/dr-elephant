@@ -1,0 +1,64 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis shows how much time the reducer spends in shuffle and sort steps versus in the reducer code.<br>
+    This should allow you to understand the efficiency of your reducer.
+</p>
+<p>
+    This result of the analysis shows problems with reducers where shuffle and/or sort times are significantly larger than code runtime.
+</p>
+<h5>Example</h5>
+<p>
+<div class="list-group">
+  <a class="list-group-item list-group-item-danger" href="">
+    <h4 class="list-group-item-heading">Shuffle &amp; Sort</h4>
+    <table class="list-group-item-text table table-condensed left-table">
+      <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Number of tasks</td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <td>Average code runtime</td>
+        <td>5min 53sec</td>
+      </tr>
+      <tr>
+        <td>Average shuffle time</td>
+        <td>33min 40sec (5.72x)</td>
+      </tr>
+      <tr>
+        <td>Average sort time</td>
+        <td>1min 30sec (0.26x)</td>
+      </tr>
+      </tbody>
+    </table>
+  </a>
+</div>
+</p>
+<h3>Suggestions</h3>
+<p>
+  If your shuffle time is high but sort is low, you likely need to tune slowstart by setting "mapreduce.job.reduce.slowstart.completedmaps" to 0.90+ up to 1.0 <br>
+  Warning: Setting this parameter close to 1.0 will decrease shuffle time, but may increase this job's total runtime <br>
+  <br>
+  If you want to set it to 0.95 on Nertz: <br>
+  For Hadoop/Java jobs: Use "jobConf.setFloat("mapreduce.job.reduce.slowstart.completedmaps", 0.95f);"<br>
+  For Apache-Pig jobs: Use "set mapreduce.job.reduce.slowstart.completedmaps 0.95"<br>
+  For Apache-Hive jobs: Use "set mapreduce.job.reduce.slowstart.completedmaps=0.95"<br>
+  For Azkaban flows, add jvm.args=-Dmapreduce.job.reduce.slowstart.completedmaps=0.95 to your job properties(will affect all MapReduce jobs under this azkaban job)<br>
+  See <a href="https://github.com/linkedin/dr-elephant/wiki/Tuning-Tips">Hadoop Tuning Tips</a> for further information.
+</p>

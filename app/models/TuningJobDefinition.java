@@ -42,7 +42,7 @@ public class TuningJobDefinition extends Model {
   public static class TABLE {
     public static final String TABLE_NAME = "tuning_job_definition";
     public static final String client = "client";
-    public static final String tuningAlgorithmId = "tuningAlgorithmId";
+    public static final String tuningAlgorithm = "tuningAlgorithm";
     public static final String tuningEnabled = "tuningEnabled";
     public static final String averageResourceUsage = "averageResourceUsage";
     public static final String averageExecutionTime = "averageExecutionTime";
@@ -50,6 +50,7 @@ public class TuningJobDefinition extends Model {
     public static final String allowedMaxResourceUsagePercent = "allowedMaxResourceUsagePercent";
     public static final String allowedMaxExecutionTimePercent = "allowedMaxExecutionTimePercent";
     public static final String job = "job";
+    public static final String tuningDisabledReason = "tuningDisabledReason";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
   }
@@ -66,7 +67,7 @@ public class TuningJobDefinition extends Model {
   public TuningAlgorithm tuningAlgorithm;
 
   @Column(nullable = false)
-  public int tuningEnabled;
+  public boolean tuningEnabled;
 
   @Column(nullable = true)
   public Double averageResourceUsage;
@@ -100,4 +101,20 @@ public class TuningJobDefinition extends Model {
   @Column(nullable = false)
   @UpdatedTimestamp
   public Timestamp updatedTs;
+
+
+  @Column(nullable = true)
+  public String tuningDisabledReason;
+
+  @Override
+  public void save() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.save();
+  }
+
+  @Override
+  public void update() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.update();
+  }
 }

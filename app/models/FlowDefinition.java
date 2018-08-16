@@ -16,6 +16,8 @@
 
 package models;
 
+import com.avaje.ebean.annotation.UpdatedTimestamp;
+import java.sql.Timestamp;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -37,6 +39,8 @@ public class FlowDefinition extends Model {
     public static final String id = "id";
     public static final String flowDefId = "flowDefId";
     public static final String flowDefUrl = "flowDefUrl";
+    public static final String createdTs = "createdTs";
+    public static final String updatedTs = "updatedTs";
   }
 
   @Id
@@ -49,8 +53,28 @@ public class FlowDefinition extends Model {
   @Column(nullable = false)
   public String flowDefUrl;
 
+  @Column(nullable = false)
+  public Timestamp createdTs;
+
+  @Column(nullable = false)
+  @UpdatedTimestamp
+  public Timestamp updatedTs;
+
   public static Model.Finder<Integer, FlowDefinition> find =
       new Model.Finder<Integer, FlowDefinition>(Integer.class, FlowDefinition.class);
+
+  @Override
+  public void save() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.save();
+  }
+
+  @Override
+  public void update() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.update();
+  }
+
 }
 
 

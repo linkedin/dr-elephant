@@ -32,11 +32,11 @@ public class MapperMemoryHeuristic extends GenericMemoryHeuristic {
 
   private static final Logger logger = Logger.getLogger(MapperMemoryHeuristic.class);
   public static final String MAPRED_MAPPER_MEMORY_CONF = "mapreduce.map.memory.mb";
-  public static final String HIVE_MAPPER_MEMORY_CONF = "hive.tez.container.size";
-  public static final String TEZ_MAPPER_MEMORY_CONF = "tez.task.resource.memory.mb";
+
 
   public MapperMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
-    super(TEZ_MAPPER_MEMORY_CONF, HIVE_MAPPER_MEMORY_CONF, MAPRED_MAPPER_MEMORY_CONF, __heuristicConfData);
+    super(MAPRED_MAPPER_MEMORY_CONF, __heuristicConfData);
+
   }
 
   @Override

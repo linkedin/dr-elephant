@@ -20,6 +20,7 @@ import com.avaje.ebean.annotation.UpdatedTimestamp;
 import java.sql.Timestamp;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -41,8 +42,8 @@ public class JobSuggestedParamValue extends Model {
   public static class TABLE {
     public static final String TABLE_NAME = "job_suggested_param_value";
     public static final String id = "id";
-    public static final String jobExecution = "jobExecution";
-    public static final String tuningParameterId = "tuningParameterId";
+    public static final String jobSuggestedParamSet = "jobSuggestedParamSet";
+    public static final String tuningParameter = "tuningParameter";
     public static final String paramValue = "paramValue";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
@@ -52,19 +53,34 @@ public class JobSuggestedParamValue extends Model {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   public Integer id;
   public Double paramValue;
-  public Timestamp createdTs;
-
-  @UpdatedTimestamp
-  public Timestamp updatedTs;
 
   @ManyToOne(cascade = CascadeType.ALL)
-  @JoinTable(name = "job_execution", joinColumns = {@JoinColumn(name = "job_execution_id", referencedColumnName = "id")})
-  public JobExecution jobExecution;
+  @JoinTable(name = "job_suggested_param_set", joinColumns = {@JoinColumn(name = "job_suggested_param_set_id", referencedColumnName = "id")})
+  public JobSuggestedParamSet jobSuggestedParamSet;
 
   @ManyToOne(cascade = CascadeType.ALL)
   @JoinTable(name = "tuning_parameter", joinColumns = {@JoinColumn(name = "tuning_parameter_id", referencedColumnName = "id")})
   public TuningParameter tuningParameter;
 
+  @Column(nullable = false)
+  public Timestamp createdTs;
+
+  @Column(nullable = false)
+  @UpdatedTimestamp
+  public Timestamp updatedTs;
+
   public static Finder<Long, JobSuggestedParamValue> find =
       new Finder<Long, JobSuggestedParamValue>(Long.class, JobSuggestedParamValue.class);
+
+  @Override
+  public void save() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.save();
+  }
+
+  @Override
+  public void update() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.update();
+  }
 }

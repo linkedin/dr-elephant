@@ -18,17 +18,18 @@ package com.linkedin.drelephant.tuning;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.linkedin.drelephant.ElephantContext;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
-
-import play.libs.Json;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import models.JobDefinition;
+import models.JobSuggestedParamSet;
+import models.TuningAlgorithm;
+import models.TuningJobDefinition;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.log4j.Logger;
+import play.libs.Json;
 
 
 /**
@@ -36,17 +37,17 @@ import java.util.List;
  */
 public class PSOParamGenerator extends ParamGenerator {
 
-  private final Logger logger = Logger.getLogger(PSOParamGenerator.class);
   private static final String PARAMS_TO_TUNE_FIELD_NAME = "parametersToTune";
   private static final String PYTHON_PATH_CONF = "python.path";
   private static final String PSO_DIR_PATH_ENV_VARIABLE = "PSO_DIR_PATH";
   private static final String PYTHON_PATH_ENV_VARIABLE = "PYTHONPATH";
-
+  private final Logger logger = Logger.getLogger(PSOParamGenerator.class);
   private String PYTHON_PATH = null;
   private String TUNING_SCRIPT_PATH = null;
 
   public PSOParamGenerator() {
     Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+
     PYTHON_PATH = configuration.get(PYTHON_PATH_CONF);
     if (PYTHON_PATH == null) {
       PYTHON_PATH = System.getenv(PYTHON_PATH_ENV_VARIABLE);
@@ -75,25 +76,34 @@ public class PSOParamGenerator extends ParamGenerator {
     JobTuningInfo newJobTuningInfo = new JobTuningInfo();
     newJobTuningInfo.setTuningJob(jobTuningInfo.getTuningJob());
     newJobTuningInfo.setParametersToTune(jobTuningInfo.getParametersToTune());
+    newJobTuningInfo.setJobType(jobTuningInfo.getJobType());
 
     JsonNode jsonJobTuningInfo = Json.toJson(jobTuningInfo);
-    logger.info("Job Tuning Info for " + jobTuningInfo.getTuningJob().jobName + ": " + jsonJobTuningInfo);
     String parametersToTune = jsonJobTuningInfo.get(PARAMS_TO_TUNE_FIELD_NAME).toString();
-    logger.info("Parameters to tune for job: " + parametersToTune);
     String stringTunerState = jobTuningInfo.getTunerState();
     stringTunerState = stringTunerState.replaceAll("\\s+", "");
+    String jobType = jobTuningInfo.getJobType().toString();
+
+    logger.info(" ID " + jobTuningInfo.getTuningJob().id);
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .fetch(TuningJobDefinition.TABLE.job, "*")
+        .where()
+        .eq(TuningJobDefinition.TABLE.job + "." + JobDefinition.TABLE.id, jobTuningInfo.getTuningJob().id)
+        .eq(TuningJobDefinition.TABLE.tuningEnabled, 1)
+        .findUnique();
+
+    int swarmSize = getSwarmSize(tuningJobDefinition.tuningAlgorithm);
 
     List<String> error = new ArrayList<String>();
-
+    logger.debug("String State " + stringTunerState);
     try {
-      logger.info(
-          "Calling PSO with StringTunerState= " + stringTunerState + "\nand Parameters to tune: " + parametersToTune);
+
       Process p = Runtime.getRuntime()
-          .exec(PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune);
+          .exec(PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune + " " + jobType
+              + " " + swarmSize);
       BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
       BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream()));
       String updatedStringTunerState = inputStream.readLine();
-      logger.info("Output from PSO script: " + updatedStringTunerState);
       newJobTuningInfo.setTunerState(updatedStringTunerState);
       String errorLine;
       while ((errorLine = errorStream.readLine()) != null) {
@@ -106,5 +116,13 @@ public class PSOParamGenerator extends ParamGenerator {
       logger.error("Error in generateParamSet()", e);
     }
     return newJobTuningInfo;
+  }
+
+  private int getSwarmSize(TuningAlgorithm tuningAlgorithm) {
+    AutoTuningOptimizeManager optimizeManager = OptimizationAlgoFactory.getOptimizationAlogrithm(tuningAlgorithm);
+    if (optimizeManager != null) {
+      return optimizeManager.getSwarmSize();
+    }
+    return 3;
   }
 }

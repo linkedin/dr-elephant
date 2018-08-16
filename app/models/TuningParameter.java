@@ -48,15 +48,14 @@ public class TuningParameter extends Model {
     public static final String TABLE_NAME = "tuning_parameter";
     public static final String id = "id";
     public static final String paramName = "paramName";
-    public static final String tuningAlgorithmId = "tuningAlgorithmId";
     public static final String defaultValue = "defaultValue";
     public static final String minValue = "minValue";
     public static final String maxValue = "maxValue";
     public static final String stepSize = "stepSize";
-    public static final String createdTs = "createdTs";
-    public static final String updatedTs = "updatedTs";
     public static final String tuningAlgorithm = "tuningAlgorithm";
     public static final String isDerived = "isDerived";
+    public static final String createdTs = "createdTs";
+    public static final String updatedTs = "updatedTs";
   }
 
   @Id
@@ -94,4 +93,16 @@ public class TuningParameter extends Model {
 
   public static Finder<Integer, TuningParameter> find =
       new Finder<Integer, TuningParameter>(Integer.class, TuningParameter.class);
+
+  @Override
+  public void save() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.save();
+  }
+
+  @Override
+  public void update() {
+    this.updatedTs = new Timestamp(System.currentTimeMillis());
+    super.update();
+  }
 }

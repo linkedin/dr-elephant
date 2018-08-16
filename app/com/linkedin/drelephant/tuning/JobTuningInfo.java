@@ -19,70 +19,93 @@ package com.linkedin.drelephant.tuning;
 import models.TuningParameter;
 import models.JobDefinition;
 import java.util.List;
-
+import models.TuningAlgorithm.JobType;
 
 /**
  * This class holds the tuning information for the job.
  */
 class JobTuningInfo {
 
-  private JobDefinition _tuningJob;
+    private JobDefinition _tuningJob;
 
-  /**
-   * Comprises of:
-   *  - archive: best configuration encountered
-   *  - prev_population: pen-ultimate configuration
-   *  - current_population: current configuration
-   *  - rnd_state: state of random number generator
-   */
-  private String _tunerState;
-  private List<TuningParameter> _parametersToTune;
+    private JobType _jobType;
 
-  /**
-   * Sets the job being tuned
-   * @param tuningJob Job
-   */
-  public void setTuningJob(JobDefinition tuningJob) {
-    this._tuningJob = tuningJob;
-  }
+    /**
+     * Comprises of:
+     * - archive: best configuration encountered
+     * - prev_population: pen-ultimate configuration
+     * - current_population: current configuration
+     * - rnd_state: state of random number generator
+     */
+    private String _tunerState;
+    private List<TuningParameter> _parametersToTune;
 
-  /**
-   * Returns the job being tuned
-   * @return Job
-   */
-  public JobDefinition getTuningJob() {
-    return _tuningJob;
-  }
 
-  /**
-   * Sets the string tuner state
-   * @param stringTunerState String tuner state
-   */
-  public void setTunerState(String stringTunerState) {
-    this._tunerState = stringTunerState;
-  }
+    /**
+     * Sets the jobtype of job being tuned
+     */
+    public void setJobType(JobType jobType) {
+        this._jobType = jobType;
+    }
 
-  /**
-   * Returns string tuner state
-   * @return String tuner state
-   */
-  public String getTunerState() {
-    return _tunerState;
-  }
+    /**
+     * Returns the job type
+     */
+    public JobType getJobType() {
+        return _jobType;
+    }
 
-  /**
-   * Sets parameters to tune
-   * @param parameters Parameters to tune
-   */
-  public void setParametersToTune(List<TuningParameter> parameters) {
-    this._parametersToTune = parameters;
-  }
+    /**
+     * Sets the job being tuned
+     *
+     * @param tuningJob Job
+     */
+    public void setTuningJob(JobDefinition tuningJob) {
+        this._tuningJob = tuningJob;
+    }
 
-  /**
-   * Returns parameters to tune
-   * @return Parameters to tune
-   */
-  public List<TuningParameter> getParametersToTune() {
-    return _parametersToTune;
-  }
+    /**
+     * Returns the job being tuned
+     *
+     * @return Job
+     */
+    public JobDefinition getTuningJob() {
+        return _tuningJob;
+    }
+
+    /**
+     * Sets the string tuner state
+     *
+     * @param stringTunerState String tuner state
+     */
+    public void setTunerState(String stringTunerState) {
+        this._tunerState = stringTunerState;
+    }
+
+    /**
+     * Returns string tuner state
+     *
+     * @return String tuner state
+     */
+    public String getTunerState() {
+        return _tunerState;
+    }
+
+    /**
+     * Sets parameters to tune
+     *
+     * @param parameters Parameters to tune
+     */
+    public void setParametersToTune(List<TuningParameter> parameters) {
+        this._parametersToTune = parameters;
+    }
+
+    /**
+     * Returns parameters to tune
+     *
+     * @return Parameters to tune
+     */
+    public List<TuningParameter> getParametersToTune() {
+        return _parametersToTune;
+    }
 }
