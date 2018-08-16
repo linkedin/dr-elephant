@@ -1,0 +1,71 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    This analysis shows the data locality for your apps. <br>
+    We check the ratio between your job's node local map tasks AND the total number of map tasks. <br>
+    Also check the ratio between your job's rack local map tasks AND the total number of tasks <br>
+    The setting in question here is container memory is "yarn.scheduler.capacity.node-locality-delay". This is the Number of missed scheduling opportunities after which the capacity-scheduler attempts to schedule
+     rack local containers. <br>
+     For Cloud based storage systems: This number should be low (0 or -1) as there is no notion of data locality and there is no point even checking for it<br>
+     For on-prem storage/hdfs with cloud or on-prem compute, this number should be equal to the number of nodes in the cluster to guarantee a scheduling attempt to each data local node.
+    If this heuristic is above MODERATE, it means you are making good use of hadoop's most important feature of data locality.
+</p>
+
+<h5>Example</h5>
+<p>
+<div class="list-group">
+    <a class="list-group-item list-group-item-danger" href="#">
+        <h4 class="list-group-item-heading">Mapper Task Locality</h4>
+        <table class="list-group-item-text table table-condensed left-table">
+            <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Data Local Map Tasks</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>Other Local Map Tasks</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>Rack local Map Tasks</td>
+                <td>56</td>
+            </tr>
+            <tr>
+                <td>Total Launched Map Tasks</td>
+                <td>127</td>
+            </tr>
+            </tbody>
+        </table>
+    </a>
+</div>
+</p>
+<h4>Suggestions</h4>
+<p>
+
+   <br>
+    The problem indicates your tasks are not running local to the data. This will cause large network data flow and could lead to bottlenecks for very large jobs.
+   <br>
+    You should try to increase <strong>yarn.scheduler.capacity.node-locality-delay</strong> to atleast the number of nodes on the cluster
+   <br>
+   See yarn.scheduler.fair.locality.threshold.node and yarn.scheduler.fair.locality.threshold.rack for fair scheduler
+    This will make sure that there is at least one scheduling attempt to each data local node
+    <br>
+
+    See <a href="https://hadoop.apache.org/docs/r2.7.3/hadoop-yarn/hadoop-yarn-site/CapacityScheduler.html">Capacity Scheduler Node Locality Settings</a> for further information.<br>
+    <br>
+    See <a href="https://hadoop.apache.org/docs/r2.7.3/hadoop-yarn/hadoop-yarn-site/CapacityScheduler.html">Fair Scheduler Node Locality Settings</a> for further information.<br>

@@ -98,6 +98,7 @@ public class MapReduceCounterData {
     FileInput,
     FileSystemCounters,
     MapReduce,
+    JobCounters,
     FileOutput;
   }
 
@@ -131,11 +132,18 @@ public class MapReduceCounterData {
     COMBINE_OUTPUT_RECORDS(GroupName.MapReduce, "COMBINE_OUTPUT_RECORDS", "Combine output records"),
     SPILLED_RECORDS(GroupName.MapReduce, "SPILLED_RECORDS", "Spilled Records"),
 
+    DATA_LOCAL_MAPS(GroupName.JobCounters,"DATA_LOCAL_MAPS","Data Local Map tasks"),
+    RACK_LOCAL_MAPS(GroupName.JobCounters,"RACK_LOCAL_MAPS","Rack Local Map Tasks"),
+    OTHER_LOCAL_MAPS(GroupName.JobCounters,"OTHER_LOCAL_MAPS","Other Local Maps"),
+    TOTAL_LAUNCHED_MAPS(GroupName.JobCounters,"TOTAL_LAUNCHED_MAPS","Total Launched Map Tasks"),
+
     CPU_MILLISECONDS(GroupName.MapReduce, "CPU_MILLISECONDS", "CPU time spent (ms)"),
     GC_MILLISECONDS(GroupName.MapReduce, "GC_TIME_MILLIS", "GC time elapsed (ms)"),
     COMMITTED_HEAP_BYTES(GroupName.MapReduce, "COMMITTED_HEAP_BYTES", "Total committed heap usage (bytes)"),
     PHYSICAL_MEMORY_BYTES(GroupName.MapReduce, "PHYSICAL_MEMORY_BYTES", "Physical memory (bytes) snapshot"),
     VIRTUAL_MEMORY_BYTES(GroupName.MapReduce, "VIRTUAL_MEMORY_BYTES", "Virtual memory (bytes) snapshot");
+
+
 
     GroupName _group;
     String _name;
