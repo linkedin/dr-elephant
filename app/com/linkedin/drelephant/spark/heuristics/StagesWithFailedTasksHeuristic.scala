@@ -21,6 +21,7 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{StageData, TaskData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
+import com.linkedin.drelephant.util.Utils
 
 import scala.collection.JavaConverters
 
@@ -51,7 +52,7 @@ class StagesWithFailedTasksHeuristic(private val heuristicConfigurationData: Heu
       heuristicConfigurationData.getClassName,
       heuristicConfigurationData.getHeuristicName,
       evaluator.severity,
-      0,
+      evaluator.score,
       resultDetails.asJava
     )
     result
@@ -142,6 +143,10 @@ object StagesWithFailedTasksHeuristic {
 
     lazy val (severityOOMStages: Severity, severityOverheadStages: Severity, stagesWithOOMError: Int, stagesWithOverheadError: Int) = getErrorsSeverity
     lazy val severity: Severity = Severity.max(severityOverheadStages, severityOOMStages)
+
+    val executorCount = data.executorSummaries.filterNot(_.id.equals("driver")).size
+    lazy val score = Utils.getHeuristicScore(severity, executorCount)
+
   }
 
 }

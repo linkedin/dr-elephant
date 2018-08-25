@@ -22,7 +22,7 @@ import scala.util.Try
 import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
-import com.linkedin.drelephant.util.MemoryFormatUtils
+import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
 import com.linkedin.drelephant.math.Statistics
 
 /**
@@ -94,7 +94,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
       heuristicConfigurationData.getClassName,
       heuristicConfigurationData.getHeuristicName,
       evaluator.severity,
-      0,
+      evaluator.score,
       mutableResultDetailsArrayList
     )
     if (evaluator.serializerSeverity != Severity.NONE) {
@@ -240,6 +240,10 @@ object ConfigurationHeuristic {
     }
 
     lazy val severity: Severity = Severity.max(serializerSeverity, shuffleAndDynamicAllocationSeverity, severityConfThresholds)
+
+    val executorCount = data.executorSummaries.size
+
+    lazy val score = Utils.getHeuristicScore(severity, executorCount)
 
     private val serializerIfNonNullRecommendation: String = configurationHeuristic.serializerIfNonNullRecommendation
 

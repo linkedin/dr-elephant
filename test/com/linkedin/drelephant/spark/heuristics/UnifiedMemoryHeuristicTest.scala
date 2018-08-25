@@ -69,6 +69,11 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
       heuristicResult.getSeverity should be(Severity.CRITICAL)
     }
 
+    it("has non-zero score") {
+      heuristicResult.getScore should be(Severity.CRITICAL.getValue * data.executorSummaries
+        .filterNot(_.id.equals("driver")).size)
+    }
+
     it("has max value") {
       val details = heuristicResult.getHeuristicResultDetails.get(2)
       details.getName should be("Max peak unified memory")
@@ -83,6 +88,11 @@ class UnifiedMemoryHeuristicTest extends FunSpec with Matchers {
 
     it("data1 has severity") {
       heuristicResult1.getSeverity should be(Severity.CRITICAL)
+    }
+
+    it("data1 has non - zero score") {
+      heuristicResult1.getScore should be(Severity.CRITICAL.getValue * data1.executorSummaries
+        .filterNot(_.id.equals("driver")).size)
     }
 
     it("data1 has maxMemory") {

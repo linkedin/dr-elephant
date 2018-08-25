@@ -20,7 +20,7 @@ import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
-import com.linkedin.drelephant.util.MemoryFormatUtils
+import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
 
 import scala.collection.JavaConverters
 
@@ -56,7 +56,7 @@ class UnifiedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
       heuristicConfigurationData.getClassName,
       heuristicConfigurationData.getHeuristicName,
       evaluator.severity,
-      0,
+      evaluator.score,
       resultDetails.asJava
     )
     result
@@ -128,5 +128,9 @@ object UnifiedMemoryHeuristic {
     } else {
       Severity.NONE
     }
+
+    val executorCount = executorList.size
+    lazy val score = Utils.getHeuristicScore(severity, executorCount)
+
   }
 }

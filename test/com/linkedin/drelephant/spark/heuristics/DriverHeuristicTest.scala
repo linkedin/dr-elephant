@@ -39,6 +39,10 @@ class DriverHeuristicTest extends FunSpec with Matchers {
       heuristicResult.getSeverity should be(Severity.SEVERE)
     }
 
+    it("has score") {
+      heuristicResult.getScore should be(Severity.SEVERE.getValue * 1)
+    }
+
     describe("Evaluator") {
       val evaluator = new Evaluator(driverHeuristic, data)
       it("has max driver peak JVM memory") {

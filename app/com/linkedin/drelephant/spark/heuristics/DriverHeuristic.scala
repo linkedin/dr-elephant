@@ -23,7 +23,7 @@ import scala.util.Try
 import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
-import com.linkedin.drelephant.util.MemoryFormatUtils
+import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
 
 /**
@@ -98,7 +98,7 @@ class DriverHeuristic(private val heuristicConfigurationData: HeuristicConfigura
       heuristicConfigurationData.getClassName,
       heuristicConfigurationData.getHeuristicName,
       evaluator.severity,
-      0,
+      evaluator.score,
       mutableResultDetailsArrayList
     )
     result
@@ -187,6 +187,10 @@ object DriverHeuristic {
     //Severity for the configuration thresholds
     val severityConfThresholds: Severity = Severity.max(severityDriverCores, severityDriverMemory, severityDriverMemoryOverhead)
     lazy val severity: Severity = Severity.max(severityConfThresholds, severityGc, severityJvmUsedMemory)
+
+    val executorCount = 1 //For driver number of executor is 1
+    lazy val score = Utils.getHeuristicScore(severity, executorCount)
+
     private def getProperty(key: String): Option[String] = appConfigurationProperties.get(key)
   }
 

@@ -22,7 +22,7 @@ import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.math.Statistics
-
+import com.linkedin.drelephant.util.Utils
 
 import scala.collection.JavaConverters
 
@@ -66,7 +66,7 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
       heuristicConfigurationData.getClassName,
       heuristicConfigurationData.getHeuristicName,
       evaluator.severityTimeA,
-      0,
+      evaluator.score,
       resultDetails.asJava
     )
     result
@@ -115,6 +115,9 @@ object ExecutorGcHeuristic {
         Severity.NONE
 
     lazy val severityTimeD: Severity = executorGcHeuristic.gcSeverityDThresholds.severityOf(ratio)
+
+    val executorCount = executorSummaries.size
+    lazy val score = Utils.getHeuristicScore(severityTimeA, executorCount)
 
     /**
       * returns the total JVM GC Time and total executor Run Time across all stages

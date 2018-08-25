@@ -21,7 +21,7 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ExecutorStageSummary,
 import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
-import com.linkedin.drelephant.util.MemoryFormatUtils
+import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
 
 import scala.collection.JavaConverters
 
@@ -76,7 +76,7 @@ class ExecutorStorageSpillHeuristic(private val heuristicConfigurationData: Heur
       heuristicConfigurationData.getClassName,
       heuristicConfigurationData.getHeuristicName,
       evaluator.severity,
-      0,
+      evaluator.score,
       resultDetails.asJava
     )
     result
@@ -131,6 +131,10 @@ object ExecutorStorageSpillHeuristic {
       }
       else Severity.NONE
     }
+
+    val executorCount = executorSummaries.size
+    lazy val score = Utils.getHeuristicScore(severity, executorCount)
+
 
     lazy val sparkExecutorMemory: Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0)
     lazy val sparkExecutorCores: Int = (appConfigurationProperties.get(SPARK_EXECUTOR_CORES).map(_.toInt)).getOrElse(0)

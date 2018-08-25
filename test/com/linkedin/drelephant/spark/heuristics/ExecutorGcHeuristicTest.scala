@@ -106,8 +106,17 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
         heuristicResult.getSeverity should be(Severity.CRITICAL)
       }
 
+      it("returns non-zero score") {
+        heuristicResult.getScore should be(Severity.CRITICAL.getValue * data.executorSummaries
+          .filterNot(_.id.equals("driver")).size)
+      }
+
       it("return the low severity") {
         heuristicResult2.getSeverity should be(Severity.LOW)
+      }
+
+      it("return the 0 score") {
+        heuristicResult2.getScore should be(0)
       }
 
       it("return NONE severity for runtime less than 5 min") {

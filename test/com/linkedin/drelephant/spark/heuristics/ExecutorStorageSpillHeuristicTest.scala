@@ -68,6 +68,10 @@ class ExecutorStorageSpillHeuristicTest extends FunSpec with Matchers {
         heuristicResult.getSeverity should be(Severity.SEVERE)
       }
 
+      it("returns the score") {
+        heuristicResult.getScore should be(Severity.SEVERE.getValue * data1.executorSummaries.size)
+      }
+
       it("returns the total memory spilled") {
         val details = heuristicResultDetails.get(0)
         details.getName should include("Total memory spilled")
