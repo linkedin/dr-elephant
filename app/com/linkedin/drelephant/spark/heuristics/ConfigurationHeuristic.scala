@@ -241,6 +241,9 @@ object ConfigurationHeuristic {
 
     lazy val severity: Severity = Severity.max(serializerSeverity, shuffleAndDynamicAllocationSeverity, severityConfThresholds)
 
+    if (data.executorSummaries == null) {
+      throw new Exception("Executor Summary is Null.")
+    }
     val executorCount = data.executorSummaries.size
 
     lazy val score = Utils.getHeuristicScore(severity, executorCount)

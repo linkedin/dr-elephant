@@ -144,6 +144,10 @@ object StagesWithFailedTasksHeuristic {
     lazy val (severityOOMStages: Severity, severityOverheadStages: Severity, stagesWithOOMError: Int, stagesWithOverheadError: Int) = getErrorsSeverity
     lazy val severity: Severity = Severity.max(severityOverheadStages, severityOOMStages)
 
+    if (data.executorSummaries == null) {
+      throw new Exception("Executor Summary is Null.")
+    }
+
     val executorCount = data.executorSummaries.filterNot(_.id.equals("driver")).size
     lazy val score = Utils.getHeuristicScore(severity, executorCount)
 

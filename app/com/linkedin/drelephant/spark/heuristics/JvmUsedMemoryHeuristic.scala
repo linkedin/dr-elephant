@@ -79,6 +79,10 @@ object JvmUsedMemoryHeuristic {
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
 
+    if (data.executorSummaries == null) {
+      throw new Exception("Executor Summary is Null.")
+    }
+
     lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
     val executorList: Seq[ExecutorSummary] = executorSummaries.filterNot(_.id.equals("driver"))
     val sparkExecutorMemory: Long = (appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY).map(MemoryFormatUtils.stringToBytes)).getOrElse(0L)
