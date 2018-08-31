@@ -55,6 +55,7 @@ public class JobSuggestedParamSet extends Model {
     public static final String fitness = "fitness";
     public static final String fitnessJobExecution = "fitnessJobExecution";
     public static final String isParamSetBest = "isParamSetBest";
+    public static final String isManuallyOverridenParameter = "isManuallyOverridenParameter";
     public static final String areConstraintsViolated = "areConstraintsViolated";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
@@ -90,6 +91,9 @@ public class JobSuggestedParamSet extends Model {
 
   @Column(nullable = false)
   public Boolean isParamSetBest;
+
+  @Column(nullable = false)
+  public Boolean isManuallyOverridenParameter=false;
 
   @Column(nullable = false)
   public Boolean areConstraintsViolated;

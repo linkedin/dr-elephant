@@ -53,9 +53,9 @@
     <description>API URL for Dr Elephant</description>
   </property>
   <!--The below property is optional-->
-  <!--<property>-->
-  <!--<name>python.path</name>-->
-  <!--<value>/path/to/python/binary</value>-->
-  <!--<description>Root directory for python</description>-->
-  <!--</property>-->
+  <property>
+  <name>python.path</name>
+  <value>/usr/local/bin/python2.7</value>
+  <description>Root directory for python</description>
+  </property>
 </configuration>

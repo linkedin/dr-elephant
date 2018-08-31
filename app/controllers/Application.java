@@ -930,7 +930,7 @@ public class Application extends Controller {
       }
       String jobType = paramValueMap.get("autoTuningJobType");
       String optimizationAlgo =
-          paramValueMap.get("optimizationAlgo") == null ? TuningAlgorithm.OptimizationAlgo.PSO.name()
+          paramValueMap.get("optimizationAlgo") == null ? TuningAlgorithm.OptimizationAlgo.HBT.name()
               : paramValueMap.get("optimizationAlgo");
       String optimizationAlgoVersion = paramValueMap.get("optimizationAlgoVersion");
       String optimizationMetric = paramValueMap.get("optimizationMetric");

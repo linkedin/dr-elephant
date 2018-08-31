@@ -44,6 +44,7 @@ public class TuningJobDefinition extends Model {
     public static final String client = "client";
     public static final String tuningAlgorithm = "tuningAlgorithm";
     public static final String tuningEnabled = "tuningEnabled";
+    public static final String autoApply = "autoApply";
     public static final String averageResourceUsage = "averageResourceUsage";
     public static final String averageExecutionTime = "averageExecutionTime";
     public static final String averageInputSizeInBytes = "averageInputSizeInBytes";
@@ -51,8 +52,10 @@ public class TuningJobDefinition extends Model {
     public static final String allowedMaxExecutionTimePercent = "allowedMaxExecutionTimePercent";
     public static final String job = "job";
     public static final String tuningDisabledReason = "tuningDisabledReason";
+    public static final String numberOfIterations = "numberOfIterations";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
+
   }
 
   @ManyToOne(cascade = CascadeType.ALL)
@@ -70,6 +73,9 @@ public class TuningJobDefinition extends Model {
   public boolean tuningEnabled;
 
   @Column(nullable = true)
+  public boolean autoApply = false;
+
+  @Column(nullable = true)
   public Double averageResourceUsage;
 
   @Column(nullable = true)
@@ -83,6 +89,9 @@ public class TuningJobDefinition extends Model {
 
   @Column(nullable = true)
   public Double allowedMaxExecutionTimePercent;
+
+  @Column(nullable = true)
+  public Integer numberOfIterations=10;
 
   public Double getAverageInputSizeInGB() {
     if (averageInputSizeInBytes != null) {
