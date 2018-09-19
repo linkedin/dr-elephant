@@ -144,7 +144,7 @@ object StagesHeuristic {
 
     lazy val stagesWithLongAverageExecutorRuntimes: Seq[(StageData, Long)] =
       stagesAndAverageExecutorRuntimeSeverities
-        .collect { case (stageData, runtime, severity) if severity.getValue > Severity.MODERATE.getValue => (stageData, runtime) }
+        .collect { case (stageData, runtime, severity) if severity.getValue > Severity.LOW.getValue => (stageData, runtime) }
 
     lazy val severity: Severity = Severity.max((stageFailureRateSeverity +: (taskFailureRateSeverities ++ runtimeSeverities)): _*)
 
