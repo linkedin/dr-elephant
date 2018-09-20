@@ -42,8 +42,8 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   private val logger: Logger = Logger.getLogger(classOf[SparkFetcher])
 
   val eventLogUri = Option(fetcherConfigurationData.getParamMap.get(LOG_LOCATION_URI_XML_FIELD))
-  logger.info("wq log location of Spark application is set to " + eventLogUri)
-    logger.info("wq log location of Spark application is set to " + eventLogUri)
+  logger.info("The event log location of Spark application is set to " + eventLogUri)
+
   private[fetchers] lazy val hadoopConfiguration: Configuration = new Configuration()
 
   private[fetchers] lazy val sparkUtils: SparkUtils = SparkUtils

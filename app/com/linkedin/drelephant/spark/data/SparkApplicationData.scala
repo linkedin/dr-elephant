@@ -35,7 +35,6 @@ case class SparkApplicationData(
   import SparkApplicationData._
   import JavaConverters._
 
-
   override def getApplicationType(): ApplicationType = APPLICATION_TYPE
 
   override def getConf(): Properties = {
@@ -66,7 +65,6 @@ object SparkApplicationData {
     val jobDatas = restDerivedData.jobDatas
     val stageDatas = restDerivedData.stageDatas
     val executorSummaries = restDerivedData.executorSummaries
-
     val stagesWithFailedTasks = restDerivedData.stagesWithFailedTasks
     apply(appId, appConfigurationProperties, applicationInfo, jobDatas, stageDatas, executorSummaries, stagesWithFailedTasks)
   }

@@ -92,9 +92,6 @@ object ExecutorGcHeuristic {
   val GC_SEVERITY_D_THRESHOLDS_KEY: String = "gc_severity_D_threshold"
 
   class Evaluator(executorGcHeuristic: ExecutorGcHeuristic, data: SparkApplicationData) {
-
-
-
     lazy val executorAndDriverSummaries: Seq[ExecutorSummary] = data.executorSummaries
     if (executorAndDriverSummaries == null) {
       throw new Exception("Executors Summary is null.")

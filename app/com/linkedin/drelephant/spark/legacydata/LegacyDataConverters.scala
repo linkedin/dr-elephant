@@ -187,9 +187,7 @@ object LegacyDataConverters {
     val executorData = legacyData.getExecutorData
 
     def extractExecutorSummary(executorId: String): ExecutorSummaryImpl = {
-
       val executorInfo = executorData.getExecutorInfo(executorId)
-
       new ExecutorSummaryImpl(
         executorInfo.execId,
         executorInfo.hostPort,

@@ -28,7 +28,6 @@ import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
 
 
-
 /**
   * A heuristic based on metrics for a Spark app's executors.
   *
@@ -150,10 +149,6 @@ object ExecutorsHeuristic {
   val IGNORE_MAX_MILLIS_LESS_THAN_THRESHOLD_KEY: String = "ignore_max_millis_less_than_threshold"
 
   class Evaluator(executorsHeuristic: ExecutorsHeuristic, data: SparkApplicationData) {
-
-    
-
-
     lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
 
     lazy val appAttemptInfo : ApplicationAttemptInfo = data.applicationInfo.attempts.filter(_.completed)(0)
