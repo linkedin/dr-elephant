@@ -114,6 +114,8 @@ object ExecutorStorageSpillHeuristicTest {
     totalTasks = 0,
     maxTasks = 10,
     totalDuration=0,
+    addTime = null,
+    endTime = null,
     totalInputBytes=0,
     totalShuffleRead=0,
     totalShuffleWrite= 0,
