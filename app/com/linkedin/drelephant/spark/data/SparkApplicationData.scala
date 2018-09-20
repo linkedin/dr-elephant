@@ -23,7 +23,6 @@ import scala.collection.JavaConverters
 import com.linkedin.drelephant.analysis.{ApplicationType, HadoopApplicationData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
 
-
 case class SparkApplicationData(
   appId: String,
   appConfigurationProperties: Map[String, String],
@@ -35,6 +34,7 @@ case class SparkApplicationData(
 ) extends HadoopApplicationData {
   import SparkApplicationData._
   import JavaConverters._
+
 
   override def getApplicationType(): ApplicationType = APPLICATION_TYPE
 
@@ -66,6 +66,7 @@ object SparkApplicationData {
     val jobDatas = restDerivedData.jobDatas
     val stageDatas = restDerivedData.stageDatas
     val executorSummaries = restDerivedData.executorSummaries
+
     val stagesWithFailedTasks = restDerivedData.stagesWithFailedTasks
     apply(appId, appConfigurationProperties, applicationInfo, jobDatas, stageDatas, executorSummaries, stagesWithFailedTasks)
   }

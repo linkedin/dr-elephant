@@ -16,59 +16,15 @@
 -->
 <!-- Scheduler configurations -->
 <schedulers>
-
-    <scheduler>
-        <name>airflow</name>
-        <classname>com.linkedin.drelephant.schedulers.AirflowScheduler</classname>
-        <params>
-            <airflowbaseurl>http://localhost:8000</airflowbaseurl>
-        </params>
-    </scheduler>
-
     <scheduler>
         <name>azkaban</name>
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
         <params>
-          <!--<exception_enabled>true</exception_enabled>-->
-          <!--<workflow_client>com.linkedin.drelephant.exceptions.azkaban.AzkabanWorkflowClient</workflow_client>-->
-          <!--<private_key>/home/key/private_key</private_key>-->
-          <!--<userame>elephant</userame>-->
-          <!--<password></password>-->
-          <!--<flowtimefield>flowExecId</flowtimefield>-->
-          <!--<flowtimetype>yyyy-MM-dd'T'HH:mm:ss</flowtimetype>-->
+          <exception_enabled>true</exception_enabled>
+	  <workflow_client>com.linkedin.drelephant.clients.azkaban.AzkabanWorkflowClient</workflow_client>
+          <private_key>/home/sgupta7/.ssh/sgupta7_at_linkedin.com_ssh_key</private_key>
+          <username>sgupta7</username>
         </params>
-
-    </scheduler>
-
-    <scheduler>
-        <name>oozie</name>
-        <classname>com.linkedin.drelephant.schedulers.OozieScheduler</classname>
-        <params>
-            <!-- URL of oozie host -->
-            <oozie_api_url>http://localhost:11000/oozie</oozie_api_url>
-
-            <!-- ### Non mandatory properties ###
-            ### choose authentication method
-            <oozie_auth_option>KERBEROS/SIMPLE</oozie_auth_option>
-
-            ### override oozie console url with a template (only parameter will be the id)
-            <oozie_job_url_template></oozie_job_url_template>
-            <oozie_job_exec_url_template></oozie_job_exec_url_template>
-
-            ### (if scheduled jobs are expected make sure to add following templates since oozie doesn't provide their URLS on server v4.1.0)
-            <oozie_workflow_url_template>http://localhost:11000/oozie/?job=%s</oozie_workflow_url_template>
-            <oozie_workflow_exec_url_template>http://localhost:11000/oozie/?job=%s</oozie_workflow_exec_url_template>
-
-            ### Use true if you can assure all app names are unique.
-            ### When true dr-elephant will unit all coordinator runs (in case of coordinator killed and then run again)
-            <oozie_app_name_uniqueness>false</oozie_app_name_uniqueness>
-            -->
-        </params>
-    </scheduler>
-
-    <scheduler>
-        <name>pinball</name>
-        <classname>com.linkedin.drelephant.schedulers.PinballScheduler</classname>
     </scheduler>
 
     <scheduler>

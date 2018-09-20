@@ -29,14 +29,6 @@
   </fetcher>
 -->
 <fetchers>
-  <!--
-     REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
-   -->
-  <fetcher>
-    <applicationtype>tez</applicationtype>
-    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
-  </fetcher>
-  <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
@@ -44,30 +36,30 @@
       <sampling_enabled>false</sampling_enabled>
     </params>
   </fetcher>
-  -->
   <!--
-     This is a replacement for the MapReduceFetcherHadoop2 that attempts to burn
+     This is an experimental replacement for the MapReduceFetcherHadoop2 that attempts to burn
      through queues of jobs faster by pulling data directly from HDFS rather than going through
      the job history server.
 
      Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
      files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
-     is 1024MB. To increase this, e.g. to 2048MB, update the below mem conf in app-conf/elephant.conf:
-       jvm_args="-mem 2048"
+     is 1024MB. To increase this, e.g. to 2048MB, run this before start.sh:
+       export OPTS="-mem 2048"
 
      To work properly, this fetcher should use the same timezone with the job history server.
      If not set, the local timezone will be used.
    -->
-
+  <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
     <params>
-      <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
       <sampling_enabled>false</sampling_enabled>
-      <history_server_time_zone>UTC</history_server_time_zone>
+      <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
+      <history_server_time_zone>PST</history_server_time_zone>
     </params>
   </fetcher>
+  -->
 
   <!--
     FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties
@@ -85,12 +77,10 @@
       <event_log_location_uri>webhdfs://localhost:50070/system/spark-history</event_log_location_uri>
     </params>
   -->
+
   <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
-    <params>
-      <fetch_failed_tasks>true</fetch_failed_tasks>
-    </params>
   </fetcher>
 
   <!--

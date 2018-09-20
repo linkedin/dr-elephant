@@ -40,9 +40,9 @@
   <!--
   Initial window in MS to indicate how much older apps to fetch from RM.
   -->
-  <!--
+  
   <property>
     <name>drelephant.analysis.fetch.initial.windowMillis</name>
-    <value>3600000</value>
-  </property> -->
+    <value>360000000</value>
+  </property>
 </configuration>

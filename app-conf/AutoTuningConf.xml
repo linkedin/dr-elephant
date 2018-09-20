@@ -19,7 +19,7 @@
 <configuration>
   <property>
     <name>autotuning.enabled</name>
-    <value>false</value>
+    <value>true</value>
     <description>Enable or disable auto tuning</description>
   </property>
   <property>

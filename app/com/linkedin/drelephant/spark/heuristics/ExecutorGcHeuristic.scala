@@ -92,6 +92,9 @@ object ExecutorGcHeuristic {
   val GC_SEVERITY_D_THRESHOLDS_KEY: String = "gc_severity_D_threshold"
 
   class Evaluator(executorGcHeuristic: ExecutorGcHeuristic, data: SparkApplicationData) {
+
+
+
     lazy val executorAndDriverSummaries: Seq[ExecutorSummary] = data.executorSummaries
     if (executorAndDriverSummaries == null) {
       throw new Exception("Executors Summary is null.")
@@ -101,10 +104,12 @@ object ExecutorGcHeuristic {
     if (executorSummaries.isEmpty) {
       throw new Exception("No executor information available.")
     }
+    lazy val applicationInfo: Seq[ApplicationAttemptInfo] = data.applicationInfo.attempts.filter(_.completed)
+    var appInfo: ApplicationAttemptInfo = applicationInfo(0)
 
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
-    var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries)
+    var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries,appInfo)
 
     var ratio: Double = jvmTime.toDouble / executorRunTimeTotal.toDouble
 
@@ -121,12 +126,20 @@ object ExecutorGcHeuristic {
       * @param executorSummaries
       * @return
       */
-    private def getTimeValues(executorSummaries: Seq[ExecutorSummary]): (Long, Long) = {
+    private def getTimeValues(executorSummaries: Seq[ExecutorSummary], applInfo: ApplicationAttemptInfo): (Long, Long) = {
       var jvmGcTimeTotal: Long = 0
       var executorRunTimeTotal: Long = 0
       executorSummaries.foreach(executorSummary => {
         jvmGcTimeTotal+=executorSummary.totalGCTime
-        executorRunTimeTotal+=executorSummary.totalDuration
+        if(executorSummary.endTime == null)
+        {
+        executorRunTimeTotal+=(applInfo.endTime.getTime - executorSummary.addTime.getTime)
+        }
+        else
+        {
+        executorRunTimeTotal+=(executorSummary.endTime.getTime - executorSummary.addTime.getTime)
+        }
+
       })
       (jvmGcTimeTotal, executorRunTimeTotal)
     }

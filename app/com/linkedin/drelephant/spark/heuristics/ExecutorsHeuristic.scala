@@ -21,10 +21,12 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.math.Statistics
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationAttemptInfo
 import com.linkedin.drelephant.util.MemoryFormatUtils
 
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
+
 
 
 /**
@@ -148,7 +150,13 @@ object ExecutorsHeuristic {
   val IGNORE_MAX_MILLIS_LESS_THAN_THRESHOLD_KEY: String = "ignore_max_millis_less_than_threshold"
 
   class Evaluator(executorsHeuristic: ExecutorsHeuristic, data: SparkApplicationData) {
+
+    
+
+
     lazy val executorSummaries: Seq[ExecutorSummary] = data.executorSummaries
+
+    lazy val appAttemptInfo : ApplicationAttemptInfo = data.applicationInfo.attempts.filter(_.completed)(0)
 
     lazy val totalStorageMemoryAllocated: Long = executorSummaries.map { _.maxMemory }.sum
 
@@ -163,9 +171,9 @@ object ExecutorsHeuristic {
       severityOfDistribution(storageMemoryUsedDistribution, ignoreMaxBytesLessThanThreshold)
 
     lazy val taskTimeDistribution: Distribution =
-      Distribution(executorSummaries.map { _.totalDuration })
+      Distribution(executorSummaries.map {executionSummary => if(executionSummary.endTime == null) (appAttemptInfo.endTime.getTime - executionSummary.addTime.getTime) else (executionSummary.endTime.getTime - executionSummary.addTime.getTime) })
 
-    lazy val totalTaskTime : Long = executorSummaries.map(_.totalDuration).sum
+    lazy val totalTaskTime : Long = executorSummaries.map(executionSummary => if(executionSummary.endTime == null) (appAttemptInfo.endTime.getTime - executionSummary.addTime.getTime) else (executionSummary.endTime.getTime - executionSummary.addTime.getTime)).sum
 
     lazy val taskTimeSeverity: Severity =
       severityOfDistribution(taskTimeDistribution, ignoreMaxMillisLessThanThreshold)

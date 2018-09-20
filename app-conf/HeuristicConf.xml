@@ -135,7 +135,7 @@
   </heuristic>
 
   <!-- MAP-REDUCE HEURISTICS -->
-
+ 
   <heuristic>
     <applicationtype>mapreduce</applicationtype>
     <heuristicname>Mapper Skew</heuristicname>
