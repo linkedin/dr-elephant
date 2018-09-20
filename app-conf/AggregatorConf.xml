@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2016 LinkedIn Corp.
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License. You may obtain a copy of
+  the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+
+<!-- Data aggregators configurations
+  An Aggregator implements HadoopMetricsAggregator interface and help aggregate a certain application type data.
+
+  Example:
+  <aggregator>
+    # Choose the application type that this aggregator is for
+    <applicationtype>mapreduce</applicationtype>
+
+
+    # Specify the implementation class
+    <classname>com.linkedin.drelephant.mapreduce.MapReduceAggregator</classname>
+  </aggregator>
+-->
+<aggregators>
+  <aggregator>
+    <applicationtype>mapreduce</applicationtype>
+    <classname>com.linkedin.drelephant.mapreduce.MapReduceMetricsAggregator</classname>
+  </aggregator>
+  <aggregator>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.TezMetricsAggregator</classname>
+  </aggregator>
+  <aggregator>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.SparkMetricsAggregator</classname>
+    <params>
+      <allocated_memory_waste_buffer_percentage>0.5</allocated_memory_waste_buffer_percentage>
+    </params>
+  </aggregator>
+</aggregators>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2016 LinkedIn Corp.
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License. You may obtain a copy of
+  the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+
+<!-- Data fetchers configurations
+  A Fetcher implements ElephantFetcher interface and help fetch a certain application type data.
+
+  Example:
+  <fetcher>
+    # Choose the application type that this fetcher is for
+    <applicationtype>mapreduce</applicationtype>
+
+
+    # Specify the implementation class
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
+  </fetcher>
+-->
+<fetchers>
+  <!--
+     REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
+   -->
+  <fetcher>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
+  </fetcher>
+  <!--
+  <fetcher>
+    <applicationtype>mapreduce</applicationtype>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
+    <params>
+      <sampling_enabled>false</sampling_enabled>
+    </params>
+  </fetcher>
+  -->
+  <!--
+     This is a replacement for the MapReduceFetcherHadoop2 that attempts to burn
+     through queues of jobs faster by pulling data directly from HDFS rather than going through
+     the job history server.
+
+     Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
+     files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
+     is 1024MB. To increase this, e.g. to 2048MB, update the below mem conf in app-conf/elephant.conf:
+       jvm_args="-mem 2048"
+
+     To work properly, this fetcher should use the same timezone with the job history server.
+     If not set, the local timezone will be used.
+   -->
+
+  <fetcher>
+    <applicationtype>mapreduce</applicationtype>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
+    <params>
+      <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
+      <sampling_enabled>false</sampling_enabled>
+      <history_server_time_zone>UTC</history_server_time_zone>
+    </params>
+  </fetcher>
+
+  <!--
+    FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties
+
+    Param Description:
+    *event_log_size_limit_in_mb* sets the threshold for the size of the eventlog. Increasing it will necessiate
+    increase in heap size. default is 100
+
+    *event_log_location_uri* can be used to specify the fully qualified uri for the location in hdfs for eventlogs
+    if this is not specified, the fetcher will try to deduce it from the spark-conf
+
+    eg:
+    <params>
+      <event_log_size_limit_in_mb>500</event_log_size_limit_in_mb>
+      <event_log_location_uri>webhdfs://localhost:50070/system/spark-history</event_log_location_uri>
+    </params>
+  -->
+  <fetcher>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+    <params>
+      <fetch_failed_tasks>true</fetch_failed_tasks>
+    </params>
+  </fetcher>
+
+  <!--
+  This is an experimental fetcher for Spark applications which uses SHS REST API to get application metrics
+  and WebHDFS to get application properties from eventlogs.
+
+   <fetcher>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+  </fetcher>
+
+  Param Description (Requires Spark >= 1.5.0):
+  *use_rest_for_eventlogs* enables the fetcher to get eventlogs via SHS REST API to derive application properties.
+  *should_process_logs_locally* if use_rest_for_eventlogs is true, then enabling this flag will enable fetcher to just
+  get eventlogs via SHS REST API and derives application metrics and properties from eventlogs.
+  Therefore, fetcher does not use other REST calls, which may have significant memory overhead on SHS.
+
+  <fetcher>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+    <params>
+      <use_rest_for_eventlogs>true</use_rest_for_eventlogs>
+      <should_process_logs_locally>true</should_process_logs_locally>
+    </params>
+  </fetcher>
+  -->
+</fetchers>
