@@ -187,6 +187,8 @@ object SparkMetricsAggregatorTest {
     totalTasks = 0,
     maxTasks = 0,
     totalDuration,
+    addTime = null,
+    endTime = null,
     totalInputBytes = 0,
     totalShuffleRead = 0,
     totalShuffleWrite = 0,
