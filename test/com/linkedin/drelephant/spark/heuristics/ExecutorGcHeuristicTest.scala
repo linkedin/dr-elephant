@@ -20,10 +20,10 @@ import scala.collection.JavaConverters
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity, SeverityThresholds}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl, StageDataImpl}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl,ApplicationInfoImpl, ExecutorSummaryImpl, StageDataImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
-
+import java.util.{Calendar,Date}
 import scala.concurrent.duration.Duration
 
 /**
@@ -35,27 +35,63 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
   describe("ExecutorGcHeuristic") {
     val heuristicConfigurationData = newFakeHeuristicConfigurationData()
     val executorGcHeuristic = new ExecutorGcHeuristic(heuristicConfigurationData)
+    val dateArray : Array[Date] = new Array[Date](20)
+    var cal: Calendar = Calendar.getInstance()
+    dateArray(0) = cal.getTime
+    cal.add(Calendar.MILLISECOND,700)
+    dateArray(1) = cal.getTime
+    cal.add(Calendar.MILLISECOND,300)
+    for(i <- 2 to 11)
+    {
+    dateArray(i) = cal.getTime
+    cal.add(Calendar.MINUTE,1)
+    }
+    for(i <- 12 to 19)
+    {
+     dateArray(i) = cal.getTime
+     cal.add(Calendar.MINUTE,5)
+    }
+    val appAttemptInfo = Seq(
+    newFakeApplicationAttemptInfo(endTime = dateArray(14))
+    )
 
+    val appAttemptInfo1 = Seq(
+    newFakeApplicationAttemptInfo(endTime = dateArray(1))
+    )
+
+   val appAttemptInfo2 = Seq(
+    newFakeApplicationAttemptInfo(endTime = dateArray(6))
+   )
+
+   val appAttemptInfo3 = Seq(
+   newFakeApplicationAttemptInfo(endTime = dateArray(9))
+    )
     val executorSummaries = Seq(
       newFakeExecutorSummary(
         id = "1",
         totalGCTime = Duration("2min").toMillis,
-        totalDuration = Duration("15min").toMillis
+        totalDuration = Duration("15min").toMillis,
+        addTime = dateArray(12),
+        endTime = dateArray(15)
       ),
       newFakeExecutorSummary(
         id = "2",
         totalGCTime = Duration("6min").toMillis,
-        totalDuration = Duration("14min").toMillis
-      ),
+        totalDuration = Duration("14min").toMillis,
+        addTime = dateArray(8)
+        ),
       newFakeExecutorSummary(
         id = "3",
         totalGCTime = Duration("4min").toMillis,
-        totalDuration = Duration("20min").toMillis
-      ),
+        totalDuration = Duration("20min").toMillis,
+        addTime = dateArray(2)
+        ),
       newFakeExecutorSummary(
         id = "4",
         totalGCTime = Duration("8min").toMillis,
-        totalDuration = Duration("30min").toMillis
+        totalDuration = Duration("30min").toMillis,
+        addTime = dateArray(13),
+        endTime = dateArray(19)
       )
     )
 
@@ -63,7 +99,9 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       newFakeExecutorSummary(
         id = "1",
         totalGCTime = 500,
-        totalDuration = 700
+        totalDuration = 700,
+        addTime = dateArray(0),
+        endTime = dateArray(1)
       )
     )
 
@@ -71,12 +109,14 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       newFakeExecutorSummary(
         id = "1",
         totalGCTime = 12000,
-        totalDuration = Duration("4min").toMillis
+        totalDuration = Duration("4min").toMillis,
+        addTime = dateArray(2)
       ),
       newFakeExecutorSummary(
         id = "2",
         totalGCTime = 13000,
-        totalDuration = Duration("1min").toMillis
+        totalDuration = Duration("1min").toMillis,
+        addTime = dateArray(5)
       )
     )
 
@@ -84,15 +124,16 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       newFakeExecutorSummary(
         id = "1",
         totalGCTime = 9000,
-        totalDuration = Duration("2min").toMillis
+        totalDuration = Duration("2min").toMillis,
+        addTime = dateArray(7)
       )
     )
 
     describe(".apply") {
-      val data = newFakeSparkApplicationData(executorSummaries)
-      val data1 = newFakeSparkApplicationData(executorSummaries1)
-      val data2 = newFakeSparkApplicationData(executorSummaries2)
-      val data3 = newFakeSparkApplicationData(executorSummaries3)
+      val data = newFakeSparkApplicationData(executorSummaries,appAttemptInfo)
+      val data1 = newFakeSparkApplicationData(executorSummaries1,appAttemptInfo1)
+      val data2 = newFakeSparkApplicationData(executorSummaries2,appAttemptInfo2)
+      val data3 = newFakeSparkApplicationData(executorSummaries3,appAttemptInfo3)
       val heuristicResult = executorGcHeuristic.apply(data)
       val heuristicResult1 = executorGcHeuristic.apply(data1)
       val heuristicResult2 = executorGcHeuristic.apply(data2)
@@ -169,7 +210,9 @@ object ExecutorGcHeuristicTest {
   def newFakeExecutorSummary(
     id: String,
     totalGCTime: Long,
-    totalDuration: Long
+    totalDuration: Long,
+    addTime: Date,
+    endTime: Date = null
   ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
@@ -182,6 +225,8 @@ object ExecutorGcHeuristicTest {
     totalTasks = 0,
     maxTasks = 0,
     totalDuration,
+    addTime,
+    endTime,
     totalInputBytes=0,
     totalShuffleRead=0,
     totalShuffleWrite= 0,
@@ -192,14 +237,23 @@ object ExecutorGcHeuristicTest {
     peakJvmUsedMemory = Map.empty,
     peakUnifiedMemory = Map.empty
   )
+  def newFakeApplicationAttemptInfo(
+      endTime: Date
+    ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
+      attemptId = null,
+      startTime= null,
+      endTime,
+      sparkUser = "",
+      completed = true
+    )
 
   def newFakeSparkApplicationData(
-    executorSummaries: Seq[ExecutorSummaryImpl]
+    executorSummaries: Seq[ExecutorSummaryImpl] , appAttemptInfo: Seq[ApplicationAttemptInfoImpl]
   ): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfoImpl(appId, name = "app", Seq.empty),
+      new ApplicationInfoImpl(appId, name = "app", appAttemptInfo),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = executorSummaries,
