@@ -133,10 +133,16 @@ object StagesHeuristicTest {
     status,
     stageId,
     attemptId = 0,
+    numTasks = numCompleteTasks + numFailedTasks,
     numActiveTasks = numCompleteTasks + numFailedTasks,
     numCompleteTasks,
     numFailedTasks,
     executorRunTime,
+    executorCpuTime = 0,
+    submissionTime = None,
+    firstTaskLaunchedTime = None,
+    completionTime = None,
+    failureReason = None,
     inputBytes = 0,
     inputRecords = 0,
     outputBytes = 0,
@@ -152,7 +158,13 @@ object StagesHeuristicTest {
     schedulingPool = "",
     accumulatorUpdates = Seq.empty,
     tasks = None,
-    executorSummary = None
+    executorSummary = None,
+    peakJvmUsedMemory = None,
+    peakExecutionMemory = None,
+    peakStorageMemory = None,
+    peakUnifiedMemory = None,
+    taskSummary = None,
+    executorMetricsSummary = None
   )
 
   def newFakeSparkApplicationData(
