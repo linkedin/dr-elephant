@@ -95,13 +95,16 @@ class SparkRestClient(sparkConf: SparkConf) {
           getLogData(attemptTarget)
         }
       } else Future.successful(None)
+      val futureFailedTasks = Future {
+        getStagesWithFailedTasks(attemptTarget)
+      }
 
       SparkRestDerivedData(
         applicationInfo,
         Await.result(futureJobDatas, DEFAULT_TIMEOUT),
         Await.result(futureStageDatas, DEFAULT_TIMEOUT),
         Await.result(futureExecutorSummaries, Duration(5, SECONDS)),
-        Seq.empty,
+        Await.result(futureFailedTasks, DEFAULT_TIMEOUT),
         Await.result(futureLogData, Duration(5, SECONDS))
       )
 
@@ -211,7 +214,7 @@ class SparkRestClient(sparkConf: SparkConf) {
   }
 
   private def getStageDatas(attemptTarget: WebTarget): Seq[StageDataImpl] = {
-    val target = attemptTarget.path("stages")
+    val target = attemptTarget.path("stages/withSummaries")
     try {
       get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {

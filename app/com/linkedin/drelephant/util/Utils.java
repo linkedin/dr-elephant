@@ -268,6 +268,26 @@ public final class Utils {
     return String.format("%d:%02d:%02d", hours, minutes, seconds);
   }
 
+  public static String getDuration(long millis) {
+    double seconds = millis / 1000.0;
+    if (seconds < 1) {
+      return millis + " ms";
+    } else {
+      double minutes = seconds / 60.0;
+      if (minutes < 1) {
+        return String.format("%.2f sec", seconds);
+      } else {
+        double hours = minutes / 60.0;
+        if (hours < 1) {
+          return String.format("%.2f min", minutes);
+        } else {
+          double days = hours / 24.0;
+          return String.format("%.2f days", days);
+        }
+      }
+    }
+  }
+
   /**
    * Convert a value in MBSeconds to GBHours
    * @param MBSeconds The value to convert
