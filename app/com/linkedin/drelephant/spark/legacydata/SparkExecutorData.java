@@ -17,7 +17,6 @@
 package com.linkedin.drelephant.spark.legacydata;
 
 import scala.None;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
