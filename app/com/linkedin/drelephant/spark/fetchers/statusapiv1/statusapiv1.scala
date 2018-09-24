@@ -83,6 +83,8 @@ trait ExecutorSummary{
   def totalTasks: Int
   def maxTasks: Int
   def totalDuration: Long
+  def addTime: Date
+  def endTime: Option[Date]
   def totalInputBytes: Long
   def totalShuffleRead: Long
   def totalShuffleWrite: Long
@@ -294,6 +296,8 @@ class ExecutorSummaryImpl(
   var totalTasks: Int,
   var maxTasks: Int,
   var totalDuration: Long,
+  var addTime: Date,
+  var endTime: Option[Date],
   var totalInputBytes: Long,
   var totalShuffleRead: Long,
   var totalShuffleWrite: Long,

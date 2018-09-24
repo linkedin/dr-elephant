@@ -16,9 +16,11 @@
 
 package com.linkedin.drelephant.spark.legacydata;
 
+import scala.None;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Date;
 
 
 /**
@@ -41,6 +43,8 @@ public class SparkExecutorData {
     public int totalTasks = 0;
     public int maxTasks = 0;
     public long duration = 0L;
+    public Date addTime = new Date();
+    public Date endTime = new Date();
     public long inputBytes = 0L;
     public long outputBytes = 0L;
     public long shuffleRead = 0L;
@@ -52,7 +56,7 @@ public class SparkExecutorData {
       return "{execId: " + execId + ", hostPort:" + hostPort + " , rddBlocks: " + rddBlocks + ", memUsed: " + memUsed
           + ", maxMem: " + maxMem + ", diskUsed: " + diskUsed + ", totalTasks" + totalTasks + ", maxTasks" + maxTasks + ", tasksActive: "
           + activeTasks + ", tasksComplete: " + completedTasks + ", tasksFailed: " + failedTasks + ", duration: "
-          + duration + ", inputBytes: " + inputBytes + ", outputBytes:" + outputBytes + ", shuffleRead: " + shuffleRead
+          + duration + ", addTime: " + addTime + ", end time:" + endTime + ", inputBytes: " + inputBytes + ", outputBytes:" + outputBytes + ", shuffleRead: " + shuffleRead
           + ", shuffleWrite: " + shuffleWrite + ", totalGCTime: " + totalGCTime + ", totalMemoryBytesSpilled: " + totalMemoryBytesSpilled + "}";
     }
   }

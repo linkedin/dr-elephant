@@ -112,7 +112,6 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = Future {
     val appId = analyticJob.getAppId
     val restDerivedData = Await.result(sparkRestClient.fetchData(appId, eventLogSource == EventLogSource.Rest), DEFAULT_TIMEOUT)
-
     val logDerivedData = eventLogSource match {
       case EventLogSource.None => None
       case EventLogSource.Rest => restDerivedData.logDerivedData

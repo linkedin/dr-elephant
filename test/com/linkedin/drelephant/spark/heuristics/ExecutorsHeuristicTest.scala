@@ -21,9 +21,11 @@ import scala.collection.JavaConverters
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity, SeverityThresholds}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl,
+ApplicationInfoImpl, ExecutorSummaryImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
+import java.util.{Calendar,Date}
 
 /**
   * Test class for Executors Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
@@ -40,6 +42,20 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
       )
     )
     val executorsHeuristic = new ExecutorsHeuristic(heuristicConfigurationData)
+    val dateArray : Array[Date] = new Array[Date](20)
+    val cal: Calendar = Calendar.getInstance()
+    dateArray(0)  = cal.getTime
+    cal.add(Calendar.SECOND,1000)
+    cal.add(Calendar.MILLISECOND,1)
+    for(i <- 1 to 19)
+    {
+
+      dateArray(i) = cal.getTime
+      cal.add(Calendar.SECOND,1000)
+
+    }
+    val appAttemptInfo = Seq(newFakeApplicationAttemptInfo(endTime = dateArray(4)))
+
 
     val maxMemory = 5000000L
 
@@ -48,6 +64,8 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
         id = "1",
         memoryUsed = 1000000L,
         totalDuration = 1000001L,
+        addTime = dateArray(0),
+        endTime = Option(dateArray(1)),
         totalInputBytes = 1000002L,
         totalShuffleRead = 1000003L,
         totalShuffleWrite = 1000004L,
@@ -57,6 +75,8 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
         id = "2",
         memoryUsed = 2000000L,
         totalDuration = 2000001L,
+        addTime = dateArray(0),
+        endTime = Option(dateArray(2)),
         totalInputBytes = 2000002L,
         totalShuffleRead = 2000003L,
         totalShuffleWrite = 2000004L,
@@ -66,6 +86,8 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
         id = "3",
         memoryUsed = 3000000L,
         totalDuration = 3000001L,
+        addTime = dateArray(0),
+        endTime = Option(dateArray(3)),
         totalInputBytes = 3000002L,
         totalShuffleRead = 3000003L,
         totalShuffleWrite = 3000004L,
@@ -75,6 +97,8 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
         id = "4",
         memoryUsed = 4000000L,
         totalDuration = 4000001L,
+        addTime = dateArray(0),
+        endTime = None,
         totalInputBytes = 4000002L,
         totalShuffleRead = 4000003L,
         totalShuffleWrite = 4000004L,
@@ -83,7 +107,7 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
     )
 
     describe(".apply") {
-      val data = newFakeSparkApplicationData(executorSummaries)
+      val data = newFakeSparkApplicationData(executorSummaries,appAttemptInfo)
       val heuristicResult = executorsHeuristic.apply(data)
       val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
 
@@ -150,7 +174,7 @@ class ExecutorsHeuristicTest extends FunSpec with Matchers {
       import ExecutorsHeuristic.Evaluator
       import ExecutorsHeuristic.Distribution
 
-      val data = newFakeSparkApplicationData(executorSummaries)
+      val data = newFakeSparkApplicationData(executorSummaries,appAttemptInfo)
       val evaluator = new Evaluator(executorsHeuristic, data)
 
       it("has the total storage memory allocated") {
@@ -232,6 +256,8 @@ object ExecutorsHeuristicTest {
     id: String,
     memoryUsed: Long,
     totalDuration: Long,
+    addTime: Date,
+    endTime: Option[Date],
     totalInputBytes: Long,
     totalShuffleRead: Long,
     totalShuffleWrite: Long,
@@ -248,6 +274,8 @@ object ExecutorsHeuristicTest {
     totalTasks = 0,
     maxTasks = 0,
     totalDuration,
+    addTime,
+    endTime,
     totalInputBytes,
     totalShuffleRead,
     totalShuffleWrite,
@@ -258,12 +286,21 @@ object ExecutorsHeuristicTest {
     peakJvmUsedMemory = Map.empty,
     peakUnifiedMemory = Map.empty
   )
+   def newFakeApplicationAttemptInfo(
+        endTime: Date
+      ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
+        attemptId = Option("ATTEMPTid_1"),
+        startTime= Calendar.getInstance().getTime,
+        endTime,
+        sparkUser = "",
+        completed = true
+      )
 
-  def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData = {
+  def newFakeSparkApplicationData(executorSummaries: Seq[ExecutorSummaryImpl],appAttemptInfo: Seq[ApplicationAttemptInfoImpl]): SparkApplicationData = {
     val appId = "application_1"
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfoImpl(appId, name = "app", Seq.empty),
+      new ApplicationInfoImpl(appId, name = "app", appAttemptInfo),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = executorSummaries,

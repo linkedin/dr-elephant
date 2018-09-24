@@ -9,6 +9,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 import scala.collection.JavaConverters
 import scala.concurrent.duration.Duration
+import java.util.Calendar
 
 /**
   * Test class for Driver Metrics Heuristic. It checks whether all the values used in the heuristic are calculated correctly.
@@ -81,6 +82,8 @@ object DriverHeuristicTest {
     totalTasks = 0,
     maxTasks = 0,
     totalDuration,
+    addTime = Calendar.getInstance().getTime,
+    endTime = None,
     totalInputBytes = 0,
     totalShuffleRead = 0,
     totalShuffleWrite = 0,
