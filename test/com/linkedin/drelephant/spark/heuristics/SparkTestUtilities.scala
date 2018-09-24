@@ -10,7 +10,7 @@ import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 
 import scala.collection.JavaConverters
 
-object SparkTestUtilities {
+private [heuristics] object SparkTestUtilities {
   import JavaConverters._
   val OOM_ERROR = "java.lang.OutOfMemoryError"
   val OVERHEAD_MEMORY_ERROR = "killed by YARN for exceeding memory limits"
@@ -20,7 +20,7 @@ object SparkTestUtilities {
   private val sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
   /** Create a ample heuristics configuration data. */
-  private [heuristics] def createHeuristicConfigurationData(
+  def createHeuristicConfigurationData(
       params: Map[String, String] = Map.empty): HeuristicConfigurationData =
     new HeuristicConfigurationData("heuristic", "class", "view", new ApplicationType("type"), params.asJava)
 
@@ -30,7 +30,7 @@ object SparkTestUtilities {
     * @param stageId stage ID.
     * @param numTasks total number of tasks for the stage.
     */
-  private[heuristics] case class StageAnalysisBuilder(stageId: Int, numTasks: Int) {
+  case class StageAnalysisBuilder(stageId: Int, numTasks: Int) {
     var rawSpillSeverity = Severity.NONE
     var executionSpillSeverity = Severity.NONE
     var longTaskSeverity = Severity.NONE
@@ -53,7 +53,8 @@ object SparkTestUtilities {
     var details: Seq[String] = Seq()
 
     /**
-      * Configure execution memory spill related parameters
+      * Configure execution memory spill related parameters.
+      *
       * @param raw the raw execution memory spill severity.
       * @param severity the reported execution memory spill severity.
       * @param maxTaskSpillMb maximum amount (MB) of execution memory spill for a task.
@@ -167,7 +168,7 @@ object SparkTestUtilities {
     * @param stageId stage ID
     * @param numTasks total number of tasks for the stage.
     */
-  private[heuristics] case class StageBuilder(stageId: Int, numTasks: Int) {
+  case class StageBuilder(stageId: Int, numTasks: Int) {
     val stage = new StageDataImpl(
       StageStatus.COMPLETE,
       stageId,
@@ -463,7 +464,7 @@ object SparkTestUtilities {
     * @param properties configuration properties for the Spark application.
     * @return Spark application data.
     */
-  private[heuristics] def createSparkApplicationData
+  def createSparkApplicationData
   (stages: Seq[StageDataImpl],
    executorSummaries: Seq[ExecutorSummaryImpl],
    properties: Option[Map[String, String]]): SparkApplicationData = {

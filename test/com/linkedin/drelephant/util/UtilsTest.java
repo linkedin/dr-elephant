@@ -197,6 +197,17 @@ public class UtilsTest {
     assertEquals("0:05:24", Utils.getDurationBreakdown(durations[4]));
     assertEquals("314483:43:34", Utils.getDurationBreakdown(durations[5]));
   }
+
+  @Test
+  public void testGetDuration() {
+    long []durations = { 153, 25431, 432344, 23423562, 178123456L};
+    assertEquals("153 ms", Utils.getDuration(durations[0]));
+    assertEquals("25.43 sec", Utils.getDuration(durations[1]));
+    assertEquals("7.21 min", Utils.getDuration(durations[2]));
+    assertEquals("6.51 hr", Utils.getDuration(durations[3]));
+    assertEquals("2.06 days", Utils.getDuration(durations[4]));
+  }
+
   @Test
   public void testGetPercentage() {
     long []numerators = {10,20,30,40,50};

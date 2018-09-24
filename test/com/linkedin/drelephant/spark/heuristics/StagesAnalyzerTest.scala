@@ -3,8 +3,6 @@ package com.linkedin.drelephant.spark.heuristics
 import java.util.Date
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
-import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1._
 import org.scalatest.{FunSpec, Matchers}
 
@@ -33,21 +31,25 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
           .failures(Severity.CRITICAL, Severity.NONE, Severity.CRITICAL, Severity.NONE, 2, 2, 0)
           .create(),
         StageAnalysisBuilder(3, 15)
-          .failures(Severity.NONE, Severity.SEVERE, Severity.CRITICAL, Severity.NONE, 2, 0, 1)
+          .failures(Severity.NONE, Severity.LOW, Severity.MODERATE, Severity.NONE, 2, 0, 1)
           .create(),
         StageAnalysisBuilder(4, 15)
-          .failures(Severity.SEVERE, Severity.CRITICAL, Severity.CRITICAL, Severity.NONE, 3, 1, 2)
+          .failures(Severity.LOW, Severity.MODERATE, Severity.CRITICAL, Severity.NONE, 3, 1, 2)
           .create(),
         StageAnalysisBuilder(5, 4)
           .failures(Severity.NONE, Severity.NONE, Severity.CRITICAL, Severity.CRITICAL, 2, 0, 0)
           .create()
       )
       val expectedDetails = List(
+        "Stage 2 has 2 failed tasks.",
         "Stage 2: has 2 tasks that failed because of OutOfMemory exception.",
+        "Stage 3 has 2 failed tasks.",
         "Stage 3: has 1 tasks that failed because the container was killed by YARN for exeeding memory limits.",
+        "Stage 4 has 3 failed tasks.",
         "Stage 4: has 1 tasks that failed because of OutOfMemory exception.",
         "Stage 4: has 2 tasks that failed because the container was killed by YARN for exeeding memory limits.",
-        "Stage 5 failed: array issues")
+        "Stage 5 failed: array issues",
+        "Stage 5 has 2 failed tasks.")
 
       val stageAnalyzer = new StagesAnalyzer(heuristicConfigurationData, data)
       val stageAnalysis = stageAnalyzer.getStageAnalysis(200)

@@ -268,6 +268,14 @@ public final class Utils {
     return String.format("%d:%02d:%02d", hours, minutes, seconds);
   }
 
+  /**
+   * Convert a millisecond duration to a string format, specifying
+   * milliseconds, seconds, minutes, hours, or days, for the largest unit
+   * that has a > 1.0 value.
+   *
+   * @param millis duration in milliseconds
+   * @return The string format.
+   */
   public static String getDuration(long millis) {
     double seconds = millis / 1000.0;
     if (seconds < 1) {
@@ -282,6 +290,9 @@ public final class Utils {
           return String.format("%.2f min", minutes);
         } else {
           double days = hours / 24.0;
+          if (days < 1) {
+            return String.format("%.2f hr", hours);
+          }
           return String.format("%.2f days", days);
         }
       }
