@@ -23,7 +23,6 @@ import scala.collection.JavaConverters
 import com.linkedin.drelephant.analysis.{ApplicationType, HadoopApplicationData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
 
-
 case class SparkApplicationData(
   appId: String,
   appConfigurationProperties: Map[String, String],

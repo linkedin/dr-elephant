@@ -102,9 +102,13 @@ object ExecutorGcHeuristic {
       throw new Exception("No executor information available.")
     }
 
+    lazy val applicationInfo: Seq[ApplicationAttemptInfo] = data.applicationInfo.attempts.filter(_.completed)
+
+    var appInfo: ApplicationAttemptInfo = applicationInfo(0)
+
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
-    var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries)
+    var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries, appInfo)
 
     var ratio: Double = jvmTime.toDouble / executorRunTimeTotal.toDouble
 
@@ -121,12 +125,12 @@ object ExecutorGcHeuristic {
       * @param executorSummaries
       * @return
       */
-    private def getTimeValues(executorSummaries: Seq[ExecutorSummary]): (Long, Long) = {
+    private def getTimeValues(executorSummaries: Seq[ExecutorSummary], applInfo: ApplicationAttemptInfo): (Long, Long) = {
       var jvmGcTimeTotal: Long = 0
       var executorRunTimeTotal: Long = 0
       executorSummaries.foreach(executorSummary => {
         jvmGcTimeTotal+=executorSummary.totalGCTime
-        executorRunTimeTotal+=executorSummary.totalDuration
+        executorRunTimeTotal+=executorSummary.endTime.getOrElse(appInfo.endTime).getTime - executorSummary.addTime.getTime
       })
       (jvmGcTimeTotal, executorRunTimeTotal)
     }

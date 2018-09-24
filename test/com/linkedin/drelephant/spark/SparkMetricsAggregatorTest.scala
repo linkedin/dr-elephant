@@ -17,6 +17,7 @@
 package com.linkedin.drelephant.spark
 
 import java.util.Date
+import java.util.Calendar
 
 import scala.collection.JavaConverters
 
@@ -187,6 +188,8 @@ object SparkMetricsAggregatorTest {
     totalTasks = 0,
     maxTasks = 0,
     totalDuration,
+    addTime = Calendar.getInstance().getTime,
+    endTime = None,
     totalInputBytes = 0,
     totalShuffleRead = 0,
     totalShuffleWrite = 0,

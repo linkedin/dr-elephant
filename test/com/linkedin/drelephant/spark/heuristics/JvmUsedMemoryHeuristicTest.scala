@@ -6,6 +6,7 @@ import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerived
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
+import java.util.Calendar
 
 import scala.collection.JavaConverters
 
@@ -90,6 +91,8 @@ object JvmUsedMemoryHeuristicTest {
     totalTasks = 0,
     maxTasks = 0,
     totalDuration = 0,
+    addTime=Calendar.getInstance().getTime,
+    endTime=None,
     totalInputBytes = 0,
     totalShuffleRead = 0,
     totalShuffleWrite = 0,

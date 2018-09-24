@@ -23,6 +23,7 @@ import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerived
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl, StageDataImpl}
 import com.linkedin.drelephant.spark.heuristics.ExecutorStorageSpillHeuristic.Evaluator
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
+import java.util.Calendar
 import org.scalatest.{FunSpec, Matchers}
 
 /**
@@ -114,6 +115,8 @@ object ExecutorStorageSpillHeuristicTest {
     totalTasks = 0,
     maxTasks = 10,
     totalDuration=0,
+    addTime = Calendar.getInstance().getTime,
+    endTime = None,
     totalInputBytes=0,
     totalShuffleRead=0,
     totalShuffleWrite= 0,
