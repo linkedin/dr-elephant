@@ -201,7 +201,7 @@ object LegacyDataConverters {
         executorInfo.maxTasks,
         executorInfo.duration,
         executorInfo.addTime,
-	      Option(executorInfo.endTime),
+        Option(executorInfo.endTime),
         executorInfo.inputBytes,
         executorInfo.shuffleRead,
         executorInfo.shuffleWrite,
