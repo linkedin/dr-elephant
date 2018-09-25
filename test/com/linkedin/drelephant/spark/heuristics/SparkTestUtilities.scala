@@ -12,10 +12,10 @@ import scala.collection.JavaConverters
 
 private [heuristics] object SparkTestUtilities {
   import JavaConverters._
+  import java.text.SimpleDateFormat
+
   val OOM_ERROR = "java.lang.OutOfMemoryError"
   val OVERHEAD_MEMORY_ERROR = "killed by YARN for exceeding memory limits"
-
-  import java.text.SimpleDateFormat
 
   private val sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
 
@@ -41,6 +41,12 @@ private [heuristics] object SparkTestUtilities {
     var gcSeverity = Severity.NONE
     var taskFailureSeverity = Severity.NONE
     var stageFailureSeverity = Severity.NONE
+    var spillScore = 0
+    var longTaskScore = 0
+    var taskSkewScore = 0
+    var taskFailureScore = 0
+    var stageFailureScore = 0
+    var gcScore = 0
     var medianRunTime: Option[Double] = None
     var maxRunTime: Option[Double] = None
     var memoryBytesSpilled = 0L
@@ -50,7 +56,12 @@ private [heuristics] object SparkTestUtilities {
     var numTasksWithOOM = 0
     var numTasksWithContainerKilled = 0
     var stageDuration = Some((5 * 60 * 1000).toLong)
-    var details: Seq[String] = Seq()
+    var spillDetails: Seq[String] = Seq()
+    var longTaskDetails: Seq[String] = Seq()
+    var taskSkewDetails: Seq[String] = Seq()
+    var taskFailureDetails: Seq[String] = Seq()
+    var stageFailureDetails: Seq[String] = Seq()
+    var gcDetails: Seq[String] = Seq()
 
     /**
       * Configure execution memory spill related parameters.
@@ -64,12 +75,16 @@ private [heuristics] object SparkTestUtilities {
     def spill(
         raw: Severity,
         severity: Severity,
+        score: Int,
         maxTaskSpillMb: Long,
-        bytesSpilledMb: Long): StageAnalysisBuilder = {
+        bytesSpilledMb: Long,
+        details: Seq[String]): StageAnalysisBuilder = {
       rawSpillSeverity = raw
       executionSpillSeverity = severity
+      spillScore = score
       maxTaskBytesSpilled = maxTaskSpillMb << 20
       memoryBytesSpilled = bytesSpilledMb << 20
+      spillDetails = details
       this
     }
 
@@ -92,73 +107,91 @@ private [heuristics] object SparkTestUtilities {
       this
     }
 
-    /** set the long task severity */
-    def longSeverity(severity: Severity): StageAnalysisBuilder = {
+    /** set the long task analysis information */
+    def longTask(severity: Severity, score: Int, details: Seq[String]): StageAnalysisBuilder = {
       longTaskSeverity = severity
+      longTaskScore = score
+      longTaskDetails = details
       this
     }
 
-    /** set the raw and reported task skew severity */
-    def skewSeverity(raw: Severity, severity: Severity): StageAnalysisBuilder = {
+    /** set the raw and reported task skew severity and details */
+    def skew(
+        raw: Severity,
+        severity: Severity,
+        score: Int,
+        details: Seq[String]): StageAnalysisBuilder = {
       rawSkewSeverity = raw
       taskSkewSeverity = severity
+      taskSkewScore = score
+      taskSkewDetails = details
       this
     }
 
     /**
-      * Configure stage and task failure details.
+      * Configure stage failure information.
       *
+      * @param severity severity of stage failure.
+      * @param score score for stage failure analysis
+      * @param details information and recommendations
+      * @return
+      */
+    def stageFailure(severity: Severity,
+                     score: Int,
+                     details: Seq[String]): StageAnalysisBuilder = {
+      stageFailureSeverity = severity
+      stageFailureScore = score
+      stageFailureDetails = details
+      this
+    }
+
+    /**
+      * Configure task failure information.
+      *
+      * @param taskSeverity severity of all task failures.
       * @param oomSeverity severity of task failures due to OutOfMemory errors.
       * @param containerKilledSeverity severity of failures due to containers killed by YARN.
-      * @param taskSeverity severity of all task failures.
-      * @param stageSeverity severity of stage failure.
+      * @param score score from task failure analysis.
       * @param numFailures total number of task failures.
       * @param numOOM total number of tasks failed with OutOfMemory errors.
       * @param numContainerKilled total number of tasks failed due to container killed by YARN.
+      * @param details information and recommendations for task failures
       * @return this StageAnalysisBuilder.
       */
-    def failures(
-                  oomSeverity: Severity,
-                  containerKilledSeverity: Severity,
-                  taskSeverity: Severity,
-                  stageSeverity: Severity,
-                  numFailures: Int,
-                  numOOM: Int,
-                  numContainerKilled: Int): StageAnalysisBuilder = {
+    def taskFailures(
+        taskSeverity: Severity,
+        oomSeverity: Severity,
+        containerKilledSeverity: Severity,
+        score: Int,
+        numFailures: Int,
+        numOOM: Int,
+        numContainerKilled: Int,
+        details: Seq[String]): StageAnalysisBuilder = {
+      taskFailureSeverity = taskSeverity
       failedWithOOMSeverity = oomSeverity
       failedWithContainerKilledSeverity = containerKilledSeverity
-      taskFailureSeverity = taskSeverity
-      stageFailureSeverity = stageSeverity
+      taskFailureScore = score
       numFailedTasks = numFailures
       numTasksWithOOM = numOOM
       numTasksWithContainerKilled = numContainerKilled
+      taskFailureDetails = details
       this
     }
 
     /** Create the StageAnalysis. */
     def create(): StageAnalysis = {
-      StageAnalysis(stageId,
-        rawSpillSeverity,
-        executionSpillSeverity,
-        longTaskSeverity,
-        rawSkewSeverity,
-        taskSkewSeverity,
-        failedWithOOMSeverity,
-        failedWithContainerKilledSeverity,
-        taskFailureSeverity,
-        stageFailureSeverity,
-        gcSeverity,
-        numTasks,
-        medianRunTime,
-        maxRunTime,
-        memoryBytesSpilled,
-        maxTaskBytesSpilled,
-        inputBytes,
-        numFailedTasks,
-        numTasksWithOOM,
-        numTasksWithContainerKilled,
-        stageDuration,
-        details)
+      StageAnalysis(
+        stageId,
+        ExecutionMemorySpillResult(executionSpillSeverity, rawSpillSeverity, spillScore,
+          memoryBytesSpilled, maxTaskBytesSpilled, inputBytes, spillDetails),
+        LongTaskResult(longTaskSeverity, longTaskScore, medianRunTime, longTaskDetails),
+        TaskSkewResult(taskSkewSeverity, rawSkewSeverity, taskSkewScore,
+          medianRunTime, maxRunTime, stageDuration, taskSkewDetails),
+        TaskFailureResult(taskFailureSeverity, failedWithOOMSeverity,
+          failedWithContainerKilledSeverity, taskFailureScore, numTasks, numFailedTasks,
+          numTasksWithOOM, numTasksWithContainerKilled, taskFailureDetails),
+        StageFailureResult(stageFailureSeverity, stageFailureScore, stageFailureDetails),
+        StageGCResult(gcSeverity, gcScore, gcDetails))
     }
   }
 
