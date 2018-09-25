@@ -21,7 +21,8 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
         StageBuilder(3, 15).failures(2, 0, 1).create(),
         StageBuilder(4, 15).failures(3, 1, 2).create(),
         StageBuilder(5, 4).failures(2, 0, 0).status(StageStatus.FAILED, Some("array issues")).create())
-      val data = createSparkApplicationData(stages, Seq.empty, None)
+      val properties = Map( "spark.sql.shuffle.partitions" -> "200")
+      val data = createSparkApplicationData(stages, Seq.empty, Some(properties))
 
       val expectedAnalysis = Seq(
         StageAnalysisBuilder(1, 3).create(),
@@ -48,7 +49,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
           .create())
 
       val stageAnalyzer = new StagesAnalyzer(heuristicConfigurationData, data)
-      val stageAnalysis = stageAnalyzer.getStageAnalysis(200)
+      val stageAnalysis = stageAnalyzer.getStageAnalysis()
       (0 until expectedAnalysis.size).foreach { i =>
         compareStageAnalysis(stageAnalysis(i), expectedAnalysis(i))
       }
@@ -71,7 +72,8 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
         StageBuilder(12, 5).taskRuntime(2, 50, 53).times("09/09/2018 12:00:00", "09/09/2018 12:01:00").create(),
         StageBuilder(13, 5).taskRuntime(5, 50, 60).input(50, 500, 600).create(),
         StageBuilder(14, 5).taskRuntime(5, 200, 210).output(5, 200, 210).create())
-      val data = createSparkApplicationData(stages, Seq.empty, None)
+      val properties = Map( "spark.sql.shuffle.partitions" -> "5")
+      val data = createSparkApplicationData(stages, Seq.empty, Some(properties))
 
       val expectedAnalysis = Seq(
         StageAnalysisBuilder(1, 5).taskRuntime(200, 250)
@@ -130,7 +132,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
             Seq()).create())
 
       val stageAnalyzer = new StagesAnalyzer(heuristicConfigurationData, data)
-      val stageAnalysis = stageAnalyzer.getStageAnalysis(5)
+      val stageAnalysis = stageAnalyzer.getStageAnalysis()
        (0 until expectedAnalysis.size).foreach { i =>
         compareStageAnalysis(stageAnalysis(i), expectedAnalysis(i))
       }
@@ -147,8 +149,9 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
         StageBuilder(6, 3).taskRuntime(700, 3500, 4500).create(),
         StageBuilder(7, 2).taskRuntime(700, 900, 2000).create(),
         StageBuilder(8, 3).taskRuntime(3000, 3000, 9000).input(2 << 20, 3 << 20, 5 << 20).create())
+      val properties = Map( "spark.sql.shuffle.partitions" -> "3")
+      val data = createSparkApplicationData(stages, Seq.empty, Some(properties))
 
-      val data = createSparkApplicationData(stages, Seq.empty, None)
       val expectedAnalysis = Seq(
         StageAnalysisBuilder(1, 3).taskRuntime(120, 150).create(),
         StageAnalysisBuilder(2, 3).taskRuntime(180, 200).longTask(Severity.LOW, 0, Seq()).create(),
@@ -172,7 +175,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
           .input(5 << 20).create())
 
       val stageAnalyzer = new StagesAnalyzer(heuristicConfigurationData, data)
-      val stageAnalysis = stageAnalyzer.getStageAnalysis(3)
+      val stageAnalysis = stageAnalyzer.getStageAnalysis()
       (0 until expectedAnalysis.size).foreach { i =>
         compareStageAnalysis(stageAnalysis(i), expectedAnalysis(i))
       }
@@ -206,7 +209,8 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
           .spill(50, 250, 3L << 20).create(),
         StageBuilder(12, 3).taskRuntime(50, 250, 350).output(50, 250, 6 << 20)
           .spill(50, 250, 4L << 20).create())
-      val data = createSparkApplicationData(stages, Seq.empty, None)
+      val properties = Map( "spark.sql.shuffle.partitions" -> "5")
+      val data = createSparkApplicationData(stages, Seq.empty, Some(properties))
 
       val expectedAnalysis = Seq(
         StageAnalysisBuilder(1, 5).taskRuntime(100, 150)
@@ -304,7 +308,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
           .create())
 
       val stageAnalyzer = new StagesAnalyzer(heuristicConfigurationData, data)
-      val stageAnalysis = stageAnalyzer.getStageAnalysis(5)
+      val stageAnalysis = stageAnalyzer.getStageAnalysis()
       (0 until expectedAnalysis.size).foreach { i =>
         compareStageAnalysis(stageAnalysis(i), expectedAnalysis(i))
       }

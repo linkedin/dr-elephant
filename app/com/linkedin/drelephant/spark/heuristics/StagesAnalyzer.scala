@@ -81,17 +81,11 @@ private[heuristics] class StagesAnalyzer(
   private val maxRecommendedPartitions = heuristicConfigurationData.getParamMap
     .getOrDefault(MAX_RECOMMENDED_PARTITIONS_KEY, DEFAULT_MAX_RECOMMENDED_PARTITIONS).toInt
 
-  /**
-    * Get the analysis for each stage of the application.
-    *
-    * @param curNumPartitions the configured number of partitions for the application
-    *                         (value of spark.sql.shuffle.partitions).
-    * @return list of analysis results of stages.
-    */
-  def getStageAnalysis(curNumPartitions: Int): Seq[StageAnalysis] = {
-    val failedTasksStageMap = data.stagesWithFailedTasks.flatMap { stageData =>
-      stageData.tasks.map(tasks => (stageData.stageId, tasks.values))
-    }.toMap
+  /** @return list of analysis results for all the stages. */
+  def getStageAnalysis(): Seq[StageAnalysis] = {
+    val appConfigurationProperties: Map[String, String] = data.appConfigurationProperties
+    val curNumPartitions = appConfigurationProperties.get(SPARK_SQL_SHUFFLE_PARTITIONS)
+      .map(_.toInt).getOrElse(SPARK_SQL_SHUFFLE_PARTITIONS_DEFAULT)
 
     data.stageDatas.map { stageData =>
       val medianTime = stageData.taskSummary.collect {
@@ -112,7 +106,7 @@ private[heuristics] class StagesAnalyzer(
       val taskSkewResult = checkForTaskSkew(stageId, stageData, medianTime, maxTime, stageDuration,
           executionMemorySpillResult.severity)
       val stageFailureResult = checkForStageFailure(stageId, stageData)
-      val taskFailureResult = checkForTaskFailure(stageId, stageData, failedTasksStageMap)
+      val taskFailureResult = checkForTaskFailure(stageId, stageData)
       val gcResult = checkForGC(stageId, stageData)
 
       new StageAnalysis(stageData.stageId, executionMemorySpillResult, longTaskResult,
@@ -210,7 +204,6 @@ private[heuristics] class StagesAnalyzer(
         taskSkewThresholds.severityOf(max / median)
       case _ => Severity.NONE
     }
-    val median = medianTime.getOrElse(0.0D)
     val maximum = maxTime.getOrElse(0.0D)
     val taskSkewSeverity =
       if (maximum > taskDurationMinThreshold &&
@@ -225,12 +218,12 @@ private[heuristics] class StagesAnalyzer(
       // add more information about what might be causing skew if skew is being flagged
       // (reported severity is significant), or there is execution memory spill, since skew
       // can also cause execution memory spill.
-      val median = Utils.getDuration(medianTime.map(_.toLong).getOrElse(0L))
-      val maximum = Utils.getDuration(maxTime.map(_.toLong).getOrElse(0L))
+      val medianStr = Utils.getDuration(medianTime.map(_.toLong).getOrElse(0L))
+      val maximumStr = Utils.getDuration(maxTime.map(_.toLong).getOrElse(0L))
       var inputSkewSeverity = Severity.NONE
       if (hasSignificantSeverity(taskSkewSeverity)) {
         details +=
-          s"Stage $stageId has skew in task run time (median is $median, max is $maximum)"
+          s"Stage $stageId has skew in task run time (median is $medianStr, max is $maximumStr)"
       }
       stageData.taskSummary.foreach { summary =>
         checkSkewedData(stageId, summary.memoryBytesSpilled(DISTRIBUTION_MEDIAN_IDX),
@@ -367,13 +360,15 @@ private[heuristics] class StagesAnalyzer(
     *
     * @param stageId stage ID.
     * @param stageData stage data.
-    * @param failedTasksStageMap map of stage ID to list of failed tasks for the stage.
     * @return result of failed tasks analysis for the stage.
     */
   private def checkForTaskFailure(
       stageId: Int,
-      stageData: StageData,
-      failedTasksStageMap: Map[Int, Iterable[TaskDataImpl]]): TaskFailureResult = {
+      stageData: StageData): TaskFailureResult = {
+    val failedTasksStageMap = data.stagesWithFailedTasks.flatMap { stageData =>
+      stageData.tasks.map(tasks => (stageData.stageId, tasks.values))
+    }.toMap
+    
     val failedTasks = failedTasksStageMap.get(stageId)
 
     val details = new ArrayBuffer[String]()
