@@ -65,7 +65,7 @@ object ConfigurationUtils {
   val DEFAULT_TASK_SKEW_THRESHOLDS =
     SeverityThresholds(low = 2, moderate = 4, severe = 8, critical = 16, ascending = true)
 
-  // Severity thresholds for checking execution memory spill, ratio of exection spill compared
+  // Severity thresholds for checking execution memory spill, ratio of execution spill compared
   // to the maximum amount of data (input, output, shuffle read, or shuffle write) processed.
   val DEFAULT_EXECUTION_MEMORY_SPILL_THRESHOLDS =
     SeverityThresholds(low = 0.01D, moderate = 0.1D, severe = 0.25D, critical = 0.5D, ascending = true)
@@ -79,10 +79,10 @@ object ConfigurationUtils {
   val DEFAULT_TASK_FAILURE_RATE_SEVERITY_THRESHOLDS =
     SeverityThresholds(low = 0.05D, moderate = 0.1D, severe = 0.15D, critical = 0.2D, ascending = true)
 
-  // The default threshold (5TB) for checking for maximum amount of data processed, for which to
+  // The default threshold (3TB) for checking for maximum amount of data processed, for which to
   // alert for execution memory spill. Tasks processing more data would be expected to have some
   // amount of spill, due to the large amount of data processed.
-  val DEFAULT_MAX_DATA_PROCESSED_THRESHOLD = "5TB"
+  val DEFAULT_MAX_DATA_PROCESSED_THRESHOLD = "3TB"
 
   // The default threshold for the ratio of the time for longest running task for a stage to the
   // stage duration. With Spark, some amount of task skew may be OK, since exectuors can process
