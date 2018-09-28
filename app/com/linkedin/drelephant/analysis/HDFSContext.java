@@ -19,6 +19,7 @@ package com.linkedin.drelephant.analysis;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.viewfs.NotInMountpointException;
 import org.apache.log4j.Logger;
 import java.io.IOException;
 
@@ -44,6 +45,22 @@ public final class HDFSContext {
       HDFS_BLOCK_SIZE = FileSystem.get(new Configuration()).getDefaultBlockSize(new Path("/"));
     } catch (IOException e) {
       logger.error("Error getting FS Block Size!", e);
+    } catch (NotInMountpointException e) {
+      logger.warn("Fix hdfs federation : The path / is not exist. Will try /tmp");
+      try {
+        HDFS_BLOCK_SIZE = FileSystem.get(new Configuration()).getDefaultBlockSize(new Path("/tmp"));
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      } catch (NotInMountpointException e2){
+        logger.warn("Fix hdfs federation : The path /tmp is not exist. Use default block size 128 * 1024 * 1024");
+        /**
+         * Currently most companies use 128M as the default block size
+         */
+        HDFS_BLOCK_SIZE = 128 * 1024 * 1024;
+      }
+    } catch (Exception s){
+      logger.warn("Error getting FS Block Size!", s);
+      HDFS_BLOCK_SIZE = 128 * 1024 * 1024;
     }
 
     logger.info("HDFS BLock size: " + HDFS_BLOCK_SIZE);
