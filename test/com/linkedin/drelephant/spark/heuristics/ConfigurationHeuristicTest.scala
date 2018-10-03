@@ -117,7 +117,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       }
 
       it("returns the severity") {
-        heuristicResult.getSeverity should be(Severity.SEVERE)
+        heuristicResult.getSeverity should be(Severity.CRITICAL)
       }
 
       it("returns the dynamic allocation flag") {
@@ -205,8 +205,8 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isDynamicAllocationEnabled should be(Some(false))
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.MODERATE)
-        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.MODERATE)
-        evaluator.severity should be(Severity.MODERATE)
+        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.CRITICAL)
+        evaluator.severity should be(Severity.CRITICAL)
       }
 
       it("has no dynamic allocation flag and shuffle flag, and serializer setting matches our recommendation") {
@@ -215,8 +215,8 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isDynamicAllocationEnabled should be(Some(false))
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.NONE)
-        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.MODERATE)
-        evaluator.severity should be(Severity.MODERATE)
+        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.CRITICAL)
+        evaluator.severity should be(Severity.CRITICAL)
       }
 
       it("has no dynamic allocation flag and shuffle flag, and serializer setting doesn't match our recommendation and is non-null") {
@@ -225,8 +225,8 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isDynamicAllocationEnabled should be(Some(false))
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.MODERATE)
-        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.MODERATE)
-        evaluator.severity should be(Severity.MODERATE)
+        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.CRITICAL)
+        evaluator.severity should be(Severity.CRITICAL)
       }
 
       it("true dynamic allocation flag and shuffle flag, and serializer setting matches our recommendation") {
@@ -258,9 +258,9 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isDynamicAllocationEnabled should be(Some(true))
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.NONE)
-        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.SEVERE)
+        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.CRITICAL)
         evaluator.severityConfThresholds should be(Severity.NONE)
-        evaluator.severity should be(Severity.SEVERE)
+        evaluator.severity should be(Severity.CRITICAL)
       }
 
       it("false dynamic allocation flag and shuffle flag, and serializer setting matches our recommendation") {
@@ -270,8 +270,8 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isDynamicAllocationEnabled should be(Some(false))
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.NONE)
-        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.MODERATE)
-        evaluator.severity should be(Severity.MODERATE)
+        evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.CRITICAL)
+        evaluator.severity should be(Severity.CRITICAL)
       }
     }
   }
