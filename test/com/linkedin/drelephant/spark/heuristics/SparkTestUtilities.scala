@@ -51,7 +51,10 @@ private [heuristics] object SparkTestUtilities {
     var maxRunTime: Option[Double] = None
     var memoryBytesSpilled = 0L
     var maxTaskBytesSpilled = 0L
-    var inputBytes: Long = 0
+    var inputBytes: Long = 0L
+    var outputBytes: Long = 0L
+    var shuffleReadBytes: Long = 0L
+    var shuffleWriteBytes: Long = 0L
     var numFailedTasks = 0
     var numTasksWithOOM = 0
     var numTasksWithContainerKilled = 0
@@ -91,6 +94,24 @@ private [heuristics] object SparkTestUtilities {
     /** Set the amount of input data in MB. */
     def input(inputMb: Long): StageAnalysisBuilder = {
       inputBytes = inputMb << 20
+      this
+    }
+
+    /** Set the amount of output data in MB. */
+    def output(outputMb: Long): StageAnalysisBuilder = {
+      outputBytes = outputMb << 20
+      this
+    }
+
+    /** Set the amount of shuffle read data in MB. */
+    def shuffleRead(shuffleReadMb: Long): StageAnalysisBuilder = {
+      shuffleReadBytes = shuffleReadMb << 20
+      this
+    }
+
+    /** Set the amount of shuffle write data in MB. */
+    def shuffleWrite(shuffleWriteMb: Long): StageAnalysisBuilder = {
+      shuffleWriteBytes = shuffleWriteMb << 20
       this
     }
 
@@ -182,16 +203,17 @@ private [heuristics] object SparkTestUtilities {
     def create(): StageAnalysis = {
       StageAnalysis(
         stageId,
-        ExecutionMemorySpillResult(executionSpillSeverity, rawSpillSeverity, spillScore,
-          memoryBytesSpilled, maxTaskBytesSpilled, inputBytes, spillDetails),
-        LongTaskResult(longTaskSeverity, longTaskScore, medianRunTime, longTaskDetails),
-        TaskSkewResult(taskSkewSeverity, rawSkewSeverity, taskSkewScore,
-          medianRunTime, maxRunTime, stageDuration, taskSkewDetails),
-        TaskFailureResult(taskFailureSeverity, failedWithOOMSeverity,
-          failedWithContainerKilledSeverity, taskFailureScore, numTasks, numFailedTasks,
-          numTasksWithOOM, numTasksWithContainerKilled, taskFailureDetails),
-        StageFailureResult(stageFailureSeverity, stageFailureScore, stageFailureDetails),
-        StageGCResult(gcSeverity, gcScore, gcDetails))
+        ExecutionMemorySpillResult(executionSpillSeverity, spillScore, spillDetails,
+          rawSpillSeverity, memoryBytesSpilled, maxTaskBytesSpilled),
+        SimpleStageAnalysisResult(longTaskSeverity, longTaskScore, longTaskDetails),
+        TaskSkewResult(taskSkewSeverity, taskSkewScore, taskSkewDetails, rawSkewSeverity),
+        TaskFailureResult(taskFailureSeverity, taskFailureScore, taskFailureDetails,
+          failedWithOOMSeverity, failedWithContainerKilledSeverity, numFailedTasks,
+          numTasksWithOOM, numTasksWithContainerKilled),
+        SimpleStageAnalysisResult(stageFailureSeverity, stageFailureScore, stageFailureDetails),
+        SimpleStageAnalysisResult(gcSeverity, gcScore, gcDetails),
+        numTasks, medianRunTime, maxRunTime, stageDuration, inputBytes, outputBytes,
+        shuffleReadBytes, shuffleWriteBytes)
     }
   }
 
