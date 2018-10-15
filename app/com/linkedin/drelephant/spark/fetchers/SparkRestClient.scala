@@ -95,8 +95,12 @@ class SparkRestClient(sparkConf: SparkConf) {
           getLogData(attemptTarget)
         }
       } else Future.successful(None)
-      val futureFailedTasks = Future {
-        getStagesWithFailedTasks(attemptTarget)
+      val futureFailedTasks = if (fetchFailedTasks) {
+        Future {
+          getStagesWithFailedTasks(attemptTarget)
+        }
+      } else {
+        Future.successful(Seq.empty)
       }
 
       SparkRestDerivedData(
