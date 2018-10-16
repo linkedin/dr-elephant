@@ -23,8 +23,9 @@ import scala.util.Try
 import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
-import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
+import com.linkedin.drelephant.util.MemoryFormatUtils
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
+import com.linkedin.drelephant.util.Utils
 
 /**
   * A heuristic based the driver's configurations and memory used.
@@ -73,11 +74,11 @@ class DriverHeuristic(private val heuristicConfigurationData: HeuristicConfigura
         SPARK_YARN_DRIVER_MEMORY_OVERHEAD,
         evaluator.sparkYarnDriverMemoryOverhead
       ),
-      new HeuristicResultDetails("Max driver peak JVM used memory", MemoryFormatUtils.bytesToString(evaluator.maxDriverPeakJvmUsedMemory))
+      new HeuristicResultDetails(DRIVER_PEAK_JVM_USED_MEMORY_HEURISTIC_NAME, MemoryFormatUtils.bytesToString(evaluator.maxDriverPeakJvmUsedMemory))
     )
     if(evaluator.severityJvmUsedMemory != Severity.NONE) {
       resultDetails = resultDetails :+ new HeuristicResultDetails("Driver Peak JVM used Memory", "The allocated memory for the driver (in " + SPARK_DRIVER_MEMORY_KEY + ") is much more than the peak JVM used memory by the driver.")
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Suggested spark.driver.memory", MemoryFormatUtils.roundOffMemoryStringToNextInteger(MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION)  * (evaluator.maxDriverPeakJvmUsedMemory + reservedMemory)).toLong)))
+      resultDetails = resultDetails :+ new HeuristicResultDetails(SUGGESTED_SPARK_DRIVER_MEMORY_HEURISTIC_NAME, MemoryFormatUtils.roundOffMemoryStringToNextInteger(MemoryFormatUtils.bytesToString(((1 + BUFFER_FRACTION)  * (evaluator.maxDriverPeakJvmUsedMemory + reservedMemory)).toLong)))
     }
     if (evaluator.severityGc != Severity.NONE) {
       resultDetails = resultDetails :+ new HeuristicResultDetails("Gc ratio high", "The driver is spending too much time on GC. We recommend increasing the driver memory.")
@@ -115,6 +116,8 @@ object DriverHeuristic {
   val EXECUTION_MEMORY = "executionMemory"
   val STORAGE_MEMORY = "storageMemory"
   val JVM_USED_MEMORY = "jvmUsedMemory"
+  val DRIVER_PEAK_JVM_USED_MEMORY_HEURISTIC_NAME="Max driver peak JVM used memory"
+  val SUGGESTED_SPARK_DRIVER_MEMORY_HEURISTIC_NAME="Suggested spark.driver.memory"
   val BUFFER_FRACTION = 0.2
 
   // 300 * FileUtils.ONE_MB (300 * 1024 * 1024)

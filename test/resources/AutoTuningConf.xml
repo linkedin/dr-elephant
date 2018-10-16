@@ -44,7 +44,7 @@
   </property>
   <property>
     <name>fitness.compute.wait_interval.ms</name>
-    <value>0</value>
+    <value>1800000</value>
     <description>Wait time after the job is completed till fitness is computer</description>
   </property>
   <property>

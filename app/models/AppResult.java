@@ -16,14 +16,9 @@
 
 package models;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.linkedin.drelephant.analysis.Severity;
-
-import com.linkedin.drelephant.util.Utils;
-import java.util.Date;
-import play.db.ebean.Model;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -31,6 +26,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import play.db.ebean.Model;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.linkedin.drelephant.analysis.Severity;
+import com.linkedin.drelephant.util.Utils;
 
 
 @Entity
@@ -57,7 +58,7 @@ public class AppResult extends Model {
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String USERNAME = "username";
-      public static final String QUEUE_NAME = "queueName";
+    public static final String QUEUE_NAME = "queueName";
     public static final String START_TIME = "startTime";
     public static final String FINISH_TIME = "finishTime";
     public static final String TRACKING_URL = "trackingUrl";
@@ -82,8 +83,8 @@ public class AppResult extends Model {
   }
 
   public static String getSearchFields() {
-    return Utils.commaSeparated(AppResult.TABLE.NAME, AppResult.TABLE.USERNAME, TABLE.QUEUE_NAME, AppResult.TABLE.JOB_TYPE,
-        AppResult.TABLE.SEVERITY, AppResult.TABLE.FINISH_TIME);
+    return Utils.commaSeparated(AppResult.TABLE.NAME, AppResult.TABLE.USERNAME, TABLE.QUEUE_NAME,
+        AppResult.TABLE.JOB_TYPE, AppResult.TABLE.SEVERITY, AppResult.TABLE.FINISH_TIME);
   }
 
   @Id
@@ -164,4 +165,21 @@ public class AppResult extends Model {
   public List<AppHeuristicResult> yarnAppHeuristicResults;
 
   public static Finder<String, AppResult> find = new Finder<String, AppResult>(String.class, AppResult.class);
+
+  public Map<String, String> getHeuristicsResultDetailsMap() {
+    Map<String, String> heuristicsDetailsMap = new HashMap<String, String>();
+    if (yarnAppHeuristicResults != null) {
+      List<AppHeuristicResultDetails> appHeuristicResultDetails;
+      for (AppHeuristicResult appHeuristicResult : yarnAppHeuristicResults) {
+        appHeuristicResultDetails = appHeuristicResult.yarnAppHeuristicResultDetails;
+        if (appHeuristicResultDetails != null) {
+          for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResultDetails) {
+            heuristicsDetailsMap.put(appHeuristicResult.heuristicClass + "_" + appHeuristicResultDetail.name,
+                appHeuristicResultDetail.value);
+          }
+        }
+      }
+    }
+    return heuristicsDetailsMap;
+  }
 }

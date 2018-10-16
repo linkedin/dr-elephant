@@ -27,6 +27,11 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import play.db.ebean.Model;
 
+
+/**
+ * This table tags / bridges between job_suggested_param and job execution. Basically it tags
+ * each execution with parameter set.
+ */
 @Entity
 @Table(name = "tuning_job_execution_param_set")
 public class TuningJobExecutionParamSet extends Model {

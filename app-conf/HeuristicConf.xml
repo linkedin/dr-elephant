@@ -320,6 +320,12 @@
     </params>
   </heuristic>
 
+   <heuristic>
+      <applicationtype>mapreduce</applicationtype>
+      <heuristicname>MapReduceConfiguration</heuristicname>
+      <classname>com.linkedin.drelephant.mapreduce.heuristics.ConfigurationHeuristic</classname>
+      <viewname>views.html.help.mapreduce.helpMapperSpeed</viewname>
+  </heuristic>
 
   <!-- SPARK HEURISTICS -->
 

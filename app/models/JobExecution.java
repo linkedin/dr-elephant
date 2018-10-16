@@ -17,7 +17,6 @@
 package models;
 
 import java.sql.Timestamp;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,12 +29,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
+import javax.persistence.Transient;
 import com.avaje.ebean.annotation.UpdatedTimestamp;
-
 import play.db.ebean.Model;
 
 
+/**
+ * This table have information about the exeuction of the job.
+ */
 @Entity
 @Table(name = "job_execution")
 public class JobExecution extends Model {
@@ -94,6 +95,9 @@ public class JobExecution extends Model {
   @Column(nullable = false)
   @UpdatedTimestamp
   public Timestamp updatedTs;
+
+  @Transient
+  public Double score;
 
   @Override
   public void save() {

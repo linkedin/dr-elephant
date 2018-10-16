@@ -21,8 +21,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.linkedin.drelephant.DrElephant;
 import com.linkedin.drelephant.ElephantContext;
-import com.linkedin.drelephant.tuning.BaselineComputeUtil;
-import com.linkedin.drelephant.tuning.FitnessComputeUtil;
+import com.linkedin.drelephant.tuning.Manager;
+import com.linkedin.drelephant.tuning.obt.BaselineManagerOBT;
+import com.linkedin.drelephant.tuning.obt.FitnessManagerOBTAlgoPSO;
 import com.linkedin.drelephant.util.Utils;
 
 import java.util.HashMap;
@@ -163,8 +164,11 @@ public class RestAPITest {
         jobSuggestedParamSet.paramSetState = ParamSetStatus.EXECUTED;
         jobSuggestedParamSet.update();
 
-        FitnessComputeUtil fitnessComputeUtil = new FitnessComputeUtil();
-        fitnessComputeUtil.updateFitness();
+        /*FitnessComputeUtil fitnessComputeUtil = new FitnessComputeUtil();
+        fitnessComputeUtil.updateFitness();*/
+
+        Manager manager = new FitnessManagerOBTAlgoPSO();
+        manager.execute();
 
         jobSuggestedParamSet = JobSuggestedParamSet.find.byId(jobSuggestedParamSet.id);
 
@@ -205,8 +209,10 @@ public class RestAPITest {
         assertTrue("New Job Not created  ",
             tuningJobDefinition.job.jobName.equals("countByCountryFlowSmallNew_countByCountry"));
 
-        BaselineComputeUtil baselineComputeUtil = new BaselineComputeUtil();
-        baselineComputeUtil.computeBaseline();
+        //BaselineComputeUtil baselineComputeUtil = new BaselineComputeUtil();
+        Manager manager = new BaselineManagerOBT();
+        manager.execute();
+        //baselineComputeUtil.computeBaseline();
 
         tuningJobDefinition = TuningJobDefinition.find.select("*")
             .where()
@@ -250,6 +256,7 @@ public class RestAPITest {
     params.put("client", "azkaban");
     params.put("autoTuningJobType", "PIG");
     params.put("optimizationMetric", "RESOURCE");
+    params.put("optimizationAlgo","PSO");
     params.put("userName", "mkumar1");
     params.put("isRetry", "false");
     params.put("skipExecutionForOptimization", "false");
@@ -286,6 +293,7 @@ public class RestAPITest {
     params.put("client", "azkaban");
     params.put("autoTuningJobType", "PIG");
     params.put("optimizationMetric", "RESOURCE");
+    params.put("optimizationAlgo","PSO");
     params.put("userName", "mkumar1");
     params.put("isRetry", "false");
     params.put("skipExecutionForOptimization", "false");
@@ -1014,6 +1022,7 @@ public class RestAPITest {
   private void populateAutoTuningTestData1() {
     try {
       initAutoTuningDB1();
+      //initDB();
     } catch (Exception e) {
       e.printStackTrace();
     }

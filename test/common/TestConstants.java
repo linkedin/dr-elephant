@@ -22,7 +22,12 @@ public class TestConstants {
   public static final int TEST_SERVER_PORT = 9001;
   public static final String BASE_URL = "http://localhost:" + TEST_SERVER_PORT;
   public static final String TEST_DATA_FILE = "test/resources/test-init.sql";
+  public static final String TEST_IPSO_DATA_FILE = "test/resources/test-init-ipso.sql";
+  public static final String TEST_BASELINE_DATA_FILE = "test/resources/test-init-baseline.sql";
+  public static final String TEST_JOB_STATUS_DATA_FILE = "test/resources/test-job-status-data.sql";
   public static final String TEST_AUTO_TUNING_DATA_FILE1 = "test/resources/tunein-test1.sql";
+  public static final String TEST_FITNESS_CALCULATION_DATA_FILE = "test/resources/test-fitness-calculation-data.sql";
+  public static final String TEST_PARAM_GENERATE_DATA_FILE = "test/resources/test-param-generate-data.sql";
 
   public static final int RESPONSE_TIMEOUT = 3000; // milliseconds
 

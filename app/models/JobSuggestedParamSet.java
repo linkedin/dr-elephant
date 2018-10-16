@@ -35,6 +35,12 @@ import javax.persistence.Table;
 import play.db.ebean.Model;
 
 
+/**
+ * This table contains information about suggested param set . This also contains state of param set,
+ * whether the param set is created , sent , executed , fitness_computed , discarded.
+ * . Table also have information about which parameter is best so far , which is default , and which is manually
+ * overridden.
+ */
 @Entity
 @Table(name = "job_suggested_param_set")
 public class JobSuggestedParamSet extends Model {
@@ -52,9 +58,11 @@ public class JobSuggestedParamSet extends Model {
     public static final String tuningAlgorithm = "tuningAlgorithm";
     public static final String paramSetState = "paramSetState";
     public static final String isParamSetDefault = "isParamSetDefault";
+    public static final String isParamSetSuggested = "isParamSetSuggested";
     public static final String fitness = "fitness";
     public static final String fitnessJobExecution = "fitnessJobExecution";
     public static final String isParamSetBest = "isParamSetBest";
+    public static final String isManuallyOverridenParameter = "isManuallyOverridenParameter";
     public static final String areConstraintsViolated = "areConstraintsViolated";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
@@ -86,10 +94,16 @@ public class JobSuggestedParamSet extends Model {
   @Column(nullable = false)
   public Boolean isParamSetDefault;
 
+  @Column(nullable = true)
+  public Boolean isParamSetSuggested ;
+
   public Double fitness;
 
   @Column(nullable = false)
   public Boolean isParamSetBest;
+
+  @Column(nullable = false)
+  public Boolean isManuallyOverridenParameter=false;
 
   @Column(nullable = false)
   public Boolean areConstraintsViolated;

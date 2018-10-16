@@ -33,7 +33,9 @@ import com.avaje.ebean.annotation.UpdatedTimestamp;
 
 import play.db.ebean.Model;
 
-
+/**
+ * This table have information about job definition.This also have information about username and schduler.
+ */
 @Entity
 @Table(name = "job_definition")
 public class JobDefinition extends Model {

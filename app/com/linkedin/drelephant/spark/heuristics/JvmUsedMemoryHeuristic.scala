@@ -44,7 +44,7 @@ class JvmUsedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
     val evaluator = new Evaluator(this, data)
 
     var resultDetails = Seq(
-      new HeuristicResultDetails("Max executor peak JVM used memory", MemoryFormatUtils.bytesToString(evaluator.maxExecutorPeakJvmUsedMemory)),
+      new HeuristicResultDetails(MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_HEURISTIC_NAME, MemoryFormatUtils.bytesToString(evaluator.maxExecutorPeakJvmUsedMemory)),
       new HeuristicResultDetails("spark.executor.memory", MemoryFormatUtils.bytesToString(evaluator.sparkExecutorMemory))
     )
 
@@ -73,6 +73,8 @@ object JvmUsedMemoryHeuristic {
   val reservedMemory: Long = 314572800
   val BUFFER_FRACTION: Double = 0.2
   val MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_THRESHOLD_KEY = "executor_peak_jvm_memory_threshold"
+  val MAX_EXECUTOR_PEAK_JVM_USED_MEMORY_HEURISTIC_NAME = "Max executor peak JVM used memory"
+
   lazy val DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD = "2G"
 
   class Evaluator(jvmUsedMemoryHeuristic: JvmUsedMemoryHeuristic, data: SparkApplicationData) {

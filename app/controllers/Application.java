@@ -43,6 +43,8 @@ import java.util.TreeSet;
 
 import models.AppHeuristicResult;
 import models.AppResult;
+import models.TuningAlgorithm;
+import models.TuningAlgorithm.JobType;
 
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -78,6 +80,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.linkedin.drelephant.tuning.AutoTuningAPIHelper;
 import com.linkedin.drelephant.tuning.TuningInput;
+import com.linkedin.drelephant.tuning.engine.SparkConfigurationConstants;
 
 
 public class Application extends Controller {
@@ -928,7 +931,9 @@ public class Application extends Controller {
         skipExecutionForOptimization = Boolean.parseBoolean(paramValueMap.get("skipExecutionForOptimization"));
       }
       String jobType = paramValueMap.get("autoTuningJobType");
-      String optimizationAlgo = paramValueMap.get("optimizationAlgo");
+      String optimizationAlgo =
+          paramValueMap.get("optimizationAlgo") /*== null ? TuningAlgorithm.OptimizationAlgo.HBT.name()
+              : paramValueMap.get("optimizationAlgo")*/;
       String optimizationAlgoVersion = paramValueMap.get("optimizationAlgoVersion");
       String optimizationMetric = paramValueMap.get("optimizationMetric");
 
@@ -940,6 +945,11 @@ public class Application extends Controller {
       if (paramValueMap.containsKey("allowedMaxExecutionTimePercent")) {
         allowedMaxExecutionTimePercent = Double.parseDouble(paramValueMap.get("allowedMaxExecutionTimePercent"));
       }
+      /*
+       This logic is for backward compatailbity. Ideally we should remove this logic in next release
+       because HBT should be the default optimization algorithm for all the jobs.
+       */
+      optimizationAlgo = getAlgoBasedOnVersion(version);
       tuningInput.setFlowDefId(flowDefId);
       tuningInput.setJobDefId(jobDefId);
       tuningInput.setFlowDefUrl(flowDefUrl);
@@ -974,28 +984,68 @@ public class Application extends Controller {
     }
   }
 
-  private static JsonNode formatGetCurrentRunParametersOutput(Map<String, Double> outputParams, Integer version) {
-    if (version == 1) {
-      return Json.toJson(outputParams);
-    } else {
-      Map<String, String> outputParamFormatted = new HashMap<String, String>();
-
-      //Temporarily removing input split parameters
-      outputParams.remove("pig.maxCombinedSplitSize");
-      outputParams.remove("mapreduce.input.fileinputformat.split.maxsize");
-
-      for (Map.Entry<String, Double> param : outputParams.entrySet()) {
-        if (param.getKey().equals("mapreduce.map.sort.spill.percent")) {
-          outputParamFormatted.put(param.getKey(), String.valueOf(param.getValue()));
-        } else if (param.getKey().equals("mapreduce.map.java.opts")
-            || param.getKey().equals("mapreduce.reduce.java.opts")) {
-          outputParamFormatted.put(param.getKey(), "-Xmx" + Math.round(param.getValue()) + "m");
-        } else {
-          outputParamFormatted.put(param.getKey(), String.valueOf(Math.round(param.getValue())));
-        }
-      }
-      return Json.toJson(outputParamFormatted);
+  public static String getAlgoBasedOnVersion(int version){
+    if(version == 1){
+      return TuningAlgorithm.OptimizationAlgo.PSO_IPSO.name();
     }
+    else{
+      return TuningAlgorithm.OptimizationAlgo.HBT.name();
+    }
+  }
+
+  private static JsonNode formatGetCurrentRunParametersOutput(Map<String, Double> outputParams, TuningInput tuningInput) {
+    if (tuningInput.getVersion() == 1) {
+      return Json.toJson(outputParams);
+    } else if (tuningInput.getJobType().equals(JobType.SPARK.name())) {
+      return formatSparkOutput(outputParams);
+    } else {
+      return formatMROutput(outputParams);
+    }
+  }
+
+  private static JsonNode formatMROutput(Map<String, Double> outputParams) {
+    Map<String, String> outputParamFormatted = new HashMap<String, String>();
+
+    //Temporarily removing input split parameters
+    outputParams.remove("pig.maxCombinedSplitSize");
+    outputParams.remove("mapreduce.input.fileinputformat.split.maxsize");
+
+    for (Map.Entry<String, Double> param : outputParams.entrySet()) {
+      if (param.getKey().equals("mapreduce.map.sort.spill.percent")) {
+        outputParamFormatted.put(param.getKey(), String.valueOf(param.getValue()));
+      } else if (param.getKey().equals("mapreduce.map.java.opts")
+          || param.getKey().equals("mapreduce.reduce.java.opts")) {
+        outputParamFormatted.put(param.getKey(), "-Xmx" + Math.round(param.getValue()) + "m");
+      } else {
+        outputParamFormatted.put(param.getKey(), String.valueOf(Math.round(param.getValue())));
+      }
+    }
+    return Json.toJson(outputParamFormatted);
+  }
+
+  private static JsonNode formatSparkOutput(Map<String, Double> outputParams) {
+    Map<String, String> outputParamFormatted = new HashMap<String, String>();
+    for (Map.Entry<String, Double> param : outputParams.entrySet()) {
+      if (param.getKey().equals(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_KEY)) {
+        outputParamFormatted.put(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_KEY, param.getValue().intValue()
+            + "m");
+      } else if (param.getKey().equals(SparkConfigurationConstants.SPARK_EXECUTOR_CORES_KEY)) {
+        outputParamFormatted.put(SparkConfigurationConstants.SPARK_EXECUTOR_CORES_KEY,
+            String.valueOf(param.getValue().intValue()));
+      } else if (param.getKey().equals(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_OVERHEAD)) {
+        outputParamFormatted.put(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_OVERHEAD, param.getValue()
+            .intValue() + "m");
+      } else if (param.getKey().equals(SparkConfigurationConstants.SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD)) {
+        outputParamFormatted.put(SparkConfigurationConstants.SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD, param.getValue()
+            .intValue() + "m");
+      } else if (param.getKey().equals(SparkConfigurationConstants.SPARK_DRIVER_MEMORY_KEY)) {
+        outputParamFormatted
+            .put(SparkConfigurationConstants.SPARK_DRIVER_MEMORY_KEY, param.getValue().intValue() + "m");
+      } else {
+        outputParamFormatted.put(param.getKey(), param.getValue().toString());
+      }
+    }
+    return Json.toJson(outputParamFormatted);
   }
 
   private static Result getCurrentRunParameters(TuningInput tuningInput) throws Exception {
@@ -1003,7 +1053,7 @@ public class Application extends Controller {
     Map<String, Double> outputParams = autoTuningAPIHelper.getCurrentRunParameters(tuningInput);
     if (outputParams != null) {
       logger.info("Output params " + outputParams);
-      return ok(formatGetCurrentRunParametersOutput(outputParams, tuningInput.getVersion()));
+      return ok(formatGetCurrentRunParametersOutput(outputParams, tuningInput));
     } else {
       AutoTuningMetricsController.markGetCurrentRunParametersFailures();
       return notFound("Unable to find parameters. Job id: " + tuningInput.getJobDefId() + " Flow id: "

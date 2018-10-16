@@ -29,6 +29,10 @@ import javax.persistence.Table;
 import com.avaje.ebean.annotation.UpdatedTimestamp;
 
 
+/**
+ * This table contains information about previous state of the job . This is required for the algorithms
+ * which require previous information for e.g PSO.
+ */
 @Entity
 @Table(name = "job_saved_state")
 public class JobSavedState extends Model {

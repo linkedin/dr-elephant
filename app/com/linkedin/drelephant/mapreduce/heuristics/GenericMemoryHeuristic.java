@@ -33,6 +33,8 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import static com.linkedin.drelephant.mapreduce.heuristics.CommonConstantsHeuristic.UtilizedParameterKeys.*;
+
 
 /**
  * This heuristic deals with the efficiency of container size
@@ -59,8 +61,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
       String strValue = paramMap.get(CONTAINER_MEM_DEFAULT_MB);
       try {
         return Long.valueOf(strValue);
-      }
-      catch (NumberFormatException e) {
+      } catch (NumberFormatException e) {
         logger.warn(CONTAINER_MEM_DEFAULT_MB + ": expected number [" + strValue + "]");
       }
     }
@@ -80,7 +81,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
 
     long containerMemDefaultBytes = getContainerMemDefaultMBytes() * FileUtils.ONE_MB;
     logger.info(heuristicName + " will use " + CONTAINER_MEM_DEFAULT_MB + " with the following threshold setting: "
-            + containerMemDefaultBytes);
+        + containerMemDefaultBytes);
 
     double[] confMemoryLimits = Utils.getParam(paramMap.get(CONTAINER_MEM_SEVERITY), memoryLimits.length);
     if (confMemoryLimits != null) {
@@ -110,7 +111,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
   @Override
   public HeuristicResult apply(MapReduceApplicationData data) {
 
-    if(!data.getSucceeded()) {
+    if (!data.getSucceeded()) {
       return null;
     }
 
@@ -122,14 +123,13 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
         containerMem = Long.parseLong(containerSizeStr);
       } catch (NumberFormatException e0) {
         // Some job has a string var like "${VAR}" for this config.
-        if(containerSizeStr.startsWith("$")) {
-          String realContainerConf = containerSizeStr.substring(containerSizeStr.indexOf("{")+1,
-              containerSizeStr.indexOf("}"));
+        if (containerSizeStr.startsWith("$")) {
+          String realContainerConf =
+              containerSizeStr.substring(containerSizeStr.indexOf("{") + 1, containerSizeStr.indexOf("}"));
           String realContainerSizeStr = data.getConf().getProperty(realContainerConf);
           try {
             containerMem = Long.parseLong(realContainerSizeStr);
-          }
-          catch (NumberFormatException e1) {
+          } catch (NumberFormatException e1) {
             logger.warn(realContainerConf + ": expected number [" + realContainerSizeStr + "]");
           }
         } else {
@@ -146,26 +146,40 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
     List<Long> taskPMems = new ArrayList<Long>();
     List<Long> taskVMems = new ArrayList<Long>();
     List<Long> runtimesMs = new ArrayList<Long>();
-    long taskPMin = Long.MAX_VALUE;
-    long taskPMax = 0;
+    List<Long> taskHeapUsages = new ArrayList<Long>();
+    long taskPMin = Long.MAX_VALUE, taskVMin = Long.MAX_VALUE, taskHUMin = Long.MAX_VALUE;
+    long taskPMax = 0, taskVMax = 0, taskHUMax = 0;
     for (MapReduceTaskData task : tasks) {
       if (task.isTimeAndCounterDataPresent()) {
         runtimesMs.add(task.getTotalRunTimeMs());
         long taskPMem = task.getCounters().get(MapReduceCounterData.CounterName.PHYSICAL_MEMORY_BYTES);
         long taskVMem = task.getCounters().get(MapReduceCounterData.CounterName.VIRTUAL_MEMORY_BYTES);
-        taskPMems.add(taskPMem);
+        long taskHeapUsage = task.getCounters().get(MapReduceCounterData.CounterName.COMMITTED_HEAP_BYTES);
         taskPMin = Math.min(taskPMin, taskPMem);
         taskPMax = Math.max(taskPMax, taskPMem);
+        taskVMin = Math.min(taskVMin, taskVMem);
+        taskVMax = Math.max(taskVMax, taskVMem);
+        taskHUMin = Math.min(taskHUMin, taskHeapUsage);
+        taskHUMax = Math.max(taskHUMax, taskHeapUsage);
         taskVMems.add(taskVMem);
+        taskPMems.add(taskPMem);
+        taskHeapUsages.add(taskHeapUsage);
       }
     }
 
-    if(taskPMin == Long.MAX_VALUE) {
+    if (taskPMin == Long.MAX_VALUE) {
       taskPMin = 0;
+    }
+    if (taskVMin == Long.MAX_VALUE) {
+      taskVMin = 0;
+    }
+    if (taskHUMin == Long.MAX_VALUE) {
+      taskHUMin = 0;
     }
 
     long taskPMemAvg = Statistics.average(taskPMems);
     long taskVMemAvg = Statistics.average(taskVMems);
+    long taskHeapUsageAvg = Statistics.average(taskHeapUsages);
     long averageTimeMs = Statistics.average(runtimesMs);
 
     Severity severity;
@@ -175,22 +189,37 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
       severity = getTaskMemoryUtilSeverity(taskPMemAvg, containerMem);
     }
 
-    HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
-        _heuristicConfData.getHeuristicName(), severity, Utils.getHeuristicScore(severity, tasks.length));
+    HeuristicResult result =
+        new HeuristicResult(_heuristicConfData.getClassName(), _heuristicConfData.getHeuristicName(), severity,
+            Utils.getHeuristicScore(severity, tasks.length));
 
     result.addResultDetail("Number of tasks", Integer.toString(tasks.length));
     result.addResultDetail("Avg task runtime", Statistics.readableTimespan(averageTimeMs));
-    result.addResultDetail("Avg Physical Memory (MB)", Long.toString(taskPMemAvg / FileUtils.ONE_MB));
-    result.addResultDetail("Max Physical Memory (MB)", Long.toString(taskPMax / FileUtils.ONE_MB));
-    result.addResultDetail("Min Physical Memory (MB)", Long.toString(taskPMin / FileUtils.ONE_MB));
-    result.addResultDetail("Avg Virtual Memory (MB)", Long.toString(taskVMemAvg / FileUtils.ONE_MB));
+    result.addResultDetail(AVG_PHYSICAL_MEMORY.getValue(),
+        Long.toString(taskPMemAvg / FileUtils.ONE_MB));
+    result.addResultDetail(MAX_PHYSICAL_MEMORY.getValue(),
+        Long.toString(taskPMax / FileUtils.ONE_MB));
+    result.addResultDetail(MIN_PHYSICAL_MEMORY.getValue(),
+        Long.toString(taskPMin / FileUtils.ONE_MB));
+    result.addResultDetail(AVG_VIRTUAL_MEMORY.getValue(),
+        Long.toString(taskVMemAvg / FileUtils.ONE_MB));
+    result.addResultDetail(MAX_VIRTUAL_MEMORY.getValue(),
+        Long.toString(taskVMax / FileUtils.ONE_MB));
+    result.addResultDetail(MIN_VIRTUAL_MEMORY.getValue(),
+        Long.toString(taskVMin / FileUtils.ONE_MB));
+    result.addResultDetail(AVG_TOTAL_COMMITTED_HEAP_USAGE_MEMORY.getValue(),
+        Long.toString(taskHeapUsageAvg / FileUtils.ONE_MB));
+    result.addResultDetail(MAX_TOTAL_COMMITTED_HEAP_USAGE_MEMORY.getValue(),
+        Long.toString(taskHUMax / FileUtils.ONE_MB));
+    result.addResultDetail(MIN_TOTAL_COMMITTED_HEAP_USAGE_MEMORY.getValue(),
+        Long.toString(taskHUMin / FileUtils.ONE_MB));
     result.addResultDetail("Requested Container Memory", FileUtils.byteCountToDisplaySize(containerMem));
 
     return result;
   }
 
   private Severity getTaskMemoryUtilSeverity(long taskMemAvg, long taskMemMax) {
-    double ratio = ((double)taskMemAvg) / taskMemMax;
+    double ratio = ((double) taskMemAvg) / taskMemMax;
     Severity sevRatio = getMemoryRatioSeverity(ratio);
     // Severity is reduced if the requested container memory is close to default
     Severity sevMax = getContainerMemorySeverity(taskMemMax);
@@ -198,14 +227,13 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
     return Severity.min(sevRatio, sevMax);
   }
 
-
   private Severity getContainerMemorySeverity(long taskMemMax) {
-    return Severity.getSeverityAscending(
-        taskMemMax, memoryLimits[0], memoryLimits[1], memoryLimits[2], memoryLimits[3]);
+    return Severity.getSeverityAscending(taskMemMax, memoryLimits[0], memoryLimits[1], memoryLimits[2],
+        memoryLimits[3]);
   }
 
   private Severity getMemoryRatioSeverity(double ratio) {
-    return Severity.getSeverityDescending(
-        ratio, memRatioLimits[0], memRatioLimits[1], memRatioLimits[2], memRatioLimits[3]);
+    return Severity.getSeverityDescending(ratio, memRatioLimits[0], memRatioLimits[1], memRatioLimits[2],
+        memRatioLimits[3]);
   }
 }

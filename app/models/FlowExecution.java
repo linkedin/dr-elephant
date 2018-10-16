@@ -32,6 +32,9 @@ import javax.persistence.Table;
 import play.db.ebean.Model;
 
 
+/**
+ * Table have information about flow execution .
+ */
 @Entity
 @Table(name = "flow_execution")
 public class FlowExecution extends Model {

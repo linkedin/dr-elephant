@@ -24,11 +24,31 @@ import java.sql.Statement;
 import org.apache.commons.io.IOUtils;
 import play.db.DB;
 
-import static common.TestConstants.TEST_DATA_FILE;
-import static common.TestConstants.TEST_AUTO_TUNING_DATA_FILE1;;
+import static common.TestConstants.*;
 
 
 public class DBTestUtil {
+
+  public static void initDBBaseline() throws IOException, SQLException {
+    initDBUtil(TEST_BASELINE_DATA_FILE);
+  }
+
+  public static void initFitnessComputation() throws IOException, SQLException {
+    initDBUtil(TEST_FITNESS_CALCULATION_DATA_FILE);
+  }
+
+  public static void initParamGenerater() throws IOException, SQLException {
+    initDBUtil(TEST_PARAM_GENERATE_DATA_FILE);
+  }
+
+  public static void initDBAzkabanJobStatus() throws IOException, SQLException {
+    initDBUtil(TEST_JOB_STATUS_DATA_FILE);
+  }
+
+
+  public static void initDBIPSO() throws IOException, SQLException {
+    initDBUtil(TEST_IPSO_DATA_FILE);
+  }
 
   public static void initDB() throws IOException, SQLException {
     initDBUtil(TEST_DATA_FILE);

@@ -32,6 +32,11 @@ import com.avaje.ebean.annotation.UpdatedTimestamp;
 import play.db.ebean.Model;
 
 
+/**
+ * This table have information about tuning algorithm .
+ * For e.g job type PIG and optimization algo PSO and optimization metric RESOURCE
+ * the algorithm id 1.
+ */
 @Entity
 @Table(name = "tuning_algorithm")
 public class TuningAlgorithm extends Model {
@@ -43,7 +48,7 @@ public class TuningAlgorithm extends Model {
   }
 
   public enum OptimizationAlgo {
-    PSO
+    PSO, PSO_IPSO, HBT
   }
 
   public enum OptimizationMetric {

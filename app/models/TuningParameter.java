@@ -34,6 +34,10 @@ import com.avaje.ebean.annotation.UpdatedTimestamp;
 import play.db.ebean.Model;
 
 
+/**
+ * This table represent tuning parameters . Parameters which is going to be tune
+ * ,with their default values and min and max values
+ */
 @Entity
 @Table(name = "tuning_parameter")
 public class TuningParameter extends Model {

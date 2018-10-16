@@ -48,7 +48,7 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
   override def apply(data: SparkApplicationData): HeuristicResult = {
     val evaluator = new Evaluator(this, data)
     var resultDetails = Seq(
-      new HeuristicResultDetails("GC time to Executor Run time ratio", evaluator.ratio.toString),
+      new HeuristicResultDetails(GC_RUN_TIME_RATIO, evaluator.ratio.toString),
       new HeuristicResultDetails("Total GC time",  evaluator.msecToString(evaluator.jvmTime)),
       new HeuristicResultDetails("Total Executor Runtime", evaluator.msecToString(evaluator.executorRunTimeTotal))
     )
@@ -77,6 +77,7 @@ object ExecutorGcHeuristic {
   val SPARK_EXECUTOR_MEMORY = "spark.executor.memory"
   val SPARK_EXECUTOR_CORES = "spark.executor.cores"
   val EXECUTOR_RUNTIME_THRESHOLD_IN_MINUTES = 5
+  val GC_RUN_TIME_RATIO="GC time to Executor Run time ratio";
 
   /** The ascending severity thresholds for the ratio of JVM GC Time and executor Run Time (checking whether ratio is above normal)
     * These thresholds are experimental and are likely to change */

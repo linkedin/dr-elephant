@@ -19,10 +19,16 @@ package com.linkedin.drelephant.tuning;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.linkedin.drelephant.tuning.engine.SparkConfigurationConstants;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.spark.network.util.JavaUtils;
+
 import models.TuningAlgorithm;
+import models.TuningAlgorithm.JobType;
 
 
 /**
@@ -286,6 +292,15 @@ public class TuningInput {
     this._scheduler = scheduler;
   }
 
+  public Map<String, Double> getDefaultParams() throws JsonParseException, JsonMappingException, IOException {
+    if(getJobType().equals(JobType.SPARK.name()))
+    {
+      return getSparkDefaultParams();
+    }else
+    {
+      return getMRDefaultParams();
+    }
+  }
   /**
    * Returns the default parameters
    * @return default parameters
@@ -294,7 +309,7 @@ public class TuningInput {
    * @throws JsonParseException
    */
   @SuppressWarnings("unchecked")
-  public Map<String, Double> getDefaultParams() throws JsonParseException, JsonMappingException, IOException {
+  public Map<String, Double> getMRDefaultParams() throws JsonParseException, JsonMappingException, IOException {
     ObjectMapper mapper = new ObjectMapper();
     Map<String, Double> paramValueMap;
     if (version == 1) {
@@ -320,6 +335,53 @@ public class TuningInput {
     }
     return paramValueMap;
   }
+
+  @SuppressWarnings("unchecked")
+  public Map<String, Double> getSparkDefaultParams() throws JsonParseException, JsonMappingException, IOException{
+
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, Double> paramValueMap = new HashMap<String, Double>();
+    if (version == 1) {
+      paramValueMap = (Map<String, Double>) mapper.readValue(this._defaultParams, Map.class);
+    } else {
+      Map<String, String> paramsStringMap = (Map<String, String>) mapper.readValue(this._defaultParams, Map.class);
+      for (Map.Entry<String, String> entry : paramsStringMap.entrySet()) {
+        String confKey = entry.getKey();
+        String confVal = entry.getValue();
+        Double confValDouble = null;
+        try {
+          if (confKey.equals(SparkConfigurationConstants.SPARK_EXECUTOR_CORES_KEY)) {
+            paramValueMap.put(SparkConfigurationConstants.SPARK_EXECUTOR_CORES_KEY, Double.parseDouble(confVal));
+          } else if (confKey.equals(SparkConfigurationConstants.SPARK_DRIVER_CORES)) {
+            paramValueMap.put(SparkConfigurationConstants.SPARK_DRIVER_CORES, Double.parseDouble(confVal));
+          } else if (confKey.equals(SparkConfigurationConstants.SPARK_EXECUTOR_INSTANCES_KEY)) {
+            paramValueMap.put(SparkConfigurationConstants.SPARK_EXECUTOR_INSTANCES_KEY, Double.parseDouble(confVal));
+          } else if (confKey.equals(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_KEY)) {
+            long memoryMb = JavaUtils.byteStringAsMb(confVal);
+            paramValueMap.put(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_KEY, new Double(memoryMb));
+          } else if (confKey.equals(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_OVERHEAD)) {
+            long memoryMb = JavaUtils.byteStringAsMb(confVal);
+            paramValueMap.put(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_OVERHEAD, new Double(memoryMb));
+          } else if (confKey.equals(SparkConfigurationConstants.SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD)) {
+            long memoryMb = JavaUtils.byteStringAsMb(confVal);
+            paramValueMap.put(SparkConfigurationConstants.SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD, new Double(memoryMb));
+          } else if (confKey.equals(SparkConfigurationConstants.SPARK_DRIVER_MEMORY_KEY)) {
+            long memoryMb = JavaUtils.byteStringAsMb(confVal);
+            paramValueMap.put(SparkConfigurationConstants.SPARK_DRIVER_MEMORY_KEY, new Double(memoryMb));
+          } else if (confVal != null) {
+            confValDouble = Double.parseDouble(confVal);
+          }
+        } catch (NumberFormatException nfe) {
+          //Do Nothing
+        }
+        if (confValDouble != null) {
+          paramValueMap.put(confKey, confValDouble);
+        }
+      }
+    }
+    return paramValueMap;
+  }
+
 
   /**
    * Sets the default parameters

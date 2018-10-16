@@ -24,7 +24,7 @@ import models.TuningAlgorithm.JobType;
 /**
  * This class holds the tuning information for the job.
  */
-class JobTuningInfo {
+public class JobTuningInfo {
 
     private JobDefinition _tuningJob;
 

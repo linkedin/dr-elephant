@@ -33,6 +33,9 @@ import javax.persistence.Table;
 import play.db.ebean.Model;
 
 
+/**
+ * This table have mapping between job suggested param set and the param value.
+ */
 @Entity
 @Table(name = "job_suggested_param_value")
 public class JobSuggestedParamValue extends Model {

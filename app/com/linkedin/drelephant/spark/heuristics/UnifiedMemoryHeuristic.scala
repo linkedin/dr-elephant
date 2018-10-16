@@ -47,7 +47,7 @@ class UnifiedMemoryHeuristic(private val heuristicConfigurationData: HeuristicCo
     var resultDetails = Seq(
       new HeuristicResultDetails("Unified Memory Space Allocated", MemoryFormatUtils.bytesToString(evaluator.maxMemory)),
       new HeuristicResultDetails("Mean peak unified memory", MemoryFormatUtils.bytesToString(evaluator.meanUnifiedMemory)),
-      new HeuristicResultDetails("Max peak unified memory", MemoryFormatUtils.bytesToString(evaluator.maxUnifiedMemory)),
+      new HeuristicResultDetails(MAX_PEAK_UNIFIED_MEMORY_HEURISTIC_NAME, MemoryFormatUtils.bytesToString(evaluator.maxUnifiedMemory)),
       new HeuristicResultDetails("spark.executor.memory", MemoryFormatUtils.bytesToString(evaluator.sparkExecutorMemory)),
       new HeuristicResultDetails("spark.memory.fraction", evaluator.sparkMemoryFraction.toString)
     )
@@ -74,6 +74,7 @@ object UnifiedMemoryHeuristic {
   val DEFAULT_SPARK_EXECUTOR_MEMORY_THRESHOLD = "2G"
   val UNIFIED_MEMORY_ALLOCATED_THRESHOLD = "256M"
   val SPARK_MEMORY_FRACTION_THRESHOLD : Double = 0.05
+  val MAX_PEAK_UNIFIED_MEMORY_HEURISTIC_NAME="Max peak unified memory";
 
   class Evaluator(unifiedMemoryHeuristic: UnifiedMemoryHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
