@@ -53,7 +53,7 @@
   </property>
   <property>
     <name>dr.elephant.api.url</name>
-    <value>http://ltx1-holdemdre01.grid.linkedin.com:8080</value>
+    <value>http://localhost:8080</value>
     <description>API URL for Dr Elephant. Optional. This is needed only if you are using APIFitnessComputeUtil to get
       fitness from Dr Elephant APIs
     </description>
