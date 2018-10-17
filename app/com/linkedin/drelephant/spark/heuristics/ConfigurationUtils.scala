@@ -54,8 +54,27 @@ object ConfigurationUtils {
   val TASK_SKEW_TASK_DURATION_MIN_THRESHOLD_KEY = "task_skew_task_duration_threshold"
   val MAX_RECOMMENDED_PARTITIONS_KEY = "max_recommended_partitions"
 
+  // keys for finding specific recommendations
+  val EXECUTION_MEMORY_SPILL_LARGE_DATA_RECOMMENDATION_KEY = "execution_memory_spill_large_data_recommendation"
+  val TASK_SKEW_INPUT_DATA_RECOMMENDATION_KEY = "task_skew_input_data_recommendation"
+  val TASK_SKEW_GENERIC_RECOMMENDATION_KEY = "task_skew_generic_recommendation"
+  val LONG_TASKS_LARGE_DATA_RECOMMENDATION_KEY = "long_tasks_large_data_recommendation"
+  val SLOW_TASKS_RECOMMENDATION_KEY = "slow_tasks_recommendation"
+  val LONG_TASKS_FEW_PARTITIONS_RECOMMENDATION_KEY = "long tasks_few_partitions"
+  val LONG_TASKS_FEW_INPUT_PARTITIONS_RECOMMENDATION_KEY = "long tasks_few_input_partitions"
 
-  // Severity hresholds for task duration in minutes, when checking to see if the median task
+  // default recommendations
+  val DEFAULT_EXECUTION_MEMORY_SPILL_LARGE_DATA_RECOMMENDATION = "a large amount of data is being processesd. " +
+    "Examine the application to see if this can be reduced"
+  val DEFAULT_TASK_SKEW_INPUT_DATA_RECOMMENDATION = "please try to modify the application to make the input partitions more even"
+  val DEFAULT_TASK_SKEW_GENERIC_RECOMMENDATION = "please try to modify the application to make the partitions more even"
+  val DEFAULT_LONG_TASKS_LARGE_DATA_RECOMMENDATION = "please try to reduce the amount of data being processed"
+  val DEFAULT_SLOW_TASKS_RECOMMENDATION = "please optimize the code to improve performance"
+  val DEFAULT_LONG_TASKS_FEW_PARTITIONS_RECOMMENDATION = "please increase the number of partitions"
+  val DEFAULT_LONG_TASKS_FEW_INPUT_PARTITIONS_RECOMMENDATION = "please increase the number of partitions for reading data"
+
+
+  // Severity thresholds for task duration in minutes, when checking to see if the median task
   // run time is too long for a stage.
   val DEFAULT_TASK_DURATION_THRESHOLDS =
     SeverityThresholds(low = 2.5D * MILLIS_PER_MIN, moderate = 5.0D * MILLIS_PER_MIN,
@@ -82,6 +101,11 @@ object ConfigurationUtils {
   // The default threshold (3TB) for checking for maximum amount of data processed, for which to
   // alert for execution memory spill. Tasks processing more data would be expected to have some
   // amount of spill, due to the large amount of data processed.
+  // Estimating the size based on some reasonable values for configuration parameters (and how
+  // much data could be kept in unified memory given these values):
+  //   spark.executor.memory / spark.executor.cores * spark.memory.fraction *
+  //     (1 - spark.memory.storageFraction) * spark.sql.shuffle.partitions
+  //   = 5GB / 2 * 0.6 * (1 - 0.5) * 4000
   val DEFAULT_MAX_DATA_PROCESSED_THRESHOLD = "3TB"
 
   // The default threshold for the ratio of the time for longest running task for a stage to the
