@@ -73,7 +73,6 @@ object ConfigurationUtils {
   val DEFAULT_LONG_TASKS_FEW_PARTITIONS_RECOMMENDATION = "please increase the number of partitions"
   val DEFAULT_LONG_TASKS_FEW_INPUT_PARTITIONS_RECOMMENDATION = "please increase the number of partitions for reading data"
 
-
   // Severity thresholds for task duration in minutes, when checking to see if the median task
   // run time is too long for a stage.
   val DEFAULT_TASK_DURATION_THRESHOLDS =
@@ -125,4 +124,63 @@ object ConfigurationUtils {
   // less data per partition, so shorter tasks and less memory needed per task. However more
   // partitions also inceases the amount of overhead for shuffle.
   val DEFAULT_MAX_RECOMMENDED_PARTITIONS = "4000"
+
+  // Default maximum number of cores for the driver.
+  val DEFAULT_MAX_DRIVER_CORES = 2
+
+  // Default minimum executor memory (640MB for executor memory, and 384MB for overhead
+  // memory, summing to 1GB total memory).
+  val DEFAULT_MIN_MEMORY = 640L << 20
+
+  // Default maximum recommended number of cores.
+  val MAX_RECOMMENDED_CORES = 4
+
+  // Default maximum recommended number of executors.
+  val MAX_RECOMMENDED_NUM_EXECUTORS = 500
+
+  // Executor memory threshold for increasing number of cores, if JVM used memory
+  // is flagged as MODERATE or higher
+  val SPARK_EXECUTOR_MEMORY_THRESHOLD_MODERATE = 2L << 30
+
+  // Executor memory threshold for increasing number of cores, if JVM used memory
+  // is flagged as LOW or higher
+  val SPARK_EXECUTOR_MEMORY_THRESHOLD_LOW = 4L << 30
+
+  // Max amount of executor memory, for which increasing the number of cores is
+  // considered, if there is extra unused executor memory.
+  val SPARK_EXECUTOR_MEMORY_THRESHOLD_INCREASE_CORES = 8L << 30
+
+  // Default buffer (over max Used JVM memory), when calculating executor memory.
+  val DEFAULT_MEMORY_BUFFER_PERCENTAGE = 0.25
+
+  // Adjustments to try for avoiding execution memory spill.
+  // This will try incrementally:
+  // - increasing the number of partitions, so that there is less data per partition,
+  //   to reduce the likelihood of execution memory spill.
+  // - increasing overall executor memory, so that there is also more space in the
+  //   unified memory region
+  // - reducing the number of cores, since executor memory is divided across the number
+  //   of tasks running in parallel, so if there are fewer concurrent tasks, then there
+  //   is more memory for each task.
+  val STAGE_SPILL_ADJUSTMENTS =
+    Seq(PartitionSetAdjustment(400), MemorySetAdjustment(4L << 30), CoreSetAdjustment(4),
+      PartitionSetAdjustment(1000), MemorySetAdjustment(6L << 30), CoreSetAdjustment(3),
+      PartitionSetAdjustment(2000), MemorySetAdjustment(8L << 30), CoreSetAdjustment(2),
+      PartitionSetAdjustment(4000), MemorySetAdjustment(10L << 30))
+
+  // Adjustments to try to avoiding OOM or GC issues.
+  // Try reducing cores, increasing memory, or increasing partitions
+  val OOM_GC_ADJUSTMENTS = Seq(
+    CoreDivisorAdjustment(MAX_RECOMMENDED_CORES, 2.0),
+    MemoryMultiplierAdjustment(4L << 30, 2.0),
+    MemoryMultiplierAdjustment(8L << 30, 1.5),
+    PartitionMultiplierAdjustment(DEFAULT_MAX_RECOMMENDED_PARTITIONS.toInt / 2, 2.0),
+    CoreSetAdjustment(2),
+    MemoryMultiplierAdjustment(16L << 30, 1.25)
+  )
+
+  val TB_TO_BYTES = 1L << 40
+  val GB_TO_BYTES = 1L << 30
+  val MB_TO_BYTES = 1L << 20
+  val KB_TO_BYTES = 1L << 10
 }
