@@ -38,7 +38,7 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
       .getOrElse(DEFAULT_GC_SEVERITY_A_THRESHOLDS)
 
   val gcSeverityDThresholds: SeverityThresholds =
-    SeverityThresholds.parse(heuristicConfigurationData.getParamMap.get(GC_SEVERITY_D_THRESHOLDS_KEY), ascending = true)
+    SeverityThresholds.parse(heuristicConfigurationData.getParamMap.get(GC_SEVERITY_D_THRESHOLDS_KEY), ascending = false)
       .getOrElse(DEFAULT_GC_SEVERITY_D_THRESHOLDS)
 
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData

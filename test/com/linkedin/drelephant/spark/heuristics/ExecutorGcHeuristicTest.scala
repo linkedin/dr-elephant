@@ -17,11 +17,10 @@
 package com.linkedin.drelephant.spark.heuristics
 
 import scala.collection.JavaConverters
-import com.linkedin.drelephant.analysis.{ApplicationType, Severity, SeverityThresholds}
+import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl, StageDataImpl}
-import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.concurrent.duration.Duration
@@ -35,7 +34,8 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
       Map(
         "max_to_median_ratio_severity_thresholds" -> "1.414,2,4,16",
         "ignore_max_bytes_less_than_threshold" -> "4000000",
-        "ignore_max_millis_less_than_threshold" -> "4000001"
+        "ignore_max_millis_less_than_threshold" -> "4000001",
+        ExecutorGcHeuristic.GC_SEVERITY_D_THRESHOLDS_KEY -> "0.5,0.3,0.2,0.1"
       )
     )
     val executorGcHeuristic = new ExecutorGcHeuristic(heuristicConfigurationData)
@@ -88,6 +88,11 @@ class ExecutorGcHeuristicTest extends FunSpec with Matchers {
         val details = heuristicResultDetails.get(2)
         details.getName should include("Total Executor Runtime")
         details.getValue should be("4740000")
+      }
+
+      it("return Gc ratio low") {
+        val details = heuristicResultDetails.get(4)
+        details.getName should include("Gc ratio low")
       }
     }
   }
