@@ -22,8 +22,6 @@ import models.TuningJobExecutionParamSet;
 import models.TuningParameter;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import scala.tools.nsc.typechecker.PatternMatching;
-
 
 /**
  * This class computes the fitness of the suggested parameters after the execution is complete. This uses
