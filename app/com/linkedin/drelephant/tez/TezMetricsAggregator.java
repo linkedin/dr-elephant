@@ -85,11 +85,12 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
 
   private long getMapContainerSize(HadoopApplicationData data) {
     try {
-      long mapContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
-      if (mapContainerSize > 0)
-        return mapContainerSize;
-      else
-        return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
+      if (data.getConf().containsKey(TEZ_CONTAINER_CONFIG)){
+        long mapContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
+        if (mapContainerSize > 0)
+          return mapContainerSize;
+      }
+      return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
     } catch ( NumberFormatException ex) {
       return CONTAINER_MEMORY_DEFAULT_BYTES;
     }
@@ -97,11 +98,12 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
 
   private long getReducerContainerSize(HadoopApplicationData data) {
     try {
-      long reducerContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
-      if (reducerContainerSize > 0)
-        return reducerContainerSize;
-      else
-        return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
+      if (data.getConf().containsKey(TEZ_CONTAINER_CONFIG)){
+        long reducerContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
+        if (reducerContainerSize > 0)
+          return reducerContainerSize;
+      }
+      return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
     } catch ( NumberFormatException ex) {
       return CONTAINER_MEMORY_DEFAULT_BYTES;
     }
