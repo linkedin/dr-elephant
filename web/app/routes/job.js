@@ -20,6 +20,8 @@ export default Ember.Route.extend({
   beforeModel: function (transition) {
     this.jobid = transition.queryParams.jobid;
   },
+  ajax: Ember.inject.service(),
+
   model(){
     return Ember.RSVP.hash({
       jobs:   this.store.queryRecord('job', {jobid: this.get("jobid")}),
@@ -27,6 +29,14 @@ export default Ember.Route.extend({
     });
   },
   actions: {
+    showRecommendations(jobDefinitionId) {
+      return this.get('ajax').post('/rest/showTuneinParams', {
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify({
+          id: jobDefinitionId
+        })
+      });
+    },
     error(error, transition) {
       if (error.errors[0].status == 404) {
         return this.transitionTo('not-found', { queryParams: {'previous': window.location.href}});

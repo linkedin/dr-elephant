@@ -26,5 +26,6 @@ export default DS.Model.extend({
   tuningAlgorithm: DS.attr('string'),
   tuningAlgorithmList: DS.attr(),
   iterationCount: DS.attr('number'),
-  tuningParameters: DS.attr()
+  tuningParameters: DS.attr(),
+  reasonForTuningDisable: DS.attr('string')
 });
