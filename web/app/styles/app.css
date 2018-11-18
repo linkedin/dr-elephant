@@ -326,3 +326,26 @@ input:checked + .slider:after
   margin-left: 5px;
   color: #0e90d2;
 }
+
+.recommendation-button {
+  background-color: #008cc9;
+  margin:auto;
+  display: block;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 500;
+  border: #0084BF 1px solid;
+  color: white;
+  padding: 5px;
+}
+
+.recommendation-button:hover {
+  background-color: white;
+  color: #008cc9;
+}
+
+.info-text {
+  margin: 2px;
+  color: #0e90d2;
+}

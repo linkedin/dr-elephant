@@ -58,6 +58,7 @@ public class TuningJobDefinition extends Model {
     public static final String numberOfIterations = "numberOfIterations";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
+    public static final String showRecommendationCount = "showRecommendationCount";
 
   }
 
@@ -103,6 +104,9 @@ public class TuningJobDefinition extends Model {
       return null;
     }
   }
+
+  @Column(nullable = false)
+  public Integer showRecommendationCount;
 
   public static Model.Finder<Integer, TuningJobDefinition> find =
       new Model.Finder<Integer, TuningJobDefinition>(Integer.class, TuningJobDefinition.class);

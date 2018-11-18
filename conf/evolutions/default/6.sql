@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS tuning_parameter_constraint (
 
 create index index_tuning_parameter_constraint on tuning_parameter_constraint (job_definition_id);
 
+alter table tuning_job_definition add column show_recommendation_count INT NOT NULL default 0;
+
 # --- !Downs
 DELETE FROM tuning_parameter WHERE tuning_algorithm_id=3;
 DELETE FROM tuning_parameter WHERE tuning_algorithm_id=4;

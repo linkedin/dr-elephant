@@ -17,6 +17,14 @@
 import Ember from 'ember';
 
 export default Ember.Controller.extend({
-    queryParams: ['jobid'],
-    jobid: null
+  queryParams: ['jobid'],
+  jobid: null,
+  showTuneinRecommendations: false,
+
+  actions: {
+    showRecommendation(jobDefinitionId) {
+      this.set("showTuneinRecommendations", true),
+      this.send("showRecommendations", jobDefinitionId);
+    }
+  }
 });

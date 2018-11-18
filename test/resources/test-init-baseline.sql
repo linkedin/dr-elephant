@@ -175,7 +175,7 @@ INSERT INTO flow_definition VALUES (10046,'https://ltx1-faroaz01.grid.linkedin.c
 
 INSERT INTO job_definition VALUES (100046,'https://ltx1-faroaz01.grid.linkedin.com:8443/manager?project=tuning_hbt&flow=dimDataSimpleFlow&job=dimDataSimpleFlow_dimDataSimple','https://ltx1-faroaz01.grid.linkedin.com:8443/manager?project=tuning_hbt&flow=dimDataSimpleFlow&job=dimDataSimpleFlow_dimDataSimple',10046,'dimDataSimpleFlow_dimDataSimple','azkaban','pkumar2','2018-09-12 08:57:43','2018-09-11 20:27:44');
 
-INSERT INTO tuning_job_definition VALUES (100046,'azkaban',3,1,1,NULL,1.15030667,1912288051,150,150,NULL,10,'2018-09-12 08:57:43','2018-09-11 20:27:49');
+INSERT INTO tuning_job_definition VALUES (100046,'azkaban',3,1,1,NULL,1.15030667,1912288051,150,150,NULL,10,'2018-09-12 08:57:43','2018-09-11 20:27:49',0);
 
 INSERT INTO flow_execution VALUES (1084,'https://ltx1-faroaz01.grid.linkedin.com:8443/executor?execid=1122321','https://ltx1-faroaz01.grid.linkedin.com:8443/executor?execid=1122321',10046,'2018-09-12 08:57:43','2018-09-11 20:27:44'),(1085,'https://ltx1-faroaz01.grid.linkedin.com:8443/executor?execid=1122375','https://ltx1-faroaz01.grid.linkedin.com:8443/executor?execid=1122375',10046,'2018-09-12 09:20:16','2018-09-11 20:50:16');
 

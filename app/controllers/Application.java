@@ -1802,6 +1802,7 @@ public class Application extends Controller {
       tuneIn.addProperty("tuningAlgorithmId", tuningAlgorithm.id);
       tuneIn.addProperty("autoApply", autoApply);
       tuneIn.addProperty("tuningAlgorithm", currentTuningAlgorithm);
+      tuneIn.addProperty("reasonForTuningDisable", checkIfTuningEnabled(tuningJobDefinition));
       tuneIn.add("tuningAlgorithmList", tuningAlgorithmList);
       tuneIn.addProperty("iterationCount",tuningJobDefinition.numberOfIterations);
       tuneIn.add("tuningParameters", tuningParameters);
@@ -1814,6 +1815,20 @@ public class Application extends Controller {
       parent.add("tunein", tuneIn);
       return ok(new Gson().toJson(parent));
     }
+  }
+
+  public static Result showTuneinParams() {
+    JsonNode requestBodyRoot = request().body().asJson();
+    Integer jobDefinitionId = requestBodyRoot.path("id").asInt();
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .where()
+        .eq(TuningJobDefinition.TABLE.job + '.' + JobDefinition.TABLE.id, jobDefinitionId)
+        .findUnique();
+    tuningJobDefinition.showRecommendationCount += 1;
+    tuningJobDefinition.save();
+    JsonObject parent = new JsonObject();
+    parent.addProperty("showRecommendationCount", tuningJobDefinition.showRecommendationCount);
+    return ok(new Gson().toJson(parent));
   }
 
   /**
@@ -1940,5 +1955,17 @@ public class Application extends Controller {
 
   private static String getCurrentTuningAlgorithmName(TuningAlgorithm tuningAlgorithm) {
     return tuningAlgorithm.optimizationAlgo.name().contains("PSO") ? "OBT" : "HBT";
+  }
+
+  private static String checkIfTuningEnabled(TuningJobDefinition tuningJobDefinition) {
+    if (tuningJobDefinition.tuningEnabled) {
+      logger.debug("Tuning is disabled for this application");
+      if (tuningJobDefinition.tuningDisabledReason != null) {
+        return tuningJobDefinition.tuningDisabledReason;
+      } else {
+        logger.info("No Reason provided to disable tuning for this application");
+      }
+    }
+    return "NONE";
   }
 }
