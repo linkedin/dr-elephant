@@ -337,7 +337,7 @@ input:checked + .slider:after
   font-weight: 500;
   border: #0084BF 1px solid;
   color: white;
-  padding: 5px;
+  padding: 9px 11px;
 }
 
 .recommendation-button:hover {
