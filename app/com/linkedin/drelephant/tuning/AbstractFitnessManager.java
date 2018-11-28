@@ -186,7 +186,10 @@ public abstract class AbstractFitnessManager implements Manager {
       jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.CREATED;
       jobSuggestedParamSet.save();
       TuningJobExecutionParamSet tuningJobExecutionParamSet = TuningJobExecutionParamSet.find.where()
-          .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + JobSuggestedParamSet.TABLE.id, jobSuggestedParamSet.id)
+          .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + '.'  +JobSuggestedParamSet.TABLE.id, jobSuggestedParamSet.id)
+          .order()
+          .desc(TuningJobExecutionParamSet.TABLE.jobExecution + '.' + JobExecution.TABLE.id)
+          .setMaxRows(1)
           .findUnique();
       if (tuningJobExecutionParamSet != null) {
         JobExecution latestJobExecution = JobExecution.find.where()
@@ -196,7 +199,8 @@ public abstract class AbstractFitnessManager implements Manager {
         latestJobExecution.resourceUsage = 0D;
         latestJobExecution.executionTime = 0D;
         latestJobExecution.inputSizeInBytes = 1D;
-        latestJobExecution.save();
+        latestJobExecution.update();
+        logger.info("Updated JobExecution: " + latestJobExecution.id + "after resetting param set to CREATED");
       } else {
         logger.error("No TuningJobExecutionParamSet found for JobSuggestedParamSet id " + jobSuggestedParamSet.id);
       }
