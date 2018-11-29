@@ -63,7 +63,7 @@ public class FitnessManagerOBTAlgoIPSO extends FitnessManagerOBT {
         // after failure.
         logger.debug("Execution id: " + jobExecution.id + " was not successful for reason other than tuning."
             + "Resetting param set: " + jobSuggestedParamSet.id + " to CREATED state");
-        resetParamSetToCreated(jobSuggestedParamSet);
+        resetParamSetToCreated(jobSuggestedParamSet, jobExecution);
       }
     }
   }
