@@ -1816,7 +1816,7 @@ public class Application extends Controller {
     }
   }
 
-  public static Result getSparkJobBestParamter(String jobDefId) {
+  public static Result getJobBestParameter(String jobDefId) {
     JobDefinition jobDefinition = JobDefinition.find
         .select("*")
         .where()
@@ -1976,6 +1976,7 @@ public class Application extends Controller {
   }
 
   private static Map<String, Double> getSparkParamsMap(Long jobSuggestedParamSetId) {
+    logger.debug("Fetching params for JobSuggestedParamSet id: " + jobSuggestedParamSetId);
     List<JobSuggestedParamValue> paramValues = JobSuggestedParamValue.find.select("*")
         .where()
         .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id,
@@ -1984,7 +1985,6 @@ public class Application extends Controller {
     Map<String, Double> paramValueMap = new HashMap<String, Double>();
     DecimalFormat truncateParamValueFormat = new DecimalFormat("#.##");
     for (JobSuggestedParamValue param: paramValues) {
-      logger.info("paramValues: " + param.tuningParameter.paramName + " " + param.paramValue);
       paramValueMap.put(param.tuningParameter.paramName,
           Double.parseDouble(truncateParamValueFormat.format(param.paramValue)));
     }
