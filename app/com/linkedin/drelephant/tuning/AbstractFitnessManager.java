@@ -148,7 +148,7 @@ public abstract class AbstractFitnessManager implements Manager {
           "Fitness of param set " + jobSuggestedParamSet.id + " corresponding to execution id: " + jobExecution.id
               + " not computed for more than the maximum duration specified to compute fitness. "
               + "Resetting the param set to CREATED state");
-      resetParamSetToCreated(jobSuggestedParamSet);
+      resetParamSetToCreated(jobSuggestedParamSet, jobExecution);
     }
   }
 
@@ -179,27 +179,21 @@ public abstract class AbstractFitnessManager implements Manager {
    * Resets the param set to CREATED state if its fitness is not already computed
    * @param jobSuggestedParamSet Param set which is to be reset
    */
-  protected void resetParamSetToCreated(JobSuggestedParamSet jobSuggestedParamSet) {
+  protected void resetParamSetToCreated(JobSuggestedParamSet jobSuggestedParamSet, JobExecution jobExecution) {
     if (!jobSuggestedParamSet.paramSetState.equals(JobSuggestedParamSet.ParamSetStatus.FITNESS_COMPUTED)
         && !jobSuggestedParamSet.paramSetState.equals(JobSuggestedParamSet.ParamSetStatus.DISCARDED)) {
       logger.debug("Resetting parameter set to created: " + jobSuggestedParamSet.id);
       jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.CREATED;
       jobSuggestedParamSet.save();
-      TuningJobExecutionParamSet tuningJobExecutionParamSet = TuningJobExecutionParamSet.find.where()
-          .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + JobSuggestedParamSet.TABLE.id, jobSuggestedParamSet.id)
+      JobExecution latestJobExecution = JobExecution.find.where()
+          .eq(JobExecution.TABLE.id,
+              jobExecution.id)
           .findUnique();
-      if (tuningJobExecutionParamSet != null) {
-        JobExecution latestJobExecution = JobExecution.find.where()
-            .eq(JobExecution.TABLE.id,
-                tuningJobExecutionParamSet.jobExecution.id)
-            .findUnique();
-        latestJobExecution.resourceUsage = 0D;
-        latestJobExecution.executionTime = 0D;
-        latestJobExecution.inputSizeInBytes = 1D;
-        latestJobExecution.save();
-      } else {
-        logger.error("No TuningJobExecutionParamSet found for JobSuggestedParamSet id " + jobSuggestedParamSet.id);
-      }
+      latestJobExecution.resourceUsage = 0D;
+      latestJobExecution.executionTime = 0D;
+      latestJobExecution.inputSizeInBytes = 1D;
+      latestJobExecution.update();
+      logger.info("Updated JobExecution: " + latestJobExecution.id + " after resetting param set to CREATED");
     }
   }
 

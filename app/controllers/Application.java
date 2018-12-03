@@ -50,6 +50,7 @@ import models.JobExecution;
 import models.JobSuggestedParamSet;
 import models.JobSuggestedParamValue;
 import models.TuningJobDefinition;
+import models.TuningJobExecutionParamSet;
 import models.TuningParameter;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -1002,7 +1003,7 @@ public class Application extends Controller {
     if (tuningInput.getVersion() == 1) {
       return Json.toJson(outputParams);
     } else if (tuningInput.getJobType().equals(JobType.SPARK.name())) {
-      return formatSparkOutput(outputParams);
+      return formatSparkOutputToJson(outputParams);
     } else {
       return formatMROutput(outputParams);
     }
@@ -1028,7 +1029,10 @@ public class Application extends Controller {
     return Json.toJson(outputParamFormatted);
   }
 
-  private static JsonNode formatSparkOutput(Map<String, Double> outputParams) {
+  private static JsonNode formatSparkOutputToJson(Map<String, Double> outputParams) {
+    return Json.toJson(formatSparkOutput(outputParams));
+  }
+  private static Map<String, String> formatSparkOutput(Map<String, Double> outputParams) {
     Map<String, String> outputParamFormatted = new HashMap<String, String>();
     for (Map.Entry<String, Double> param : outputParams.entrySet()) {
       if (param.getKey().equals(SparkConfigurationConstants.SPARK_EXECUTOR_MEMORY_KEY)) {
@@ -1050,7 +1054,7 @@ public class Application extends Controller {
         outputParamFormatted.put(param.getKey(), param.getValue().toString());
       }
     }
-    return Json.toJson(outputParamFormatted);
+    return outputParamFormatted;
   }
 
   private static Result getCurrentRunParameters(TuningInput tuningInput) throws Exception {
@@ -1827,6 +1831,39 @@ public class Application extends Controller {
     return ok(new Gson().toJson(parent));
   }
 
+  public static Result getJobBestParameter(String jobDefId) {
+    JobDefinition jobDefinition = JobDefinition.find
+        .select("*")
+        .where()
+        .eq(JobDefinition.TABLE.jobDefId, jobDefId)
+        .findUnique();
+    if (jobDefinition == null) {
+      logger.info("No Tuning Job found for jobDefUrl: " + jobDefId);
+      return notFound("No job found for provided Job Definition Id");
+    }
+    JobSuggestedParamSet bestJobSuggestedParamSet = JobSuggestedParamSet.find
+        .select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.jobDefinition + '.' + JobDefinition.TABLE.id, jobDefinition.id)
+        .eq(JobSuggestedParamSet.TABLE.isParamSetBest, 1)
+        .findUnique();
+    if (bestJobSuggestedParamSet == null) {
+      logger.info("No best Param set found for jobDefitionId: "  + jobDefinition.id);
+      return notFound("No Best Param found");
+    }
+    logger.info("JobSuggestedParamSetId for jobDefId : " + jobDefId + " is " + bestJobSuggestedParamSet.id);
+    Map<String, String> bestParamValueMap = formatSparkOutput(getSparkParamsMap(bestJobSuggestedParamSet.id));
+    TuningJobExecutionParamSet bestTuningJobExecutionParamSet = TuningJobExecutionParamSet.find
+        .select("*")
+        .where()
+        .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id, bestJobSuggestedParamSet.id)
+        .order()
+        .desc(TuningJobExecutionParamSet.TABLE.jobExecution + '.' + JobExecution.TABLE.id)
+        .setMaxRows(1)
+        .findUnique();
+    bestParamValueMap.put("executionId", bestTuningJobExecutionParamSet.jobExecution.jobExecUrl);
+    return ok(Json.toJson(bestParamValueMap));
+  }
   /**
    * Returns a list of AppResults after quering the FLOW_EXEC_ID from the database
    * @return The list of AppResults
@@ -1963,5 +2000,20 @@ public class Application extends Controller {
       }
     }
     return "NONE";
+  } 
+    private static Map<String, Double> getSparkParamsMap(Long jobSuggestedParamSetId) {
+    logger.debug("Fetching params for JobSuggestedParamSet id: " + jobSuggestedParamSetId);
+    List<JobSuggestedParamValue> paramValues = JobSuggestedParamValue.find.select("*")
+        .where()
+        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id,
+            jobSuggestedParamSetId)
+        .findList();
+    Map<String, Double> paramValueMap = new HashMap<String, Double>();
+    DecimalFormat truncateParamValueFormat = new DecimalFormat("#.##");
+    for (JobSuggestedParamValue param: paramValues) {
+      paramValueMap.put(param.tuningParameter.paramName,
+          Double.parseDouble(truncateParamValueFormat.format(param.paramValue)));
+    }
+    return paramValueMap;
   }
 }

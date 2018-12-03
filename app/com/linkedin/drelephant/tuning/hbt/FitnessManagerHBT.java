@@ -118,7 +118,7 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
         // after failure.
         logger.info("HBT Execution id: " + jobExecution.id + " was not successful for reason other than tuning."
             + "Resetting param set: " + jobSuggestedParamSet.id + " to CREATED state");
-        resetParamSetToCreated(jobSuggestedParamSet);
+        resetParamSetToCreated(jobSuggestedParamSet, jobExecution);
       }
     }
   }
