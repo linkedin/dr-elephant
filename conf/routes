@@ -57,7 +57,7 @@ GET        /rest/workflow-exceptions            controllers.api.v1.Web.restExcep
 GET        /rest/exception-statuses             controllers.api.v1.Web.restExceptionStatuses()
 GET        /rest/tunein                         controllers.Application.getTuningParameter(id: String)
 POST       /rest/getCurrentRunParameters        controllers.Application.getCurrentRunParameters()
-POST       /rest/showTuneinParams               controllers.Application.showTuneinParams
+POST       /rest/showTuneinParams               controllers.Application.updateShowRecommendationCount()
 
 # Metrics calls
 GET        /ping                                controllers.MetricsController.ping()

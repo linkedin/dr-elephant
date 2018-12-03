@@ -25,12 +25,10 @@ import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.util.Utils;
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,7 +49,6 @@ import models.JobDefinition;
 import models.JobExecution;
 import models.JobSuggestedParamSet;
 import models.JobSuggestedParamValue;
-import models.TuningAlgorithm;
 import models.TuningJobDefinition;
 import models.TuningParameter;
 import org.apache.commons.collections.map.ListOrderedMap;
@@ -59,7 +56,6 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
-import org.codehaus.jettison.json.JSONArray;
 import play.api.templates.Html;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -1802,7 +1798,7 @@ public class Application extends Controller {
       tuneIn.addProperty("tuningAlgorithmId", tuningAlgorithm.id);
       tuneIn.addProperty("autoApply", autoApply);
       tuneIn.addProperty("tuningAlgorithm", currentTuningAlgorithm);
-      tuneIn.addProperty("reasonForTuningDisable", checkIfTuningEnabled(tuningJobDefinition));
+      tuneIn.addProperty("reasonForTuningDisable", reasonForDisablingTuning(tuningJobDefinition));
       tuneIn.add("tuningAlgorithmList", tuningAlgorithmList);
       tuneIn.addProperty("iterationCount",tuningJobDefinition.numberOfIterations);
       tuneIn.add("tuningParameters", tuningParameters);
@@ -1817,7 +1813,7 @@ public class Application extends Controller {
     }
   }
 
-  public static Result showTuneinParams() {
+  public static Result updateShowRecommendationCount() {
     JsonNode requestBodyRoot = request().body().asJson();
     Integer jobDefinitionId = requestBodyRoot.path("id").asInt();
     TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
@@ -1957,7 +1953,7 @@ public class Application extends Controller {
     return tuningAlgorithm.optimizationAlgo.name().contains("PSO") ? "OBT" : "HBT";
   }
 
-  private static String checkIfTuningEnabled(TuningJobDefinition tuningJobDefinition) {
+  private static String reasonForDisablingTuning(TuningJobDefinition tuningJobDefinition) {
     if (tuningJobDefinition.tuningEnabled) {
       logger.debug("Tuning is disabled for this application");
       if (tuningJobDefinition.tuningDisabledReason != null) {
