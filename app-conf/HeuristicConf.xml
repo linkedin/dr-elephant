@@ -422,4 +422,26 @@
     </params>-->
   </heuristic>
 
+  <heuristic>
+    <applicationtype>spark</applicationtype>
+    <heuristicname>Configuration Parameters Metrics</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.ConfigurationParametersHeuristic</classname>
+    <viewname>views.html.help.spark.helpConfigurationParametersHeuristic</viewname>
+    <!--<params>
+      <executor_peak_jvm_memory_threshold>1.25,1.5,2,3</executor_peak_jvm_memory_threshold>
+      <driver_peak_jvm_memory_threshold>1.25,1.5,2,3</driver_peak_jvm_memory_threshold>
+      <gc_severity_threshold>0.08,0.09,0.1,0.15</gc_severity_threshold>
+      <spark_executor_memory_threshold_key>2G</spark_executor_memory_threshold_key>
+      <spark_stage_execution_memory_spill_threshold>0.01,0.1,0.25,0.5</spark_stage_execution_memory_spill_threshold>
+      <spark_stage_task_skew_threshold>2,4,8,16</spark_stage_task_skew_threshold>
+      <spark_stage_task_duration_threshold>150000,300000,600000,900000</spark_stage_task_duration_threshold>
+      <execution_memory_spill_max_data_threshold>3T</execution_memory_spill_max_data_threshold>
+      <stage_task_failure_rate_severity_threshold>0.05, 0.1,0.15,0.2</stage_task_failure_rate_severity_threshold>
+      <task_skew_task_to_stage_duration_ratio>0.75</task_skew_task_to_stage_duration_ratio>
+      <task_skew_task_duration_threshold>150000</task_skew_task_duration_threshold>
+      <max_recommended_partitions>4000</max_recommended_partitions>
+    </params>-->
+  </heuristic>
+
+
 </heuristics>
