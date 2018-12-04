@@ -194,7 +194,9 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      // check for too much time in GC or OOM, and adjust memory, cores, number of partitions
      if (hasOOMorGC()) {
          adjustParametersForGCandOOM()
-     } else {
+     } else if (!stageAnalysis.exists { stage =>
+       hasSignificantSeverity(stage.executionMemorySpillResult.severity)
+     }) {
        // check if executor memory can be lowered
          adjustExecutorMemory()
      }
