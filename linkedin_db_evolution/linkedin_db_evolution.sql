@@ -141,7 +141,7 @@ ALTER TABLE job_definition CHANGE COLUMN job_def_url job_def_url varchar(700) NO
 ALTER TABLE job_definition DROP INDEX job_def_id;
 ALTER TABLE job_definition ADD CONSTRAINT job_definition_u1 UNIQUE (job_def_id);
 ALTER TABLE job_suggested_param_set CHANGE COLUMN fitness_job_execution_id fitness_job_execution_id  int(10) unsigned DEFAULT NULL AFTER fitness;
-ALTER TABLE job_suggested_param_set CHANGE id id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Auto increment unique id'; 
+ALTER TABLE job_suggested_param_set CHANGE id id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Auto increment unique id';
 ALTER TABLE job_suggested_param_set CHANGE job_definition_id job_definition_id int(10) unsigned NOT NULL COMMENT 'foreign key from job_definition table' ;
 ALTER TABLE job_suggested_param_set CHANGE are_constraints_violated are_constraints_violated tinyint(4) NOT NULL DEFAULT '0' COMMENT 'are constraints violated for the parameter set' ;
 ALTER TABLE job_suggested_param_set CHANGE is_param_set_default is_param_set_default tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is parameter set default' ;
@@ -154,3 +154,8 @@ ALTER TABLE job_suggested_param_set DROP INDEX index_tje_job_execution_id;
 ALTER TABLE  job_suggested_param_value ADD CONSTRAINT  job_suggested_param_value_f1  FOREIGN KEY (job_suggested_param_set_id) REFERENCES job_suggested_param_set(id);
 -- ALTER TABLE tuning_algorithm ADD CONSTRAINT tuning_algorithm_u1 UNIQUE (optimization_algo,optimization_algo_version);
 UPDATE tuning_job_definition SET auto_apply=1;
+
+/*
+  Adding a column in tuning job definition for show recommendation count
+ */
+alter table tuning_job_definition add column show_recommendation_count INT default 0;
