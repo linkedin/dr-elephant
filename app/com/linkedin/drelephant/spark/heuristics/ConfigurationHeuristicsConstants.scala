@@ -2,7 +2,7 @@ package com.linkedin.drelephant.spark.heuristics
 
 import com.linkedin.drelephant.analysis.SeverityThresholds
 
-object ConfigurationUtils {
+object ConfigurationHeuristicsConstants {
   val JVM_USED_MEMORY = "jvmUsedMemory"
 
   // Spark configuration parameters
@@ -197,9 +197,4 @@ object ConfigurationUtils {
     CoreSetAdjustment(2),
     MemoryMultiplierAdjustment(16L << 30, 1.25)
   )
-
-  val TB_TO_BYTES = 1L << 40
-  val GB_TO_BYTES = 1L << 30
-  val MB_TO_BYTES = 1L << 20
-  val KB_TO_BYTES = 1L << 10
 }

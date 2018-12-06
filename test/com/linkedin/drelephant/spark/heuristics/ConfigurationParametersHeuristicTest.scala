@@ -2,7 +2,7 @@ package com.linkedin.drelephant.spark.heuristics
 
 import com.linkedin.drelephant.analysis.{HeuristicResult, Severity}
 import com.linkedin.drelephant.spark.heuristics.SparkTestUtilities._
-import com.linkedin.drelephant.spark.heuristics.ConfigurationUtils._
+import com.linkedin.drelephant.spark.heuristics.ConfigurationHeuristicsConstants._
 import org.scalatest.{FunSpec, Matchers}
 
 class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {

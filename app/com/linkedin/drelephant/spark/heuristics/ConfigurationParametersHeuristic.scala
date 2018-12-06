@@ -24,6 +24,10 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ExecutorSummary, Task
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
 
+import org.apache.commons.io.FileUtils
+
+import org.apache.spark.network.util.JavaUtils
+
 /**
   * A heuristic for recommending configuration parameter values, based on metrics from the application run.
   * @param heuristicConfigurationData
@@ -33,7 +37,7 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
 
   import JavaConverters._
   import ConfigurationParametersHeuristic._
-  import ConfigurationUtils._
+  import ConfigurationHeuristicsConstants._
 
   // the maximum number of recommended partitions
   private val maxRecommendedPartitions = heuristicConfigurationData.getParamMap
@@ -112,7 +116,7 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
 }
 
  object ConfigurationParametersHeuristic {
-   import ConfigurationUtils._
+   import ConfigurationHeuristicsConstants._
 
    /**
      * Evaluate the metrics for a given Spark application, and determine recommended configuration
@@ -128,10 +132,10 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
        data.appConfigurationProperties
 
      // current configuration parameters
-     lazy val sparkExecutorMemory = stringToBytes(
+     lazy val sparkExecutorMemory = JavaUtils.byteStringAsBytes(
        appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY)
          .getOrElse(SPARK_EXECUTOR_MEMORY_DEFAULT))
-     lazy val sparkDriverMemory = stringToBytes(appConfigurationProperties
+     lazy val sparkDriverMemory = JavaUtils.byteStringAsBytes(appConfigurationProperties
        .get(SPARK_DRIVER_MEMORY).getOrElse(SPARK_DRIVER_MEMORY_DEFAULT))
      lazy val sparkExecutorCores = appConfigurationProperties
        .get(SPARK_EXECUTOR_CORES).map(_.toInt).getOrElse(SPARK_EXECUTOR_CORES_DEFAULT)
@@ -144,9 +148,9 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      lazy val sparkExecutorInstances = appConfigurationProperties
        .get(SPARK_EXECUTOR_INSTANCES).map(_.toInt)
      lazy val sparkExecutorMemoryOverhead = appConfigurationProperties
-       .get(SPARK_EXECUTOR_MEMORY_OVERHEAD).map(stringToBytes(_))
+       .get(SPARK_EXECUTOR_MEMORY_OVERHEAD).map(JavaUtils.byteStringAsBytes(_))
      lazy val sparkDriverMemoryOverhead = appConfigurationProperties
-       .get(SPARK_DRIVER_MEMORY_OVERHEAD).map(stringToBytes(_))
+       .get(SPARK_DRIVER_MEMORY_OVERHEAD).map(JavaUtils.byteStringAsBytes(_))
 
      // from observation of user applications, adjusting spark.memory.fraction has not had
      // much benefit, so always set to the default value.
@@ -455,7 +459,7 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
        * @return the recommended value in bytes for executor memory overhead
        */
      private def calculateExecutorMemoryOverhead(): Option[Long] = {
-       val overheadMemoryIncrement = 1L * GB_TO_BYTES
+       val overheadMemoryIncrement = 1L * FileUtils.ONE_GB
 
        if (stageAnalysis.exists { stage =>
          hasSignificantSeverity(stage.taskFailureResult.containerKilledSeverity)
@@ -558,9 +562,7 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      (unifiedMemPerTask * numTasks).toLong
    }
 
-   private val REGEX_MATCHER = raw"(\d+)((?:[T|G|M|K])?B?)?"r
-
-   /**
+    /**
      * Given a memory value in bytes, convert it to a string with the unit that round to a >0 integer part.
      *
      * @param size The memory value in long bytes
@@ -568,44 +570,12 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      */
    private def bytesToString(size: Long): String = {
      val (value, unit) = {
-       if (size >= 2L * GB_TO_BYTES) {
-         (size.asInstanceOf[Double] / GB_TO_BYTES, "GB")
+       if (size >= 2L * FileUtils.ONE_GB) {
+         (size.asInstanceOf[Double] / FileUtils.ONE_GB, "GB")
        } else {
-         (size.asInstanceOf[Double] / MB_TO_BYTES, "MB")
+         (size.asInstanceOf[Double] / FileUtils.ONE_MB, "MB")
        }
      }
      s"${Math.ceil(value).toInt}${unit}"
-   }
-
-   /**
-     * Convert a formatted string into a long value in bytes. If no units
-     * are specified, then the default is MB.
-     *
-     * @param formattedString The string to convert
-     * @return The bytes value
-     */
-   private def stringToBytes(formattedString: String): Long = {
-     if (formattedString == null || formattedString.isEmpty) {
-       return 0L
-     }
-     //handling if the string has , for eg. 1,000MB
-     val regularizedString = formattedString.replace(",", "").toUpperCase
-     regularizedString match {
-       case REGEX_MATCHER(value, unit) =>
-         val num = value.toLong
-         if (unit.length == 0) {
-           num * MB_TO_BYTES
-         } else {
-           unit.charAt(0) match {
-             case 'T' => num * TB_TO_BYTES
-             case 'G' => num * GB_TO_BYTES
-             case 'M' => num * MB_TO_BYTES
-             case 'K' => num * KB_TO_BYTES
-             case 'B' => num
-           }
-         }
-       case _ =>
-         throw new IllegalArgumentException(s"Unable to parse memory size from formatted string [${formattedString}].")
-     }
    }
  }

@@ -59,7 +59,7 @@ private[heuristics] class StagesAnalyzer(
     private val heuristicConfigurationData: HeuristicConfigurationData,
     private val data: SparkApplicationData) {
 
-  import ConfigurationUtils._
+  import ConfigurationHeuristicsConstants._
 
   // serverity thresholds for execution memory spill
   private val executionMemorySpillThresholds: SeverityThresholds =
