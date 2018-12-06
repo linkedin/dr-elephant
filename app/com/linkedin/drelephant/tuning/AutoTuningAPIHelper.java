@@ -198,11 +198,12 @@ public class AutoTuningAPIHelper {
    *                    is to be returned
    * @return FlowExecution flow execution
    */
-  private FlowExecution getFlowExecution(TuningInput tuningInput) {
+   private synchronized FlowExecution getFlowExecution(TuningInput tuningInput) {
     FlowExecution flowExecution =
         FlowExecution.find.where().eq(FlowExecution.TABLE.flowExecId, tuningInput.getFlowExecId()).findUnique();
 
     if (flowExecution == null) {
+      logger.info("Creating flow execution for " + tuningInput.getJobExecId());
       flowExecution = new FlowExecution();
       flowExecution.flowExecId = tuningInput.getFlowExecId();
       flowExecution.flowExecUrl = tuningInput.getFlowExecUrl();
