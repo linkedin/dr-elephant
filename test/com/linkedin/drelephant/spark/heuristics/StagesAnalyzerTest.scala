@@ -179,7 +179,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
         StageAnalysisBuilder(8, 3).taskRuntime(3000, 3000).longTask(Severity.CRITICAL, 12,
           Seq("Stage 8 has a long median task run time of 50.00 min.",
             "Stage 8 has 3 tasks, 5 TB input, 0 B shuffle read, 0 B shuffle write, and 0 B output.",
-            "Stage 8: please increase the number of partitions for reading data."))
+            "Stage 8: please try to reduce the amount of data being processed."))
           .input(5 << 20).create(),
         StageAnalysisBuilder(9, 4003).taskRuntime(3000, 3000).longTask(Severity.CRITICAL, 16012,
           Seq("Stage 9 has a long median task run time of 50.00 min.",
@@ -189,7 +189,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
         StageAnalysisBuilder(10, 4000).taskRuntime(700, 900).longTask(Severity.SEVERE, 12000,
           Seq("Stage 10 has a long median task run time of 11.67 min.",
             "Stage 10 has 4000 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.",
-            "Stage 10: please optimize the code to improve performance.")).create())
+            "Stage 10: please increase the number of partitions.")).create())
 
       val stageAnalyzer = new StagesAnalyzer(heuristicConfigurationData, data)
       val stageAnalysis = stageAnalyzer.getStageAnalysis()
@@ -365,7 +365,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
       StageAnalysisBuilder(2, 4000).taskRuntime(700, 900).longTask(Severity.SEVERE, 12000,
         Seq("Stage 2 has a long median task run time of 11.67 min.",
           "Stage 2 has 4000 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.",
-          "Stage 2: optimize the code to increase speed.")).create(),
+          "Stage 2: increase the number of partitions to speed up the stage.")).create(),
        StageAnalysisBuilder(3, 2).taskRuntime(700, 900).longTask(Severity.SEVERE, 6,
         Seq("Stage 3 has a long median task run time of 11.67 min.",
           "Stage 3 has 2 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.",
@@ -373,7 +373,7 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
       StageAnalysisBuilder(4, 3).taskRuntime(3000, 3000).longTask(Severity.CRITICAL, 12,
         Seq("Stage 4 has a long median task run time of 50.00 min.",
           "Stage 4 has 3 tasks, 5 TB input, 0 B shuffle read, 0 B shuffle write, and 0 B output.",
-          "Stage 4: please set DaliSpark.SPLIT_SIZE to make partitions more even."))
+          "Stage 4: please try to filter the data to reduce the size and increase speed."))
         .input(5 << 20).create(),
       StageAnalysisBuilder(5, 3).taskRuntime(5, 250)
         .skew(Severity.CRITICAL, Severity.CRITICAL, 12,

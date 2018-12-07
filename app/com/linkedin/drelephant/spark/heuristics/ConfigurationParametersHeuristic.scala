@@ -39,10 +39,6 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
   import ConfigurationParametersHeuristic._
   import ConfigurationHeuristicsConstants._
 
-  // the maximum number of recommended partitions
-  private val maxRecommendedPartitions = heuristicConfigurationData.getParamMap
-    .getOrDefault(MAX_RECOMMENDED_PARTITIONS_KEY, DEFAULT_MAX_RECOMMENDED_PARTITIONS).toInt
-
   override def getHeuristicConfData(): HeuristicConfigurationData = heuristicConfigurationData
 
   override def apply(data: SparkApplicationData): HeuristicResult = {
@@ -74,16 +70,12 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
     }
 
     resultDetails ++= Seq(
-    new HeuristicResultDetails(CURRENT_SPARK_SQL_SHUFFLE_PARTITIONS,
-      evaluator.sparkSqlShufflePartitions.toString),
       new HeuristicResultDetails(RECOMMENDED_SPARK_EXECUTOR_CORES,
         evaluator.recommendedExecutorCores.toString),
       new HeuristicResultDetails(RECOMMENDED_SPARK_EXECUTOR_MEMORY,
         bytesToString(evaluator.recommendedExecutorMemory)),
       new HeuristicResultDetails(RECOMMENDED_SPARK_MEMORY_FRACTION,
         evaluator.recommendedMemoryFraction.toString),
-      new HeuristicResultDetails(RECOMMENDED_SPARK_SQL_SHUFFLE_PARTITIONS,
-        evaluator.recommendedNumPartitions.toString),
       new HeuristicResultDetails(RECOMMENDED_SPARK_DRIVER_CORES,
         evaluator.recommendedDriverCores.toString),
       new HeuristicResultDetails(RECOMMENDED_SPARK_DRIVER_MEMORY,
@@ -158,7 +150,6 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
 
      // recommended executor configuration values, whose recommended values will be
      // adjusted as various metrics are analyzed. Initialize to current values.
-     var recommendedNumPartitions: Int = sparkSqlShufflePartitions
      var recommendedExecutorMemory: Long = sparkExecutorMemory
      var recommendedExecutorCores: Int = sparkExecutorCores
 
@@ -187,15 +178,10 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
        new StagesAnalyzer(configurationParametersHeuristic.heuristicConfigurationData, data)
      val stageAnalysis = stageAnalyzer.getStageAnalysis()
 
-     // check for long running tasks, and increase number of partitions if applicable
-     adjustParametersForLongTasks()
-
-     // check for execution memory spill for any stages, and adjust memory, cores, number of
-     // partitions
-     // (recommendedExecutorCores, recommendedExecutorMemory, recommendedNumPartitions) =
+     // check for execution memory spill for any stages, and adjust memory and cores
      adjustParametersForExecutionMemorySpill()
 
-     // check for too much time in GC or OOM, and adjust memory, cores, number of partitions
+     // check for too much time in GC or OOM, and adjust memory and cores
      if (hasOOMorGC()) {
          adjustParametersForGCandOOM()
      } else if (!stageAnalysis.exists { stage =>
@@ -229,55 +215,24 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      val severity = Severity.max(calculateStageSeverity(stageAnalysis), executorGcSeverity,
        jvmUsedMemoryEvaluator.severity, driverSeverity)
 
-
      /**
-       * If there are any long tasks, calculate a good value for the number of partitions
-       * to decrease run time.
-       */
-     private def adjustParametersForLongTasks() = {
-       // Adjusting spark.sql.shuffle.partitions is only useful if a stage with long tasks is
-       // using this value to determine the number of tasks, so check to see the number of tasks
-       // match this value. Also, if the stage is reading input data, the number of tasks will be
-       // determined by DaliSpark.SPLIT_SIZE, so filter out these stages as well.
-       // As part of the stage analysis, information about these special cases are recorded, and
-       // the information can be returned to the user, so that they can modify their application.
-       if (stageAnalysis.exists(analysis => hasSignificantSeverity(analysis.longTaskResult.severity))) {
-         val medianDurations = stageAnalysis.filter { stageInfo =>
-           stageInfo.inputBytes == 0 && stageInfo.numTasks == sparkSqlShufflePartitions
-         }.map(_.medianRunTime.map(_.toLong).getOrElse(0L))
-         val maxMedianDuration = if (medianDurations.size > 0) {
-           medianDurations.max
-         } else {
-           0L
-         }
-         recommendedNumPartitions = Math.max(recommendedNumPartitions,
-           Math.min(DEFAULT_MAX_RECOMMENDED_PARTITIONS.toInt,
-             (sparkSqlShufflePartitions * maxMedianDuration / DEFAULT_TARGET_TASK_DURATION.toLong).toInt))
-       }
-     }
-
-     /**
-       * Examine stages for execution memory spill, and adjust cores, memory and partitions
+       * Examine stages for execution memory spill, and adjust cores and memory
        * to try to keep execution memory from spilling.
        *  - Decreasing cores reduces the number of tasks running concurrently on the executor,
        *    so there is more executor memory available per task.
        *  - Increasing executor memory also proportionally increases the size of the unified
        *    memory region.
-       *  - Increasing the number of partitions divides the total data across more tasks, so that
-       *    there is less data (and memory needed to store it) per task.
        */
      private def adjustParametersForExecutionMemorySpill() = {
 
-       // calculate recommended values for num partitions, executor memory and cores to
+       // calculate recommended values for executor memory and cores to
        // try to avoid/reduce spill
        if (stageAnalysis.exists { analysis =>
          hasSignificantSeverity(analysis.executionMemorySpillResult.severity)
        }) {
-         // find the stage with the max amount of execution memory spill, that has tasks equal to
-         // spark.sql.shuffle.partitions and no skew.
+         // find the stage with the max amount of execution memory spill, that has no skew.
          val stagesWithSpill = stageAnalysis.filter { stageInfo =>
-           !hasSignificantSeverity(stageInfo.taskSkewResult.severity) &&
-             stageInfo.numTasks == sparkSqlShufflePartitions
+           !hasSignificantSeverity(stageInfo.taskSkewResult.severity)
          }
          if (stagesWithSpill.size > 0) {
            val maxSpillStage = stagesWithSpill.maxBy(_.executionMemorySpillResult.memoryBytesSpilled)
@@ -289,15 +244,15 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
              // be sequential, so this calculation could be higher than the actual amount needed.
              val totalUnifiedMemoryNeeded = maxSpillStage.executionMemorySpillResult.memoryBytesSpilled +
                calculateTotalUnifiedMemory(sparkExecutorMemory, sparkMemoryFraction,
-                 sparkExecutorCores, sparkSqlShufflePartitions)
+                 sparkExecutorCores, maxSpillStage.numTasks)
 
              // If the amount of unified memory allocated for all tasks with the recommended
              // memory value is less than the calculated needed value.
              def checkMem(modified: Boolean): Boolean = {
                calculateTotalUnifiedMemory(recommendedExecutorMemory, recommendedMemoryFraction,
-                 recommendedExecutorCores, recommendedNumPartitions) < totalUnifiedMemoryNeeded
+                 recommendedExecutorCores, maxSpillStage.numTasks) < totalUnifiedMemoryNeeded
              }
-             // Try incrementally adjusting the number of cores, memory, and partitions to try
+             // Try incrementally adjusting the number of cores and memory to try
              // to keep everything (allocated unified memory plus spill) in memory
              adjustExecutorParameters(STAGE_SPILL_ADJUSTMENTS, checkMem)
            }
@@ -312,50 +267,19 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      }
 
      /**
-       * Adjust cores, memory and/or partitions to reduce likelihood of OutOfMemory errors or
+       * Adjust cores and/or memory to reduce likelihood of OutOfMemory errors or
        * excessive time in GC.
        *  - Decreasing cores reduces the number of tasks running concurrently on the executor,
        *    so there is more executor memory available per task.
        *  - Increasing executor memory also proportionally increases memory available per task.
-       *  - Increasing the number of partitions divides the total data across more tasks, so that
-       *    there is less data processed (and memory needed to store it) per task.
+        *    there is less data processed (and memory needed to store it) per task.
        */
      private def adjustParametersForGCandOOM() = {
-       // check if there are any stages with OOM errors, that have a non-default number
-       // of tasks (adjusting the number of partitions won't hep in this case)
-       val stageWithNonDefaultPartitionOOM = stageAnalysis.exists { stage =>
-         hasSignificantSeverity(stage.taskFailureResult.oomSeverity) &&
-           stage.numTasks != sparkSqlShufflePartitions
-       }
-
-       // check for stages with GC issues that have a non-default number of tasks.
-       // There is some randomness in when GC is done, but in case of correlation,
-       // avoid trying to adjust the number of partitions to fix.
-       val stagesWithNonDefaultPartitionGC = stageAnalysis.exists { stage =>
-         hasSignificantSeverity(stage.stageGCResult.severity) && stage.numTasks != sparkSqlShufflePartitions
-       }
-
-       // If there are stages with non-default partitions, that have OOM or GC issues,
-       // avoid trying adjustments to the number of partitions, since this will not help
-       // those stages.
-       val adjustments = if (stageWithNonDefaultPartitionOOM || stagesWithNonDefaultPartitionGC) {
-         OOM_GC_ADJUSTMENTS.filter{ adjustment =>
-           adjustment match {
-             case _: PartitionMultiplierAdjustment => false
-             case _: PartitionSetAdjustment => false
-             case _ => true
-           }
-         }
-       } else {
-         OOM_GC_ADJUSTMENTS
-       }
-
-       if (recommendedNumPartitions <= sparkSqlShufflePartitions &&
-         recommendedExecutorCores >= sparkExecutorCores &&
+        if (recommendedExecutorCores >= sparkExecutorCores &&
          recommendedExecutorMemory <= sparkExecutorMemory) {
          // Configuration parameters haven't been adjusted for execution memory spill or long tasks.
          // Adjust them now to try to prevent OOM.
-         adjustExecutorParameters(adjustments, (modified: Boolean) => !modified)
+         adjustExecutorParameters(OOM_GC_ADJUSTMENTS, (modified: Boolean) => !modified)
        }
      }
 
@@ -393,16 +317,6 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
            case adjustment: MemorySetAdjustment =>
              if (adjustment.canAdjust(recommendedExecutorMemory)) {
                recommendedExecutorMemory = adjustment.adjust(recommendedExecutorMemory)
-               modified = true
-             }
-           case adjustment: PartitionMultiplierAdjustment =>
-             if (adjustment.canAdjust(recommendedNumPartitions)) {
-               recommendedNumPartitions = adjustment.adjust(recommendedNumPartitions)
-               modified = true
-             }
-           case adjustment: PartitionSetAdjustment =>
-             if (adjustment.canAdjust(recommendedNumPartitions)) {
-               recommendedNumPartitions = adjustment.adjust(recommendedNumPartitions)
                modified = true
              }
          }
@@ -446,7 +360,7 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      private def calculateExecutorInstances(): Option[Int] = {
        sparkExecutorInstances.map { numExecutors =>
          Seq(numExecutors * sparkExecutorCores / recommendedExecutorCores,
-           recommendedNumPartitions / recommendedExecutorCores, MAX_RECOMMENDED_NUM_EXECUTORS).min
+           sparkSqlShufflePartitions / recommendedExecutorCores, MAX_RECOMMENDED_NUM_EXECUTORS).min
        }
      }
 

@@ -53,12 +53,10 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.executor.instances" -> "200",
         "Current spark.yarn.executor.memoryOverhead" -> "1024MB",
         "Current spark.yarn.driver.memoryOverhead" -> "2GB",
-        "Current spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.executor.cores" -> "3",
+         "Recommended spark.executor.cores" -> "3",
         "Recommended spark.executor.memory" -> "4GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.driver.cores" -> "1",
+         "Recommended spark.driver.cores" -> "1",
         "Recommended spark.driver.memory" -> "640MB",
         "Recommended spark.yarn.executor.memoryOverhead" -> "1024MB",
         "Recommended spark.yarn.driver.memoryOverhead" -> "2GB",
@@ -111,153 +109,15 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.executor.instances" -> "200",
         "Current spark.yarn.executor.memoryOverhead" -> "1024MB",
         "Current spark.yarn.driver.memoryOverhead" -> "2GB",
-        "Current spark.sql.shuffle.partitions" -> "200",
         "Recommended spark.executor.cores" -> "5",
         "Recommended spark.executor.memory" -> "1550MB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "200",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "1800MB",
         "Recommended spark.yarn.executor.memoryOverhead" -> "1024MB",
         "Recommended spark.yarn.driver.memoryOverhead" -> "2GB",
         "Recommended spark.executor.instances" -> "40")
       checkHeuristicResults(result, Severity.CRITICAL, 17, expectedDetails)
-    }
-
-    it("long and skewed tasks, increase partitions") {
-      // There are both skewed tasks and long tasks, increase the number of partitions
-      val heuristicConfigurationData = createHeuristicConfigurationData()
-      val stages = Seq(
-        StageBuilder(1, 3).taskRuntime(500, 5300, 15000).create(),
-        StageBuilder(2, 200).taskRuntime(600, 600, 120000).create(),
-        StageBuilder(3, 200).taskRuntime(300, 800, 120000).create(),
-        StageBuilder(4, 200).taskRuntime(20, 30, 5000).create(),
-        StageBuilder(5, 10).taskRuntime(1000, 1000, 10000).create()
-
-      )
-      val executors = Seq(
-        createExecutorSummary("driver", 1500, 3, 300),
-        createExecutorSummary("1", 1500, 3, 300),
-        createExecutorSummary("2", 1000, 3, 300),
-        createExecutorSummary("3", 800, 3, 300)
-      )
-      val properties = Map(
-        SPARK_EXECUTOR_MEMORY -> "2G",
-        SPARK_DRIVER_MEMORY -> "2G",
-        SPARK_EXECUTOR_CORES -> "4",
-        SPARK_DRIVER_CORES -> "2",
-        SPARK_EXECUTOR_INSTANCES -> "200",
-        SPARK_SQL_SHUFFLE_PARTITIONS -> "200",
-        SPARK_MEMORY_FRACTION -> "0.6"
-      )
-
-      val data = createSparkApplicationData(stages, executors, Some(properties))
-
-      val configurationParametersHeuristic = new ConfigurationParametersHeuristic(
-        heuristicConfigurationData)
-      val evaluator = new ConfigurationParametersHeuristic.Evaluator(
-        configurationParametersHeuristic, data)
-
-      val result = configurationParametersHeuristic.apply(data)
-      val expectedStageDetails =
-        "Stage 1 has skew in task run time (median is 8.33 min, max is 1.47 hr).\n" +
-        "Stage 1: please try to modify the application to make the partitions more even.\n" +
-        "Stage 1 has a long median task run time of 8.33 min.\n" +
-        "Stage 1 has 3 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-        "Stage 1: please increase the number of partitions.\n" +
-        "Stage 2 has a long median task run time of 10.00 min.\n" +
-        "Stage 2 has 200 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-        "Stage 3 has a long median task run time of 5.00 min.\n" +
-        "Stage 3 has 200 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-        "Stage 5 has a long median task run time of 16.67 min.\n" +
-        "Stage 5 has 10 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-        "Stage 5: please increase the number of partitions."
-      val expectedDetails = Map(
-        "Current spark.executor.memory" -> "2GB",
-        "Current spark.driver.memory" -> "2GB",
-        "Current spark.executor.cores" -> "4",
-        "Current spark.driver.cores" -> "2",
-        "Current spark.memory.fraction" -> "0.6",
-        "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.executor.cores" -> "4",
-        "Recommended spark.executor.memory" -> "2GB",
-        "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "800",
-        "Recommended spark.driver.cores" -> "2",
-        "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "200",
-        "stage details" -> expectedStageDetails)
-      checkHeuristicResults(result, Severity.CRITICAL, 1055, expectedDetails)
-    }
-
-    it("OOM and long tasks, increase partitions") {
-      // There are both failed tasks and long tasks, increase the number of partitions
-      val heuristicConfigurationData = createHeuristicConfigurationData()
-      val stages = Seq(
-        StageBuilder(1, 3).taskRuntime(500, 5300, 15000).create(),
-        StageBuilder(2, 200).taskRuntime(600, 600, 120000).create(),
-        StageBuilder(3, 200).taskRuntime(300, 800, 120000).create(),
-        StageBuilder(4, 200).taskRuntime(20, 30, 5000).failures(20, 20, 0).create(),
-        StageBuilder(5, 10).taskRuntime(1000, 1000, 10000).create()
-
-      )
-      val executors = Seq(
-        createExecutorSummary("driver", 1500, 3, 300),
-        createExecutorSummary("1", 1500, 3, 300),
-        createExecutorSummary("2", 1000, 3, 300),
-        createExecutorSummary("3", 800, 3, 300)
-      )
-      val properties = Map(
-        SPARK_EXECUTOR_MEMORY -> "2G",
-        SPARK_DRIVER_MEMORY -> "2G",
-        SPARK_EXECUTOR_CORES -> "4",
-        SPARK_DRIVER_CORES -> "2",
-        SPARK_EXECUTOR_INSTANCES -> "200",
-        SPARK_SQL_SHUFFLE_PARTITIONS -> "200",
-        SPARK_MEMORY_FRACTION -> "0.6"
-      )
-
-      val data = createSparkApplicationData(stages, executors, Some(properties))
-
-      val configurationParametersHeuristic = new ConfigurationParametersHeuristic(
-        heuristicConfigurationData)
-      val evaluator = new ConfigurationParametersHeuristic.Evaluator(
-        configurationParametersHeuristic, data)
-
-      val result = configurationParametersHeuristic.apply(data)
-      val expectedStageDetails =
-        "Stage 1 has skew in task run time (median is 8.33 min, max is 1.47 hr).\n" +
-          "Stage 1: please try to modify the application to make the partitions more even.\n" +
-          "Stage 1 has a long median task run time of 8.33 min.\n" +
-          "Stage 1 has 3 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-          "Stage 1: please increase the number of partitions.\n" +
-          "Stage 2 has a long median task run time of 10.00 min.\n" +
-          "Stage 2 has 200 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-          "Stage 3 has a long median task run time of 5.00 min.\n" +
-          "Stage 3 has 200 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-          "Stage 4 has 20 failed tasks.\n" +
-          "Stage 4 has 20 tasks that failed because of OutOfMemory exception.\n" +
-          "Stage 5 has a long median task run time of 16.67 min.\n" +
-          "Stage 5 has 10 tasks, 0 B input, 0 B shuffle read, 0 B shuffle write, and 0 B output.\n" +
-          "Stage 5: please increase the number of partitions."
-      val expectedDetails = Map(
-        "Current spark.executor.memory" -> "2GB",
-        "Current spark.driver.memory" -> "2GB",
-        "Current spark.executor.cores" -> "4",
-        "Current spark.driver.cores" -> "2",
-        "Current spark.memory.fraction" -> "0.6",
-        "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.executor.cores" -> "4",
-        "Recommended spark.executor.memory" -> "2GB",
-        "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "800",
-        "Recommended spark.driver.cores" -> "2",
-        "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "200",
-        "stage details" -> expectedStageDetails)
-      checkHeuristicResults(result, Severity.CRITICAL, 1095, expectedDetails)
     }
 
     it("OOM, double memory") {
@@ -301,11 +161,9 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "20",
-        "Current spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.executor.cores" -> "4",
         "Recommended spark.executor.memory" -> "4GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
         "Recommended spark.executor.instances" -> "5",
@@ -354,67 +212,12 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "20",
-        "Current spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.executor.cores" -> "4",
         "Recommended spark.executor.memory" -> "9GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
         "Recommended spark.executor.instances" -> "5",
-        "stage details" -> expectedStageDetails)
-      checkHeuristicResults(result, Severity.CRITICAL, 20, expectedDetails)
-    }
-
-    it("OOM, increase partitions") {
-      // tasks failed with OOM, since executor memory is higher (9G), increase partitions
-      val heuristicConfigurationData = createHeuristicConfigurationData()
-      val stages = Seq(
-        StageBuilder(1, 3).taskRuntime(50, 60, 15000).create(),
-        StageBuilder(2, 20).taskRuntime(60, 60, 1200).failures(5, 5, 0).create(),
-        StageBuilder(3, 10).taskRuntime(100, 100, 1000).create()
-      )
-      val executors = Seq(
-        createExecutorSummary("driver", 1500, 3, 300),
-        createExecutorSummary("1", 8000, 3, 300),
-        createExecutorSummary("2", 6000, 3, 300),
-        createExecutorSummary("3", 6000, 3, 300)
-      )
-      val properties = Map(
-        SPARK_EXECUTOR_MEMORY -> "9G",
-        SPARK_DRIVER_MEMORY -> "2G",
-        SPARK_EXECUTOR_CORES -> "4",
-        SPARK_DRIVER_CORES -> "2",
-        SPARK_EXECUTOR_INSTANCES -> "20",
-        SPARK_SQL_SHUFFLE_PARTITIONS -> "20",
-        SPARK_MEMORY_FRACTION -> "0.6"
-      )
-
-      val data = createSparkApplicationData(stages, executors, Some(properties))
-
-      val configurationParametersHeuristic = new ConfigurationParametersHeuristic(
-        heuristicConfigurationData)
-      val evaluator = new ConfigurationParametersHeuristic.Evaluator(
-        configurationParametersHeuristic, data)
-
-      val result = configurationParametersHeuristic.apply(data)
-      val expectedStageDetails = "Stage 2 has 5 failed tasks.\n" +
-        "Stage 2 has 5 tasks that failed because of OutOfMemory exception."
-      val expectedDetails = Map(
-        "Current spark.executor.memory" -> "9GB",
-        "Current spark.driver.memory" -> "2GB",
-        "Current spark.executor.cores" -> "4",
-        "Current spark.driver.cores" -> "2",
-        "Current spark.memory.fraction" -> "0.6",
-        "Current spark.executor.instances" -> "20",
-        "Current spark.sql.shuffle.partitions" -> "20",
-        "Recommended spark.executor.cores" -> "4",
-        "Recommended spark.executor.memory" -> "9GB",
-        "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "40",
-        "Recommended spark.driver.cores" -> "2",
-        "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "10",
         "stage details" -> expectedStageDetails)
       checkHeuristicResults(result, Severity.CRITICAL, 20, expectedDetails)
     }
@@ -460,11 +263,9 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "20",
-        "Current spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.executor.cores" -> "2",
         "Recommended spark.executor.memory" -> "9GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
         "Recommended spark.executor.instances" -> "10",
@@ -513,11 +314,9 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "20",
-        "Current spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.executor.cores" -> "2",
         "Recommended spark.executor.memory" -> "12GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
         "Recommended spark.executor.instances" -> "10",
@@ -564,11 +363,9 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.executor.cores" -> "2",
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
-        "Current spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.executor.cores" -> "2",
         "Recommended spark.executor.memory" -> "9GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "20",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
         "Recommended spark.yarn.executor.memoryOverhead" -> "1946MB",
@@ -619,14 +416,12 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
         "Recommended spark.executor.cores" -> "4",
-        "Recommended spark.executor.memory" -> "2GB",
+        "Recommended spark.executor.memory" -> "4GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "800",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "200",
+        "Recommended spark.executor.instances" -> "50",
         "stage details" -> expectedStageDetails)
       checkHeuristicResults(result, Severity.SEVERE, 1000, expectedDetails)
     }
@@ -675,14 +470,12 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.executor.cores" -> "4",
-        "Recommended spark.executor.memory" -> "4GB",
+        "Recommended spark.executor.cores" -> "2",
+        "Recommended spark.executor.memory" -> "10GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "1200",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "200",
+        "Recommended spark.executor.instances" -> "100",
         "stage details" -> expectedStageDetails)
       checkHeuristicResults(result, Severity.CRITICAL, 2000, expectedDetails)
     }
@@ -731,14 +524,12 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.executor.cores" -> "3",
-        "Recommended spark.executor.memory" -> "6GB",
+        "Recommended spark.executor.cores" -> "2",
+        "Recommended spark.executor.memory" -> "10GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "2000",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "266",
+        "Recommended spark.executor.instances" -> "100",
         "stage details" -> expectedStageDetails)
       checkHeuristicResults(result, Severity.CRITICAL, 1800, expectedDetails)
     }
@@ -791,14 +582,12 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
         "Recommended spark.executor.cores" -> "2",
-        "Recommended spark.executor.memory" -> "8GB",
+        "Recommended spark.executor.memory" -> "10GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "2000",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "400",
+        "Recommended spark.executor.instances" -> "100",
         "stage details" -> expectedStageDetails)
       checkHeuristicResults(result, Severity.MODERATE, 400, expectedDetails)
     }
@@ -846,14 +635,12 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
         "Current spark.driver.cores" -> "2",
         "Current spark.memory.fraction" -> "0.6",
         "Current spark.executor.instances" -> "200",
-        "Current spark.sql.shuffle.partitions" -> "200",
-        "Recommended spark.executor.cores" -> "4",
-        "Recommended spark.executor.memory" -> "4GB",
+        "Recommended spark.executor.cores" -> "2",
+        "Recommended spark.executor.memory" -> "10GB",
         "Recommended spark.memory.fraction" -> "0.6",
-        "Recommended spark.sql.shuffle.partitions" -> "1000",
         "Recommended spark.driver.cores" -> "2",
         "Recommended spark.driver.memory" -> "2GB",
-        "Recommended spark.executor.instances" -> "200",
+        "Recommended spark.executor.instances" -> "100",
         "stage details" -> expectedStageDetails)
       checkHeuristicResults(result, Severity.CRITICAL, 812, expectedDetails)
     }

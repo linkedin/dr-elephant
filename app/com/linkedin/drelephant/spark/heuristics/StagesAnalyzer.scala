@@ -98,10 +98,6 @@ private[heuristics] class StagesAnalyzer(
   private val taskDurationMinThreshold = heuristicConfigurationData.getParamMap
     .getOrDefault(TASK_SKEW_TASK_DURATION_MIN_THRESHOLD_KEY, DEFAULT_TASK_SKEW_TASK_DURATION_MIN_THRESHOLD).toLong
 
-  // the maximum number of recommended partitions
-  private val maxRecommendedPartitions = heuristicConfigurationData.getParamMap
-    .getOrDefault(MAX_RECOMMENDED_PARTITIONS_KEY, DEFAULT_MAX_RECOMMENDED_PARTITIONS).toInt
-
   // recommendation to give if there is execution memory spill due to too much data being processed.
   // Some amount of spill is expected in this, but alert the users so that they are aware that spill
   // is happening.
@@ -372,20 +368,14 @@ private[heuristics] class StagesAnalyzer(
       details += s"Stage $stageId has a long median task run time of $runTime."
       details += s"Stage $stageId has ${stageData.numTasks} tasks, $inputBytes input," +
         s" $shuffleReadBytes shuffle read, $shuffleWriteBytes shuffle write, and $outputBytes output."
-      if (stageData.numTasks >= maxRecommendedPartitions) {
-        if (maxData >= maxDataProcessedThreshold) {
-          details += s"Stage $stageId: ${longTasksLargeDataRecommenation}."
-        } else {
-          details += s"Stage $stageId: ${slowTasksRecommendation}."
-        }
-      }
-      else {
-        if (stageData.inputBytes > 0) {
-          // The stage is reading input data, try to increase the number of readers
-          details += s"Stage $stageId: ${longTasksFewInputPartitionsRecommendation}."
-        } else if (stageData.numTasks != curNumPartitions) {
-          details += s"Stage $stageId: ${longTasksFewPartitionsRecommendation}."
-        }
+
+      if (maxData >= maxDataProcessedThreshold) {
+        details += s"Stage $stageId: ${longTasksLargeDataRecommenation}."
+      } else if (stageData.inputBytes > 0) {
+        // The stage is reading input data, try to increase the number of readers
+        details += s"Stage $stageId: ${longTasksFewInputPartitionsRecommendation}."
+      } else if (stageData.numTasks != curNumPartitions) {
+        details += s"Stage $stageId: ${longTasksFewPartitionsRecommendation}."
       }
     }
     val score = Utils.getHeuristicScore(longTaskSeverity, stageData.numTasks)

@@ -31,7 +31,6 @@ object ConfigurationHeuristicsConstants {
   val CURRENT_SPARK_EXECUTOR_CORES = s"Current $SPARK_EXECUTOR_CORES"
   val CURRENT_SPARK_DRIVER_CORES = s"Current $SPARK_DRIVER_CORES"
   val CURRENT_SPARK_EXECUTOR_INSTANCES = s"Current $SPARK_EXECUTOR_INSTANCES"
-  val CURRENT_SPARK_SQL_SHUFFLE_PARTITIONS = s"Current $SPARK_SQL_SHUFFLE_PARTITIONS"
   val CURRENT_SPARK_MEMORY_FRACTION = s"Current $SPARK_MEMORY_FRACTION"
 
   val RECOMMENDED_SPARK_EXECUTOR_MEMORY = s"Recommended $SPARK_EXECUTOR_MEMORY"
@@ -41,7 +40,6 @@ object ConfigurationHeuristicsConstants {
   val RECOMMENDED_SPARK_EXECUTOR_CORES = s"Recommended $SPARK_EXECUTOR_CORES"
   val RECOMMENDED_SPARK_DRIVER_CORES = s"Recommended $SPARK_DRIVER_CORES"
   val RECOMMENDED_SPARK_EXECUTOR_INSTANCES = s"Recommended $SPARK_EXECUTOR_INSTANCES"
-  val RECOMMENDED_SPARK_SQL_SHUFFLE_PARTITIONS = s"Recommended $SPARK_SQL_SHUFFLE_PARTITIONS"
   val RECOMMENDED_SPARK_MEMORY_FRACTION = s"Recommended $SPARK_MEMORY_FRACTION"
 
   // if the overhead memory is not explicitly specified by the user, the default amount is
@@ -71,7 +69,6 @@ object ConfigurationHeuristicsConstants {
   val MAX_DATA_PROCESSED_THRESHOLD_KEY = "execution_memory_spill_max_data_threshold"
   val LONG_TASK_TO_STAGE_DURATION_RATIO_KEY = "task_skew_task_to_stage_duration_ratio"
   val TASK_SKEW_TASK_DURATION_MIN_THRESHOLD_KEY = "task_skew_task_duration_threshold"
-  val MAX_RECOMMENDED_PARTITIONS_KEY = "max_recommended_partitions"
 
   // keys for finding specific recommendations
   val EXECUTION_MEMORY_SPILL_LARGE_DATA_RECOMMENDATION_KEY = "execution_memory_spill_large_data_recommendation"
@@ -139,11 +136,6 @@ object ConfigurationHeuristicsConstants {
   // The target task duration (2.5 minutes). This is the same as the idle executor timeout.
   val DEFAULT_TARGET_TASK_DURATION = "150000"
 
-  // The default maximum number of partitions that would be recommended. More partitions means
-  // less data per partition, so shorter tasks and less memory needed per task. However more
-  // partitions also inceases the amount of overhead for shuffle.
-  val DEFAULT_MAX_RECOMMENDED_PARTITIONS = "4000"
-
   // Default maximum number of cores for the driver.
   val DEFAULT_MAX_DRIVER_CORES = 2
 
@@ -174,26 +166,23 @@ object ConfigurationHeuristicsConstants {
 
   // Adjustments to try for avoiding execution memory spill.
   // This will try incrementally:
-  // - increasing the number of partitions, so that there is less data per partition,
-  //   to reduce the likelihood of execution memory spill.
   // - increasing overall executor memory, so that there is also more space in the
   //   unified memory region
   // - reducing the number of cores, since executor memory is divided across the number
   //   of tasks running in parallel, so if there are fewer concurrent tasks, then there
   //   is more memory for each task.
   val STAGE_SPILL_ADJUSTMENTS =
-    Seq(PartitionSetAdjustment(400), MemorySetAdjustment(4L << 30), CoreSetAdjustment(4),
-      PartitionSetAdjustment(1000), MemorySetAdjustment(6L << 30), CoreSetAdjustment(3),
-      PartitionSetAdjustment(2000), MemorySetAdjustment(8L << 30), CoreSetAdjustment(2),
-      PartitionSetAdjustment(4000), MemorySetAdjustment(10L << 30))
+    Seq(MemorySetAdjustment(4L << 30), CoreSetAdjustment(4),
+      MemorySetAdjustment(6L << 30), CoreSetAdjustment(3),
+      MemorySetAdjustment(8L << 30), CoreSetAdjustment(2),
+      MemorySetAdjustment(10L << 30))
 
   // Adjustments to try to avoiding OOM or GC issues.
-  // Try reducing cores, increasing memory, or increasing partitions
+  // Try reducing cores, or increasing memory
   val OOM_GC_ADJUSTMENTS = Seq(
     CoreDivisorAdjustment(MAX_RECOMMENDED_CORES, 2.0),
     MemoryMultiplierAdjustment(4L << 30, 2.0),
     MemoryMultiplierAdjustment(8L << 30, 1.5),
-    PartitionMultiplierAdjustment(DEFAULT_MAX_RECOMMENDED_PARTITIONS.toInt / 2, 2.0),
     CoreSetAdjustment(2),
     MemoryMultiplierAdjustment(16L << 30, 1.25)
   )

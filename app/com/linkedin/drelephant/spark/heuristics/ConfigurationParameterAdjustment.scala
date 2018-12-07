@@ -50,18 +50,3 @@ private[heuristics] case class MemorySetAdjustment(
   override def canAdjust(memBytes: Long): Boolean =  (memBytes < threshold)
   override def adjust(memBytes: Long): Long = threshold
 }
-
-/** If the number of partitions is less than the threshold, then multiply by multiplier. */
-private[heuristics] case class PartitionMultiplierAdjustment(
-    threshold: Int,
-    multiplier: Double) extends ConfigurationParameterAdjustment[Int] {
-  override def canAdjust(numPartitions: Int): Boolean = (numPartitions < threshold)
-  override def adjust(numPartitions: Int): Int = (numPartitions * multiplier).toInt
-}
-
-/** If the number of partitions is less than the threshold, then set to threshold. */
-private[heuristics] case class PartitionSetAdjustment(
-    threshold: Int) extends ConfigurationParameterAdjustment[Int] {
-  override def canAdjust(numPartitions: Int): Boolean = (numPartitions < threshold)
-  override def adjust(numPartitions: Int): Int = threshold
-}
