@@ -299,22 +299,12 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
 
        while (iter.hasNext && continueFn(modified)) {
          iter.next() match {
-           case adjustment: CoreDivisorAdjustment =>
+           case adjustment: CoreAdjustment =>
              if (adjustment.canAdjust(recommendedExecutorCores)) {
                recommendedExecutorCores = adjustment.adjust(recommendedExecutorCores)
                modified = true
              }
-           case adjustment: CoreSetAdjustment =>
-             if (adjustment.canAdjust(recommendedExecutorCores)) {
-               recommendedExecutorCores = adjustment.adjust(recommendedExecutorCores)
-               modified = true
-             }
-           case adjustment: MemoryMultiplierAdjustment =>
-             if (adjustment.canAdjust(recommendedExecutorMemory)) {
-               recommendedExecutorMemory = adjustment.adjust(recommendedExecutorMemory)
-               modified = true
-             }
-           case adjustment: MemorySetAdjustment =>
+           case adjustment: MemoryAdjustment =>
              if (adjustment.canAdjust(recommendedExecutorMemory)) {
                recommendedExecutorMemory = adjustment.adjust(recommendedExecutorMemory)
                modified = true
