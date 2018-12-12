@@ -33,7 +33,6 @@ import com.linkedin.drelephant.util.{MemoryFormatUtils, Utils}
   * @param taskSkewResult stage analysis result for examining the stage for task skew.
   * @param taskFailureResult stage analysis result for examining the stage for task failures.
   * @param stageFailureResult stage analysis result for examining the stage for stage failure.
-  * @param stageGCResult stage analysis result for examining the stage for GC.
   * @param numTasks number of tasks for the stage.
   * @param medianRunTime median task run time.
   * @param maxRunTime maximum task run time.
@@ -50,7 +49,6 @@ private[heuristics] case class StageAnalysis(
     taskSkewResult: TaskSkewResult,
     taskFailureResult: TaskFailureResult,
     stageFailureResult: SimpleStageAnalysisResult,
-    stageGCResult: SimpleStageAnalysisResult,
     numTasks: Int,
     medianRunTime: Option[Double],
     maxRunTime: Option[Double],
@@ -62,7 +60,7 @@ private[heuristics] case class StageAnalysis(
 
   def getStageAnalysisResults: Seq[StageAnalysisResult] =
     Seq(executionMemorySpillResult, longTaskResult, taskSkewResult, taskFailureResult,
-      stageFailureResult, stageGCResult)
+      stageFailureResult)
 }
 
 /**
@@ -177,10 +175,9 @@ private[heuristics] class StagesAnalyzer(
           executionMemorySpillResult.severity)
       val stageFailureResult = checkForStageFailure(stageId, stageData)
       val taskFailureResult = checkForTaskFailure(stageId, stageData)
-      val gcResult = checkForGC(stageId, stageData)
 
       new StageAnalysis(stageData.stageId, executionMemorySpillResult, longTaskResult,
-        taskSkewResult, taskFailureResult, stageFailureResult, gcResult, stageData.numTasks,
+        taskSkewResult, taskFailureResult, stageFailureResult, stageData.numTasks,
         medianTime, maxTime, stageDuration, stageData.inputBytes, stageData.outputBytes,
         stageData.shuffleReadBytes, stageData.shuffleWriteBytes)
     }
@@ -431,7 +428,7 @@ private[heuristics] class StagesAnalyzer(
     val failedTasksStageMap = data.stagesWithFailedTasks.flatMap { stageData =>
       stageData.tasks.map(tasks => (stageData.stageId, tasks.values))
     }.toMap
-    
+
     val failedTasks = failedTasksStageMap.get(stageId)
 
     val details = new ArrayBuffer[String]()
@@ -456,35 +453,6 @@ private[heuristics] class StagesAnalyzer(
 
     TaskFailureResult(taskFailureSeverity, score, details, oomSeverity, containerKilledSeverity,
       stageData.numFailedTasks, numTasksWithOOM, numTasksWithContainerKilled)
-  }
-
-  /**
-    * Check the stage for a high ratio of time spent in GC compared to task run time.
-    *
-    * @param stageId stage ID.
-    * @param stageData stage data.
-    * @return result of GC analysis for the stage.
-    */
-  private def checkForGC(stageId: Int, stageData: StageData): SimpleStageAnalysisResult = {
-    var gcTime = 0.0D
-    var taskTime = 0.0D
-    val severity = stageData.taskSummary.map { task =>
-      gcTime = task.jvmGcTime(DISTRIBUTION_MEDIAN_IDX)
-      taskTime = task.executorRunTime(DISTRIBUTION_MEDIAN_IDX)
-      DEFAULT_GC_SEVERITY_A_THRESHOLDS.severityOf(gcTime / taskTime)
-    }.getOrElse(Severity.NONE)
-
-    val score = Utils.getHeuristicScore(severity, stageData.numTasks)
-
-    val details = if (hasSignificantSeverity(severity)) {
-      Seq(s"Stage ${stageId}: tasks are spending signficant time in GC (median task GC time is " +
-        s"${Utils.getDuration(gcTime.toLong)}, median task runtime is " +
-        s"${Utils.getDuration(gcTime.toLong)}")
-    } else {
-      Seq.empty
-    }
-
-    new SimpleStageAnalysisResult(severity, score, details)
   }
 
   /**

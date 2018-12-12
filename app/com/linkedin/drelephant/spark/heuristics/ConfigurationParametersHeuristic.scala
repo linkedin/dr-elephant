@@ -205,7 +205,7 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      private val stageDetailsStr = stageAnalysis.flatMap { analysis =>
        analysis.taskFailureResult.details ++ analysis.stageFailureResult.details ++
          analysis.taskSkewResult.details ++ analysis.longTaskResult.details ++
-         analysis.executionMemorySpillResult.details ++ analysis.stageGCResult.details
+         analysis.executionMemorySpillResult.details
      }.toArray.mkString("\n")
      val stageDetails = new HeuristicResultDetails("stage details", stageDetailsStr)
 

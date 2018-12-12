@@ -423,7 +423,6 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
     compareTaskSkewResult(actual.taskSkewResult, expected.taskSkewResult)
     compareTaskFailureResult(actual.taskFailureResult, expected.taskFailureResult)
     compareSimpleStageAnalysisResult(actual.stageFailureResult, expected.stageFailureResult)
-    compareSimpleStageAnalysisResult(actual.stageGCResult, expected.stageGCResult)
     actual.numTasks should be (expected.numTasks)
     actual.medianRunTime should be (expected.medianRunTime)
     actual.maxRunTime should be (expected.maxRunTime)

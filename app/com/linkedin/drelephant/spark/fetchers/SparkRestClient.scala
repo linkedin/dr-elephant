@@ -249,7 +249,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading failedTasks ${target.getUri}", e)
+        logger.error(s"error reading failedTasks ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.debug(e)
         throw e
       }
     }

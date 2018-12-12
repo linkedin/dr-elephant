@@ -227,7 +227,6 @@ private [heuristics] object SparkTestUtilities {
           failedWithOOMSeverity, failedWithContainerKilledSeverity, numFailedTasks,
           numTasksWithOOM, numTasksWithContainerKilled),
         SimpleStageAnalysisResult(stageFailureSeverity, stageFailureScore, stageFailureDetails),
-        SimpleStageAnalysisResult(gcSeverity, gcScore, gcDetails),
         numTasks, medianRunTime, maxRunTime, stageDuration, inputBytes, outputBytes,
         shuffleReadBytes, shuffleWriteBytes)
     }
