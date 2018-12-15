@@ -16,6 +16,7 @@
 
 package com.linkedin.drelephant.analysis;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
 import controllers.MetricsController;
@@ -171,17 +172,26 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
       appList.add(_firstRetryQueue.poll());
     }
 
-    Iterator iteratorSecondRetry = _secondRetryQueue.iterator();
-    while (iteratorSecondRetry.hasNext()) {
-      AnalyticJob job = (AnalyticJob) iteratorSecondRetry.next();
-      if(job.readyForSecondRetry()) {
-        appList.add(job);
-        iteratorSecondRetry.remove();
-      }
-    }
+    // Fetch jobs from second retry queue which are ready for second retry and
+    // add to app list.
+    fetchJobsFromSecondRetryQueue(appList);
 
     _lastTime = _currentTime;
     return appList;
+  }
+
+  @VisibleForTesting
+  void fetchJobsFromSecondRetryQueue(List<AnalyticJob> appList) {
+    synchronized (_secondRetryQueue) {
+      Iterator iteratorSecondRetry = _secondRetryQueue.iterator();
+      while (iteratorSecondRetry.hasNext()) {
+        AnalyticJob job = (AnalyticJob) iteratorSecondRetry.next();
+        if (job.readyForSecondRetry()) {
+          appList.add(job);
+          iteratorSecondRetry.remove();
+        }
+      }
+    }
   }
 
   @Override
@@ -193,9 +203,12 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   }
 
   @Override
-  public void addIntoSecondRetryQueue(AnalyticJob promise) {
-    _secondRetryQueue.add(promise.setTimeToSecondRetry());
-    int secondRetryQueueSize = _secondRetryQueue.size();
+  public void addIntoSecondRetryQueue(AnalyticJob job) {
+    int secondRetryQueueSize;
+    synchronized (_secondRetryQueue) {
+      _secondRetryQueue.add(job.setTimeToSecondRetry());
+      secondRetryQueueSize = _secondRetryQueue.size();
+    }
     MetricsController.setSecondRetryQueueSize(secondRetryQueueSize);
     logger.info("Second Retry queue size is " + secondRetryQueueSize);
   }
