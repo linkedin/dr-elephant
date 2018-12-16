@@ -60,6 +60,9 @@ public class TestConstants {
   public static final String APPLY_EVOLUTIONS_DEFAULT_KEY = "applyEvolutions.default";
   public static final String APPLY_EVOLUTIONS_DEFAULT_VALUE = "true";
 
+  // Application configurations
+  public static final String METRICS_ENABLE_KEY = "metrics";
+
   // Paths to the rest end-points
   public static final String REST_APP_RESULT_PATH = "/rest/job";
   public static final String REST_JOB_EXEC_RESULT_PATH = "/rest/jobexec";
@@ -72,6 +75,9 @@ public class TestConstants {
   public static final String REST_FLOW_METRICS_GRAPH_DATA_PATH = "/rest/flowmetricsgraphdata";
   public static final String REST_USER_RESOURCE_USAGE_PATH = "/rest/resourceusagedatabyuser";
   public static final String REST_GET_CURRENT_RUN_PARAMETERS = "/rest/getCurrentRunParameters";
+
+  // Paths to metrics end-points.
+  public static final String METRICS_ENDPOINT = "/metrics";
 
   public static final String DEFAULT_ENCODING = "UTF-8";
 
