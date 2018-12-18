@@ -143,11 +143,17 @@ trait StageData{
   def status: StageStatus
   def stageId: Int
   def attemptId: Int
+  def numTasks: Int
   def numActiveTasks: Int
   def numCompleteTasks: Int
   def numFailedTasks: Int
 
   def executorRunTime: Long
+  def executorCpuTime: Long
+  def submissionTime: Option[Date]
+  def firstTaskLaunchedTime: Option[Date]
+  def completionTime: Option[Date]
+  def failureReason: Option[String]
 
   def inputBytes: Long
   def inputRecords: Long
@@ -166,7 +172,14 @@ trait StageData{
 
   def accumulatorUpdates: Seq[AccumulableInfo]
   def tasks: Option[Map[Long, TaskDataImpl]]
-  def executorSummary: Option[Map[String, ExecutorStageSummary]]}
+  def executorSummary: Option[Map[String, ExecutorStageSummary]]
+
+  def peakJvmUsedMemory: Option[Long]
+  def peakExecutionMemory: Option[Long]
+  def peakStorageMemory: Option[Long]
+  def peakUnifiedMemory: Option[Long]
+  def taskSummary : Option[TaskMetricDistributions]
+  def executorMetricsSummary : Option[ExecutorMetricDistributions]}
 
 trait TaskData{
   def taskId: Long
@@ -219,10 +232,15 @@ trait TaskMetricDistributions{
   def quantiles: IndexedSeq[Double]
 
   def executorDeserializeTime: IndexedSeq[Double]
+  def executorDeserializeCpuTime: IndexedSeq[Double]
   def executorRunTime: IndexedSeq[Double]
+  def executorCpuTime: IndexedSeq[Double]
   def resultSize: IndexedSeq[Double]
   def jvmGcTime: IndexedSeq[Double]
   def resultSerializationTime: IndexedSeq[Double]
+  def gettingResultTime: IndexedSeq[Double]
+  def schedulerDelay: IndexedSeq[Double]
+  def peakExecutionMemory: IndexedSeq[Double]
   def memoryBytesSpilled: IndexedSeq[Double]
   def diskBytesSpilled: IndexedSeq[Double]
 
@@ -246,12 +264,32 @@ trait ShuffleReadMetricDistributions{
   def localBlocksFetched: IndexedSeq[Double]
   def fetchWaitTime: IndexedSeq[Double]
   def remoteBytesRead: IndexedSeq[Double]
+  def remoteBytesReadToDisk: IndexedSeq[Double]
   def totalBlocksFetched: IndexedSeq[Double]}
 
 trait ShuffleWriteMetricDistributions{
   def writeBytes: IndexedSeq[Double]
   def writeRecords: IndexedSeq[Double]
   def writeTime: IndexedSeq[Double]}
+
+trait ExecutorMetricDistributions{
+  def quantiles: IndexedSeq[Double]
+  def numTasks: IndexedSeq[Double]
+  def inputBytes : IndexedSeq[Double]
+  def inputRecords : IndexedSeq[Double]
+  def outputBytes : IndexedSeq[Double]
+  def outputRecords : IndexedSeq[Double]
+  def shuffleRead : IndexedSeq[Double]
+  def shuffleReadRecords : IndexedSeq[Double]
+  def shuffleWrite : IndexedSeq[Double]
+  def shuffleWriteRecords : IndexedSeq[Double]
+  def memoryBytesSpilled : IndexedSeq[Double]
+  def diskBytesSpilled : IndexedSeq[Double]
+  def peakJvmUsedMemory : IndexedSeq[Double]
+  def peakExecutionMemory : IndexedSeq[Double]
+  def peakStorageMemory : IndexedSeq[Double]
+  def peakUnifiedMemory : IndexedSeq[Double]}
+
 
 trait AccumulableInfo{
   def id: Long
@@ -353,11 +391,17 @@ class StageDataImpl(
   var status: StageStatus,
   var stageId: Int,
   var attemptId: Int,
+  var numTasks: Int,
   var numActiveTasks: Int ,
   var numCompleteTasks: Int,
   var numFailedTasks: Int,
 
   var executorRunTime: Long,
+  var executorCpuTime: Long,
+  var submissionTime: Option[Date],
+  var firstTaskLaunchedTime: Option[Date],
+  var completionTime: Option[Date],
+  var failureReason: Option[String],
 
   var inputBytes: Long,
   var inputRecords: Long,
@@ -376,7 +420,13 @@ class StageDataImpl(
 
   var accumulatorUpdates: Seq[AccumulableInfoImpl],
   var tasks: Option[Map[Long, TaskDataImpl]],
-  var executorSummary: Option[Map[String, ExecutorStageSummaryImpl]]) extends StageData
+  var executorSummary: Option[Map[String, ExecutorStageSummaryImpl]],
+  var peakJvmUsedMemory: Option[Long],
+  var peakExecutionMemory: Option[Long],
+  var peakStorageMemory: Option[Long],
+  var peakUnifiedMemory: Option[Long],
+  var taskSummary : Option[TaskMetricDistributionsImpl],
+  var executorMetricsSummary : Option[ExecutorMetricDistributionsImpl]) extends StageData
 
 class TaskDataImpl(
   var taskId: Long,
@@ -427,12 +477,16 @@ class ShuffleWriteMetricsImpl(
 
 class TaskMetricDistributionsImpl(
   var quantiles: IndexedSeq[Double],
-
   var executorDeserializeTime: IndexedSeq[Double],
+  var executorDeserializeCpuTime: IndexedSeq[Double],
   var executorRunTime: IndexedSeq[Double],
+  var executorCpuTime: IndexedSeq[Double],
   var resultSize: IndexedSeq[Double],
   var jvmGcTime: IndexedSeq[Double],
   var resultSerializationTime: IndexedSeq[Double],
+  var gettingResultTime: IndexedSeq[Double],
+  var schedulerDelay: IndexedSeq[Double],
+  var peakExecutionMemory: IndexedSeq[Double],
   var memoryBytesSpilled: IndexedSeq[Double],
   var diskBytesSpilled: IndexedSeq[Double],
 
@@ -456,6 +510,7 @@ class ShuffleReadMetricDistributionsImpl(
   var localBlocksFetched: IndexedSeq[Double],
   var fetchWaitTime: IndexedSeq[Double],
   var remoteBytesRead: IndexedSeq[Double],
+  var remoteBytesReadToDisk: IndexedSeq[Double],
   var totalBlocksFetched: IndexedSeq[Double]) extends ShuffleReadMetricDistributions
 
 class ShuffleWriteMetricDistributionsImpl(
@@ -468,3 +523,21 @@ class AccumulableInfoImpl(
   var name: String,
   var update: Option[String],
   var value: String) extends AccumulableInfo
+
+class ExecutorMetricDistributionsImpl(
+  var quantiles: IndexedSeq[Double],
+  var numTasks: IndexedSeq[Double],
+  var inputBytes : IndexedSeq[Double],
+  var inputRecords : IndexedSeq[Double],
+  var outputBytes : IndexedSeq[Double],
+  var outputRecords : IndexedSeq[Double],
+  var shuffleRead : IndexedSeq[Double],
+  var shuffleReadRecords : IndexedSeq[Double],
+  var shuffleWrite : IndexedSeq[Double],
+  var shuffleWriteRecords : IndexedSeq[Double],
+  var memoryBytesSpilled : IndexedSeq[Double],
+  var diskBytesSpilled : IndexedSeq[Double],
+  var peakJvmUsedMemory : IndexedSeq[Double],
+  var peakExecutionMemory : IndexedSeq[Double],
+  var peakStorageMemory : IndexedSeq[Double],
+  var peakUnifiedMemory : IndexedSeq[Double]) extends ExecutorMetricDistributions
