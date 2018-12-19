@@ -20,13 +20,12 @@ import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ExecutorSummary, TaskDataImpl}
+import com.linkedin.drelephant.util.MemoryFormatUtils
 
 import scala.collection.JavaConverters
 import scala.collection.mutable.ArrayBuffer
 
 import org.apache.commons.io.FileUtils
-
-import org.apache.spark.network.util.JavaUtils
 
 /**
   * A heuristic for recommending configuration parameter values, based on metrics from the application run.
@@ -124,10 +123,10 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
        data.appConfigurationProperties
 
      // current configuration parameters
-     lazy val sparkExecutorMemory = JavaUtils.byteStringAsBytes(
+     lazy val sparkExecutorMemory = MemoryFormatUtils.stringToBytes(
        appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY)
          .getOrElse(SPARK_EXECUTOR_MEMORY_DEFAULT))
-     lazy val sparkDriverMemory = JavaUtils.byteStringAsBytes(appConfigurationProperties
+     lazy val sparkDriverMemory = MemoryFormatUtils.stringToBytes(appConfigurationProperties
        .get(SPARK_DRIVER_MEMORY).getOrElse(SPARK_DRIVER_MEMORY_DEFAULT))
      lazy val sparkExecutorCores = appConfigurationProperties
        .get(SPARK_EXECUTOR_CORES).map(_.toInt).getOrElse(SPARK_EXECUTOR_CORES_DEFAULT)
@@ -140,9 +139,9 @@ class ConfigurationParametersHeuristic(private val heuristicConfigurationData: H
      lazy val sparkExecutorInstances = appConfigurationProperties
        .get(SPARK_EXECUTOR_INSTANCES).map(_.toInt)
      lazy val sparkExecutorMemoryOverhead = appConfigurationProperties
-       .get(SPARK_EXECUTOR_MEMORY_OVERHEAD).map(JavaUtils.byteStringAsBytes(_))
+       .get(SPARK_EXECUTOR_MEMORY_OVERHEAD).map(MemoryFormatUtils.stringToBytes(_))
      lazy val sparkDriverMemoryOverhead = appConfigurationProperties
-       .get(SPARK_DRIVER_MEMORY_OVERHEAD).map(JavaUtils.byteStringAsBytes(_))
+       .get(SPARK_DRIVER_MEMORY_OVERHEAD).map(MemoryFormatUtils.stringToBytes(_))
 
      // from observation of user applications, adjusting spark.memory.fraction has not had
      // much benefit, so always set to the default value.

@@ -449,7 +449,7 @@ private[heuristics] class StagesAnalyzer(
     val (numTasksWithContainerKilled, containerKilledSeverity) =
       checkForSpecificTaskError(stageId, stageData, failedTasks,
         StagesWithFailedTasksHeuristic.OVERHEAD_MEMORY_ERROR,
-        "the container was killed by YARN for exeeding memory limits.", details)
+        "the container was killed by YARN for exceeding memory limits.", details)
 
     TaskFailureResult(taskFailureSeverity, score, details, oomSeverity, containerKilledSeverity,
       stageData.numFailedTasks, numTasksWithOOM, numTasksWithContainerKilled)

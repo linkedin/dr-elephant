@@ -50,13 +50,13 @@ class StagesAnalyzerTest extends FunSpec with Matchers {
         StageAnalysisBuilder(3, 15)
           .taskFailures(Severity.MODERATE, Severity.NONE, Severity.LOW, 4, 2, 0, 1,
             Seq("Stage 3 has 2 failed tasks.",
-              "Stage 3 has 1 tasks that failed because the container was killed by YARN for exeeding memory limits."))
+              "Stage 3 has 1 tasks that failed because the container was killed by YARN for exceeding memory limits."))
           .create(),
         StageAnalysisBuilder(4, 15)
           .taskFailures(Severity.CRITICAL, Severity.LOW, Severity.MODERATE, 12, 3, 1, 2,
             Seq("Stage 4 has 3 failed tasks.",
               "Stage 4 has 1 tasks that failed because of OutOfMemory exception.",
-              "Stage 4 has 2 tasks that failed because the container was killed by YARN for exeeding memory limits."))
+              "Stage 4 has 2 tasks that failed because the container was killed by YARN for exceeding memory limits."))
           .create(),
         StageAnalysisBuilder(5, 4)
           .taskFailures(Severity.CRITICAL, Severity.NONE, Severity.NONE, 8, 2, 0, 0,

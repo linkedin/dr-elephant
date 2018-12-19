@@ -372,7 +372,7 @@ class ConfigurationParametersHeuristicTest extends FunSpec with Matchers {
 
       val result = configurationParametersHeuristic.apply(data)
       val expectedStageDetails = "Stage 3 has 7 failed tasks.\n" +
-        "Stage 3 has 5 tasks that failed because the container was killed by YARN for exeeding memory limits."
+        "Stage 3 has 5 tasks that failed because the container was killed by YARN for exceeding memory limits."
       val expectedDetails = Map(
         "Current spark.executor.memory" -> "9GB",
         "Current spark.driver.memory" -> "2GB",
