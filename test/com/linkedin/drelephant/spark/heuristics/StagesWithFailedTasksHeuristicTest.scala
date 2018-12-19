@@ -97,11 +97,18 @@ object StagesWithFailedTasksHeuristicTest {
     status,
     stageId,
     attemptId = 0,
+    numTasks = 0,
     numActiveTasks = numCompleteTasks,
     numCompleteTasks,
     numFailedTasks = 3,
     executorRunTime = 0,
-    inputBytes = 0,
+    executorCpuTime = 0,
+    submissionTime = None,
+    firstTaskLaunchedTime = None,
+    completionTime = None,
+    failureReason = None,
+
+  inputBytes = 0,
     inputRecords = 0,
     outputBytes = 0,
     outputRecords = 0,
@@ -150,7 +157,13 @@ object StagesWithFailedTasksHeuristicTest {
       errorMessage = None,
       taskMetrics = None)
     )),
-    executorSummary = None
+    executorSummary = None,
+    peakJvmUsedMemory = None,
+    peakExecutionMemory = None,
+    peakStorageMemory = None,
+    peakUnifiedMemory = None,
+    taskSummary = None,
+    executorMetricsSummary = None
   )
 
   def newFakeSparkApplicationData

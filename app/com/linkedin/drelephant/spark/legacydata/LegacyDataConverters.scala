@@ -60,6 +60,18 @@ object LegacyDataConverters {
       override def name: String = ""
       override def executorSummary: Option[collection.Map[String, ExecutorStageSummary]] = None
       override def status = StageStatus.COMPLETE
+        override    def completionTime: Option[java.util.Date] = None
+        override    def executorCpuTime: Long = 0L
+        override    def executorMetricsSummary: Option[ExecutorMetricDistributions] = None
+        override    def failureReason: Option[String] = None
+        override    def firstTaskLaunchedTime: Option[java.util.Date] = None
+        override    def numTasks: Int = 0
+        override    def peakExecutionMemory: Option[Long] = None
+        override    def peakJvmUsedMemory: Option[Long] = None
+        override    def peakStorageMemory: Option[Long] = None
+        override    def peakUnifiedMemory: Option[Long] = None
+        override    def submissionTime: Option[java.util.Date] = None
+        override    def taskSummary: Option[TaskMetricDistributions] = None
     })
   }
 
@@ -144,11 +156,19 @@ object LegacyDataConverters {
         extractStageStatus(stageAttemptId),
         stageAttemptId.stageId,
         stageAttemptId.attemptId,
+        numTasks = 0,
         stageInfo.numActiveTasks,
         stageInfo.numCompleteTasks,
         stageInfo.numFailedTasks,
+
         stageInfo.executorRunTime,
-        stageInfo.inputBytes,
+        executorCpuTime = 0,
+        submissionTime = None,
+        firstTaskLaunchedTime = None,
+        completionTime = None,
+        failureReason = None,
+
+      stageInfo.inputBytes,
         inputRecords = 0,
         stageInfo.outputBytes,
         outputRecords = 0,
@@ -158,12 +178,20 @@ object LegacyDataConverters {
         shuffleWriteRecords = 0,
         stageInfo.memoryBytesSpilled,
         stageInfo.diskBytesSpilled,
+
         stageInfo.name,
         stageInfo.description,
         schedulingPool = "",
+
         accumulatorUpdates = Seq.empty,
         tasks = None,
-        executorSummary = None
+        executorSummary = None,
+        peakJvmUsedMemory = None,
+        peakExecutionMemory = None,
+        peakStorageMemory = None,
+        peakUnifiedMemory = None,
+        taskSummary = None,
+        executorMetricsSummary = None
       )
     }
 
