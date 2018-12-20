@@ -82,6 +82,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
   }
 
 
+
   public GenericMemoryHeuristic(String mapredContainerMemConf, HeuristicConfigurationData heuristicConfData) {
     this._mapredContainerMemConf = mapredContainerMemConf;
     this._heuristicConfData = heuristicConfData;
@@ -135,7 +136,6 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
 
     String containerSizeStr;
 
-
     if(!Strings.isNullOrEmpty(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) && Long.valueOf(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) > 0){
       containerSizeStr = data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF);
     }
@@ -144,6 +144,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     }
     else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_mapredContainerMemConf)) > 0) {
       containerSizeStr = data.getConf().getProperty(_mapredContainerMemConf);
+
     }
     else {
       containerSizeStr = getContainerMemDefaultMBytes();

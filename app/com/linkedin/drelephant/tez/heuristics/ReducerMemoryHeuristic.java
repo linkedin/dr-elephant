@@ -34,6 +34,7 @@ public class ReducerMemoryHeuristic extends GenericMemoryHeuristic {
 
   public ReducerMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
     super(MAPRED_REDUCER_MEMORY_CONF, __heuristicConfData);
+
   }
 
   @Override

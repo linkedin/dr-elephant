@@ -15,6 +15,8 @@
  */
 package com.linkedin.drelephant.tez;
 
+
+import com.google.common.base.Strings;
 import com.linkedin.drelephant.analysis.*;
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData;
 import com.linkedin.drelephant.tez.data.TezApplicationData;
@@ -29,7 +31,9 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
 
   private static final Logger logger = Logger.getLogger(TezMetricsAggregator.class);
 
-  private static final String TEZ_CONTAINER_CONFIG = "hive.tez.container.size";
+
+  private static final String TEZ_CONTAINER_CONFIG = "tez.task.resource.memory.mb";
+  private static final String HIVE_TEZ_CONTAINER_CONFIG = "hive.tez.container.size";
   private static final String MAP_CONTAINER_CONFIG = "mapreduce.map.memory.mb";
   private static final String REDUCER_CONTAINER_CONFIG = "mapreduce.reduce.memory.mb";
   private static final String REDUCER_SLOW_START_CONFIG = "mapreduce.job.reduce.slowstart.completedmaps";
@@ -84,26 +88,37 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
   }
 
   private long getMapContainerSize(HadoopApplicationData data) {
-    try {
-      long mapContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
-      if (mapContainerSize > 0)
-        return mapContainerSize;
-      else
-        return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
-    } catch ( NumberFormatException ex) {
-      return CONTAINER_MEMORY_DEFAULT_BYTES;
+    long mapperContainerSize;
+    if(!Strings.isNullOrEmpty(data.getConf().getProperty(TEZ_CONTAINER_CONFIG)) && Long.valueOf(data.getConf().getProperty(TEZ_CONTAINER_CONFIG)) > 0){
+      mapperContainerSize = Long.valueOf(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
     }
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(HIVE_TEZ_CONTAINER_CONFIG)) && Long.valueOf(data.getConf().getProperty(HIVE_TEZ_CONTAINER_CONFIG)) > 0){
+      mapperContainerSize = Long.valueOf(data.getConf().getProperty(HIVE_TEZ_CONTAINER_CONFIG));
+    }
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(MAP_CONTAINER_CONFIG)) && Long.valueOf(data.getConf().getProperty(MAP_CONTAINER_CONFIG)) > 0){
+      mapperContainerSize = Long.valueOf(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
+    }
+    else {
+      mapperContainerSize = CONTAINER_MEMORY_DEFAULT_BYTES;
+    }
+    return mapperContainerSize;
   }
 
   private long getReducerContainerSize(HadoopApplicationData data) {
-    try {
-      long reducerContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
-      if (reducerContainerSize > 0)
-        return reducerContainerSize;
-      else
-        return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
-    } catch ( NumberFormatException ex) {
-      return CONTAINER_MEMORY_DEFAULT_BYTES;
+    long reducerContainerSize;
+    if(!Strings.isNullOrEmpty(data.getConf().getProperty(TEZ_CONTAINER_CONFIG)) && Long.valueOf(data.getConf().getProperty(TEZ_CONTAINER_CONFIG)) > 0){
+      reducerContainerSize = Long.valueOf(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
     }
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(HIVE_TEZ_CONTAINER_CONFIG)) && Long.valueOf(data.getConf().getProperty(HIVE_TEZ_CONTAINER_CONFIG)) > 0){
+      reducerContainerSize = Long.valueOf(data.getConf().getProperty(HIVE_TEZ_CONTAINER_CONFIG));
+    }
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG)) && Long.valueOf(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG)) > 0){
+      reducerContainerSize = Long.valueOf(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
+    }
+    else {
+      reducerContainerSize = CONTAINER_MEMORY_DEFAULT_BYTES;
+    }
+    return reducerContainerSize;
+
   }
 }

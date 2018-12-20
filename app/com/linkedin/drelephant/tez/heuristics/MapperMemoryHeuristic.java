@@ -33,8 +33,10 @@ public class MapperMemoryHeuristic extends GenericMemoryHeuristic {
   private static final Logger logger = Logger.getLogger(MapperMemoryHeuristic.class);
   public static final String MAPRED_MAPPER_MEMORY_CONF = "mapreduce.map.memory.mb";
 
+
   public MapperMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
     super(MAPRED_MAPPER_MEMORY_CONF, __heuristicConfData);
+
   }
 
   @Override
