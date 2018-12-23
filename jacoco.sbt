@@ -17,7 +17,16 @@
 import de.johoop.jacoco4sbt.JacocoPlugin._
 import de.johoop.jacoco4sbt._
 
-jacoco.settings
+// Baselining coverage thresholds to current coverage values so that build fails with any drop in coverage
+jacoco.settings ++ Seq(
+  jacoco.thresholds in jacoco.Config := Thresholds(
+  instruction = 51,
+  method = 50,
+  branch = 34,
+  complexity = 35,
+  line = 53,
+  clazz = 79)
+)
 
 parallelExecution      in jacoco.Config := false
 

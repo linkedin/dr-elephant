@@ -232,7 +232,7 @@ public class BackfillTest {
         try {
           runnerThread.join();
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          // Ignore the exception.
         }
       }
     });
@@ -291,7 +291,9 @@ public class BackfillTest {
         jobs.add(new DummyAnalyticJobGenerator.DummyAnalyticJob().setAppId("application_1526555215992_0008").
             setAppType(new ApplicationType("SPARK")).setName("spark_job_3").setQueueName("default").
             setStartTime(1526900000000L).setFinishTime(1526900000050L).setUser("user"));
-        doReturn(new DummyAnalyticJobGenerator(appsToPriorityMap, jobs)).when(runner).getAnalyticJobGenerator();
+        long lowestTsFromRM = 1526800000050L;
+        AnalyticJobGenerator jobGenerator = new DummyAnalyticJobGenerator(appsToPriorityMap, jobs);
+        doReturn(jobGenerator).when(runner).getAnalyticJobGenerator();
 
         // 6 jobs to be backfilled.
         List<AnalyticJob> mapReduceBackfillJobs = new ArrayList<AnalyticJob>();
@@ -303,8 +305,9 @@ public class BackfillTest {
             setAppId("application_1526555215992_0003").setAppType(new ApplicationType("MAPREDUCE")).
             setName("mapreduce_job_2").setQueueName("default").setStartTime(1526520000000L).
             setFinishTime(1526520000050L).setUser("user").setJobExecutionPriority(Priority.MIN_PRIORITY));
-        ElephantBackfillFetcher mapreduceBackfillFetcher = spy(new DummyElephantBackfillFetcher(mapReduceBackfillJobs));
-        doReturn(mapreduceBackfillFetcher).when(runner).getBackfillFetcher(eq(new ApplicationType("MAPREDUCE")));
+        DummyElephantBackfillFetcher mapreduceBackfillFetcher =
+            new DummyElephantBackfillFetcher(mapReduceBackfillJobs, "MAPREDUCE", backfillTs, lowestTsFromRM);
+        when(runner.getBackfillFetcher(eq(new ApplicationType("MAPREDUCE")))).thenReturn(mapreduceBackfillFetcher);
 
         List<AnalyticJob> sparkBackfillJobs = new ArrayList<AnalyticJob>();
         sparkBackfillJobs.add(new DummyAnalyticJobGenerator.DummyAnalyticJob().setAppId("application_1526555215992_0002").
@@ -315,8 +318,9 @@ public class BackfillTest {
             setAppType(new ApplicationType("SPARK")).setName("spark_job_2").setQueueName("default").
             setStartTime(1526700000000L).setFinishTime(1526700000050L).setUser("user").
             setJobExecutionPriority(Priority.MIN_PRIORITY));
-        ElephantBackfillFetcher sparkBackfillFetcher = spy(new DummyElephantBackfillFetcher(sparkBackfillJobs));
-        doReturn(sparkBackfillFetcher).when(runner).getBackfillFetcher(eq(new ApplicationType("SPARK")));
+        DummyElephantBackfillFetcher sparkBackfillFetcher =
+            new DummyElephantBackfillFetcher(sparkBackfillJobs, "SPARK", backfillTs, lowestTsFromRM);
+        when(runner.getBackfillFetcher(eq(new ApplicationType("SPARK")))).thenReturn(sparkBackfillFetcher);
 
         // 2 jobs below will not have finish time at the time of backfill.
         List<AnalyticJob> tezBackfillJobs = new ArrayList<AnalyticJob>();
@@ -330,9 +334,12 @@ public class BackfillTest {
             setAppId("application_1526555215992_0005").setAppType(new ApplicationType("TEZ")).
             setName("tez_job_2").setQueueName("default").setUser("user").setStartTime(1526600000020L)).
             setFinishTimeAfterAnalysis(1526600000040L).setJobExecutionPriority(Priority.MIN_PRIORITY));
-        doReturn(new ApplicationType("TEZ")).when(runner).getAppTypeForName("TEZ");
-        ElephantBackfillFetcher tezBackfillFetcher = spy(new DummyElephantBackfillFetcher(tezBackfillJobs));
-        doReturn(tezBackfillFetcher).when(runner).getBackfillFetcher(eq(new ApplicationType("TEZ")));
+        ApplicationType tezAppType = new ApplicationType("TEZ");
+        doReturn(tezAppType).when(runner).getAppTypeForName("TEZ");
+        DummyElephantBackfillFetcher tezBackfillFetcher = new DummyElephantBackfillFetcher(
+            tezBackfillJobs, "TEZ", backfillTs, lowestTsFromRM);
+        when(runner.getBackfillFetcher(eq(tezAppType))).thenReturn(tezBackfillFetcher);
+
         Thread runnerThread = new Thread(new Runnable() {
           @Override
           public void run() {
@@ -374,14 +381,13 @@ public class BackfillTest {
             "mapreduce_job_3");
         assertAppResultEntry("application_1526555215992_0008", 1526900000000L, 1526900000050L,
             "spark_job_3");
-        // Verify whether jobs were backilled based on lowest ts of apps retrieved from RM and backfill ts in DB.
-        long lowestTsFromRM = 1526800000050L;
-        ElephantBackfillFetcher[] backfillFetchers =
-            new ElephantBackfillFetcher[] {mapreduceBackfillFetcher, sparkBackfillFetcher, tezBackfillFetcher};
-        for (ElephantBackfillFetcher backfillFetcher : backfillFetchers) {
+        DummyElephantBackfillFetcher[] backfillFetchers =
+            new DummyElephantBackfillFetcher[] {mapreduceBackfillFetcher, sparkBackfillFetcher, tezBackfillFetcher};
+        for (DummyElephantBackfillFetcher backfillFetcher : backfillFetchers) {
           try {
-            verify(backfillFetcher).
-                fetchJobsForBackfill(backfillTs - ElephantRunner.BACKFILL_BUFFER_TIME, lowestTsFromRM);
+            assertTrue("Jobs for backfill (of type " + backfillFetcher.getFetcherName() + ") should have been "
+                + "fetched based on lowest ts of apps retrieved from RM and backfill ts in DB",
+                backfillFetcher.getJobsFetchedFlag());
           } catch (Exception e) {
             fail("Unexpected exception.");
           }
@@ -405,6 +411,7 @@ public class BackfillTest {
             loopCount--;
           }
         }
+
         // Ensure cleanup is performed.
         assertTrue("App to analytic map should have been empty", runner.getAppToAnalyticJobMap().isEmpty());
         assertNotNull("MAPREDUCE app type should have final info", runner.getFinishTimeInfo("MAPREDUCE"));
@@ -428,7 +435,7 @@ public class BackfillTest {
         try {
           runnerThread.join();
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          // Ignore the exception.
         }
       }
     });
@@ -532,7 +539,7 @@ public class BackfillTest {
         try {
           runnerThread.join();
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          // Ignore the exception.
         }
       }
     });
@@ -640,15 +647,35 @@ public class BackfillTest {
       }
     }
   }
+
   private static class DummyElephantBackfillFetcher implements ElephantBackfillFetcher {
     private List<AnalyticJob> _backfillJobs;
-    private DummyElephantBackfillFetcher(List<AnalyticJob> jobs) {
+    private long _backfillTs;
+    private long _lowestTsFromRM;
+    private volatile boolean _jobsFetchedFlag = false;
+    private String _fetcherName;
+    private DummyElephantBackfillFetcher(List<AnalyticJob> jobs, String fetcherName, long backfillTs, long lowestTsFromRM) {
       _backfillJobs = jobs;
+      _backfillTs = backfillTs;
+      _lowestTsFromRM = lowestTsFromRM;
+      _fetcherName = fetcherName;
     }
 
     @Override
     public List<AnalyticJob> fetchJobsForBackfill(long startTime, long endTime) throws Exception {
+      // Verify whether jobs were backfilled based on lowest ts of apps retrieved from RM and backfill ts in DB.
+      if ((startTime == _backfillTs - ElephantRunner.BACKFILL_BUFFER_TIME) && (endTime == _lowestTsFromRM)) {
+        _jobsFetchedFlag = true;
+      }
       return _backfillJobs;
+    }
+
+    private boolean getJobsFetchedFlag() {
+      return _jobsFetchedFlag;
+    }
+
+    private String getFetcherName() {
+      return _fetcherName;
     }
   }
 }

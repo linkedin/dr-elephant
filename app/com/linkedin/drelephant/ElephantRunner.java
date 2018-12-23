@@ -127,7 +127,7 @@ public class ElephantRunner implements Runnable {
   }
 
   @VisibleForTesting
-  AnalyticJobGenerator getAnalyticJobGenerator() {
+  public AnalyticJobGenerator getAnalyticJobGenerator() {
     if (HadoopSystemContext.isHadoop2Env()) {
       return new AnalyticJobGeneratorHadoop2();
     } else {
@@ -253,12 +253,12 @@ public class ElephantRunner implements Runnable {
   }
 
   @VisibleForTesting
-  ElephantBackfillFetcher getBackfillFetcher(ApplicationType appType) {
+  public ElephantBackfillFetcher getBackfillFetcher(ApplicationType appType) {
     return ElephantContext.instance().getBackfillFetcherForApplicationType(appType);
   }
 
   @VisibleForTesting
-  ApplicationType getAppTypeForName(String appType) {
+  public ApplicationType getAppTypeForName(String appType) {
     return ElephantContext.instance().getApplicationTypeForName(appType);
   }
 

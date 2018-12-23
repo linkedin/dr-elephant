@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.*;
+import play.Play;
 
 
 /**
@@ -94,7 +95,7 @@ public final class Utils {
   public static Document loadXMLDoc(String filePath) {
     InputStream instream = null;
     logger.info("Loading configuration file " + filePath);
-    instream = ClassLoader.getSystemClassLoader().getResourceAsStream(filePath);
+    instream = Play.application().resourceAsStream(filePath);
 
     if (instream == null) {
       logger.info("Configuation file not present in classpath. File:  " + filePath);
