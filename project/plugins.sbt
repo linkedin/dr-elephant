@@ -24,3 +24,6 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("pla
 
 // Jacoco code coverage plugin
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6")
+
+// Findbugs plugin
+addSbtPlugin("de.johoop" % "findbugs4sbt" % "1.4.0")

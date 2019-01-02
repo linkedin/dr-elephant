@@ -9,7 +9,7 @@ install:
   - sudo pip install argparse
 
 script:
-  - sbt test jacoco:cover
+  - ./travis.sh
 
 # only build PRs and master (not all branch pushes)
 branches:
