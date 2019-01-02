@@ -50,6 +50,8 @@ public class MemoryFormatUtilsTest extends TestCase {
     assertEquals(expectedBytes, MemoryFormatUtils.stringToBytes("0.879e1 MB"));
     assertEquals(expectedBytes, MemoryFormatUtils.stringToBytes("+0.879e+1 MB"));
     assertEquals(expectedBytes, MemoryFormatUtils.stringToBytes("87.9e-1 MB"));
+    assertEquals(expectedBytes, MemoryFormatUtils.stringToBytes("8,790e-3 MB"));
+    assertEquals(expectedBytes, MemoryFormatUtils.stringToBytes("8,790,000e-6 MB"));
   }
 
   public void testStringToBytes() {
