@@ -44,7 +44,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final String RM_NODE_STATE_URL = "http://%s/ws/v1/cluster/info";
   private static final String FETCH_INITIAL_WINDOW_MS = "drelephant.analysis.fetch.initial.windowMillis";
 
-  private static Configuration configuration;
+  private Configuration configuration;
 
   // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
   private static final long FETCH_DELAY = 60000;

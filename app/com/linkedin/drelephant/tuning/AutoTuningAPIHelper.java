@@ -447,7 +447,6 @@ public class AutoTuningAPIHelper {
    */
   @SuppressWarnings("unchecked")
   private void insertParameterValues(JobSuggestedParamSet jobSuggestedParamSet, Map<String, Double> paramValueMap) {
-    ObjectMapper mapper = new ObjectMapper();
     if (paramValueMap != null) {
       for (Map.Entry<String, Double> paramValue : paramValueMap.entrySet()) {
         insertParameterValue(jobSuggestedParamSet, paramValue.getKey(), paramValue.getValue());

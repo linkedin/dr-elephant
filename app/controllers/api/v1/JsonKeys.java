@@ -55,11 +55,11 @@ public class JsonKeys {
   public static final String EXCEPTION_STATUS = "exception-status";
   public static final String SCHEDULERS = "schedulers";
   public static final String EXCEPTION_ENABLED = "exceptionenabled";
-  public static String EXCEPTION_SUMMARY = "exceptionSummary";
-  public static String STATUS = "status";
-  public static String TYPE = "type";
-  public static String TASKS = "tasks";
-  public static String WORKFLOW_EXCEPTIONS = "workflow-exceptions";
+  public static final String EXCEPTION_SUMMARY = "exceptionSummary";
+  public static final String STATUS = "status";
+  public static final String TYPE = "type";
+  public static final String TASKS = "tasks";
+  public static final String WORKFLOW_EXCEPTIONS = "workflow-exceptions";
 
 
   // Workflows

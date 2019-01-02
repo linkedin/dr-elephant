@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import controllers.AutoTuningMetricsController;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -198,7 +199,7 @@ public abstract class ParamGenerator {
 
       boolean validSavedState = true;
       if (jobSavedState != null && jobSavedState.isValid()) {
-        String savedState = new String(jobSavedState.savedState);
+        String savedState = new String(jobSavedState.savedState, Charset.forName("UTF-8"));
         ObjectNode jsonSavedState = (ObjectNode) Json.parse(savedState);
         JsonNode jsonCurrentPopulation = jsonSavedState.get(JSON_CURRENT_POPULATION_KEY);
         List<Particle> currentPopulation = jsonToParticleList(jsonCurrentPopulation);
@@ -481,7 +482,7 @@ public abstract class ParamGenerator {
         jobSavedState = new JobSavedState();
         jobSavedState.jobDefinitionId = jobTuningInfo.getTuningJob().id;
       }
-      jobSavedState.savedState = jobTuningInfo.getTunerState().getBytes();
+      jobSavedState.savedState = jobTuningInfo.getTunerState().getBytes(Charset.forName("UTF-8"));
       jobSavedState.save();
     }
   }

@@ -32,4 +32,22 @@
   <Match>
       <Class name="~.*controllers\.routes(.[a-z\$]+)?"/>
   </Match>
+
+  <!-- Other exclusions -->
+  <!-- play.db.ebean.Model.Finder is not modified hence ignore the warning -->
+  <Match>
+      <Class name="~models.*" />
+      <Field name="find" />
+      <Bug pattern="MS_SHOULD_BE_FINAL" />
+  </Match>
+  <!--
+      Random is meant to be used only once in calculating TOKEN_UPDATE_INTERVAL hence this
+      bug can be ignored. As TOKEN_UPDATE_INTERVAL is a static field and will be initialized
+      in static initializer code, filtering it out by using <clinit>
+  -->
+  <Match>
+      <Class name="com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2" />
+      <Method name='&lt;clinit&gt;' />
+      <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE" />
+  </Match>
 </FindBugsFilter>

@@ -58,9 +58,8 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
     if (paramMap.containsKey(CONTAINER_MEM_DEFAULT_MB)) {
       String strValue = paramMap.get(CONTAINER_MEM_DEFAULT_MB);
       try {
-        return Long.valueOf(strValue);
-      }
-      catch (NumberFormatException e) {
+        return Long.parseLong(strValue);
+      } catch (NumberFormatException e) {
         logger.warn(CONTAINER_MEM_DEFAULT_MB + ": expected number [" + strValue + "]");
       }
     }

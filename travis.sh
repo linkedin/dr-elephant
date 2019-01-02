@@ -65,7 +65,7 @@ function runFindbugs() {
   totalBugs=`echo $totalBugs | awk -F'="' '{print $2}'`
   if [ $totalBugs -gt 0 ];then
     echo -e "$ERROR_COLOR_PREFIX Build failed due to "$totalBugs" Findbugs issues..."
-    #exit 1;
+    exit 1;
   fi
 }
 

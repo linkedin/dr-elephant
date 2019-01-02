@@ -21,6 +21,7 @@ import com.linkedin.drelephant.ElephantContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.hadoop.conf.Configuration;
@@ -85,8 +86,10 @@ public class PSOParamGenerator extends ParamGenerator {
       Process p = Runtime.getRuntime()
           .exec(
               PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune + " " + jobType);
-      BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
-      BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+      BufferedReader inputStream = new BufferedReader(
+          new InputStreamReader(p.getInputStream(), Charset.forName("UTF-8")));
+      BufferedReader errorStream = new BufferedReader(
+          new InputStreamReader(p.getErrorStream(), Charset.forName("UTF-8")));
       String updatedStringTunerState = inputStream.readLine();
       newJobTuningInfo.setTunerState(updatedStringTunerState);
       String errorLine;

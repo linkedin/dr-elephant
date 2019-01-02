@@ -75,7 +75,7 @@ public class MRClient {
     String mrJobHistoryURL = "http://" + jhistoryAddr + "/ws/v1/history/mapreduce/jobs/" + mrJobId;
     try {
       JsonNode response = fetchJson(new URL(mrJobHistoryURL));
-      if (response.get("job").get("state").toString() != "SUCCEEDED") {
+      if (!response.get("job").get("state").toString().equals("SUCCEEDED")) {
         return response.get("job").get("diagnostics").getTextValue();
       }
     } catch (MalformedURLException e) {

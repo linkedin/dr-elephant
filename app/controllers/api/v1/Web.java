@@ -1397,11 +1397,11 @@ public class Web extends Controller {
     int total = 0;
 
     if (form.get("offset") != null && form.get("offset") != "") {
-      offset = Integer.valueOf(form.get("offset"));
+      offset = Integer.parseInt(form.get("offset"));
     }
 
     if (form.get("limit") != null && form.get("limit") != "") {
-      limit = Integer.valueOf(form.get("limit"));
+      limit = Integer.parseInt(form.get("limit"));
     }
 
     if (offset < 0) {
@@ -1550,11 +1550,11 @@ public class Web extends Controller {
     int total = 0;
 
     if (form.get("offset") != null && form.get("offset") != "") {
-      offset = Integer.valueOf(form.get("offset"));
+      offset = Integer.parseInt(form.get("offset"));
     }
 
     if (form.get("limit") != null && form.get("limit") != "") {
-      limit = Integer.valueOf(form.get("limit"));
+      limit = Integer.parseInt(form.get("limit"));
     }
 
     if (offset < 0) {
@@ -1770,10 +1770,10 @@ public class Web extends Controller {
     HadoopSecurity _hadoopSeverity = HadoopSecurity.getInstance();
 
 
-    logger.info(String.format("scheduler + ", scheduler));
-    if(scheduler==null) {
+    logger.info("Scheduler is " + scheduler);
+    if (scheduler == null) {
       scheduler = "azkaban";
-      logger.info(String.format("Setting scheduler ", scheduler));
+      logger.info(String.format("Setting default scheduler as %s", scheduler));
     }
     if(!InfoExtractor.getSchedulersConfiguredForException().contains(scheduler)) {
       logger.info("scheduler not found ");
