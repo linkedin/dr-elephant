@@ -34,8 +34,8 @@ public final class Statistics {
   public static final long MINUTE_IN_MS = 60L * SECOND_IN_MS;
   public static final long HOUR_IN_MS = 60L * MINUTE_IN_MS;
 
-  public static long MINUTE = 60L;
-  public static long HOUR = 60*MINUTE;
+  public static final long MINUTE = 60L;
+  public static final long HOUR = 60L * MINUTE;
 
   private Statistics() {
   }

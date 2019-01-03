@@ -49,8 +49,8 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final String FETCH_INITIAL_WINDOW_MS = "drelephant.analysis.fetch.initial.windowMillis";
   private static final String RM_APPLICATION_FILTER = "rm_application_filter";
 
-  private static Configuration configuration;
-  private static Properties elephantProperties;
+  private Configuration configuration;
+  private Properties elephantProperties;
 
   // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
   private static final long FETCH_DELAY = 60000;

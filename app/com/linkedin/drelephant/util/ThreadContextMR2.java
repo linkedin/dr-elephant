@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 public final class ThreadContextMR2 {
     private static final Logger logger = Logger.getLogger(com.linkedin.drelephant.util.ThreadContextMR2.class);
 
+    private static final Random RANDOM_GENERATOR = new Random();
     private static final AtomicInteger THREAD_ID = new AtomicInteger(1);
 
     private static final ThreadLocal<Integer> _LOCAL_THREAD_ID = new ThreadLocal<Integer>() {
@@ -45,7 +46,7 @@ public final class ThreadContextMR2 {
                 public AuthenticatedURL.Token initialValue() {
                     _LOCAL_LAST_UPDATED.set(System.currentTimeMillis());
                     // Random an interval for each executor to avoid update token at the same time
-                    _LOCAL_UPDATE_INTERVAL.set(Statistics.MINUTE_IN_MS * 30 + new Random().nextLong()
+                    _LOCAL_UPDATE_INTERVAL.set(Statistics.MINUTE_IN_MS * 30 + RANDOM_GENERATOR.nextLong()
                             % (3 * Statistics.MINUTE_IN_MS));
                     logger.info("Executor " + _LOCAL_THREAD_ID.get() + " update interval " + _LOCAL_UPDATE_INTERVAL.get() * 1.0
                             / Statistics.MINUTE_IN_MS);

@@ -39,9 +39,9 @@ public class AzkabanJobStatusUtil {
   private static final Logger logger = Logger.getLogger(AzkabanJobStatusUtil.class);
   private HashMap<String, AzkabanWorkflowClient> workflowClients = new HashMap<String, AzkabanWorkflowClient>();
   private String scheduler = "azkaban";
-  private static String USERNAME = "username";
-  private static String PRIVATE_KEY = "private_key";
-  private static String PASSWORD = "password";
+  private static final String USERNAME = "username";
+  private static final String PRIVATE_KEY = "private_key";
+  private static final String PASSWORD = "password";
   private static final long TOKEN_UPDATE_INTERVAL = AutoTuner.ONE_MIN * 60 * 1;
 
   public AzkabanWorkflowClient getWorkflowClient(String url) throws MalformedURLException {
@@ -67,7 +67,7 @@ public class AzkabanJobStatusUtil {
       SchedulerConfigurationData schedulerData = InfoExtractor.getSchedulerData(scheduler);
 
       if (schedulerData == null) {
-        throw new RuntimeException(String.format("Cannot find scheduler %s for url %s", scheduler));
+        throw new RuntimeException(String.format("Cannot find scheduler %s", scheduler));
       }
 
       if (!schedulerData.getParamMap().containsKey(USERNAME)) {

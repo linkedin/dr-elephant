@@ -98,24 +98,19 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     if(!data.getSucceeded()) {
       return null;
     }
-   
-  
-    TezTaskData[] tasks = getTasks(data);
 
+    TezTaskData[] tasks = getTasks(data);
 
     List<Long> totalPhysicalMemory = new LinkedList<Long>();
     List<Long> totalVirtualMemory = new LinkedList<Long>();
     List<Long> runTime = new LinkedList<Long>();
-  
+
     for (TezTaskData task : tasks) {
-    	 
       if (task.isSampled()) {
         totalPhysicalMemory.add(task.getCounters().get(TezCounterData.CounterName.PHYSICAL_MEMORY_BYTES));
         totalVirtualMemory.add(task.getCounters().get(TezCounterData.CounterName.VIRTUAL_MEMORY_BYTES));
         runTime.add(task.getTotalRunTimeMs());
       }
-   
-
     }
 
     long averagePMem = Statistics.average(totalPhysicalMemory);
@@ -125,7 +120,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     try{
       maxPMem = Collections.max(totalPhysicalMemory);
       minPMem = Collections.min(totalPhysicalMemory);
-      
+
     }
     catch(Exception exception){
       maxPMem = 0;
@@ -136,20 +131,22 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     String containerSizeStr;
 
 
-    if(!Strings.isNullOrEmpty(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) && Long.valueOf(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) > 0){
+    if(!Strings.isNullOrEmpty(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF))
+        && Long.parseLong(data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF)) > 0) {
       containerSizeStr = data.getConf().getProperty(TEZ_MAPPER_MEMORY_CONF);
-    }
-    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF)) && Long.valueOf(data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF)) > 0){
+    } else if(!Strings.isNullOrEmpty(data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF))
+        && Long.parseLong(data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF)) > 0) {
       containerSizeStr = data.getConf().getProperty(HIVE_MAPPER_MEMORY_CONF);
     }
-    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf)) && Long.valueOf(data.getConf().getProperty(_mapredContainerMemConf)) > 0) {
+    else if(!Strings.isNullOrEmpty(data.getConf().getProperty(_mapredContainerMemConf))
+        && Long.parseLong(data.getConf().getProperty(_mapredContainerMemConf)) > 0) {
       containerSizeStr = data.getConf().getProperty(_mapredContainerMemConf);
     }
     else {
       containerSizeStr = getContainerMemDefaultMBytes();
     }
-   
-    long containerSize = Long.valueOf(containerSizeStr) * FileUtils.ONE_MB;
+
+    long containerSize = Long.parseLong(containerSizeStr) * FileUtils.ONE_MB;
 
     double averageMemMb = (double)((averagePMem) /FileUtils.ONE_MB) ;
 
@@ -181,7 +178,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<TezApplication
     result.addResultDetail("Requested Container Memory (MB)",
             (tasks.length == 0 || containerSize == 0 || containerSize == -1) ? "0" : String.valueOf(containerSize / FileUtils.ONE_MB));
 
-   
+
     return result;
 
   }
