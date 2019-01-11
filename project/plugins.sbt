@@ -27,3 +27,6 @@ addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6")
 
 // Findbugs plugin
 addSbtPlugin("de.johoop" % "findbugs4sbt" % "1.4.0")
+
+// Copy paste detector plugin
+addSbtPlugin("de.johoop" % "cpd4sbt" % "1.2.0")
