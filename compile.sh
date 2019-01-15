@@ -16,6 +16,24 @@
 # the License.
 #
 
+########################################################
+#
+#                  Global constants
+#
+########################################################
+
+# ******************** Constants for Checkstyle *********************
+# Path for Checkstyle HTML report
+readonly CHECKSTYLE_HTML_REPORT_PATH="target/checkstyle-report.html"
+
+# ******************** Constants for Scalastyle *********************
+# Path for Scalastyle HTML report
+readonly SCALASTYLE_HTML_REPORT_PATH="target/scalastyle-result.html"
+# Path for Scalastyle HTML report generation python script
+readonly SCALASTYLE_XSL_FILE="project/checkstyle-noframes-severity-sorted-modified.xsl"
+# Path for Scalastyle HTML report generation python script
+readonly SCALASTYLE_HTML_REPORT_GEN_SCRIPT="project/scalastyle_xml_to_html.py"
+
 function print_usage() {
   echo ""
   echo "Usage: ./compile.sh [config_file_path] [additional_options]"
@@ -25,6 +43,7 @@ function print_usage() {
   echo -e "\tcoverage: Runs Jacoco code coverage and fails the build as per configured threshold"
   echo -e "\tfindbugs: Runs Findbugs for Java code"
   echo -e "\tcpd: Runs Copy Paste Detector(CPD) for Java and Scala code"
+  echo -e "\tstylechecks: Runs Checkstyle for Java and Scalastyle for Scala code"
 }
 
 function play_command() {
@@ -46,10 +65,10 @@ function require_programs() {
   done 
 
   if [ ! -z "$missing_programs" ]; then
-    echo "[ERROR] The following programs are required and are missing: $missing_programs"
+    echo -e "$ERROR_COLOR_PREFIX The following programs are required and are missing: $missing_programs"
     exit 1
   else
-    echo "[SUCCESS] Program requirement is fulfilled!"
+    echo -e "$SUCCESS_COLOR_PREFIX Program requirement is fulfilled!"
   fi
 }
 
@@ -77,9 +96,7 @@ function processCPDReportByLanguage() {
   result=$?
   if [ $result -gt 0 ]; then
     if [ $result -eq 2 ]; then
-      echo ""
-      echo -e "$WARNING_COLOR_PREFIX Note: Make sure your local repo is up to date with the branch you want to merge to, otherwise threshold/baseline "\
-          "values to be updated in baseline.conf\n\tmight be different and that can lead to CI failure..."
+      echo -e $(noteForUpdatingRepo)" and that can lead to CI failure..."
     fi
     echo ""
     exit 1;
@@ -98,24 +115,152 @@ function processCPDReportByLanguage() {
 #   None
 ##########################################################
 function runCPD() {
-  echo "Running CPD for Java"
+  echo -e "$INFO_COLOR_PREFIX Running CPD for Java"
   play_command $1 cpd
   if [ $? -ne 0 ]; then
+    echo -e "$ERROR_COLOR_PREFIX CPD for Java failed"
     exit 1;
   fi
   processCPDReportByLanguage "Java" $JAVA_CPD_THRESHOLD "JAVA_CPD_THRESHOLD"
 
-  echo "Running CPD for Scala"
+  echo -e "$INFO_COLOR_PREFIX Running CPD for Scala"
   changeCPDLanguageSetting "Language.Java" "Language.Scala"
   play_command $OPTS cpd
   if [ $? -ne 0 ]; then
     # Reset language back to Java
     changeCPDLanguageSetting "Language.Scala" "Language.Java"
+    echo -e "$ERROR_COLOR_PREFIX CPD for Scala failed"
     exit 1;
   fi
   processCPDReportByLanguage "Scala" $SCALA_CPD_THRESHOLD "SCALA_CPD_THRESHOLD"
   # Reset language back to Java
   changeCPDLanguageSetting "Language.Scala" "Language.Java"
+}
+
+##########################################################
+# Note for updating repo before updating baseline.conf
+#
+# Arguments:
+#   None
+# Returns:
+#   Note for updating repo
+##########################################################
+function noteForUpdatingRepo {
+  echo -e "$WARNING_COLOR_PREFIX Note: Make sure your local repo is up to date with the branch you want to merge to, otherwise threshold/baseline "\
+        "values to be updated in baseline.conf\n\tmight be different"
+}
+
+############################################################
+# Process style report based on tool for which report is
+# being processed. Verifies report existence, checks for
+# warning baseline, checks for error threshold breach and
+# if required fail the build or print appropriate message.
+#
+# Arguments:
+#   arg1: Indicates the tool whose report will be processed
+#         (Checkstyle or Scalastyle)
+#   arg2: Report location for the tool whose report is to be
+#         processed
+#   arg3: Error threshold, above which build would fail, for
+#         the tool whose report will be processed
+#   arg4: Warnings baseline for the tool whose report will be
+#         processed
+#   arg5: Name of the error threshold constant for the tool
+#         and language
+#   arg6: Name of the warning baseline constant for the tool
+#         and language
+# Returns:
+#   None
+############################################################
+function processStyleReport() {
+  verifyStyleReportExistence $1 $2
+
+  # Check warnings in Checkstyle/Scalastyle report
+  checkStyleToolWarnings $1 $2 $4 $6 numWarnings
+  result=$?
+  if [ $result -gt 0 ]; then
+    if [ $result -eq 1 ]; then
+      msgToResetStyleReportWarning $1 $4 $6 $numWarnings
+    fi
+    echo -e $(noteForUpdatingRepo)"..."
+  fi
+  echo ""
+
+  # Check errors in Checkstyle/Scalastyle report
+  checkStyleToolErrors $1 $2 $3 $5
+  result=$?
+  if [ $result -gt 0 ]; then
+    if [ $result -eq 2 ]; then
+      echo -e $(noteForUpdatingRepo)" and that can lead to CI failure..."
+    fi
+    echo ""
+    exit 1;
+  fi
+  echo ""
+}
+
+############################################################
+# Process both Checkstyle and Scalastyle XML reports. Also
+# generates Scalastyle HTML report(Checkstyle HTML report is
+# automatically generated by checkstyle4sbt plugin).
+# Fail the build if threshold values are breached.
+#
+# Arguments:
+#   None
+# Returns:
+#   None
+############################################################
+function processCheckstyleAndScalastyleReports() {
+  echo ""
+  echo -e "$INFO_COLOR_PREFIX Checking Checkstyle report..."
+  echo -e "$INFO_COLOR_PREFIX Checkstyle XML report generated at path: $CHECKSTYLE_REPORT_PATH and HTML report generated at path: $CHECKSTYLE_HTML_REPORT_PATH"
+  processStyleReport "Checkstyle" $CHECKSTYLE_REPORT_PATH $CHECKSTYLE_ERROR_THRESHOLD $CHECKSTYLE_WARNING_BASELINE "CHECKSTYLE_ERROR_THRESHOLD" "CHECKSTYLE_WARNING_BASELINE"
+
+  scalastyleHtmlGenMsg=""
+  preProcessScalastyleReport $SCALASTYLE_REPORT_PATH
+  pythonVersion=`python --version 2>&1`
+  if [ $? -ne 0 ]; then
+    echo -e "$WARNING_COLOR_PREFIX Cannot generate Scalastyle HTML report as Python is unavailable. Install Python and add it in PATH"
+  else
+    # Generate Scalastyle HTML Report
+    rm -rf $SCALASTYLE_HTML_REPORT_PATH
+    echo "Using $pythonVersion"
+    pip install lxml
+    if [ $? -ne 0 ]; then
+      echo -e "$WARNING_COLOR_PREFIX Could not install lxml module for Python. Scalastyle HTML report could not be generated"
+    else
+      python $SCALASTYLE_HTML_REPORT_GEN_SCRIPT $SCALASTYLE_REPORT_PATH $SCALASTYLE_XSL_FILE $SCALASTYLE_HTML_REPORT_PATH
+      if [ $? -ne 0 ]; then
+        echo -e "$WARNING_COLOR_PREFIX Scalastyle HTML report could not be generated"
+      else
+        scalastyleHtmlGenMsg=" and HTML report generated at path: $SCALASTYLE_HTML_REPORT_PATH"
+      fi
+    fi
+  fi
+  echo -e "$INFO_COLOR_PREFIX Checking Scalastyle report..."
+  echo -e "$INFO_COLOR_PREFIX Scalastyle XML report generated at path: $SCALASTYLE_REPORT_PATH"$scalastyleHtmlGenMsg
+  processStyleReport "Scalastyle" $SCALASTYLE_REPORT_PATH $SCALASTYLE_ERROR_THRESHOLD $SCALASTYLE_WARNING_BASELINE "SCALASTYLE_ERROR_THRESHOLD" "SCALASTYLE_WARNING_BASELINE"
+}
+
+#############################################################
+# Run Checkstyle and Scalastyle and then process the report.
+# Fail the build if the command fails or if threshold values
+# are breached.
+#
+# Arguments:
+#   arg1: Play command OPTS
+# Returns:
+#   None
+#############################################################
+function runStyleChecks() {
+  echo -e "$INFO_COLOR_PREFIX Running Checkstyle and Scalastyle"
+  play_command $1 checkstyle scalastyle
+  if [ $? -ne 0 ]; then
+    echo -e "$ERROR_COLOR_PREFIX Either Checkstyle or Scalastyle has failed"
+    echo ""
+    exit 1;
+  fi
+  processCheckstyleAndScalastyleReports
 }
 
 require_programs zip unzip
@@ -129,6 +274,7 @@ extra_commands=""
 # Indicates whether a custom configuration file is passed as first parameter.
 custom_config="n"
 run_CPD="n"
+run_StyleChecks="n"
 # Process command line arguments
 while :; do
   if [ ! -z $1 ]; then
@@ -141,6 +287,13 @@ while :; do
         ;;
       cpd)
         run_CPD="y"
+        ;;
+      stylechecks)
+        run_StyleChecks="y"
+        ;;
+      help)
+        print_usage
+        exit 0;
         ;;
       *)
         # User may pass the first argument(optional) which is a path to config file
@@ -266,6 +419,11 @@ fi
 # Run CPD if passed as an argument
 if [ $run_CPD = "y" ]; then
   runCPD $OPTS
+fi
+
+# Run Checkstyle and Scalastyle if stylechecks is passed as an argument
+if [ $run_StyleChecks = "y" ]; then
+  runStyleChecks $OPTS
 fi
 
 set -v

@@ -39,6 +39,14 @@ readonly CPD_REPORT_BASE_PATH=$REPORTS_BASE_PATH"cpd/"
 # Default path for CPD report
 readonly CPD_REPORT_PATH=$CPD_REPORT_BASE_PATH"cpd.xml"
 
+# ******************* Constants for Checkstyle *********************
+# Path for Checkstyle report
+readonly CHECKSTYLE_REPORT_PATH="target/checkstyle-report.xml"
+
+# ******************* Constants for Scalastyle *********************
+# Path for Scalastyle report
+readonly SCALASTYLE_REPORT_PATH="target/scalastyle-result.xml"
+
 # ************************ Other constants **************************
 # Color coded prefixes for ERROR, WARNING, INFO and SUCCESS messages
 readonly ERROR_COLOR_PREFIX="[\033[0;31mERROR\033[0m]"
@@ -78,7 +86,6 @@ function getCPDReportName() {
 ##########################################################
 function checkIfCPDFailed() {
   duplicates=`grep "<duplication lines=" $4 | wc -l | xargs`
-  msg="CPD $1 Report has $duplicates duplicates"
   if [ $duplicates -gt $2 ]; then
     if [ $5 -eq 1 ]; then
       echo -e "$ERROR_COLOR_PREFIX Dumping results on failure..."
@@ -90,8 +97,7 @@ function checkIfCPDFailed() {
     return 1;
   elif [ $duplicates -eq 0 ]; then
     if [ $duplicates -lt $2 ]; then
-      echo -e "$ERROR_COLOR_PREFIX $msg and you have fixed some CPD issues in this PR which is great! But you forgot to update the threshold, hence failing the build."
-      echo -e "\tPlease modify $3 variable to $duplicates in baseline.conf to ensure that the new threshold takes effect for subsequent builds."
+      handleSettingThresholdVariable "CPD $1" $duplicates "duplicates" $3
       return 2;
     else
       echo -e "$SUCCESS_COLOR_PREFIX $msg"
@@ -99,11 +105,209 @@ function checkIfCPDFailed() {
   elif [ $duplicates -eq $2 ]; then
     echo -e "$WARNING_COLOR_PREFIX $msg but it is within threshold hence not failing the build"
   else
-    echo -e "$ERROR_COLOR_PREFIX $msg and you have fixed some CPD issues in this PR which is great! But you forgot to update the threshold, hence failing the build."
-    echo -e "\tPlease modify $3 variable to $duplicates in baseline.conf to ensure that the new threshold takes effect for subsequent builds."
+    handleSettingThresholdVariable "CPD $1" $duplicates "duplicates" $3
     return 2;
   fi
   return 0;
+}
+
+############################################################
+# Prints message to reset style report warnings variable in
+# baseline.conf, if number of warnings are above baseline.
+#
+# Arguments:
+#   arg1: Indicates the tool whose report is being parsed
+#         (Checkstyle or Scalastyle)
+#   arg2: Warnings baseline value for the tool
+#   arg3: Warnings baseline variable for the tool
+#   arg4: Number of warnings which will be used to set the
+#         variable passed as arg3
+# Returns:
+#   None
+############################################################
+function msgToResetStyleReportWarning() {
+  echo -e "$WARNING_COLOR_PREFIX $1 warnings are above baseline: $2. If your changes have not introduced these warnings or they can't be fixed,"\
+      "consider resetting the variable $3 to $4 in baseline.conf"
+}
+
+############################################################
+# Verify if style report for the tool being run exists.
+#
+# Arguments:
+#   arg1: Indicates the tool whose report is being checked
+#         (Checkstyle or Scalastyle)
+#   arg2: Report location for the tool
+# Returns:
+#   None
+############################################################
+function verifyStyleReportExistence() {
+  # Check if report exists
+  if [ ! -f $2 ]; then
+    echo -e "$ERROR_COLOR_PREFIX $1 report was not generated, failing the build..."
+    exit 1;
+  fi
+}
+
+############################################################
+# For the severity passed, group checkstyle or scalastyle
+# issues by issue type and dump top 10 results.
+#
+# Arguments:
+#   arg1: Indicates the tool whose report is being parsed
+#         (Checkstyle or Scalastyle)
+#   arg2: Report location for the tool whose report is being
+#         parsed.
+#   arg3: Severity of the issues for which we are dumping
+#         results
+#   arg4: Number of issues at the severity passed as arg3
+# Returns:
+#   None
+############################################################
+function dumpTop10StyleIssueTypes() {
+  # Convert passed severity to format in the report
+  severityWithQuotes='"'$3'"'
+  severityString='severity='$severityWithQuotes
+  # Extract issue type for the passed severity, find the top 10 results based
+  # on occurences of each issue type and dump them in the format below:
+  # issue-type: occurences of this issue type
+  result=`grep $severityString $2 | grep -o 'source="\S*' | sort | uniq -c |\
+      sort -r -n -k1 | head -10 | sed 's/source="//g;s/"\/>//g'| awk -F" " '{printf("\t%s: %s\n", $2,$1);}'`
+  resultCount=`echo "${result}" | wc -l | xargs`
+  echo -e "$WARNING_COLOR_PREFIX $4 $1 "$3"s detected. Top $resultCount issue types with their counts are as under:"
+  echo "${result}"
+}
+
+##########################################################
+# This function is called when build has to be failed
+# because developer has fixed CPD or Checkstyle or
+# Scalastyle issues but not updated the corresponding
+# threshold variable in this script.
+#
+# Arguments:
+#   arg1: Report description
+#   arg2: Issue count
+#   arg3: Issue description
+#   arg4: Name of variable to be updated
+# Returns:
+#   None
+##########################################################
+function handleSettingThresholdVariable() {
+  msg="$1 Report has $2 $3"
+  color=$ERROR_COLOR_PREFIX
+  failTheBuildMsg=", hence failing the build.\n\tPlease modify"
+  thresholdOrBaseline="threshold"
+  if [ $3 = "warnings" ]; then
+    color=$WARNING_COLOR_PREFIX
+    failTheBuildMsg=".\n\tYou can modify"
+    thresholdOrBaseline="baseline"
+  fi
+  echo -e "$color $msg and you have fixed some of them as part of this change which is great! But you forgot to update the $thresholdOrBaseline$failTheBuildMsg"\
+      "$4 variable to $2 in baseline.conf to ensure that the new $thresholdOrBaseline takes effect for subsequent builds."
+}
+
+##################################################################
+# Check if there are warnings in the report for the tool whose
+# report is being processed. If warnings exist, dump top 10 issues
+# grouped by issue type. Return an integer indicating whether
+# number of warnings are 0, above or below baseline.
+# Also print messages if baseline variable has to be updated in
+# baseline.conf. Number of warnings are also returned by setting
+# an argument passed to the function.
+#
+# Arguments:
+#   arg1: Indicates the tool whose report will be processed
+#         (Checkstyle or Scalastyle)
+#   arg2: Report location for the tool whose report is to be
+#         processed
+#   arg3: Warnings baseline for the tool whose report will be
+#         processed
+#   arg4: Name of the warning baseline constant for the tool
+#   arg5: Argument which will be set equal to number of
+#         warnings found in the report.
+# Returns:
+#   0: Success
+#   1: Warnings above baseline
+#   2: Warnings fixed but baseline variable not updated
+################################################################
+function checkStyleToolWarnings() {
+  # Local variable which references to arg5.
+  local  __numWarnings=$5
+  # Check if there are any warnings in the Checkstyle or Scalastyle report
+  local styleWarnings=`grep 'severity="warning"' $2 | wc -l | xargs`
+  # Effectively sets number of warnings to arg5
+  eval $__numWarnings="'$styleWarnings'"
+  if [ $styleWarnings -gt 0 ]; then
+    dumpTop10StyleIssueTypes $1 $2 "warning" $styleWarnings
+    # Return number of warnings only if over baseline
+    if [ $styleWarnings -gt $3 ]; then
+      return 1;
+    elif [ $styleWarnings -lt $3 ]; then
+      handleSettingThresholdVariable $1 $styleWarnings "warnings" $4
+      return 2;
+    fi
+  else
+    echo -e "$SUCCESS_COLOR_PREFIX $1 Report has no warnings..."
+  fi
+  return 0;
+}
+
+##################################################################
+# Process checkstyle/scalastyle report after the tool has been run
+# This method will find how many errors exist.
+# If errors exist and they are above threshold, fail the build.
+# Fail the build even if errors have been fixed but threshold
+# variable has not been updated in baseline.conf
+# Print top 10 issues at error severity grouped by issue
+# type if errors are equal to threshold (for informational
+# purposes)
+#
+# Arguments:
+#   arg1: Indicates the tool whose report will be processed
+#         (Checkstyle or Scalastyle)
+#   arg2: Report location for the tool whose report is to be
+#         processed
+#   arg3: Error threshold, above which build would fail, for
+#         the tool whose report will be processed
+#   arg4: Name of the error threshold constant for the tool
+#
+# Returns:
+#   0: Success
+#   1: Failure due to errors above threshold
+#   2: Failure due to errors fixed but threshold variable not
+#      updated.
+##################################################################
+function checkStyleToolErrors() {
+  # Check if there are any errors in the Checkstyle or Scalastyle report and fail the build, if above threshold
+  styleErrors=`grep 'severity="error"' $2 | wc -l | xargs`
+  if [ $styleErrors -gt $3 ]; then
+    echo -e "$ERROR_COLOR_PREFIX Build failed as the code change has introduced $1 ERRORS. $styleErrors found (threshold: $3)"
+    return 1;
+  fi
+
+  # Print top 10 checkstyle/scalastyle error categories if number of errors within threshold
+  if [ $styleErrors -gt 0 ]; then
+    if [ $styleErrors -gt $3 ]; then
+      echo -e "$ERROR_COLOR_PREFIX Build failed as this code change has introduced $1 ERRORS. $styleErrors found (threshold: $3)"
+      return 1;
+    elif [ $styleErrors -eq $3 ]; then
+      dumpTop10StyleIssueTypes $1 $2 "error" $styleErrors
+      echo -e "$WARNING_COLOR_PREFIX Note: The code change may not have introduced $1 errors as count is within threshold. Not failing"\
+          "the build."
+      return 0;
+    else
+      handleSettingThresholdVariable $1 $styleErrors "errors" $4
+      return 2;
+    fi
+  else
+    if [ $3 -gt 0 ]; then
+      handleSettingThresholdVariable $1 $styleErrors "errors" $4
+      return 2;
+    else
+      echo ""
+      echo -e "$SUCCESS_COLOR_PREFIX $1 Report has no errors..."
+      return 0;
+    fi
+  fi
 }
 
 ##########################################################
@@ -188,4 +392,64 @@ function removeLicenseHeaderDuplicates() {
 function changeCPDLanguageSetting() {
   sed "s/$1/$2/g" cpd.sbt > cpd.sbt.bak
   mv cpd.sbt.bak cpd.sbt
+}
+
+############################################################
+# Generate a final scalastyle report by removing duplicate
+# errors and sorting the results within a file by line
+# number.
+#
+# Arguments:
+#   arg1: Report location for the tool being run
+# Returns:
+#   None
+############################################################
+function preProcessScalastyleReport() {
+  # Flag to indicate whether we are processing file tag i.e. we have encountered file begin tag but not the file end tag
+  filetag=0
+  currentLineNum=0
+  currentErrorTag=""
+  count=0
+  while IFS='' read -r line || [[ -n "$line" ]]; do
+    if [[ $line == *"<file "* ]]; then
+      # On start file tag, copy the line and set the filetag flag
+      echo -e $line >> $1.bak
+      filetag=1
+    elif [[ $line == *"</file>"* ]]; then
+      # On end file tag, sort and find unique lines in tmpResult file(contains errors for a file).
+      # This is done to avoid duplicates
+      sortedResults=`cat tmpResult | sort -n -k 1 | uniq`
+      # Remove the line number prepended in tmpResult used for sorting errors by line number
+      finalResults=`echo "${sortedResults}" | sed 's/^[0-9]* / /g'`
+      # Copy errors for a file in sorted order and after removing duplicates
+      echo "${finalResults}" >> $1.bak
+      rm -rf tmpResult
+      # Copy file end tag as well
+      echo -e $line >> $1.bak
+      filetag=0
+    elif [ $filetag -eq 1 ]; then
+      # We are processing errors inside a file
+      # Fetch line number from the corresponding attribute and prepend the line with line number
+      # This is done to ensure sorting of errors within a file by line number and removing duplicates,
+      # if any. Store this result in a tmpResult file
+      lineAttribute=`echo "$line" | sed -n 's/.* line="\([0-9.]*\).*/\1/p'`
+      if [[ $line == *"<error "* ]]; then
+        if [[ $line == *"/>" ]]; then
+          echo -e $lineAttribute" "$line >> tmpResult
+        else
+          currentLineNum=$lineAttribute
+          currentErrorTag=$line
+        fi
+      elif [[ $line == *"/>" ]]; then
+         # Processing error tag. Encountered end of tag.
+         lineWithoutSpaces=`echo $line | sed 's/^[ ]*//g'`
+         echo -e "$currentLineNum $currentErrorTag $lineWithoutSpaces" >> tmpResult
+      fi
+    else
+      # Not inside file tag. Copy line as is.
+      echo -e $line >> $1.bak
+    fi
+  done< $1
+  # Move the .bak file to the report file
+  mv $1.bak $1
 }
