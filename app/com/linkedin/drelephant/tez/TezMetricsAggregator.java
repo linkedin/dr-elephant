@@ -85,12 +85,9 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
 
   private long getMapContainerSize(HadoopApplicationData data) {
     try {
-      if (data.getConf().containsKey(TEZ_CONTAINER_CONFIG)){
-        long mapContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
-        if (mapContainerSize > 0)
-          return mapContainerSize;
-      }
-      return Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
+      // Trying to get container size from tez config, if not found trying from MapReduce config
+      long mapContainerSize = data.getConf().containsKey(TEZ_CONTAINER_CONFIG) ? Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG)) : -1;
+      return mapContainerSize > 0 ? mapContainerSize : Long.parseLong(data.getConf().getProperty(MAP_CONTAINER_CONFIG));
     } catch ( NumberFormatException ex) {
       return CONTAINER_MEMORY_DEFAULT_BYTES;
     }
@@ -98,12 +95,9 @@ public class TezMetricsAggregator implements HadoopMetricsAggregator {
 
   private long getReducerContainerSize(HadoopApplicationData data) {
     try {
-      if (data.getConf().containsKey(TEZ_CONTAINER_CONFIG)){
-        long reducerContainerSize = Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG));
-        if (reducerContainerSize > 0)
-          return reducerContainerSize;
-      }
-      return Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
+      // Trying to get container size from tez config, if not found trying from MapReduce config
+      long reducerContainerSize = data.getConf().containsKey(TEZ_CONTAINER_CONFIG) ? Long.parseLong(data.getConf().getProperty(TEZ_CONTAINER_CONFIG)) : -1;
+      return reducerContainerSize > 0 ? reducerContainerSize: Long.parseLong(data.getConf().getProperty(REDUCER_CONTAINER_CONFIG));
     } catch ( NumberFormatException ex) {
       return CONTAINER_MEMORY_DEFAULT_BYTES;
     }
