@@ -8,6 +8,7 @@ import controllers.AutoTuningMetricsController;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import models.JobDefinition;
@@ -68,7 +69,7 @@ public abstract class ParameterGenerateManagerOBTAlgoPSO extends ParameterGenera
     boolean validSavedState = true;
     JobSavedState jobSavedState = JobSavedState.find.byId(job.id);
     if (jobSavedState != null && jobSavedState.isValid()) {
-      String savedState = new String(jobSavedState.savedState);
+      String savedState = new String(jobSavedState.savedState, Charset.forName("UTF-8"));
       ObjectNode jsonSavedState = (ObjectNode) Json.parse(savedState);
       JsonNode jsonCurrentPopulation = jsonSavedState.get(JSON_CURRENT_POPULATION_KEY);
       List<Particle> currentPopulation = jsonToParticleList(jsonCurrentPopulation);
@@ -180,8 +181,10 @@ public abstract class ParameterGenerateManagerOBTAlgoPSO extends ParameterGenera
           PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune + " " + jobType + " "
               + swarmSize);
 
-      BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
-      BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+      BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream(),
+          Charset.forName("UTF-8")));
+      BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream(),
+          Charset.forName("UTF-8")));
       String updatedStringTunerState = inputStream.readLine();
       logger.debug("Param  Generator Testing" + updatedStringTunerState);
       newJobTuningInfo.setTunerState(updatedStringTunerState);
@@ -354,7 +357,7 @@ public abstract class ParameterGenerateManagerOBTAlgoPSO extends ParameterGenera
         jobSavedState = new JobSavedState();
         jobSavedState.jobDefinitionId = jobTuningInfo.getTuningJob().id;
       }
-      jobSavedState.savedState = jobTuningInfo.getTunerState().getBytes();
+      jobSavedState.savedState = jobTuningInfo.getTunerState().getBytes(Charset.forName("UTF-8"));
       jobSavedState.save();
     }
   }

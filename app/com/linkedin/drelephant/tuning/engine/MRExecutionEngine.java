@@ -85,7 +85,7 @@ public class MRExecutionEngine implements ExecutionEngine {
    */
 
   @Override
-  public Boolean isParamConstraintViolatedIPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
+  public boolean isParamConstraintViolatedIPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
     logger.info(" Constraint Violeted ");
     Double mrSortMemory = null;
     Double mrMapMemory = null;
@@ -166,7 +166,7 @@ public class MRExecutionEngine implements ExecutionEngine {
     }
   }
 
-  public Boolean isParamConstraintViolatedPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
+  public boolean isParamConstraintViolatedPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
     Double mrSortMemory = null;
     Double mrMapMemory = null;
     Double pigMaxCombinedSplitSize = null;
@@ -360,7 +360,7 @@ public class MRExecutionEngine implements ExecutionEngine {
   }
 
   @Override
-  public Boolean isParamConstraintViolatedHBT(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
+  public boolean isParamConstraintViolatedHBT(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
     return false;
   }
 

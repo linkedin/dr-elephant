@@ -52,12 +52,12 @@ public interface ExecutionEngine {
   /**
    * Check if the suggested parameters violets any constraint for PSO .
    */
-  Boolean isParamConstraintViolatedPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList);
+  boolean isParamConstraintViolatedPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList);
 
   /**
    * Check if the suggested parameters violets any constraint for IPSO .
    */
-  Boolean isParamConstraintViolatedIPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList);
+  boolean isParamConstraintViolatedIPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList);
 
   /**
    *  Optimizes parameter boundries based on the Heuristics. This is only applicable for IPSO
@@ -79,5 +79,5 @@ public interface ExecutionEngine {
    * @param jobSuggestedParamValueList
    * @return
    */
-  Boolean isParamConstraintViolatedHBT(List<JobSuggestedParamValue> jobSuggestedParamValueList);
+  boolean isParamConstraintViolatedHBT(List<JobSuggestedParamValue> jobSuggestedParamValueList);
 }

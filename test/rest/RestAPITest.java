@@ -125,13 +125,13 @@ public class RestAPITest {
 
   @Test
   public void testRestGetCurrentRunParameters() {
-    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
-    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
-    org.junit.Assume.assumeTrue(autoTuningEnabled);
 
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateAutoTuningTestData1();
+        Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+        configuration.setBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+        org.junit.Assume.assumeTrue(false);
 
         JsonNode jsonNode = getTestGetCurrentRunParameterData();
         final WS.Response response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
@@ -180,13 +180,12 @@ public class RestAPITest {
 
   @Test
   public void testRestGetCurrentRunParametersNewJob() {
-    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
-    Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
-    org.junit.Assume.assumeTrue(autoTuningEnabled);
-
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateAutoTuningTestData1();
+        Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+        configuration.setBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+        org.junit.Assume.assumeTrue(false);
 
         JsonNode jsonNode = getTestGetCurrentRunParameterNewData();
         final WS.Response response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
