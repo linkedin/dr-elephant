@@ -507,7 +507,7 @@ echo ""
 echo "************************************************************"
 echo "  3. Run Copy Paste Detector(CPD)"
 echo "************************************************************"
-runCPD "${changedFilesList}"
+#runCPD "${changedFilesList}"
 echo -e "$SUCCESS_COLOR_PREFIX Copy Paste Detector(CPD) step succeeded..."
 
 echo ""
