@@ -1,9 +1,11 @@
 package com.linkedin.drelephant.tuning.hbt;
 
 import com.linkedin.drelephant.tuning.TuningHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
 import models.AppHeuristicResult;
 import models.AppResult;
 import models.JobDefinition;
@@ -12,8 +14,11 @@ import models.JobSuggestedParamSet;
 import models.TuningAlgorithm;
 import models.TuningJobDefinition;
 import models.TuningJobExecutionParamSet;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+
 import com.avaje.ebean.Expr;
 import com.linkedin.drelephant.AutoTuner;
 import com.linkedin.drelephant.ElephantContext;
@@ -82,7 +87,7 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
     Double score = 0D;
     for (AppResult appResult : results) {
       totalResourceUsed += appResult.resourceUsed;
-      totalInputBytesInBytes += getTotalInputBytes(appResult);
+      totalInputBytesInBytes += appResult.getTotalInputBytes();
       score += appResult.score;
     }
 
@@ -258,8 +263,7 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
         jobSuggestedParamSet.isParamSetBest = true;
         currentBestJobSuggestedParamSet.save();
       } else if (currentBestJobSuggestedParamSet.fitness.longValue() == jobSuggestedParamSet.fitness.longValue()) {
-        if (currentBestJobSuggestedParamSet.fitnessJobExecution.resourceUsage
-            > jobSuggestedParamSet.fitnessJobExecution.resourceUsage) {
+        if (isNewParamBestParam(jobSuggestedParamSet, currentBestJobSuggestedParamSet)) {
           logger.debug("Param set: " + jobSuggestedParamSet.id
               + " is the new best param set for job because of better resource usage: "
               + jobSuggestedParamSet.jobDefinition.jobDefId);
@@ -274,5 +278,27 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
       jobSuggestedParamSet.isParamSetBest = true;
     }
     return jobSuggestedParamSet;
+  }
+
+  private boolean isNewParamBestParam(JobSuggestedParamSet jobSuggestedParamSet,
+      JobSuggestedParamSet currentBestJobSuggestedParamSet) {
+    boolean newParamBestParam = false;
+    if (currentBestJobSuggestedParamSet.fitnessJobExecution.inputSizeInBytes > 1
+        && jobSuggestedParamSet.fitnessJobExecution.inputSizeInBytes > 1) {
+      Double currentBestResourceUsagePerGBInput =
+          currentBestJobSuggestedParamSet.fitnessJobExecution.resourceUsage * FileUtils.ONE_GB
+              / currentBestJobSuggestedParamSet.fitnessJobExecution.inputSizeInBytes;
+      Double newResourceUsagePerGBInput =
+          jobSuggestedParamSet.fitnessJobExecution.resourceUsage * FileUtils.ONE_GB
+              / jobSuggestedParamSet.fitnessJobExecution.inputSizeInBytes;
+      if (newResourceUsagePerGBInput < currentBestResourceUsagePerGBInput) {
+        newParamBestParam = true;
+      }
+    } else {
+      if (currentBestJobSuggestedParamSet.fitnessJobExecution.resourceUsage > jobSuggestedParamSet.fitnessJobExecution.resourceUsage) {
+        newParamBestParam = true;
+      }
+    }
+    return newParamBestParam;
   }
 }

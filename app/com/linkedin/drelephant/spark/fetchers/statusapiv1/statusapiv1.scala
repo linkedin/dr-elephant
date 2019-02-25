@@ -77,6 +77,7 @@ trait ExecutorSummary{
   def rddBlocks: Int
   def memoryUsed: Long
   def diskUsed: Long
+  def totalCores: Int
   def activeTasks: Int
   def failedTasks: Int
   def completedTasks: Int
@@ -326,6 +327,7 @@ class ExecutorSummaryImpl(
   var rddBlocks: Int,
   var memoryUsed: Long,
   var diskUsed: Long,
+  var totalCores: Int,
   var activeTasks: Int,
   var failedTasks: Int,
   var completedTasks: Int,

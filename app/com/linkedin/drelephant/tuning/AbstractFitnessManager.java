@@ -153,29 +153,6 @@ public abstract class AbstractFitnessManager implements Manager {
   }
 
   /**
-   * Returns the total input size
-   * @param appResult appResult
-   * @return total input size
-   */
-  protected Long getTotalInputBytes(AppResult appResult) {
-    Long totalInputBytes = 0L;
-    if (appResult.yarnAppHeuristicResults != null) {
-      for (AppHeuristicResult appHeuristicResult : appResult.yarnAppHeuristicResults) {
-        if (appHeuristicResult.heuristicName.equals(CommonConstantsHeuristic.MAPPER_SPEED)) {
-          if (appHeuristicResult.yarnAppHeuristicResultDetails != null) {
-            for (AppHeuristicResultDetails appHeuristicResultDetails : appHeuristicResult.yarnAppHeuristicResultDetails) {
-              if (appHeuristicResultDetails.name.equals(CommonConstantsHeuristic.TOTAL_INPUT_SIZE_IN_MB)) {
-                totalInputBytes += Math.round(Double.parseDouble(appHeuristicResultDetails.value) * FileUtils.ONE_MB);
-              }
-            }
-          }
-        }
-      }
-    }
-    return totalInputBytes;
-  }
-
-  /**
    * Resets the param set to CREATED state if its fitness is not already computed
    * @param jobSuggestedParamSet Param set which is to be reset
    */

@@ -68,7 +68,7 @@ public abstract class FitnessManagerOBT extends AbstractFitnessManager {
     Double totalInputBytesInBytes = 0D;
     for (AppResult appResult : results) {
       totalResourceUsed += appResult.resourceUsed;
-      totalInputBytesInBytes += getTotalInputBytes(appResult);
+      totalInputBytesInBytes += appResult.getTotalInputBytes();
     }
 
     Long totalRunTime = Utils.getTotalRuntime(results);

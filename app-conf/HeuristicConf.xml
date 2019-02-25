@@ -349,7 +349,12 @@
     <classname>com.linkedin.drelephant.spark.heuristics.JobsHeuristic</classname>
     <viewname>views.html.help.spark.helpJobsHeuristic</viewname>
   </heuristic>
-
+  <heuristic>
+    <applicationtype>spark</applicationtype>
+    <heuristicname>Spark Application Metrics</heuristicname>
+    <classname>com.linkedin.drelephant.spark.heuristics.SparkApplicationMetricsHeuristic</classname>
+    <viewname>views.html.help.spark.helpApplicationMetricsHeuristic</viewname>
+  </heuristic>
   <heuristic>
     <applicationtype>spark</applicationtype>
     <heuristicname>Spark Stage Metrics</heuristicname>

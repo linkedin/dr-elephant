@@ -27,11 +27,19 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import models.TuningAlgorithm.JobType;
+
+import org.apache.commons.io.FileUtils;
+
 import play.db.ebean.Model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.linkedin.drelephant.analysis.Severity;
+import com.linkedin.drelephant.mapreduce.heuristics.CommonConstantsHeuristic;
+import com.linkedin.drelephant.mapreduce.heuristics.MapperSpeedHeuristic;
+import com.linkedin.drelephant.spark.heuristics.SparkApplicationMetricsHeuristic;
 import com.linkedin.drelephant.util.Utils;
+import org.apache.log4j.Logger;
 
 
 @Entity
@@ -39,6 +47,7 @@ import com.linkedin.drelephant.util.Utils;
 public class AppResult extends Model {
 
   private static final long serialVersionUID = 1L;
+  private static final Logger logger = Logger.getLogger(AppResult.class);
 
   public static final int ID_LIMIT = 50;
   public static final int USERNAME_LIMIT = 50;
@@ -181,5 +190,38 @@ public class AppResult extends Model {
       }
     }
     return heuristicsDetailsMap;
+  }
+
+  public String getHeuristicValue(String heuristicClass, String heuristicName) {
+    Map<String, String> heuristicsMap = getHeuristicsResultDetailsMap();
+    return heuristicsMap.get(heuristicClass + "_" + heuristicName);
+  }
+
+  /**
+   * Returns the total input size
+   * @param appResult appResult
+   * @return total input size
+   */
+  public Long getTotalInputBytes() {
+    String heursiticValue = null;
+    if (jobType.toLowerCase().equals(JobType.PIG.name().toLowerCase())
+        || jobType.toLowerCase().equals(JobType.HIVE.name().toLowerCase())) {
+      heursiticValue =
+          getHeuristicValue(MapperSpeedHeuristic.class.getCanonicalName(),
+              CommonConstantsHeuristic.TOTAL_INPUT_SIZE_IN_MB);
+    } else if (jobType.toLowerCase().equals(JobType.SPARK.name().toLowerCase())) {
+      heursiticValue =
+          getHeuristicValue(SparkApplicationMetricsHeuristic.class.getCanonicalName(),
+              SparkApplicationMetricsHeuristic.TOTAL_INPUT_SIZE_IN_MB());
+    }
+    Long totalInputBytes = 0L;
+    if (heursiticValue != null) {
+      try {
+        totalInputBytes = Math.round(Double.parseDouble(heursiticValue) * FileUtils.ONE_MB);
+      } catch (NumberFormatException e) {
+        logger.debug("Found wrong input bytes for application ID " + id);
+      }
+    }
+    return totalInputBytes;
   }
 }

@@ -16,17 +16,22 @@
 
 package com.linkedin.drelephant.spark
 
-import com.linkedin.drelephant.analysis.{HadoopAggregatedData, HadoopApplicationData, HadoopMetricsAggregator}
+import com.linkedin.drelephant.analysis.{ HadoopAggregatedData, HadoopApplicationData, HadoopMetricsAggregator }
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.math.Statistics
-import com.linkedin.drelephant.spark.data.{SparkApplicationData}
+import com.linkedin.drelephant.spark.data.{ SparkApplicationData }
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
 import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
 
 import scala.util.Try
-
+import java.util.Date
+import com.linkedin.drelephant.AutoTuner
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
+import com.linkedin.drelephant.ElephantContext
+import org.apache.hadoop.yarn.conf.YarnConfiguration
+import org.apache.hadoop.conf.Configuration
 
 class SparkMetricsAggregator(private val aggregatorConfigurationData: AggregatorConfigurationData)
     extends HadoopMetricsAggregator {
@@ -52,10 +57,10 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     executorMemoryBytes <- executorMemoryBytesOf(data)
   } {
     val applicationDurationMillis = applicationDurationMillisOf(data)
-    if( applicationDurationMillis < 0) {
+    if (applicationDurationMillis < 0) {
       logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
     } else {
-      var (resourcesActuallyUsed, resourcesAllocatedForUse) = calculateResourceUsage(data.executorSummaries, executorMemoryBytes)
+      var (resourcesActuallyUsed, resourcesAllocatedForUse) = calculateResourceUsage(data)
       val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
       val resourcesWastedMBSeconds = (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
         case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
@@ -78,27 +83,32 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   }
 
   //calculates the resource usage by summing up the resources used per executor
-  private def calculateResourceUsage(executorSummaries: Seq[ExecutorSummary], executorMemoryBytes: Long): (BigInt, BigInt) = {
+  private def calculateResourceUsage(data: SparkApplicationData): (BigInt, BigInt) = {
+    val executorSummaries = data.executorSummaries
     var sumResourceUsage: BigInt = 0
-    var sumResourcesAllocatedForUse : BigInt = 0
+    var sumResourcesAllocatedForUse: BigInt = 0
     executorSummaries.foreach(
       executorSummary => {
-        var memUsedBytes: Long = executorSummary.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0).asInstanceOf[Number].longValue + MemoryFormatUtils.stringToBytes(SPARK_RESERVED_MEMORY)
-        var timeSpent: Long = executorSummary.totalDuration
-        val bytesMillisUsed = BigInt(memUsedBytes) * timeSpent
-        val bytesMillisAllocated = BigInt(executorMemoryBytes) * timeSpent
+        val memoryOverhead = overheadMemoryBytesOf(data).get
+        val roundedContainerBytes = getRoundedContainerBytes(data).get
+        val memUsedBytes: Long = executorSummary.peakJvmUsedMemory.getOrElse(JVM_USED_MEMORY, 0).asInstanceOf[Number].longValue + MemoryFormatUtils.stringToBytes(SPARK_RESERVED_MEMORY) + memoryOverhead
+        val timeSpent: Long = executorSummary.totalDuration
+        var totalCores: Int = executorSummary.totalCores
+        if (totalCores == 0) {
+          totalCores = 1
+        }
+        val bytesMillisUsed = BigInt(memUsedBytes) * timeSpent / totalCores
+        val bytesMillisAllocated = BigInt(roundedContainerBytes) * timeSpent / totalCores
         sumResourcesAllocatedForUse += (bytesMillisAllocated / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
         sumResourceUsage += (bytesMillisUsed / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
-      }
-    )
+      })
     (sumResourceUsage, sumResourcesAllocatedForUse)
   }
 
   private def aggregateresourcesAllocatedForUse(
     executorInstances: Int,
     executorMemoryBytes: Long,
-    applicationDurationMillis: Long
-   ): BigInt = {
+    applicationDurationMillis: Long): BigInt = {
     val bytesMillis = BigInt(executorInstances) * BigInt(executorMemoryBytes) * BigInt(applicationDurationMillis)
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
@@ -122,14 +132,43 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   private def totalExecutorTaskTimeMillisOf(data: SparkApplicationData): BigInt = {
     data.executorSummaries.map { executorSummary => BigInt(executorSummary.totalDuration) }.sum
   }
+  private def overheadMemoryBytesOf(data: SparkApplicationData): Option[Long] = {
+    val executorMemory = executorMemoryBytesOf(data)
+    val appConfigurationProperties = data.appConfigurationProperties
+    if (appConfigurationProperties.get(SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD).isEmpty) {
+      val overheadMemory = executorMemory.get * (appConfigurationProperties.get(SPARK_MEMORY_OVERHEAD_MULTIPLIER_PERCENT).getOrElse(DEFAULT_SPARK_MEMORY_OVERHEAD_MULTIPLIER_PERCENT)).toInt / 100
+      Option(overheadMemory)
+    } else {
+      appConfigurationProperties.get(SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD).map(MemoryFormatUtils.stringToBytes)
+    }
+  }
+
+  private def getRoundedContainerBytes(data: SparkApplicationData): Option[Long] = {
+    val increment = getIncrementBytes()
+    val executorMemory = executorMemoryBytesOf(data)
+    val memoryOverHead = overheadMemoryBytesOf(data)
+    val totalMemoryRequired = executorMemory.get + memoryOverHead.get
+    val roundedContainerBytes = Math.ceil((totalMemoryRequired * 1.0) / increment.get) * increment.get
+    Option(roundedContainerBytes.longValue())
+  }
+
+  private def getIncrementBytes(): Option[Long] = {
+    val config = new Configuration
+    val incrementMB = config.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
+      YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB)
+    Option(incrementMB * 1024 * 1024)
+  }
 }
 
 object SparkMetricsAggregator {
   /** The percentage of allocated memory we expect to waste because of overhead. */
+  val DEFAULT_SPARK_MEMORY_OVERHEAD_MULTIPLIER_PERCENT = "10"
   val DEFAULT_ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE = 0.5D
   val ALLOCATED_MEMORY_WASTE_BUFFER_PERCENTAGE_KEY = "allocated_memory_waste_buffer_percentage"
   val SPARK_RESERVED_MEMORY: String = "300M"
   val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
   val SPARK_EXECUTOR_MEMORY_KEY = "spark.executor.memory"
+  val SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD = "spark.yarn.executor.memoryOverhead"
+  val SPARK_MEMORY_OVERHEAD_MULTIPLIER_PERCENT = "spark.memoryOverhead.multiplier.percent"
   val JVM_USED_MEMORY = "jvmUsedMemory"
 }

@@ -138,6 +138,7 @@ object UnifiedMemoryHeuristicTest {
     rddBlocks = 0,
     memoryUsed = 0,
     diskUsed = 0,
+    totalCores = 1,
     activeTasks = 0,
     failedTasks = 0,
     completedTasks = 0,

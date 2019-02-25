@@ -222,6 +222,7 @@ object LegacyDataConverters {
         executorInfo.rddBlocks,
         executorInfo.memUsed,
         executorInfo.diskUsed,
+        executorInfo.totalCores,
         executorInfo.activeTasks,
         executorInfo.failedTasks,
         executorInfo.completedTasks,
