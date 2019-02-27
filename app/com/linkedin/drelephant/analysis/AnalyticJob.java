@@ -17,6 +17,7 @@
 package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.exceptions.core.ExceptionFingerprintingRunner;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
 import org.apache.log4j.Logger;
+import com.linkedin.drelephant.exceptions.util.Constant.*;
 
 
 /**
@@ -39,7 +41,6 @@ public class AnalyticJob {
   private static final int _RETRY_LIMIT = 3;                  // Number of times a job needs to be tried before going into second retry queue
   private static final int _SECOND_RETRY_LIMIT = 5;           // Number of times a job needs to be tried before dropping
   private static final String EXCLUDE_JOBTYPE = "exclude_jobtypes_filter"; // excluded Job Types for heuristic
-
 
   public boolean readyForSecondRetry() {
     this._timeLeftToRetry = this._timeLeftToRetry - 1;
@@ -62,6 +63,12 @@ public class AnalyticJob {
   private String _trackingUrl;
   private long _startTime;
   private long _finishTime;
+  // Job status is succeeded or failed
+  private boolean isSucceeded;
+  private String _amContainerLogsURL;
+  private String _amHostHttpAddress;
+  // Job final state is finished or failed
+  private String _state;
 
   /**
    * Returns the application type
@@ -270,7 +277,6 @@ public class AnalyticJob {
       }
     }
 
-
     HadoopMetricsAggregator hadoopMetricsAggregator = ElephantContext.instance().getAggregatorForApplicationType(getAppType());
     hadoopMetricsAggregator.aggregate(data);
     HadoopAggregatedData hadoopAggregatedData = hadoopMetricsAggregator.getResult();
@@ -325,8 +331,40 @@ public class AnalyticJob {
 
     // Retrieve information from job configuration like scheduler information and store them into result.
     InfoExtractor.loadInfo(result, data);
-
+    /**
+     * Exception fingerprinting is applied (if required)
+     */
+    boolean isExceptionFingerPrintingApplied = applyExceptionFingerprinting(result, data);
+    if (isExceptionFingerPrintingApplied) {
+      logger.debug(" Exception Fingerprinting is successfully applied ");
+    }
     return result;
+  }
+
+  /**
+   *
+   * @param result
+   * @param data
+   * @return true if the exception fingerprinting is applied else false
+   */
+
+  public boolean applyExceptionFingerprinting(AppResult result, HadoopApplicationData data) {
+    try {
+      if (!this.isSucceeded() && this.getAppType()
+          .getName()
+          .toLowerCase()
+          .equals(ExecutionEngineType.SPARK.name().toLowerCase())) {
+        logger.info("Exception fingerprinting is called for following appID " + this.getAppId());
+        // TODO: Create a separate thread do all EF heavy processing and then update data base will in the main
+        // thread . For this to be done InfoExtractor.loadInfo(result, data); has to be separated out.
+        // As job_execution_id is the common key between auto tuning and dr elephant processing
+        new ExceptionFingerprintingRunner(this, result, data, ExecutionEngineType.SPARK).run();
+        return true;
+      }
+    } catch (Exception e) {
+      logger.error(" Exception while applying exception fingerprinting  ", e);
+    }
+    return false;
   }
 
   /**
@@ -345,5 +383,80 @@ public class AnalyticJob {
    */
   public boolean retry() {
     return (_retries++) < _RETRY_LIMIT;
+  }
+
+  /**
+   *
+   * @return true if application is succeeded else false
+   */
+  public boolean isSucceeded() {
+    return isSucceeded;
+  }
+
+  /**
+   *
+   * @param succeeded
+   * @return current object after setting the property
+   */
+  public AnalyticJob setSucceeded(boolean succeeded) {
+    isSucceeded = succeeded;
+    return this;
+  }
+
+  /**
+   *
+   * @return AM container Logs URL
+   */
+  public String getAmContainerLogsURL() {
+    return _amContainerLogsURL;
+  }
+
+  /**
+   *
+   * @param amContainerLogsURL
+   * @return current object after setting the property
+   */
+  public AnalyticJob setAmContainerLogsURL(String amContainerLogsURL) {
+    _amContainerLogsURL = amContainerLogsURL;
+    return this;
+  }
+
+  /**
+   *
+   * @return http host address of AM
+   * This method is currently not been used . But will be used once
+   * exception fingerprinting have to parase log from HDFS
+   */
+  //TODO: Use this method when parsing logs from HDFS
+  public String getAmHostHttpAddress() {
+    return _amHostHttpAddress;
+  }
+
+  /**
+   *
+   * @param amHostHttpAddress
+   * @return current object after setting the property
+   */
+  public AnalyticJob setAmHostHttpAddress(String amHostHttpAddress) {
+    _amHostHttpAddress = amHostHttpAddress;
+    return this;
+  }
+
+  /**
+   *
+   * @return state of the job
+   */
+  public String getState() {
+    return _state;
+  }
+
+  /**
+   *
+   * @param state
+   * @return current object after setting the property
+   */
+  public AnalyticJob setState(String state) {
+    _state = state;
+    return this;
   }
 }

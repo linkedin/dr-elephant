@@ -26,7 +26,7 @@ import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 
 import scala.collection.JavaConverters
 
-private [heuristics] object SparkTestUtilities {
+private [spark] object SparkTestUtilities {
   import JavaConverters._
   import java.text.SimpleDateFormat
 
@@ -499,7 +499,7 @@ private [heuristics] object SparkTestUtilities {
     * @param totalDurationSec total task runtime for the executor.
     * @return executor summary.
     */
-  private[heuristics] def createExecutorSummary(
+  private[spark] def createExecutorSummary(
       id: String,
       jvmUsedMemoryMb: Long,
       totalGCTimeSec: Long,

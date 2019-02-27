@@ -28,7 +28,6 @@ import com.linkedin.drelephant.security.HadoopSecurity;
 
 import controllers.MetricsController;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.concurrent.*;
@@ -63,6 +62,7 @@ public class ElephantRunner implements Runnable {
   private int _executorNum;
   private HadoopSecurity _hadoopSecurity;
   private ThreadPoolExecutor _threadPoolExecutor;
+  private ThreadPoolExecutor _threadPoolExecutorFailure;
   private AnalyticJobGenerator _analyticJobGenerator;
 
   private void loadGeneralConfiguration() {
@@ -112,6 +112,16 @@ public class ElephantRunner implements Runnable {
           _threadPoolExecutor = new ThreadPoolExecutor(_executorNum, _executorNum, 0L, TimeUnit.MILLISECONDS,
                   new LinkedBlockingQueue<Runnable>(), factory);
 
+          /**
+           * creating seperate thread pool for failure jobs , since failure jobs may take more time
+           * because of exception fingerprinting and it should not block successful job analysis
+           *
+           */
+          int numberofThreadsforFailedJobs = (int)Math.ceil(_executorNum*1.0/2.0);
+          _threadPoolExecutorFailure = new ThreadPoolExecutor(numberofThreadsforFailedJobs, numberofThreadsforFailedJobs, 0L, TimeUnit.MILLISECONDS,
+              new LinkedBlockingQueue<Runnable>(), factory);
+
+          logger.info(" Number of threads for failure  "+numberofThreadsforFailedJobs);
           while (_running.get() && !Thread.currentThread().isInterrupted()) {
             _analyticJobGenerator.updateResourceManagerAddresses();
             lastRun = System.currentTimeMillis();
@@ -138,12 +148,17 @@ public class ElephantRunner implements Runnable {
             }
 
             for (AnalyticJob analyticJob : todos) {
-              _threadPoolExecutor.submit(new ExecutorJob(analyticJob));
+              if(analyticJob.isSucceeded()) {
+                _threadPoolExecutor.submit(new ExecutorJob(analyticJob));
+              }else{
+                _threadPoolExecutorFailure.submit(new ExecutorJob(analyticJob));
+              }
             }
 
             int queueSize = _threadPoolExecutor.getQueue().size();
-            MetricsController.setQueueSize(queueSize);
-            logger.info("Job queue size is " + queueSize);
+            int queueSizeFailed = _threadPoolExecutorFailure.getQueue().size();
+            MetricsController.setQueueSize(queueSize+queueSizeFailed);
+            logger.info("Job queue size is " + (queueSize+queueSizeFailed));
 
             //Wait for a while before next fetch
             waitInterval(_fetchInterval);
@@ -171,7 +186,7 @@ public class ElephantRunner implements Runnable {
       try {
         String analysisName = String.format("%s %s", _analyticJob.getAppType().getName(), _analyticJob.getAppId());
         long analysisStartTimeMillis = System.currentTimeMillis();
-        logger.info(String.format("Analyzing %s", analysisName));
+        logger.info(String.format("Analyzing %s having status %s", analysisName, _analyticJob.isSucceeded()));
         AppResult result = _analyticJob.getAnalysis();
         result.save();
         long processingTime = System.currentTimeMillis() - analysisStartTimeMillis;
@@ -233,6 +248,9 @@ public class ElephantRunner implements Runnable {
     _running.set(false);
     if (_threadPoolExecutor != null) {
       _threadPoolExecutor.shutdownNow();
+    }
+    if(_threadPoolExecutorFailure != null){
+      _threadPoolExecutorFailure.shutdownNow();
     }
   }
 }

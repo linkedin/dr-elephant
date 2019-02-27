@@ -58,6 +58,7 @@ public class JobExecution extends Model {
     public static final String jobExecUrl = "jobExecUrl";
     public static final String jobDefinition = "jobDefinition";
     public static final String flowExecution = "flowExecution";
+    public static final String autoTuningFault = "autoTuningFault";
     public static final String job = "job";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
@@ -98,6 +99,9 @@ public class JobExecution extends Model {
 
   @Transient
   public Double score;
+
+  @Column(nullable = false)
+  public boolean autoTuningFault;
 
   @Override
   public void save() {
