@@ -17,10 +17,10 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
+  ajax: Ember.inject.service(),
   beforeModel: function (transition) {
     this.jobid = transition.queryParams.jobid;
   },
-  ajax: Ember.inject.service(),
 
   model(){
     return Ember.RSVP.hash({
@@ -29,7 +29,7 @@ export default Ember.Route.extend({
     });
   },
   actions: {
-    showRecommendations(jobDefinitionId) {
+    updateShowRecommendationCount(jobDefinitionId) {
       return this.get('ajax').post('/rest/showTuneinParams', {
         contentType: 'application/json; charset=UTF-8',
         data: JSON.stringify({

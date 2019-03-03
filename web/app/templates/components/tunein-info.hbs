@@ -1,0 +1,89 @@
+{{!--
+
+ Copyright 2016 LinkedIn Corp.
+
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ use this file except in compliance with the License. You may obtain a copy of
+ the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ License for the specific language governing permissions and limitations under
+ the License.
+
+--}}
+
+ <!--If the jobSuggestedParamSetId is null then we won't show the TuneIn param div
+  as TuneIn params are not present for the job-->
+{{#unless (eq tunein.jobSuggestedParamSetId "null")}}
+  <div class="shadow details-container box">
+    <h4>TuneIn Recommended Parameters</h4>
+    {{#if showTuneinRecommendations}}
+      <hr class="bold-horizontal-line">
+      <table class="table info borderless">
+        <tbody>
+        <tr class="heading">
+          <th>Parameter Name </th>
+          <th>Suggested Value</th>
+          <th>Manual Override</th>
+        </tr>
+        {{#each tunein.tuningParameters as |param|}}
+          <tr>
+            <td class="bold">{{param.name}}</td>
+            <td>{{param.jobSuggestedParamValue}}</td>
+            <td>
+              {{input type="text" class="param-value" value=param.userSuggestedParamValue disabled=true}}
+            </td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+      <div class="severity-None">*These parameter suggestions are based on latest job execution</div>
+      <hr class="bold-horizontal-line">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-3 heading bold">Auto Tuning</div>
+          <div class="col-sm-3 heading bold">Tuning Algorithm</div>
+          <div class="col-sm-3 heading bold">Number of Iterations</div>
+        </div>
+        <div class="row">
+          <div class="col-sm-3">
+            <label class="switch">
+              {{input type="checkbox" checked=tunein.autoApply disabled=true}}
+              <div class="slider round"></div>
+            </label>
+          </div>
+          <div class="col-sm-3">
+            <select id='soflow' disabled>
+              {{#each tunein.tuningAlgorithmList as |algorithm|}}
+                <option value={{algorithm.name}} selected={{eq algorithm.name tunein.tuningAlgorithm}}>{{algorithm.name}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="col-sm-3">
+            {{input type="text" class="iteration-count" id="form-workflow-id" name="iterationCount" value=tunein.iterationCount disabled=true}}
+          </div>
+
+          <div class="col-sm-3">
+            <button type="submit" class="btn wf-button" disabled title="This funtionality will be available in the next release"> Submit</button>
+          </div>
+        </div>
+      </div>
+      <div class="severity-Critical">Above shown features will be enabled in the next release</div>
+      {{#if (or (eq jobs.severity "None") (eq jobs.severity "Low"))}}
+        <div class="severity-None">All Heuristics Passed with the above mentioned parameters</div>
+      {{/if}}
+      {{#unless (eq tunein.reasonForTuningDisable "NONE")}}
+        <div class="text info-text">Disabling TuneIn for this application as {{tunein.reasonForTuningDisable}}</div>
+      {{/unless}}
+    {{else}}
+      <div class="wrapper">
+        <button class="recommendation-button" {{action "showTuneinDetails"}}>Show TuneIn Recommended Parameters</button>
+      </div>
+    {{/if}}
+    <div class="info-text text-right">For any queries, contact <b>ask_tunein</b></div>
+  </div>
+{{/unless}}
