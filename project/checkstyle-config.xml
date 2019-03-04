@@ -14,7 +14,7 @@
   License for the specific language governing permissions and limitations under
   the License.
 -->
-<!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.3//EN" "http://checkstyle.sourceforge.net/dtds/configuration_1_3.dtd">
+<!DOCTYPE module PUBLIC "-//Source Forge//DTD Check Configuration 1.3//EN" "http://checkstyle.sourceforge.net/dtds/configuration_1_3.dtd">
 <module name="Checker">
   <!-- *********************** Configurations *********************** -->
   <!-- Filter out non Java files -->
