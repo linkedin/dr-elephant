@@ -73,7 +73,7 @@
         </div>
       </div>
       <div class="severity-Critical">Above shown features will be enabled in the next release</div>
-      {{#if (or (eq jobs.severity "None") (eq jobs.severity "Low"))}}
+      {{#if (or (eq job.severity "None") (eq job.severity "Low"))}}
         <div class="severity-None">All Heuristics Passed with the above mentioned parameters</div>
       {{/if}}
       {{#unless (eq tunein.reasonForTuningDisable "NONE")}}

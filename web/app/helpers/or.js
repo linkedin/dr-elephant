@@ -27,7 +27,7 @@ export function or(params) {
     throw new Error("Handlerbars Helper 'or' needs atleast 2 Boolean parameters");
   var result = false;
   for (var i = 0; i < params.length; i++) {
-    result = result || !!params[i];
+    result = result || params[i]
   }
   return result;
 }
