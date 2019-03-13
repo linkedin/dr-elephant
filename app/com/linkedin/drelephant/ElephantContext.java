@@ -34,6 +34,11 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.configurations.jobtype.JobTypeConfiguration;
 import com.linkedin.drelephant.mapreduce.MapReduceMetricsAggregator;
 import com.linkedin.drelephant.util.Utils;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -48,6 +53,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
+
 import play.api.templates.Html;
 
 
@@ -67,6 +73,7 @@ public class ElephantContext {
   private static final String JOB_TYPES_CONF = "JobTypeConf.xml";
   private static final String GENERAL_CONF = "GeneralConf.xml";
   private static final String AUTO_TUNING_CONF = "AutoTuningConf.xml";
+  private static final String ELEPHANT_CONF = "elephant.conf";
 
   private final Map<String, List<String>> _heuristicGroupedNames = new HashMap<String, List<String>>();
   private List<HeuristicConfigurationData> _heuristicsConfData;
@@ -84,6 +91,7 @@ public class ElephantContext {
   private final Map<ApplicationType, ElephantFetcher> _typeToFetcher = new HashMap<ApplicationType, ElephantFetcher>();
   private final Map<String, Html> _heuristicToView = new HashMap<String, Html>();
   private Map<ApplicationType, List<JobType>> _appTypeToJobTypes = new HashMap<ApplicationType, List<JobType>>();
+  private Properties elephantProperties = null;
 
   public static void init() {
     INSTANCE = new ElephantContext();
@@ -105,6 +113,10 @@ public class ElephantContext {
     return _autoTuningConf;
   }
 
+  public Properties getElephnatConf() {
+    return elephantProperties;
+  }
+
   private void loadConfiguration() {
     loadAggregators();
     loadFetchers();
@@ -112,10 +124,25 @@ public class ElephantContext {
     loadJobTypes();
     loadGeneralConf();
     loadAutoTuningConf();
-
+    loadElephantConf();
     // It is important to configure supported types in the LAST step so that we could have information from all
     // configurable components.
     configureSupportedApplicationTypes();
+  }
+
+  private void loadElephantConf() {
+    elephantProperties = new Properties();
+    InputStream elephantConfInput = null;
+    elephantConfInput = getClass().getClassLoader().getResourceAsStream(ELEPHANT_CONF);
+    if (elephantConfInput != null) {
+      try {
+        elephantProperties.load(elephantConfInput);
+      } catch (IOException e) {
+        throw new RuntimeException("Error in reading config file " + ELEPHANT_CONF);
+      }
+    } else {
+      throw new RuntimeException("property file " + ELEPHANT_CONF + " not found. ");
+    }
   }
 
   private void loadAggregators() {

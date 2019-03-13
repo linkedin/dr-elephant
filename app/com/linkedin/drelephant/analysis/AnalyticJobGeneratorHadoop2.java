@@ -18,12 +18,16 @@ package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
+
 import controllers.MetricsController;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
 import models.AppResult;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -43,8 +47,10 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final String RESOURCE_MANAGER_IDS = "yarn.resourcemanager.ha.rm-ids";
   private static final String RM_NODE_STATE_URL = "http://%s/ws/v1/cluster/info";
   private static final String FETCH_INITIAL_WINDOW_MS = "drelephant.analysis.fetch.initial.windowMillis";
+  private static final String RM_APPLICATION_FILTER = "rm_application_filter";
 
   private static Configuration configuration;
+  private static Properties elephantProperties;
 
   // We provide one minute job fetch delay due to the job sending lag from AM/NM to JobHistoryServer HDFS
   private static final long FETCH_DELAY = 60000;
@@ -110,6 +116,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   public void configure(Configuration configuration)
       throws IOException {
     this.configuration = configuration;
+    this.elephantProperties = ElephantContext.instance().getElephnatConf();
     String initialFetchWindowString = configuration.get(FETCH_INITIAL_WINDOW_MS);
     if (initialFetchWindowString != null) {
       long initialFetchWindow = Long.parseLong(initialFetchWindowString);
@@ -138,10 +145,15 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
     logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)
         + ", and current time: " + _currentTime);
+    String rmApplicationFilter = "";
+    if(elephantProperties.containsKey(RM_APPLICATION_FILTER)){
+      rmApplicationFilter = elephantProperties.getProperty(RM_APPLICATION_FILTER).replaceAll("^\"|\"$", "");
+    }
 
     // Fetch all succeeded apps
-    URL succeededAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
-            "/ws/v1/cluster/apps?finalStatus=SUCCEEDED&finishedTimeBegin=%s&finishedTimeEnd=%s",
+    URL succeededAppsURL =
+        new URL(new URL("http://" + _resourceManagerAddress), String.format(
+            "/ws/v1/cluster/apps?finalStatus=SUCCEEDED&finishedTimeBegin=%s&finishedTimeEnd=%s&" + rmApplicationFilter,
             String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
     logger.info("The succeeded apps URL is " + succeededAppsURL);
     List<AnalyticJob> succeededApps = readApps(succeededAppsURL, true);
@@ -150,9 +162,10 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     // Fetch all failed apps
     // state: Application Master State
     // finalStatus: Status of the Application as reported by the Application Master
-    URL failedAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
-        "/ws/v1/cluster/apps?finalStatus=FAILED&state=FINISHED&finishedTimeBegin=%s&finishedTimeEnd=%s",
-        String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
+    URL failedAppsURL =
+        new URL(new URL("http://" + _resourceManagerAddress), String.format(
+            "/ws/v1/cluster/apps?finalStatus=FAILED&state=FINISHED&finishedTimeBegin=%s&finishedTimeEnd=%s&"
+                + rmApplicationFilter, String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
     List<AnalyticJob> failedApps = readApps(failedAppsURL, false);
     logger.info("The failed apps URL is " + failedAppsURL);
     appList.addAll(failedApps);
