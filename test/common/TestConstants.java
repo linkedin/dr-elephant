@@ -16,6 +16,9 @@
 
 package common;
 
+import scala.Int;
+
+
 public class TestConstants {
 
   // Test data constants

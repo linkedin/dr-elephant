@@ -32,6 +32,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.validation.constraints.NotNull;
 import models.AppHeuristicResult;
 import models.AppResult;
 import models.TuningAlgorithm;
@@ -78,6 +80,7 @@ import play.data.Form;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import views.html.helper.form;
 import views.html.index;
 import views.html.help.metrics.helpRuntime;
 import views.html.help.metrics.helpWaittime;
@@ -135,8 +138,24 @@ public class Application extends Controller {
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
+  public static final String SESSION_ID_KEY = "session_id";
+  public static final String PROJECT_KEY = "project";
+  public static final String PASSWORD = "password";
+  public static final String ERROR_KEY = "error";
+  public static final String SCHEDULER_URL = "schedulerUrl";
+  public static final String AUTHORIZATION_AJAX_ENDPOINT = "checkForWritePermission";
+  public static final String IS_USER_AUTHORISED_KEY = "hasWritePermission";
+  public static final String AJAX = "ajax";
+  public static final String AZKABAN_AUTHORIZATION_URL_SUFFIX = "/manager";
+  public static final String AZKABAN_AUTHENTICATION_URL_SUFFIX = "/?action=login";
+  public static final String AZKABAN_SESSION_ID_KEY = "session.id";
+  public static final String STATUS = "status";
+  public static final String SUCCESS = "success";
+
 
   private enum Version {OLD,NEW};
+
+
 
   // Configuration properties
   private static final String SEARCH_MATCHES_PARTIAL_CONF = "drelephant.application.search.match.partial";
@@ -1911,7 +1930,11 @@ public class Application extends Controller {
     try {
       response = authenticateUser(username, password, schedulerUrl + AZKABAN_AUTHENTICATION_URL_SUFFIX);
     } catch (Exception ex) {
+<<<<<<< HEAD
       logger.error("Some error occured while authenticating the user ", ex);
+=======
+      logger.error("Some error occured while authenticating the user " + ex);
+>>>>>>> Implementation of Authentication and Authorization for TuneIn purpose
       return internalServerError();
     }
     return ok(Json.toJson(response));
@@ -1931,11 +1954,10 @@ public class Application extends Controller {
    *}
    **/
   public static Result getUserAuthorizationStatus(String sessionId, String jobDefId, String schedulerUrl) {
-    logger.info("Checking for user authorization");
     if (!isSet(sessionId) || !isSet(jobDefId) || !isSet(schedulerUrl)) {
       return badRequest("SessionId or JobDefId or SchedulerUrl cannot be empty");
     }
-    final Map<String, String> responseMap = new HashMap();
+    Map<String, String> responseMap = new HashMap();
     try {
       Map<String, String> queryParams = new HashMap();
       queryParams.put(AZKABAN_SESSION_ID_KEY, sessionId);
@@ -1953,7 +1975,6 @@ public class Application extends Controller {
       logger.error("Error while fetching User's Project Authorization status ",ex);
       return internalServerError("Something went wrong while authorizing the user");
     }
-    logger.info(responseMap.toString());
     return ok(Json.toJson(responseMap));
   }
 
@@ -2160,7 +2181,9 @@ public class Application extends Controller {
     if (!isSet(url)) {
       throw new IllegalArgumentException("URL cannot be NULL for POST call");
     }
+
     logger.info("Making a POST call to URL " + url);
+
     List<NameValuePair> postEntity = new ArrayList();
     if (postParams != null) {
       for (Map.Entry<String, String> entry : postParams.entrySet()) {

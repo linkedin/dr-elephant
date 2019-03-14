@@ -20,7 +20,9 @@ import Scheduler from 'dr-elephant/utils/scheduler';
 export default Ember.Route.extend({
   notifications: Ember.inject.service('notification-messages'),
   ajax: Ember.inject.service(),
-  beforeModel: function (transition) {
+  beforeModel: function(transition) {
+    let loginController = this.controllerFor('login');
+    loginController.set('previousTransition', transition);
     this.jobid = transition.queryParams.jobid;
   },
 
@@ -89,7 +91,6 @@ export default Ember.Route.extend({
           this.get('notifications').error("Something went wrong!!", {
             autoClear: true
           });
-
       }
     });
     return authorizationStatus;
