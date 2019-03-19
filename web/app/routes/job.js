@@ -58,12 +58,12 @@ export default Ember.Route.extend({
       },
       async: false
     }).then((response) => {
-      if (response.hasOwnProperty("hasWritePermission") && response.hasWritePermission === "true") {
-      if (response.hasWritePermission === "true") {
-        authorizationStatus = "authorised";
-      } else {
-        authorizationStatus = "unauthorised";
-      }
+      if (response.hasOwnProperty("hasWritePermission")) {
+        if (response.hasWritePermission === "true") {
+          authorizationStatus = "authorised";
+        } else {
+          authorizationStatus = "unauthorised";
+        }
     } else if (response.hasOwnProperty("error")) {
       if (response.error === "session") {
         console.log("Previous session_id expired, so proceed to login")
