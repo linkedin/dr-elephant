@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.validation.constraints.NotNull;
 import models.AppHeuristicResult;
 import models.AppResult;
 import models.TuningAlgorithm;

@@ -20,6 +20,8 @@ import Scheduler from 'dr-elephant/utils/scheduler';
 export default Ember.Route.extend({
   notifications: Ember.inject.service('notification-messages'),
   ajax: Ember.inject.service(),
+  notifications: Ember.inject.service('notification-messages'),
+
   beforeModel: function(transition) {
     let loginController = this.controllerFor('login');
     loginController.set('previousTransition', transition);
