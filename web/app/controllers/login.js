@@ -18,6 +18,7 @@ import Ember from 'ember';
 
 export default Ember.Controller.extend({
   session: Ember.inject.service(),
+  notifications: Ember.inject.service('notification-messages'),
   error: '',
   showError: false,
   schedulerUrl: null,
@@ -25,14 +26,18 @@ export default Ember.Controller.extend({
   actions: {
     login() {
       let {username, password} = this.getProperties('username', 'password');
-      username = this.getValidStringValue(username)
-      password = this.getValidStringValue(password)
+      username = this.getValidStringValue(username);
+      password = this.getValidStringValue(password);
       if (!username.length || !password.length) {
-        alert("Username or Password cannot be empty.")
+        this.get('notifications').error("Username or Password cannot be empty.", {
+          autoClear: true
+        });
       } else if (this.cluster == null || this.schedulerUrl == null){
         /*if cluster or the schedulerUrl is empty this means that
            login route is not transitioned from the job page */
-        alert("Cannot process your request!! Visit the Job Page again and retry")
+        this.get('notifications').error("Cannot process your request!! Visit the Job Page again and retry", {
+          autoClear: true
+        });
       } else {
           //session service will return an Ajax promise as a response of the POST call to /login API
           this.get("session").login(username, password, this.schedulerUrl).then((response) => {
@@ -44,23 +49,31 @@ export default Ember.Controller.extend({
                 expires: inTenHours
               });
               //setting user
-              this.get("session").setLoggedInUser(username)
+              this.get("session").setLoggedInUser(username);
               this.set("error", '');
               //Transit to previous route if available or transit to index page
-              alert("Login was successful. Now you can modify the TuneIn parameters.");
+              this.get('notifications').success("Successful Login", {
+                autoClear: true
+              });
               this.transitionToPreviousRoute();
             } else if (response.hasOwnProperty("error")) {
                 this.set("showError", true);
                 this.set("error", response.error)
             } else {
-                alert("Something went wrong while processing your request");
+                this.get('notifications').error("Something went wrong while processing your request", {
+                  autoClear: true
+                });
             }
             this.resetLoginProperties();
           }, (error) => {
               if (error.status === 500) {
-                alert("Oops!! Something went wrong while processing your request")
+                this.get('notifications').error("The server was unable to process your request", {
+                  autoClear: true
+                });
               } else if (error.responseText) {
-                alert(error.responseText)
+                this.get('notifications').error(error.responseText, {
+                  autoClear: true
+                });
               }
               this.resetLoginProperties();
           });

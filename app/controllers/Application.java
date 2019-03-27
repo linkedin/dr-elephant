@@ -59,7 +59,6 @@ import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -1943,7 +1942,6 @@ public class Application extends Controller {
       List<NameValuePair> jobDefQueryParams = URLEncodedUtils.parse(new java.net.URI(jobDefId), "UTF-8");
       for (NameValuePair param: jobDefQueryParams) {
         if (param.getName().equals(PROJECT_KEY)) {
-          logger.info(PROJECT_KEY + " " + param.getValue());
           queryParams.put(PROJECT_KEY, param.getValue());
           break;
         }

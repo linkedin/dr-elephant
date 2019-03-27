@@ -92,6 +92,11 @@ public class Web extends Controller {
   private static final String AZKABAN_TO_CLUSTER_MAP_KEY = "azkaban_to_cluster_map";
   private static Map<String, String> azkabanKeyToClusterNameMap = new HashMap();
 
+  private enum CLUSTER_MAP {
+    KEY,
+    VALUE
+  }
+
   /**
    * Returns the json object for the dashboard summaries of jobs analzyed in last day.
    */
@@ -2029,7 +2034,7 @@ public class Web extends Controller {
         if (row.length != 2) {
           throw new IllegalArgumentException("Config azkaban_to_cluster_map is not configured properly");
         }
-        azkabanKeyToClusterNameMap.put(row[0], row[1]);
+        azkabanKeyToClusterNameMap.put(row[CLUSTER_MAP.KEY.ordinal()], row[CLUSTER_MAP.VALUE.ordinal()]);
       }
     }
     for (Map.Entry<String, String> keyValuePair : azkabanKeyToClusterNameMap.entrySet()) {
