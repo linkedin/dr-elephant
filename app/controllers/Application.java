@@ -70,6 +70,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
+import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import play.api.templates.Html;
 import play.data.DynamicForm;
@@ -1930,39 +1931,29 @@ public class Application extends Controller {
    *}
    **/
   public static Result getUserAuthorizationStatus(String sessionId, String jobDefId, String schedulerUrl) {
+    logger.info("Checking for user authorization");
     if (!isSet(sessionId) || !isSet(jobDefId) || !isSet(schedulerUrl)) {
       return badRequest("SessionId or JobDefId or SchedulerUrl cannot be empty");
     }
-    Map<String, String> responseMap = new HashMap();
+    final Map<String, String> responseMap = new HashMap();
     try {
       Map<String, String> queryParams = new HashMap();
       queryParams.put(AZKABAN_SESSION_ID_KEY, sessionId);
       queryParams.put(AJAX, AUTHORIZATION_AJAX_ENDPOINT);
-      //Extracting Project Name from the Job Definition id
-      List<NameValuePair> jobDefQueryParams = URLEncodedUtils.parse(new java.net.URI(jobDefId), "UTF-8");
-      for (NameValuePair param: jobDefQueryParams) {
-        if (param.getName().equals(PROJECT_KEY)) {
-          queryParams.put(PROJECT_KEY, param.getValue());
-          break;
-        }
-      }
-      if (!queryParams.containsKey(PROJECT_KEY)) {
+      String projectName = getProjectName(jobDefId);
+      if (projectName != null) {
+        queryParams.put(PROJECT_KEY, projectName);
+      } else {
         return badRequest("Job Definition doesn't contain Project name");
       }
       HttpResponse response = httpGetCall(schedulerUrl + AZKABAN_AUTHORIZATION_URL_SUFFIX, queryParams);
       HttpEntity entity = response.getEntity();
-      if (entity != null) {
-        JSONObject result = new JSONObject(EntityUtils.toString(entity));
-        if (result.has(ERROR_KEY)) {
-          responseMap.put(ERROR_KEY, result.get(ERROR_KEY).toString());
-        } else if (result.get(IS_USER_AUTHORISED_KEY) != null){
-          responseMap.put(IS_USER_AUTHORISED_KEY, result.get(IS_USER_AUTHORISED_KEY).toString());
-        }
-      }
+      handleAuthorizationResponse(entity, responseMap);
     } catch (Exception ex) {
       logger.error("Error while fetching User's Project Authorization status ",ex);
       return internalServerError("Something went wrong while authorizing the user");
     }
+    logger.info(responseMap.toString());
     return ok(Json.toJson(responseMap));
   }
 
@@ -2180,5 +2171,38 @@ public class Application extends Controller {
     httpPost.setEntity(new UrlEncodedFormEntity(postEntity));
     CloseableHttpClient client = HttpClients.createDefault();
     return client.execute(httpPost);
+  }
+
+  /**
+   * Method for extracting the project name from jobDefId which is a URL
+   * @param jobDefId Job Definition Id
+   * @return Project name if exists in the JobDefId else returns `null`
+   */
+  private static String getProjectName(String jobDefId) throws URISyntaxException {
+    List<NameValuePair> jobDefQueryParams = URLEncodedUtils.parse(new java.net.URI(jobDefId), "UTF-8");
+    for (NameValuePair param: jobDefQueryParams) {
+      if (param.getName().equals(PROJECT_KEY)) {
+        return param.getValue();
+      }
+    }
+    return null;
+  }
+
+  /**
+   * This method is responsible for parsing the response for Authorization call to Scheduler and then populate the
+   * response for the TuneIn's Authorization API
+   * @param entity  Response entity from Scheduler Authorization call
+   * @param responseMap Map containing response for the authorization API
+   */
+  private static void handleAuthorizationResponse(HttpEntity entity, final Map<String, String> responseMap)
+      throws IOException, JSONException {
+    if (entity != null) {
+      JSONObject result = new JSONObject(EntityUtils.toString(entity));
+      if (result.has(ERROR_KEY)) {
+        responseMap.put(ERROR_KEY, result.get(ERROR_KEY).toString());
+      } else if (result.get(IS_USER_AUTHORISED_KEY) != null){
+        responseMap.put(IS_USER_AUTHORISED_KEY, result.get(IS_USER_AUTHORISED_KEY).toString());
+      }
+    }
   }
 }
