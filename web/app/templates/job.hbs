@@ -92,75 +92,8 @@
       </tbody>
     </table>
   </div>
-  {{#unless (eq model.tunein.jobSuggestedParamSetId "null")}}
-    <div class="shadow details-container box">
-      <h4>TuneIn Recommended Parameters</h4>
-      {{#if showTuneinRecommendations}}
-        <hr class="bold-horizontal-line">
-        <table class="table info borderless">
-          <tbody>
-          <tr class="heading">
-            <th>Parameter Name</th>
-            <th>Suggested Value</th>
-            <th>Manual Override</th>
-          </tr>
-          {{#each model.tunein.tuningParameters as |tuningParam|}}
-            <tr>
-              <td class="bold">{{tuningParam.name}}</td>
-              <td>{{tuningParam.jobSuggestedParamValue}}</td>
-              <td>
-                {{input type="text" class="param-value" value=tuningParam.userSuggestedParamValue disabled=true}}
-              </td>
-            </tr>
-          {{/each}}
-          </tbody>
-        </table>
-        <div class="severity-None">*These parameter suggestions are based on latest job execution</div>
-        <hr class="bold-horizontal-line">
-        <div class="container">
-          <div class="row">
-            <div class="col-sm-3 heading bold">Auto Tuning</div>
-            <div class="col-sm-3 heading bold">Tuning Algorithm</div>
-            <div class="col-sm-3 heading bold">Number of Iterations</div>
-          </div>
-          <div class="row">
-            <div class="col-sm-3">
-              <label class="switch">
-                {{input type="checkbox" checked=model.tunein.autoApply disabled=true}}
-                <div class="slider round"></div>
-              </label>
-            </div>
-            <div class="col-sm-3">
-              <select id='soflow' disabled>
-                {{#each model.tunein.tuningAlgorithmList as |algorithm|}}
-                  <option value={{algorithm.name}} selected={{eq algorithm.name model.tunein.tuningAlgorithm}}>{{algorithm.name}}</option>
-                {{/each}}
-              </select>
-            </div>
-            <div class="col-sm-3">
-              {{input type="text" class="iteration-count" id="form-workflow-id" name="iterationCount" value=model.tunein.iterationCount disabled=true}}
-            </div>
 
-            <div class="col-sm-3">
-              <button type="submit" class="btn wf-button" disabled title="This will be available in the next release"> Submit</button>
-            </div>
-          </div>
-        </div>
-        <div class="severity-Critical">Above shown features will be enabled in the next release</div>
-        {{#if (eq model.jobs.severity "None")}}
-          <div class="severity-None">All Heuristics Passed with the above mentioned parameters</div>
-        {{/if}}
-        {{#unless (eq model.tunein.reasonForTuningDisable "NONE")}}
-          <div class="text info-text">Disabling TuneIn for this application as {{model.tunein.reasonForTuningDisable}}</div>
-        {{/unless}}
-      {{else}}
-        <div class="wrapper">
-          <button class="recommendation-button" {{action "showRecommendation" model.tunein.jobDefinitionId}}>Show TuneIn Recommended Parameters</button>
-        </div>
-      {{/if}}
-      <div class="info-text text-right">For any queries, contact <b>ask_tunein</b></div>
-    </div>
-  {{/unless}}
+  {{tunein-info tunein=model.tunein job=model.jobs action="updateShowRecommendationCount" param=model.tunein.jobDefinitionId}}
 
   <div class="shadow summary-list-container">
     <div class="summary-list-header">Applications</div>
