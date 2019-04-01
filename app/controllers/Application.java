@@ -1929,11 +1929,7 @@ public class Application extends Controller {
     try {
       response = authenticateUser(username, password, schedulerUrl + AZKABAN_AUTHENTICATION_URL_SUFFIX);
     } catch (Exception ex) {
-<<<<<<< HEAD
       logger.error("Some error occured while authenticating the user ", ex);
-=======
-      logger.error("Some error occured while authenticating the user " + ex);
->>>>>>> Implementation of Authentication and Authorization for TuneIn purpose
       return internalServerError();
     }
     return ok(Json.toJson(response));
