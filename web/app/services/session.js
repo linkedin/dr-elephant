@@ -33,10 +33,23 @@ export default Ember.Service.extend({
     })
   },
   logout(){
-    this.set("currentUser", null)
-    Cookies.remove('userId')
+    this.set("currentUser", null);
   },
   setLoggedInUser(username) {
     this.set("currentUser", username);
+    //saving username to localStorage for persistence even after browser refresh
+    localStorage.setItem('currentUser', username);
+  },
+  getActiveUser(){
+    let activeUser = this.get('currentUser');
+    if (activeUser) {
+      return activeUser;
+    } else {
+      activeUser = localStorage.getItem('currentUser');
+      if (activeUser) {
+        this.set('currentUser', activeUser);
+      }
+      return activeUser;
+    }
   }
 })

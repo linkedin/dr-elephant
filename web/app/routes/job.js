@@ -121,7 +121,7 @@ export default Ember.Route.extend({
       const cookieName = 'elephant.' + cluster + '.session.id';
       const scheduler = new Scheduler();
       const schedulerUrl = scheduler.getSchedulerUrl(jobDefId, schedulerName);
-      const currentUser = this.get('session').currentUser;
+      const currentUser = this.get('session').getActiveUser();
       if (!Cookies.get(cookieName)) {
         this.doLogin(schedulerUrl, cluster);
       } else {
