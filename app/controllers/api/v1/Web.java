@@ -1777,10 +1777,10 @@ public class Web extends Controller {
     HadoopSecurity _hadoopSeverity = HadoopSecurity.getInstance();
 
 
-    logger.info(String.format("scheduler + ", scheduler));
+    logger.info(String.format("scheduler + %s", scheduler));
     if(scheduler==null) {
       scheduler = "azkaban";
-      logger.info(String.format("Setting scheduler ", scheduler));
+      logger.info(String.format("Setting scheduler %s", scheduler));
     }
     if(!InfoExtractor.getSchedulersConfiguredForException().contains(scheduler)) {
       logger.info("scheduler not found ");
