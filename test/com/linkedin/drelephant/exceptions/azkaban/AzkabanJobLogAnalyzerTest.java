@@ -27,7 +27,7 @@ public class AzkabanJobLogAnalyzerTest {
 
   private String succeededAzkabanJobLog = "24-06-2016 03:12:53 PDT extractCrawlCompanyIndustryClassificationFlow_extractionFinalizer INFO - Starting job sample_sample at 1466763173873\n"
       + "24-06-2016 03:12:53 PDT extractCrawlCompanyIndustryClassificationFlow_extractionFinalizer INFO - job JVM args: -Dazkaban.flowid=sampleFlow -Dazkaban.execid=557260 -Dazkaban.jobid=sample_jobr\n"
-      + "24-06-2016 03:12:55 PDT extractCrawlCompanyIndustryClassificationFlow_extractionFinalizer INFO - Finishing job sample_job attempt: 0 at 1466763175040 with status SUCCEEDED";
+      + "24-06-2016 03:12:55 PDT extractCrawlCompanyIndustryClassificationFlow_extractionFinalizer INFO - Finishing job sample_job at 1466763175040 with status SUCCEEDED";
 
   private String killedAzkabanJobLog = "28-06-2016 16:58:20 PDT feature-exploration_create-index-map INFO - Starting job sample at 1467158300703\n"
       + "28-06-2016 17:58:05 PDT feature-exploration_create-index-map ERROR - Kill has been called.\n"
@@ -37,7 +37,7 @@ public class AzkabanJobLogAnalyzerTest {
       + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map INFO - Cancelling mr job tracker token \n"
       + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map ERROR - Job run failed!\n"
       + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map ERROR - java.lang.RuntimeException: azkaban.jobExecutor.utils.process.ProcessFailureException cause: java.lang.RuntimeException: azkaban.jobExecutor.utils.process.ProcessFailureException\n"
-      + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map INFO - Finishing job feature-exploration_create-index-map attempt: 0 at 1467161886022 with status KILLED\n"
+      + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map INFO - Finishing job feature-exploration_create-index-map at 1467161886022 with status KILLED\n"
       + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map INFO - applicationIds to kill: [application_1466048666726_642278]\n"
       + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map INFO - start klling application: application_1466048666726_642278\n"
       + "28-06-2016 17:58:06 PDT feature-exploration_create-index-map INFO - successfully killed application: application_1466048666726_642278";
@@ -53,7 +53,7 @@ public class AzkabanJobLogAnalyzerTest {
       + "24-06-2016 03:12:40 PDT help_center_sessions INFO - \tat org.apache.hadoop.ipc.Server$Handler.run(Server.java:2038\n"
       + "24-06-2016 03:13:00 PDT help_center_sessions ERROR - Job run failed!\n"
       + "24-06-2016 03:13:00 PDT help_center_sessions ERROR - java.lang.RuntimeException: azkaban.jobExecutor.utils.process.ProcessFailureException cause: java.lang.RuntimeException: azkaban.jobExecutor.utils.process.ProcessFailureException\n"
-      + "24-06-2016 03:13:00 PDT help_center_sessions INFO - Finishing job help_center_sessions attempt: 0 at 1466763180242 with status FAILED";
+      + "24-06-2016 03:13:00 PDT help_center_sessions INFO - Finishing job help_center_sessions at 1466763180242 with status FAILED";
 
   private String scriptLevelFailedAzkabanJobLog="28-06-2016 16:23:10 PDT job_search_trigger INFO - Starting job job_search_trigger at 1467156190329\n"
       + "28-06-2016 16:23:12 PDT job_search_trigger INFO - INFO Last attempt: false\n"
@@ -67,7 +67,7 @@ public class AzkabanJobLogAnalyzerTest {
       + "28-06-2016 16:23:12 PDT job_search_trigger INFO - Process completed unsuccessfully in 1 seconds.\n"
       + "28-06-2016 16:23:12 PDT job_search_trigger ERROR - Job run failed!\n"
       + "28-06-2016 16:23:12 PDT job_search_trigger ERROR - java.lang.RuntimeException: azkaban.jobExecutor.utils.process.ProcessFailureException cause: java.lang.RuntimeException: azkaban.jobExecutor.utils.process.ProcessFailureException\n"
-      + "28-06-2016 16:23:12 PDT job_search_trigger INFO - Finishing job job_search_trigger attempt: 0 at 1467156192215 with status FAILED";
+      + "28-06-2016 16:23:12 PDT job_search_trigger INFO - Finishing job job_search_trigger at 1467156192215 with status FAILED";
 
   private String azkabanLevelFailedAzkabanJobLog = "28-06-2016 13:45:27 PDT feature-exploration_create-index-map INFO - Starting job feature-exploration_create-index-map at 1467146727699\n"
       + "28-06-2016 13:45:27 PDT feature-exploration_create-index-map INFO - job JVM args: -Dazkaban.flowid=feature-exploration -Dazkaban.execid=593197 -Dazkaban.jobid=feature-exploration_create-index-map\n"
@@ -76,7 +76,7 @@ public class AzkabanJobLogAnalyzerTest {
       + "28-06-2016 13:45:27 PDT feature-exploration_create-index-map ERROR - Failed to build job type\n"
       + "azkaban.jobtype.JobTypeManagerException: Failed to build job executor for job feature-exploration_create-index-map\n"
       + "28-06-2016 13:45:27 PDT feature-exploration_create-index-map ERROR - Job run failed preparing the job.\n"
-      + "28-06-2016 13:45:27 PDT feature-exploration_create-index-map INFO - Finishing job feature-exploration_create-index-map attempt: 0 at 1467146727702 with status FAILED";
+      + "28-06-2016 13:45:27 PDT feature-exploration_create-index-map INFO - Finishing job feature-exploration_create-index-map at 1467146727702 with status FAILED";
 
   private AzkabanJobLogAnalyzer analyzedSucceededLog;
   private AzkabanJobLogAnalyzer analyzedKilledLog;
