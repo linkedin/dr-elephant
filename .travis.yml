@@ -2,12 +2,13 @@ language: scala
 sudo: true
 jdk:
   - oraclejdk8
-scala:
-  - 2.10.4
 python: "2.6"
 install:
   - sudo pip install inspyred
   - sudo pip install argparse
+
+script:
+  - ./travis.sh
 
 # only build PRs for the following branches (not all branch pushes)
 branches:
