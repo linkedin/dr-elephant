@@ -1,0 +1,343 @@
+<!--
+  Copyright 2016 LinkedIn Corp.
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License. You may obtain a copy of
+  the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+<!--
+If you wish to turn off checking for a section of code, you can put a comment in the source
+before and after the section, with the following syntax:
+  // scalastyle:off
+  ...  // code which leads to scalastyle error
+  // scalastyle:on
+
+You can also disable only one rule, by specifying its rule id, as specified in:
+  http://www.scalastyle.org/rules-1.0.0.html
+  // scalastyle:off header.matches
+  ...  // file header
+  // scalastyle:on header.matches
+-->
+<scalastyle>
+  <name>Scalastyle standard configuration</name>
+
+  <!-- *********************** Issues which will be treated as errors hence enforced *********************** -->
+  <!-- File should not contain tabs -->
+  <check level="error" class="org.scalastyle.file.FileTabChecker" enabled="true"></check>
+  <!-- Scala files should have a header like below -->
+  <check level="error" class="org.scalastyle.file.HeaderMatchesChecker" enabled="true">
+    <parameters>
+      <parameter name="header"><![CDATA[/*
+ * Copyright 2016 LinkedIn Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */]]></parameter>
+    </parameters>
+  </check>
+
+  <!-- LENGTHS -->
+  <!-- Length of the file should be lesser than 2000 lines -->
+  <check level="error" class="org.scalastyle.file.FileLengthChecker" enabled="true">
+    <parameters>
+      <parameter name="maxFileLength"><![CDATA[2000]]></parameter>
+    </parameters>
+  </check>
+  <!-- Length of a line should not exceed 120 characters -->
+  <check level="error" class="org.scalastyle.file.FileLineLengthChecker" enabled="true">
+    <parameters>
+      <parameter name="maxLineLength"><![CDATA[120]]></parameter>
+      <parameter name="tabSize"><![CDATA[2]]></parameter>
+      <parameter name="ignoreImports">true</parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.MethodLengthChecker" enabled="true">
+    <parameters>
+      <parameter name="maxLength"><![CDATA[150]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.ParameterNumberChecker" enabled="true">
+    <parameters>
+      <parameter name="maxParameters"><![CDATA[7]]></parameter>
+    </parameters>
+  </check>
+
+  <!-- NAMING CONVENTIONS. Refer to https://docs.scala-lang.org/style/naming-conventions.html -->
+  <check level="error" class="org.scalastyle.scalariform.ClassNamesChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[[A-Z][A-Za-z]*]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.ObjectNamesChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[[A-Z][A-Za-z]*]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.MethodNamesChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.PackageObjectNamesChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z]*$]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.ClassTypeParameterChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[A-Z_]$]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.FieldNamesChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
+      <parameter name="objectFieldRegex"><![CDATA[^[A-Z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.PackageNamesChecker" enabled="true">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z]*$]]></parameter>
+    </parameters>
+  </check>
+
+  <!-- CODING -->
+  <!-- Equals and hash code related rules -->
+  <check level="error" class="org.scalastyle.scalariform.EqualsHashCodeChecker" enabled="true"></check>
+  <check level="error" class="org.scalastyle.scalariform.CovariantEqualsChecker" enabled="true"></check>
+
+  <check level="error" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" enabled="true">
+    <customMessage><![CDATA[Public method declared on a type is like an API. Explicitly declare a return type to ensure
+    other code which depends on it won’t break unexpectedly.]]></customMessage>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.StructuralTypeChecker" enabled="true">
+    <customMessage><![CDATA[Structural types in Scala can use reflection which can have performance
+    consequences.]]></customMessage>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.NonASCIICharacterChecker" enabled="true"></check>
+
+  <!-- Do not allow a bunch of collections in the package scala.collection.mutable -->
+  <check customId="mutablesynchronizedbuffer" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">mutable\.SynchronizedBuffer</parameter>
+    </parameters>
+    <customMessage><![CDATA[Synchronization via traits is inherently unreliable. Consider
+      java.util.concurrent.ConcurrentLinkedQueue as an alternative. If you must use mutable.SynchronizedBuffer, wrap
+      the code block with:
+      // scalastyle:off mutablesynchronizedbuffer
+      mutable.SynchronizedBuffer[...]
+      // scalastyle:on mutablesynchronizedbuffer
+    ]]></customMessage>
+  </check>
+  <check customId="mutablesynchronizedmap" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">mutable\.SynchronizedMap</parameter>
+    </parameters>
+    <customMessage><![CDATA[Synchronization via traits is inherently unreliable. Consider
+      java.util.concurrent.ConcurrentHashMap as an alternative. If you must use mutable.SynchronizedMap, wrap
+      the code block with:
+      // scalastyle:off mutablesynchronizedmap
+      mutable.SynchronizedMap[...]
+      // scalastyle:on mutablesynchronizedmap
+    ]]></customMessage>
+  </check>
+  <check customId="mutablesynchronizedset" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">mutable\.SynchronizedSet</parameter>
+    </parameters>
+    <customMessage><![CDATA[Synchronization via traits is inherently unreliable. Consider
+      java.util.concurrent.ConcurrentHashMap[A,Unit] as an alternative. If you must use mutable.SynchronizedSet, wrap
+      the code block with:
+      // scalastyle:off mutablesynchronizedset
+      mutable.SynchronizedSet[...]
+      // scalastyle:on mutablesynchronizedset
+    ]]></customMessage>
+  </check>
+  <check customId="mutablesynchronizedqueue" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">mutable\.SynchronizedQueue</parameter>
+    </parameters>
+    <customMessage><![CDATA[Synchronization via selective overriding of methods is inherently unreliable. Consider
+      java.util.concurrent.ConcurrentLinkedQueue as an alternative. If you must use mutable.SynchronizedQueue, wrap
+      the code block with:
+      // scalastyle:off mutablesynchronizedqueue
+      mutable.SynchronizedQueue[...]
+      // scalastyle:on mutablesynchronizedqueue
+    ]]></customMessage>
+  </check>
+  <check customId="mutablesynchronizedpriorityqueue" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">mutable\.SynchronizedPriorityQueue</parameter>
+    </parameters>
+    <customMessage><![CDATA[Synchronization via selective overriding of methods is inherently unreliable. Consider
+      java.util.concurrent.ConcurrentSkipListSet as an alternative. If you must use mutable.SynchronizedPriorityQueue, wrap
+      the code block with:
+      // scalastyle:off mutablesynchronizedpriorityqueue
+      mutable.SynchronizedPriorityQueue[...]
+      // scalastyle:on mutablesynchronizedpriorityqueue
+    ]]></customMessage>
+  </check>
+  <check customId="mutablesynchronizedstack" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">mutable\.SynchronizedStack</parameter>
+    </parameters>
+    <customMessage><![CDATA[Synchronization via selective overriding of methods is inherently unreliable. Consider
+      java.util.concurrent.LinkedBlockingDequeue as an alternative. If you must use mutable.SynchronizedStack, wrap
+      the code block with:
+      // scalastyle:off mutablesynchronizedstack
+      mutable.SynchronizedStack[...]
+      // scalastyle:on mutablesynchronizedstack
+    ]]></customMessage>
+  </check>
+  <check customId="println" level="error" class="org.scalastyle.scalariform.TokenChecker" enabled="true">
+    <parameters><parameter name="regex">^println$</parameter></parameters>
+    <customMessage><![CDATA[Are you sure you want to println? If yes, wrap the code block with
+      // scalastyle:off println
+      println(...)
+      // scalastyle:on println]]></customMessage>
+  </check>
+  <check customId="javaconversions" level="error" class="org.scalastyle.scalariform.TokenChecker" enabled="true">
+    <parameters><parameter name="regex">JavaConversions</parameter></parameters>
+    <customMessage>Instead of importing implicits in scala.collection.JavaConversions._, import
+    scala.collection.JavaConverters._ and use .asScala / .asJava methods</customMessage>
+  </check>
+  <check customId="throwerror" level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+    <parameters>
+      <parameter name="regex">throw new \w+Error\(</parameter>
+    </parameters>
+    <customMessage><![CDATA[Instead of throwing Error, you should use appropriate Exception instead.
+      If you must throw Error, wrap the code block with
+      // scalastyle:off throwerror
+      throw new XXXError(...)
+      // scalastyle:on throwerror
+    ]]></customMessage>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.NoFinalizeChecker" enabled="true"></check>
+
+  <!-- MISCELLANEOUS -->
+  <check level="error" class="org.scalastyle.scalariform.CyclomaticComplexityChecker" enabled="true">
+    <parameters>
+      <parameter name="maximum"><![CDATA[15]]></parameter>
+    </parameters>
+  </check>
+  <!-- Indentation settings -->
+  <check level="error" class="org.scalastyle.file.IndentationChecker" enabled="true">
+    <parameters>
+      <parameter name="tabSize">2</parameter>
+      <parameter name="methodParamIndentSize">2</parameter>
+      <parameter name="classParamIndentSize">2</parameter>
+    </parameters>
+  </check>
+
+  <!-- *********************** Issues which will be treated as warnings *********************** -->
+  <!-- WHITESPACE -->
+  <check level="warning" class="org.scalastyle.scalariform.SpacesAfterPlusChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.file.WhitespaceEndOfLineChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.SpacesBeforePlusChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.EnsureSingleSpaceBeforeTokenChecker" enabled="true">
+   <parameters>
+     <parameter name="tokens">ARROW, EQUALS, ELSE, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
+   </parameters>
+  </check>
+  <check level="warning" class="org.scalastyle.scalariform.EnsureSingleSpaceAfterTokenChecker" enabled="true">
+    <parameters>
+     <parameter name="tokens">ARROW, EQUALS, COMMA, COLON, IF, ELSE, DO, WHILE, FOR, MATCH, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
+    </parameters>
+  </check>
+
+  <!-- IMPORTS -->
+  <check level="warning" class="org.scalastyle.scalariform.IllegalImportsChecker" enabled="true">
+    <parameters>
+      <parameter name="illegalImports"><![CDATA[sun._,java.awt._]]></parameter>
+    </parameters>
+  </check>
+
+  <!-- CODING -->
+  <check level="warning" class="org.scalastyle.scalariform.NullChecker" enabled="true">
+    <customMessage><![CDATA[Scala discourages use of nulls. Use Option instead]]></customMessage>
+  </check>
+  <check level="warning" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="true">
+    <parameters>
+      <parameter name="ignore"><![CDATA[-1,0,1,2,3]]></parameter>
+    </parameters>
+  </check>
+  <check level="warning" class="org.scalastyle.scalariform.ReturnChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.NumberOfTypesChecker" enabled="true">
+    <parameters>
+      <parameter name="maxTypes"><![CDATA[30]]></parameter>
+    </parameters>
+  </check>
+  <check level="warning" class="org.scalastyle.scalariform.UppercaseLChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.SimplifyBooleanExpressionChecker" enabled="false"></check>
+  <check level="warning" class="org.scalastyle.scalariform.IfBraceChecker" enabled="true">
+    <parameters>
+      <parameter name="singleLineAllowed"><![CDATA[true]]></parameter>
+      <parameter name="doubleLineAllowed"><![CDATA[true]]></parameter>
+    </parameters>
+  </check>
+  <check level="warning" class="org.scalastyle.scalariform.ForBraceChecker" enabled="true"/>
+  <check level="warning" class="org.scalastyle.scalariform.NoCloneChecker" enabled="true"></check>
+  <!-- Use Scala @deprecated instead of Java @Deprecated -->
+  <check level="warning" class="org.scalastyle.scalariform.DeprecatedJavaChecker" enabled="true"></check>
+  <!-- Use Scala override instead of Java Override -->
+  <check level="warning" class="org.scalastyle.scalariform.OverrideJavaChecker" enabled="true"></check>
+  <check level="warning" class="org.scalastyle.scalariform.LowercasePatternMatchChecker" enabled="true"/>
+  <!-- Use constants instead of multiple string literals. As there can be multiple unnecessary issues
+       reported, keeping it at warning severity. Committers though should pay attention to this issue
+       and ask contributors to fix wherever they deem fit -->
+  <check level="warning" class="org.scalastyle.scalariform.MultipleStringLiteralsChecker" enabled="true">
+    <parameters>
+      <parameter name="allowed">2</parameter>
+      <parameter name="ignoreRegex"><![CDATA[^(("")|(")|(", "))$]]></parameter>
+    </parameters>
+  </check>
+
+  <!-- MISCELLANEOUS -->
+  <check level="warning" class="org.scalastyle.scalariform.NumberOfMethodsInTypeChecker" enabled="true">
+    <parameters>
+      <parameter name="maxMethods"><![CDATA[30]]></parameter>
+    </parameters>
+  </check>
+
+  <!-- SCALADOC related -->
+  <check level="warning" class="org.scalastyle.scalariform.ScalaDocChecker" enabled="true">
+    <parameters>
+      <parameter name="ignoreRegex"><![CDATA[(.*Spec$)|(.*SpecIT$)]]></parameter>
+      <parameter name="ignoreTokenTypes">PatDefOrDcl,TypeDefOrDcl,FunDefOrDcl,TmplDef</parameter>
+      <parameter name="ignoreOverride">false</parameter>
+      <parameter name="indentStyle">javadoc</parameter>
+    </parameters>
+  </check>
+
+  <!-- *********************** Issues which are ignored for now *********************** -->
+  <check level="warning" class="org.scalastyle.file.NewLineAtEofChecker" enabled="false"></check>
+  <check level="warning" class="org.scalastyle.file.NoNewLineAtEofChecker" enabled="false"></check>
+  <check level="warning" class="org.scalastyle.scalariform.BlockImportChecker" enabled="false"/>
+  <check level="warning" class="org.scalastyle.scalariform.VarFieldChecker" enabled="false"/>
+  <check level="warning" class="org.scalastyle.scalariform.VarLocalChecker" enabled="false"/>
+  <check level="warning" class="org.scalastyle.scalariform.WhileChecker" enabled="false"/>
+  <check level="warning" class="org.scalastyle.scalariform.XmlLiteralChecker" enabled="false"/>
+  <check level="warning" class="org.scalastyle.scalariform.UnderscoreImportChecker" enabled="false">
+    <parameters>
+      <parameter name="ignoreRegex"><![CDATA[collection\.JavaConverters\._|scala\.concurrent\.duration\._]]></parameter>
+    </parameters>
+  </check>
+</scalastyle>
