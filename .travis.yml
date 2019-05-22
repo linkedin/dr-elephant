@@ -2,6 +2,8 @@ language: scala
 sudo: true
 jdk:
   - oraclejdk8
+scala:
+  - 2.10.4
 python: "2.6"
 install:
   - sudo pip install inspyred
