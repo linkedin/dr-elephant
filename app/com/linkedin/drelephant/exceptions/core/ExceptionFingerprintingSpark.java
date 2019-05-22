@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -157,7 +158,7 @@ public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
               + "s");
       logger.info(" URL to query for driver logs  " + completeURLToQuery);
       connection =  intializeHTTPConnection(completeURLToQuery);
-      in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      in = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
       String inputLine;
       String logLengthTrigger = LogLengthSchema.LOG_LENGTH.name().replace("_", " ");
       try {
@@ -196,7 +197,7 @@ public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
     HttpURLConnection connection = null;
     try {
       connection =  intializeHTTPConnection(url);
-      in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      in = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
       String inputLine;
       long logLength = 0l;
       String logLengthTrigger = LogLengthSchema.LOG_LENGTH.name().replace("_", " ");

@@ -59,12 +59,12 @@ public class SparkExecutionEngine implements ExecutionEngine {
 
   @Override
   public Boolean isParamConstraintViolatedPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
-    return null;
+    return false;
   }
 
   @Override
   public Boolean isParamConstraintViolatedIPSO(List<JobSuggestedParamValue> jobSuggestedParamValueList) {
-    return null;
+    return false;
   }
 
   @Override

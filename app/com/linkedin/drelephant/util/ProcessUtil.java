@@ -3,6 +3,7 @@ package com.linkedin.drelephant.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class ProcessUtil {
       Process p = Runtime.getRuntime().exec(command);
       logger.info(command);
 
-      BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+      BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream(), Charset.forName("UTF-8")));
       String errorLine;
       while ((errorLine = errorStream.readLine()) != null) {
         error.add(errorLine);
