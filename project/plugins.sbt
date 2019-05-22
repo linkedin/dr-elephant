@@ -24,3 +24,15 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("pla
 
 // Jacoco code coverage plugin
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6")
+
+// Findbugs plugin
+addSbtPlugin("de.johoop" % "findbugs4sbt" % "1.4.0")
+
+// Copy paste detector plugin
+addSbtPlugin("de.johoop" % "cpd4sbt" % "1.2.0")
+
+// Checkstyle plugin
+addSbtPlugin("com.etsy" % "sbt-checkstyle-plugin" % "3.1.1")
+
+// Scalastyle plugin
+addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
