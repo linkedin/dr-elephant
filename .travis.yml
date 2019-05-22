@@ -8,8 +8,11 @@ install:
   - sudo pip install inspyred
   - sudo pip install argparse
 
+script:
+  - sbt test jacoco:cover
+
 # only build PRs and master (not all branch pushes)
 branches:
   only:
     - master
-
+    - tuning_20190221
