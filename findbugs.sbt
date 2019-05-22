@@ -25,5 +25,3 @@ findbugsPriority := Priority.High
 
 // Exclude filters file to filter out certain files, folders or issues
 findbugsExcludeFilters := Some(scala.xml.XML.loadFile(baseDirectory.value / "project" / "findbugs-exclude-filters.xml"))
-
-findbugsReportType := Some(ReportType.Html)
