@@ -54,6 +54,9 @@ class ExceptionFingerprintingSparkTest extends FunSpec with Matchers {
   }
   val fakeApp = fakeApplication(dbConn, gs)
 
+  // So initialization of MapReduceFSFetcherHadoop2 succeeds.
+  Configuration.addDefaultResource("mapred-site.xml")
+
   describe(".apply") {
     it("check for user enabled exception") {
       val stage = createStage(1, StageStatus.FAILED, Some("array issues"), "details")
