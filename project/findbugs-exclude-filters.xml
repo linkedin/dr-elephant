@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!--
+  Copyright 2016 LinkedIn Corp.
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License. You may obtain a copy of
+  the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+
+<!-- FindBugs exclusion filters -->
+<FindBugsFilter>
+  <!-- Exclude scala files -->
+  <Match>
+      <Source name="~.*\.scala" />
+  </Match>
+
+  <!-- Eliminating Play auto-generated files -->
+  <Match>
+      <Class name="~Routes.*"/>
+  </Match>
+  <Match>
+      <Class name="~controllers\.routes.*"/>
+  </Match>
+  <Match>
+      <Class name="~.*controllers\.routes(.[a-z\$]+)?"/>
+  </Match>
+
+  <!-- Other exclusions -->
+  <!-- play.db.ebean.Model.Finder is not modified hence ignore the warning -->
+  <Match>
+      <Class name="~models.*" />
+      <Field name="find" />
+      <Bug pattern="MS_SHOULD_BE_FINAL" />
+  </Match>
+  <!--
+      Random is meant to be used only once in calculating TOKEN_UPDATE_INTERVAL hence this
+      bug can be ignored. As TOKEN_UPDATE_INTERVAL is a static field and will be initialized
+      in static initializer code, filtering it out by using <clinit>
+  -->
+  <Match>
+      <Class name="com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2" />
+      <Method name='&lt;clinit&gt;' />
+      <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE" />
+  </Match>
+</FindBugsFilter>
