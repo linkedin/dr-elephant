@@ -88,8 +88,7 @@ public class ParameterGenerateManagerHBT extends AbstractParameterGenerateManage
         .setMaxRows(1)
         .findUnique();
     logger.debug("Job Status " + jobExecution.executionState.name());
-    if (jobExecution.executionState.name().equals(JobExecution.ExecutionState.IN_PROGRESS.name())
-        || jobExecution.executionState.name().equals(JobExecution.ExecutionState.NOT_STARTED.name())) {
+    if (jobExecution.executionState.name().equals(JobExecution.ExecutionState.IN_PROGRESS.name())) {
       logger.debug(" Job is still running , cannot use for param generation ");
       return "";
     }
