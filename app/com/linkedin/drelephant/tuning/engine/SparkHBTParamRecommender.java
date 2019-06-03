@@ -54,7 +54,7 @@ public class SparkHBTParamRecommender {
   private static final long EXECUTOR_MEMORY_BUFFER_PER_CORE = 0;
   private static final long EXECUTOR_MEMORY_BUFFER_OVERALL = 0;
   private static final long FIX_MEMORY_BUFFER_OVERALL = 200 * FileUtils.ONE_MB;
-  private static final long FIX_MEMORY_BUFFER_PER_CORE = 0 * FileUtils.ONE_MB;
+  private static final long FIX_MEMORY_BUFFER_PER_CORE = 100 * FileUtils.ONE_MB;
 
   private static final long DRIVER_MEMORY_BUFFER = 25;
 
