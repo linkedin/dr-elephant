@@ -112,6 +112,7 @@ public class JsonKeys {
   public static final String TUNING_PARAMETERS = "tuningParameters";
   public static final String TUNING_ALGORITHM_LIST = "tuningAlgorithmList";
   public static final String UPDATED_PARAM_DETAILS = "updatedParamDetails";
+  public static final String SHOW_RECOMMENDATION_COUNT = "showRecommendationCount";
 
   // Authentication and Authorizaton
   public static final String SESSION_ID_KEY = "session_id";
