@@ -20,11 +20,6 @@ import com.linkedin.drelephant.analysis.HadoopApplicationData;
 import com.linkedin.drelephant.clients.WorkflowClient;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
-
-import com.linkedin.drelephant.tez.data.TezApplicationData;
-import com.linkedin.drelephant.clients.WorkflowClient;
-
-import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.schedulers.Scheduler;
 import com.linkedin.drelephant.spark.data.SparkApplicationData;
 
@@ -41,7 +36,6 @@ import org.w3c.dom.Document;
 
 import models.AppResult;
 import scala.Option;
-import scala.Some;
 
 
 /**
@@ -114,14 +108,11 @@ public class InfoExtractor {
    * @param data The Hadoop application data
    */
   public static void loadInfo(AppResult result, HadoopApplicationData data) {
-    Properties properties = new Properties();
-    if( data instanceof MapReduceApplicationData) {
-      properties = retrieveMapreduceProperties((MapReduceApplicationData) data);
-    } else if ( data instanceof SparkApplicationData) {
+    Properties properties;
+    if (data instanceof SparkApplicationData) {
       properties = retrieveSparkProperties((SparkApplicationData) data);
-    }
-    else if(data instanceof TezApplicationData){
-      properties = retrieveTezProperties((TezApplicationData) data);
+    } else {
+      properties = data.getConf();
     }
     Scheduler scheduler = getSchedulerInstance(data.getAppId(), properties);
 
@@ -162,19 +153,6 @@ public class InfoExtractor {
           appData.appId() + "]. It does not contain [" + SPARK_EXTRA_JAVA_OPTIONS + "] property in its spark properties.");
     }
     return properties;
-  }
-
-  /**
-   * Retrieve the mapreduce application properties
-   * @param appData the mapReduce Application Data
-   * @return the retrieve mapreduce properties
-   */
-  public static Properties retrieveMapreduceProperties(MapReduceApplicationData appData) {
-    return appData.getConf();
-  }
-
-  public static Properties retrieveTezProperties(TezApplicationData appData) {
-    return appData.getConf();
   }
 
   /**
