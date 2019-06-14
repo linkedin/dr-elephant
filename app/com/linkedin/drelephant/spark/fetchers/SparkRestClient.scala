@@ -73,17 +73,15 @@ class SparkRestClient(sparkConf: SparkConf) {
       throw new IllegalArgumentException("spark.yarn.historyServer.address not provided; can't use Spark REST API")
   }
 
-  private val apiTarget: WebTarget = client.property(ClientProperties.CONNECT_TIMEOUT, CONNECTION_TIMEOUT).property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT).target(historyServerUri).path(API_V1_MOUNT_PATH)
+  private val apiTarget: WebTarget = client.property(ClientProperties.CONNECT_TIMEOUT, CONNECTION_TIMEOUT)
+    .property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT).target(historyServerUri).path(API_V1_MOUNT_PATH)
 
   def fetchData(appId: String, fetchLogs: Boolean = false, fetchFailedTasks: Boolean = true)(
     implicit ec: ExecutionContext
   ): Future[SparkRestDerivedData] = {
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId)
-
+    val jobData = getJobDatas(attemptTarget)
     Future {
-      val futureJobDatas = Future {
-        getJobDatas(attemptTarget)
-      }
       val futureStageDatas = Future {
         getStageDatas(attemptTarget)
       }
@@ -105,7 +103,7 @@ class SparkRestClient(sparkConf: SparkConf) {
 
       SparkRestDerivedData(
         applicationInfo,
-        Await.result(futureJobDatas, DEFAULT_TIMEOUT),
+        jobData,
         Await.result(futureStageDatas, DEFAULT_TIMEOUT),
         Await.result(futureExecutorSummaries, Duration(5, SECONDS)),
         Await.result(futureFailedTasks, DEFAULT_TIMEOUT),
