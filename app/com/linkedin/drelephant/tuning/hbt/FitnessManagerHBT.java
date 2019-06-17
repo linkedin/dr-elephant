@@ -194,7 +194,9 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
         if (disableTuningforUserSpecifiedIterations(jobDefinition, numberOfValidSuggestedParamExecution)
             || disableTuningforHeuristicsPassed(jobDefinition, tuningJobExecutionParamSets,
             numberOfValidSuggestedParamExecution)) {
-          logger.debug(" Tuning Disabled for Job " + jobDefinition.id);
+          if (isDebugEnabled) {
+            logger.debug(" Tuning Disabled for Job " + jobDefinition.id);
+          }
         }
       } catch (Exception e) {
         logger.error(" Error while disabling tuneIn for job " + jobDefinition.id, e);
@@ -210,8 +212,9 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
     if (areHeuristicsPassed(tuningJobExecutionParamSets)
         && numberOfAppliedSuggestedParamExecution >= MINIMUM_HBT_EXECUTION) {
       disableTuning(jobDefinition, "All Heuristics Passed");
+      return true;
     }
-    return true;
+    return false;
   }
 
   private boolean areHeuristicsPassed(List<TuningJobExecutionParamSet> tuningJobExecutionParamSets) {
@@ -252,10 +255,10 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
         return true;
       }
     }
-    return checkHeuriticsforSeverity(heuristicsWithHighSeverity);
+    return checkHeuristicsForSeverity(heuristicsWithHighSeverity);
   }
 
-  private boolean checkHeuriticsforSeverity(List<String> heuristicsWithHighSeverity) {
+  private boolean checkHeuristicsForSeverity(List<String> heuristicsWithHighSeverity) {
     if (heuristicsWithHighSeverity.size() == 0) {
       logger.debug(" No severe heursitics ");
       return true;
