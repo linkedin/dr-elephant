@@ -30,6 +30,7 @@ public class TestConstants {
   public static final String TEST_PARAM_GENERATE_DATA_FILE = "test/resources/test-param-generate-data.sql";
   public static final String TEST_SPARK_HBT_PARAM_RECOMMENDER = "test/resources/test-SparkHBTParamRecommender.sql";
   public static final String TEST_AUTO_TUNING_MR_HBT="test/resources/test-init-MRHBT.sql";
+  public static final String TEST_MR_PIG_HBT_PARAMETER_RECOMMENDER = "test/resources/test-pig-hbt.sql";
   public static final int RESPONSE_TIMEOUT = 3000; // milliseconds
 
   public static final String TEST_JOB_ID1 = "application_1458194917883_1453361";
@@ -53,6 +54,14 @@ public class TestConstants {
       "https://elephant.linkedin.com:8443/manager?project=b2-confirm-email-reminder&flow=reminder";
   public static final String TEST_JOB_DEF_ID1 =
       "https://elephant.linkedin.com:8443/manager?project=b2-confirm-email-reminder&flow=reminder&job=overwriter-reminder2";
+
+  public static final String TEST_PIG_HBT_FLOW_EXEC_ID1 = "https://elephant.linkedin.com:8443/executor?execid=1";
+  public static final String TEST_PIG_HBT_FLOW_EXEC_ID2 = "https://elephant.linkedin.com:8443/executor?execid=2";
+  public static final String TEST_PIG_HBT_FLOW_EXEC_ID3 = "https://elephant.linkedin.com:8443/executor?execid=3";
+  public static final String TEST_PIG_HBT_JOB_EXEC_ID1 = "https://elephant.linkedin.com:8443/executor?execid=1&job=job_1&attempt=0";
+  public static final String TEST_PIG_HBT_JOB_EXEC_ID2 = "https://elephant.linkedin.com:8443/executor?execid=2&job=job_2&attempt=0";
+  public static final String TEST_PIG_HBT_JOB_EXEC_ID3 = "https://elephant.linkedin.com:8443/executor?execid=3&job=job_3&attempt=0";
+
 
   public static final String TEST_START_TIME1 = "2016-04-18";
   public static final String TEST_END_TIME1 = "2016-04-19";

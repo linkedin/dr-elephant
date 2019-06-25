@@ -78,7 +78,6 @@ public class ConfigurationHeuristic implements Heuristic<MapReduceApplicationDat
     if (pigSplitSize != null) {
       result.addResultDetail(PIG_MAX_SPLIT_SIZE_HEURISTICS_CONF.getValue(), pigSplitSize);
     }
-
     return result;
   }
 }

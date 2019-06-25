@@ -51,13 +51,13 @@ object Dependencies {
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-      )
+    )
   } else {
     "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-      )
+    )
   }
 
   // Dependency coordinates
@@ -100,7 +100,8 @@ object Dependencies {
       ),
     "javax.mail" % "mail" % "1.4",
     "com.linkedin.tony" % "tony-core" % tonyVersion intransitive(),
-    "net.lingala.zip4j" % "zip4j" % "1.3.2"
+    "net.lingala.zip4j" % "zip4j" % "1.3.2",
+    "org.projectlombok" % "lombok" % "1.18.8"
   ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)

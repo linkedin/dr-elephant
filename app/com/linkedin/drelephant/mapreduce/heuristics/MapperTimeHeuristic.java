@@ -147,6 +147,7 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
     result.addResultDetail("Average task runtime", Statistics.readableTimespan(averageTimeMs));
     result.addResultDetail("Max task runtime", Statistics.readableTimespan(taskMaxMs));
     result.addResultDetail("Min task runtime", Statistics.readableTimespan(taskMinMs));
+    result.addResultDetail("Avg Input Size (Bytes)", Long.toString(averageSize));
 
     return result;
   }
@@ -166,7 +167,7 @@ public class MapperTimeHeuristic implements Heuristic<MapReduceApplicationData> 
 
   private Severity getShortRuntimeSeverity(long runtimeMs) {
     return Severity.getSeverityDescending(
-            runtimeMs, shortRuntimeLimits[0], shortRuntimeLimits[1], shortRuntimeLimits[2], shortRuntimeLimits[3]);
+        runtimeMs, shortRuntimeLimits[0], shortRuntimeLimits[1], shortRuntimeLimits[2], shortRuntimeLimits[3]);
   }
 
   private Severity getLongRuntimeSeverity(long runtimeMs) {

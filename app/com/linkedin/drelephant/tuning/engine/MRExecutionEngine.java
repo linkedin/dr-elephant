@@ -4,6 +4,7 @@ import com.avaje.ebean.Expr;
 import com.avaje.ebean.ExpressionList;
 import com.linkedin.drelephant.mapreduce.heuristics.CommonConstantsHeuristic;
 import com.linkedin.drelephant.tuning.ExecutionEngine;
+import com.linkedin.drelephant.tuning.hbt.PigHbtParameterRecommender;
 import com.linkedin.drelephant.tuning.hbt.MRJob;
 import com.linkedin.drelephant.util.MemoryFormatUtils;
 import java.util.ArrayList;
@@ -13,7 +14,6 @@ import java.util.Map;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
-import models.JobDefinition;
 import models.JobExecution;
 import models.JobSuggestedParamSet;
 import models.JobSuggestedParamValue;
@@ -338,6 +338,8 @@ public class MRExecutionEngine implements ExecutionEngine {
     mrJob.analyzeAllApplications();
     mrJob.processJobForParameter();
     Map<String, Double> suggestedParameter = mrJob.getJobSuggestedParameter();
+    PigHbtParameterRecommender pigParameterRecommender = new PigHbtParameterRecommender(results);
+    suggestedParameter = pigParameterRecommender.suggestParameters();
     StringBuffer idParameters = new StringBuffer();
     for (TuningParameter tuningParameter : tuningParameters) {
       Double paramValue = suggestedParameter.get(tuningParameter.paramName);
@@ -347,7 +349,6 @@ public class MRExecutionEngine implements ExecutionEngine {
     }
     logger.info(" New Suggested Parameter " + idParameters);
     return idParameters.toString();
-
   }
 
   @Override
@@ -445,5 +446,3 @@ public class MRExecutionEngine implements ExecutionEngine {
     return usageData;
   }
 }
-
-

@@ -17,12 +17,15 @@
 package com.linkedin.drelephant.math;
 
 import java.lang.reflect.Array;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.apache.commons.io.FileUtils;
+
+import static org.apache.commons.io.FileUtils.*;
 
 
 /**
@@ -285,5 +288,28 @@ public final class Statistics {
       array[index] = array[i];
       array[i] = temp;
     }
+  }
+
+  public static int getTimeInSeconds(String durationString) throws NumberFormatException {
+    durationString = durationString.replaceAll(" ", "");
+    String[] durationSplit = durationString.split("hr|min|sec");
+    int length = durationSplit.length;
+    int durationInSeconds = 0;
+    if (length > 1) {
+      for (int index = 0; index <= length - 2; index++) {
+        durationInSeconds = (durationInSeconds * 60) + Integer.parseInt(durationSplit[index]) * 60;
+      }
+    } else if (length == 1) {
+      if (durationString.contains("hr")) {
+        durationInSeconds += Integer.parseInt(durationSplit[0]) * 60 * 60;
+      } else if (durationString.contains("min")) {
+        durationInSeconds += Integer.parseInt(durationSplit[0]) * 60;
+      } else {
+        durationInSeconds += Integer.parseInt(durationSplit[0]);
+      }
+      return durationInSeconds;
+    }
+    durationInSeconds += Integer.parseInt(durationSplit[length - 1]);
+    return durationInSeconds;
   }
 }

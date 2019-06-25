@@ -18,15 +18,17 @@ package com.linkedin.drelephant.math;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 
 public class StatisticsTest {
+
+  @Rule
+  public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
   public void testAverage1() {
@@ -112,5 +114,20 @@ public class StatisticsTest {
     assertEquals(0, Statistics.percentile(finishTimeSingle,0));
     assertEquals(10,Statistics.percentile(finishTimeSingle, 10));
     assertEquals(10,Statistics.percentile(finishTimeSingle, 50));
+  }
+
+  @Test
+  public void testgetTimeInSeconds() {
+    assertEquals(Statistics.getTimeInSeconds("1 hr 20 min 5 sec"), 4805);
+    assertEquals(Statistics.getTimeInSeconds("40 min 5 sec"), 2405);
+    assertEquals(Statistics.getTimeInSeconds("35 sec"), 35);
+    assertEquals(Statistics.getTimeInSeconds("2 hr"), 7200);
+    assertEquals(Statistics.getTimeInSeconds("5 min"), 300);
+
+    exceptionRule.expect(NumberFormatException.class);
+    Statistics.getTimeInSeconds("1 hour 5 minutes");
+    Statistics.getTimeInSeconds("TestDuration");
+    Statistics.getTimeInSeconds("5 minutes");
+    Statistics.getTimeInSeconds("0 hr 5 min");
   }
 }

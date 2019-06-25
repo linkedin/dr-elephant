@@ -289,7 +289,7 @@ public class Application extends Controller {
           .eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecPair.getId())
           .findList();
       Map<IdUrlPair, List<AppResult>> map = ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.JOB_EXECUTION_ID);
-      return ok(searchPage.render(null, flowDetails.render(flowExecPair, map)));
+      return ok(searchPage.render(null, views.html.results.flowDetails.render(flowExecPair, map)));
     } else if (!jobDefId.isEmpty()) {
       List<AppResult> results = AppResult.find
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID)
@@ -302,7 +302,7 @@ public class Application extends Controller {
       String flowDefId = (results.isEmpty()) ? "" :  results.get(0).flowDefId;  // all results should have the same flow id
       IdUrlPair flowDefIdPair = new IdUrlPair(flowDefId, AppResult.TABLE.FLOW_DEF_URL);
 
-      return ok(searchPage.render(null, flowDefinitionIdDetails.render(flowDefIdPair, map)));
+      return ok(searchPage.render(null, views.html.results.flowDefinitionIdDetails.render(flowDefIdPair, map)));
     }
 
     // Prepare pagination of results
@@ -333,7 +333,7 @@ public class Application extends Controller {
     } else {
       List<AppResult> resultsToDisplay = results.subList((currentPage - paginationBarStartIndex) * pageLength,
           Math.min(results.size(), (currentPage - paginationBarStartIndex + 1) * pageLength));
-      return ok(searchPage.render(paginationStats, searchResults.render(
+      return ok(searchPage.render(paginationStats, views.html.results.searchResults.render(
           String.format("Results: Showing %,d of %,d", resultsToDisplay.size(), query.findRowCount()), resultsToDisplay)));
     }
   }
@@ -488,7 +488,7 @@ public class Application extends Controller {
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
           .findList();
     }
-    return ok(comparePage.render(compareResults.render(compareFlows(results1, results2))));
+    return ok(comparePage.render(views.html.results.compareResults.render(compareFlows(results1, results2))));
   }
 
   /**
@@ -576,10 +576,10 @@ public class Application extends Controller {
     if (!isSet(partialFlowDefId)) {
       if (version.equals(Version.NEW)) {
         return ok(flowHistoryPage
-            .render(partialFlowDefId, graphType, flowHistoryResults.render(null, null, null, null)));
+            .render(partialFlowDefId, graphType, views.html.results.flowHistoryResults.render(null, null, null, null)));
       } else {
         return ok(
-            oldFlowHistoryPage.render(partialFlowDefId, graphType, oldFlowHistoryResults.render(null, null, null, null)));
+            oldFlowHistoryPage.render(partialFlowDefId, graphType, views.html.results.oldFlowHistoryResults.render(null, null, null, null)));
       }
     }
 
@@ -670,21 +670,21 @@ public class Application extends Controller {
     if (version.equals(Version.NEW)) {
       if (graphType.equals("heuristics")) {
         return ok(flowHistoryPage.render(flowDefPair.getId(), graphType,
-            flowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
+            views.html.results.flowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
-        return ok(flowHistoryPage.render(flowDefPair.getId(), graphType, flowMetricsHistoryResults
+        return ok(flowHistoryPage.render(flowDefPair.getId(), graphType, views.html.results.flowMetricsHistoryResults
             .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
       }
     } else {
       if (graphType.equals("heuristics")) {
         return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType,
-            oldFlowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
+            views.html.results.oldFlowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
         if (hasSparkJob) {
           return notFound("Cannot plot graph for " + graphType + " since it contains a spark job. " + graphType
               + " graphs are not supported for spark right now");
         } else {
-          return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType, oldFlowMetricsHistoryResults
+          return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType, views.html.results.oldFlowMetricsHistoryResults
               .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
         }
       }
@@ -801,21 +801,21 @@ public class Application extends Controller {
     if (version.equals(Version.NEW)) {
       if (graphType.equals("heuristics")) {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
-            jobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+            views.html.results.jobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
         return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
-            jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+            views.html.results.jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
       }
     } else {
       if (graphType.equals("heuristics")) {
         return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
-            oldJobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+            views.html.results.oldJobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
         if (hasSparkJob) {
           return notFound("Resource and time graph are not supported for spark right now");
         } else {
           return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
-              oldJobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+              views.html.results.oldJobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
         }
       }
     }
@@ -1038,7 +1038,7 @@ public class Application extends Controller {
 
     //Temporarily removing input split parameters
 //    outputParams.remove("pig.maxCombinedSplitSize");
- //    outputParams.remove("mapreduce.input.fileinputformat.split.maxsize");
+//    outputParams.remove("mapreduce.input.fileinputformat.split.maxsize");
 
     for (Map.Entry<String, Double> param : outputParams.entrySet()) {
       if (param.getKey().equals("mapreduce.map.sort.spill.percent")) {
