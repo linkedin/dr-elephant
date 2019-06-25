@@ -24,27 +24,74 @@ import java.util.Map;
 
 public class TonyUtils {
   /**
-   * Returns the max memory in bytes used by any task of the specified type.
-   * @param taskMap  a map containing data for all tasks
-   * @param taskType  the task type
-   * @return  the max memory in bytes used by any task of the specified type
+   * Returns the max metric value of any task of the specified type given metricName
+   * Skips metrics collection for unavailable metric data
+   * @param taskMap a map containing data for all tasks
+   * @param taskType the task type
+   * @param metricName the name of the metric to query
+   * @return the max metric value of any task of the specified type
    */
-  public static double getMaxMemoryBytesUsedForTaskType(Map<String, Map<Integer, TonyTaskData>> taskMap,
-      String taskType) {
-    double maxMemoryBytesUsed = 0;
+  public static double getMaxMetricForTaskTypeAndMetricName(Map<String, Map<Integer, TonyTaskData>> taskMap,
+      String taskType, String metricName) {
+    double maxMetric = 0.0;
+    if (taskMap.get(taskType) == null) {
+      return -1.0d;
+    }
+
     for (TonyTaskData taskData : taskMap.get(taskType).values()) {
       List<Metric> metrics = taskData.getMetrics();
       if (metrics == null) {
         continue;
       }
       for (Metric metric : metrics) {
-        if (metric.getName().equals(Constants.MAX_MEMORY_BYTES)) {
-          if (metric.getValue() > maxMemoryBytesUsed) {
-            maxMemoryBytesUsed = metric.getValue();
+        if (metric.getName().equals(metricName)) {
+          if (metric.getValue() <= 0) {
+            continue;
+          }
+
+          if (metric.getValue() > maxMetric) {
+            maxMetric = metric.getValue();
           }
         }
       }
     }
-    return maxMemoryBytesUsed;
+
+    return maxMetric;
+  }
+
+  /**
+   * Returns the average metric value of all task of the specified type given metricName
+   * Skips metrics collection for unavailable metric data
+   * @param taskMap a map containing data for all tasks
+   * @param tasktype the task type
+   * @param metricsName the name of the metric to query
+   * @return the average metric value of any task of the specified type
+   */
+  public static double getAvgMetricForTaskTypeAndMetricName(Map<String, Map<Integer, TonyTaskData>> taskMap,
+      String taskType, String metricName) {
+    double avgMetric = 0.0;
+    double numMetrics = 0;
+    if (taskMap.get(taskType) == null) {
+      return -1.0d;
+    }
+    for (TonyTaskData taskData : taskMap.get(taskType).values()) {
+      double avgMetricPerTask = 0.0;
+      List<Metric> metrics = taskData.getMetrics();
+      if (metrics == null) {
+        continue;
+      }
+      for (Metric metric : metrics) {
+        if (metric.getName().equals(metricName)) {
+          if (metric.getValue() <= 0) {
+            continue;
+          }
+
+          avgMetric += metric.getValue();
+          numMetrics++;
+        }
+      }
+    }
+
+    return avgMetric / numMetrics;
   }
 }

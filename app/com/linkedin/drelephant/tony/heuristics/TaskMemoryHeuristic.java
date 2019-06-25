@@ -107,7 +107,8 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
           Long.toString(taskBytesRequested / FileUtils.ONE_MB)));
 
       // get global max memory per task
-      double maxMemoryBytesUsed = TonyUtils.getMaxMemoryBytesUsedForTaskType(taskMap, taskType);
+      double maxMemoryBytesUsed = TonyUtils.getMaxMetricForTaskTypeAndMetricName(taskMap, taskType,
+          Constants.MAX_MEMORY_BYTES);
       if (maxMemoryBytesUsed <= 0) {
         details.add(new HeuristicResultDetails("Max memory (MB) used in any " + taskType + " task", "Unknown"));
         continue;

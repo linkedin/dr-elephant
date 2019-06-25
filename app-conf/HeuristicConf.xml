@@ -461,6 +461,14 @@
       <!--task_memory_thresholds>0.8, 0.7, 0.6, 0.5</task_memory_thresholds-->
     </params>
   </heuristic>
+  <heuristic>
+    <applicationtype>tony</applicationtype>
+    <heuristicname>Task GPU</heuristicname>
+    <classname>com.linkedin.drelephant.tony.heuristics.TaskGPUHeuristic</classname>
+    <viewname>views.html.help.tony.helpTaskGPU</viewname>
+    <params>
+    </params>
+  </heuristic>
   <!-- END TONY HEURISTICS -->
 
 </heuristics>

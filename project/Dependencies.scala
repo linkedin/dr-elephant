@@ -30,7 +30,7 @@ object Dependencies {
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
   lazy val oozieClientVersion = "4.2.0"
-  lazy val tonyVersion = "0.3.11"
+  lazy val tonyVersion = "0.3.16"
 
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"

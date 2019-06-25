@@ -1,0 +1,37 @@
+@*
+* Copyright 2019 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+<p>
+  This heuristic shows GPU utilization and GPU memory utilization for each task type.
+  Try to optimize your GPU utilization!
+</p>
+<p>
+  GPU_UTILIZATION shows the percent of time over the past sample period during which one or more kernels was executing
+  on the GPU.
+</p>
+<p>
+  GPU_FB_MEMORY_USAGE shows the on-board frame buffer memory usage in percentage. Note, reported total memory is
+  affected by ECC (error-correcting code) state. If ECC is enabled the total available memory is decreased by several
+  percent, due to the requisite parity bits. The driver may also reserve a small amount of memory for internal use, even
+  without active work on the GPU.
+</p>
+<p>
+  GPU_MAIN_MEMORY_USAGE aka BAR1 memory usage shows the percentage of memory used to map the FB (device memory) so that
+  it can be directly accessed by CPU.
+</p>
+<p>
+  Above metrics are collected via nvidia-smi tools installed on the host, for more detailed information please visit
+  <a href="http://developer.download.nvidia.com/compute/cuda/6_0/rel/gdk/nvidia-smi.331.38.pdf">nvidia-smi manual</a>.
+</p>

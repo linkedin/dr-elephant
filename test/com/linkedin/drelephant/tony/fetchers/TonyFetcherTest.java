@@ -125,7 +125,9 @@ public class TonyFetcherTest {
 
   private static void testHelper(String appId) throws Exception {
     FetcherConfigurationData configData = new FetcherConfigurationData(null, null,
-        ImmutableMap.of(Constants.TONY_CONF_DIR, _tonyConfDir));
+        ImmutableMap.of(Constants.TONY_CONF_DIR, _tonyConfDir,
+            TonyConfigurationKeys.TONY_HISTORY_FINISHED_DIR_TIMEZONE,
+            TonyConfigurationKeys.DEFAULT_TONY_HISTORY_FINISHED_DIR_TIMEZONE));
     TonyFetcher tonyFetcher = new TonyFetcher(configData);
 
     AnalyticJob job = new AnalyticJob();

@@ -26,6 +26,8 @@ import com.linkedin.tony.util.ParserUtils;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.time.ZoneId;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,9 +36,13 @@ import org.apache.log4j.Logger;
 
 public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
   private static final Logger _LOGGER = Logger.getLogger(TonyFetcher.class);
+  private static final String HISTORY_SERVER_TIME_ZONE_XML_FIELD = "history_server_time_zone_xml_field";
   private final Path _intermediateDir;
   private final Path _finishedDir;
+  private String _finishedDirTimezone;
   private final FileSystem _fs;
+  private TimeZone _timeZone;
+  private ZoneId _zoneId;
 
   /**
    * Constructor for {@link TonyFetcher}.
@@ -56,6 +62,13 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
     _intermediateDir = new Path(conf.get(TonyConfigurationKeys.TONY_HISTORY_INTERMEDIATE));
     _finishedDir = new Path(conf.get(TonyConfigurationKeys.TONY_HISTORY_FINISHED));
     _fs = _finishedDir.getFileSystem(conf);
+
+    _finishedDirTimezone = conf.get(TonyConfigurationKeys.TONY_HISTORY_FINISHED_DIR_TIMEZONE);
+    if (_finishedDirTimezone == null) {
+      _finishedDirTimezone = TonyConfigurationKeys.DEFAULT_TONY_HISTORY_FINISHED_DIR_TIMEZONE;
+    }
+    _zoneId = ZoneId.of(_finishedDirTimezone);
+    _LOGGER.info("Using ZoneID: " + _zoneId.getId());
   }
 
   @Override
@@ -69,7 +82,7 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
     // application finishes and thus is slightly before the RM's application finish time. So it's possible that the
     // yyyy/MM/dd derived from the RM's application finish time is a day later and we may not find the history files.
     // In case we don't find the history files in yyyy/MM/dd, we should check the previous day as well.
-    String yearMonthDay = ParserUtils.getYearMonthDayDirectory(date);
+    String yearMonthDay = ParserUtils.getYearMonthDayDirectory(date, _zoneId);
     Path jobDir = new Path(_finishedDir, yearMonthDay + Path.SEPARATOR + job.getAppId());
     if (!_fs.exists(jobDir)) {
       // check intermediate dir
