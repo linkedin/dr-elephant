@@ -26,7 +26,6 @@ import com.linkedin.tony.util.ParserUtils;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import java.time.ZoneId;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,12 +35,10 @@ import org.apache.log4j.Logger;
 
 public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
   private static final Logger _LOGGER = Logger.getLogger(TonyFetcher.class);
-  private static final String HISTORY_SERVER_TIME_ZONE_XML_FIELD = "history_server_time_zone_xml_field";
   private final Path _intermediateDir;
   private final Path _finishedDir;
   private String _finishedDirTimezone;
   private final FileSystem _fs;
-  private TimeZone _timeZone;
   private ZoneId _zoneId;
 
   /**
