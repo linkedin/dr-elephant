@@ -75,6 +75,13 @@ public class TaskGPUHeuristic implements Heuristic<TonyApplicationData> {
       details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
           Integer.toString(taskMap.get(taskType).size())));
 
+      // get number of GPU resource requested, if any
+      Integer numGPUsRequested = conf.getInt(TonyConfigurationKeys.getResourceKey(taskType, "gpus"), 0);
+      if (numGPUsRequested > 0) {
+        details.add(new HeuristicResultDetails("Number of GPUs requested per " + taskType + " tasks",
+            Integer.toString(numGPUsRequested)));
+      }
+
       // get global max gpu utilization metrics
       for (String maxMetricToApply : MAX_METRICS_TO_APPLY) {
         double maxMetric = TonyUtils.getMaxMetricForTaskTypeAndMetricName(taskMap, taskType, maxMetricToApply);

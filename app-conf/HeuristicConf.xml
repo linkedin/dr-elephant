@@ -466,8 +466,6 @@
     <heuristicname>Task GPU</heuristicname>
     <classname>com.linkedin.drelephant.tony.heuristics.TaskGPUHeuristic</classname>
     <viewname>views.html.help.tony.helpTaskGPU</viewname>
-    <params>
-    </params>
   </heuristic>
   <!-- END TONY HEURISTICS -->
 
