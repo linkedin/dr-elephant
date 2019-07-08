@@ -3,16 +3,8 @@ package com.linkedin.drelephant.mapreduce.heuristics;
 public class CommonConstantsHeuristic {
 
   public static final String MAPPER_SPEED = "Mapper Speed";
-  public static final String MAPPER_SPILL = "Mapper Spill";
-  public static final String MAPPER_MEMORY = "Mapper Memory";
-  public static final String MAPPER_GC = "Mapper GC";
-  public static final String MAPPER_TIME = "Mapper Time";
-  public static final String REDUCER_MEMORY = "Reducer Memory";
-  public static final String REDUCER_TIME = "Reducer Time";
   public static final String MAPREDUCE_CONFIGURATION = "MapReduceConfiguration";
   public static final String TOTAL_INPUT_SIZE_IN_MB = "Total input size in MB";
-  public static final String AVG_INPUT_SIZE_IN_BYTES = "Avg Input Size (Bytes)";
-  public static final String MAPPER_OUTPUT_RECORD_SPILL_RATIO = "Ratio of spilled records to output records";
 
   public enum MRJobTaskType{MAP, REDUCE};
 
@@ -28,6 +20,7 @@ public class CommonConstantsHeuristic {
     MIN_TOTAL_COMMITTED_HEAP_USAGE_MEMORY("Min Total Committed Heap Usage Memory (MB)"),
     AVERAGE_TASK_INPUT_SIZE("Average task input size"),
     AVERAGE_TASK_RUNTIME("Average task runtime"),
+    AVG_INPUT_SIZE_IN_BYTES("Avg Input Size (Bytes)"),
     NUMBER_OF_TASK("Number of tasks"),
     RATIO_OF_SPILLED_RECORDS_TO_OUTPUT_RECORDS("Ratio of spilled records to output records"),
     SORT_BUFFER("Sort Buffer"),

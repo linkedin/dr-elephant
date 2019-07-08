@@ -162,8 +162,7 @@ public class PigHbtParameterRecommenderTest {
         assertTrue("Should contain Mapper Spill as failed heuristic", failedHeuristics.contains(MAPPER_SPILL.getValue()));
         assertTrue("Should contain Reducer Memory as failed heuristic", failedHeuristics.contains(REDUCER_MEMORY.getValue()));
         assertTrue("Should contain Reducer Time as failed heuristic", failedHeuristics.contains(REDUCER_TIME.getValue()));
-        assertFalse("Should not contain Mapper GC as failed heuristic", failedHeuristics.contains(
-            CommonConstantsHeuristic.MAPPER_GC));
+        assertFalse("Should not contain Mapper GC as failed heuristic", failedHeuristics.contains("Mapper GC"));
 
         appResultsList_2 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID2, TEST_PIG_HBT_FLOW_EXEC_ID2);
         PigHbtParameterRecommender pigHbtParameterRecommender_2 = new PigHbtParameterRecommender(appResultsList_2);
@@ -181,7 +180,7 @@ public class PigHbtParameterRecommenderTest {
         List<AppResult> appResultsList_1, appResultsList_2, appResultsList_3;
         appResultsList_1 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID1, TEST_PIG_HBT_FLOW_EXEC_ID1);
         PigHbtParameterRecommender pigHbtParameterRecommender_1 = new PigHbtParameterRecommender(appResultsList_1);
-        pigHbtParameterRecommender_1.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_1.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_1.suggestParametersForMemorySpill();
         assertEquals("Split percent should be 0.80", pigHbtParameterRecommender_1.getLatestAppliedParams()
             .get(SORT_SPILL_HADOOP_CONF.getValue()), 0.80, delta);
@@ -194,7 +193,7 @@ public class PigHbtParameterRecommenderTest {
 
         appResultsList_2 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID2, TEST_PIG_HBT_FLOW_EXEC_ID2);
         PigHbtParameterRecommender pigHbtParameterRecommender_2 = new PigHbtParameterRecommender(appResultsList_2);
-        pigHbtParameterRecommender_2.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_2.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_2.suggestParametersForMemorySpill();
         assertEquals("Split percent should be 0.86", pigHbtParameterRecommender_2.getLatestAppliedParams()
             .get(SORT_SPILL_HADOOP_CONF.getValue()), 0.86, delta);
@@ -207,7 +206,7 @@ public class PigHbtParameterRecommenderTest {
 
         appResultsList_3 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID3, TEST_PIG_HBT_FLOW_EXEC_ID3);
         PigHbtParameterRecommender pigHbtParameterRecommender_3 = new PigHbtParameterRecommender(appResultsList_3);
-        pigHbtParameterRecommender_3.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_3.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_3.suggestParametersForMemorySpill();
         assertEquals("Split percent should be 0.78", pigHbtParameterRecommender_3.getLatestAppliedParams()
             .get(SORT_SPILL_HADOOP_CONF.getValue()), 0.78, delta);
@@ -229,7 +228,7 @@ public class PigHbtParameterRecommenderTest {
         List<AppResult> appResultsList_1, appResultsList_2;
         appResultsList_1 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID1, TEST_PIG_HBT_FLOW_EXEC_ID1);
         PigHbtParameterRecommender pigHbtParameterRecommender_1 = new PigHbtParameterRecommender(appResultsList_1);
-        pigHbtParameterRecommender_1.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_1.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_1.suggestSplitSize();
         assertEquals(pigHbtParameterRecommender_1.getLatestAppliedParams().get(MAPPER_HEAP_HADOOP_CONF.getValue()), 1536, delta);
         assertTrue("Suggested parameter should contain MR split size suggestion",
@@ -243,7 +242,7 @@ public class PigHbtParameterRecommenderTest {
 
         appResultsList_2 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID2, TEST_PIG_HBT_FLOW_EXEC_ID2);
         PigHbtParameterRecommender pigHbtParameterRecommender_2 = new PigHbtParameterRecommender(appResultsList_2);
-        pigHbtParameterRecommender_2.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_2.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_2.suggestSplitSize();
         assertEquals(pigHbtParameterRecommender_2.getLatestAppliedParams().get(MAPPER_HEAP_HADOOP_CONF.getValue()).intValue(),
             2500);
@@ -265,7 +264,7 @@ public class PigHbtParameterRecommenderTest {
         List<AppResult> appResultsList_1, appResultsList_2;
         appResultsList_1 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID1, TEST_PIG_HBT_FLOW_EXEC_ID1);
         PigHbtParameterRecommender pigHbtParameterRecommender_1 = new PigHbtParameterRecommender(appResultsList_1);
-        pigHbtParameterRecommender_1.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_1.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_1.suggestMemoryParam(CommonConstantsHeuristic.MRJobTaskType.MAP);
         assertTrue("Latest execution parameters should contain Mapper Memory",
             pigHbtParameterRecommender_1.getLatestAppliedParams().containsKey(MAPPER_MEMORY_HADOOP_CONF.getValue()));
@@ -280,7 +279,7 @@ public class PigHbtParameterRecommenderTest {
 
         appResultsList_2 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID2, TEST_PIG_HBT_FLOW_EXEC_ID2);
         PigHbtParameterRecommender pigHbtParameterRecommender_2 = new PigHbtParameterRecommender(appResultsList_2);
-        pigHbtParameterRecommender_2.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_2.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_2.suggestMemoryParam(CommonConstantsHeuristic.MRJobTaskType.MAP);
         assertTrue("Latest execution parameters should contain Mapper Memory",
             pigHbtParameterRecommender_2.getLatestAppliedParams().containsKey(MAPPER_MEMORY_HADOOP_CONF.getValue()));
@@ -304,7 +303,7 @@ public class PigHbtParameterRecommenderTest {
         List<AppResult> appResultsList_1, appResultsList_2;
         appResultsList_1 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID1, TEST_PIG_HBT_FLOW_EXEC_ID1);
         PigHbtParameterRecommender pigHbtParameterRecommender_1 = new PigHbtParameterRecommender(appResultsList_1);
-        pigHbtParameterRecommender_1.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_1.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_1.suggestMemoryParam(CommonConstantsHeuristic.MRJobTaskType.REDUCE);
         assertTrue("Latest execution parameters should contain Reducer Memory",
             pigHbtParameterRecommender_1.getLatestAppliedParams().containsKey(REDUCER_MEMORY_HADOOP_CONF.getValue()));
@@ -319,7 +318,7 @@ public class PigHbtParameterRecommenderTest {
 
         appResultsList_2 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID2, TEST_PIG_HBT_FLOW_EXEC_ID2);
         PigHbtParameterRecommender pigHbtParameterRecommender_2 = new PigHbtParameterRecommender(appResultsList_2);
-        pigHbtParameterRecommender_2.loadLatestAppliedParameters();
+        pigHbtParameterRecommender_2.loadLatestAppliedParametersAndMaxParamValue();
         pigHbtParameterRecommender_2.suggestMemoryParam(CommonConstantsHeuristic.MRJobTaskType.REDUCE);
         assertTrue("Latest execution parameters should contain Reducer Memory",
             pigHbtParameterRecommender_2.getLatestAppliedParams().containsKey(REDUCER_MEMORY_HADOOP_CONF.getValue()));

@@ -42,16 +42,28 @@ import static java.lang.Math.*;
 
 public class PigHbtParameterRecommender {
   private List<AppResult> appResultList;
+  private HashMap<String, Double> maxHeuristicDetailValueMap = new HashMap();
   @Getter
   private Map<String, Double> jobSuggestedParameters = new HashMap<>();
   @Getter
   private Map<String, Double> latestAppliedParams = new HashMap<>();
   public Map<String, Double> essentialCounters = new HashMap<>();
 
+  public class MaxMemoryHeuristicsProperties {
+    double maxUtilizedPhysicalMemory = 0;
+    double maxUtilizedHeapMemory = 0;
+    double maxUtilizedVirtualMemory = 0;
+  }
+
   private final Logger logger = Logger.getLogger(getClass());
 
   public PigHbtParameterRecommender(List<AppResult> appResultList) {
     this.appResultList = appResultList;
+  }
+
+  void loadLatestAppliedParametersAndMaxParamValue() {
+    loadLatestAppliedParameters();
+    setMaxParamValues();
   }
 
   /**
@@ -102,13 +114,14 @@ public class PigHbtParameterRecommender {
    * @return Map with suggested parameter's name as key and its value
    */
   public Map<String, Double> suggestParameters() {
-    loadLatestAppliedParameters();
+    loadLatestAppliedParametersAndMaxParamValue();
     List<String> failedHeuristicNameList = getFailedHeuristics();
-    suggestToFixFailedHeuristics(failedHeuristicNameList);
     if (failedHeuristicNameList.size() == 0) {
       logger.info("No failed heuristics, so will try to optimize memory parameters");
       suggestMemoryParam(MRJobTaskType.MAP);
       suggestMemoryParam(MRJobTaskType.REDUCE);
+    } else {
+      suggestToFixFailedHeuristics(failedHeuristicNameList);
     }
     addRequiredPreviousSuggestedParameters();
     modifyMapperMemory();
@@ -120,19 +133,15 @@ public class PigHbtParameterRecommender {
    */
   private void suggestToFixFailedHeuristics(List<String> failedHeuristicNameList) {
     for (String failedHeuristicName : failedHeuristicNameList) {
-      switch (failedHeuristicName) {
-        case MAPPER_MEMORY :
-          suggestMemoryParam(MRJobTaskType.MAP);
-          break;
-        case REDUCER_MEMORY :
-          suggestMemoryParam(MRJobTaskType.REDUCE);
-          break;
-        case MAPPER_SPILL :
-          suggestParametersForMemorySpill();
-          break;
-        case MAPPER_TIME:
-        case MAPPER_SPEED:
-          suggestSplitSize();
+      if (failedHeuristicName.equals(MAPPER_MEMORY_HEURISTIC_NAME)) {
+        suggestMemoryParam(MRJobTaskType.MAP);
+      } else if (failedHeuristicName.equals(REDUCER_MEMORY_HEURISTIC_NAME)) {
+        suggestMemoryParam(MRJobTaskType.REDUCE);
+      } else if (failedHeuristicName.equals(MAPPER_SPILL_HEURISTIC_NAME)) {
+        suggestParametersForMemorySpill();
+      } else if (failedHeuristicName.equals(MAPPER_SPEED_HEURISTIC_NAME) ||
+          failedHeuristicName.equals(MAPPER_TIME_HEURISTIC_NAME)) {
+        suggestSplitSize();
       }
     }
   }
@@ -155,21 +164,28 @@ public class PigHbtParameterRecommender {
    */
   @VisibleForTesting
   void suggestMemoryParam(MRJobTaskType taskType) {
-    String memoryHeuristicName;
-    if (taskType.equals(MRJobTaskType.MAP)) {
-      memoryHeuristicName = MAPPER_MEMORY_HEURISTICS_CONF.getValue();
-    } else {
-      memoryHeuristicName = REDUCER_MEMORY_HEURISTICS_CONF.getValue();
+    double maxUtilizedPhysicalMemory, maxUtilizedHeapMemory, maxUtilizedVirtualMemory;
+    try {
+      if (taskType.equals(MRJobTaskType.MAP)) {
+        maxUtilizedPhysicalMemory = maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_PHYSICAL_MEMORY);
+        maxUtilizedHeapMemory = maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_HEAP_MEMORY);
+        maxUtilizedVirtualMemory = maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_VIRTUAL_MEMORY);
+      } else {
+        maxUtilizedPhysicalMemory = maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_PHYSICAL_MEMORY);
+        maxUtilizedHeapMemory = maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_HEAP_MEMORY);
+        maxUtilizedVirtualMemory = maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_VIRTUAL_MEMORY);
+        ;
+      }
+    } catch (NullPointerException npe) {
+      logger.error(String.format("Couldn't find max value for Memory related params for task type %s,"
+          + " not suggesting Memory parameters", taskType.toString()), npe);
+      return;
     }
-    double maxUsedPhysicalMapperMemoryByJob =
-        getHeuristicDetailsMaxValueForJob(memoryHeuristicName, MAX_PHYSICAL_MEMORY.getValue());
-    double maxUsedHeapMemory =
-        getHeuristicDetailsMaxValueForJob(memoryHeuristicName, MAX_TOTAL_COMMITTED_HEAP_USAGE_MEMORY.getValue());
-    double maxUsedVirtualMemory = getHeuristicDetailsMaxValueForJob(memoryHeuristicName, MAX_VIRTUAL_MEMORY.getValue());
-    double recommendedMemory = max(maxUsedPhysicalMapperMemoryByJob, (maxUsedVirtualMemory / YARN_VMEM_TO_PMEM_RATIO));
+    double recommendedMemory = max(maxUtilizedPhysicalMemory,
+        (maxUtilizedVirtualMemory / YARN_VMEM_TO_PMEM_RATIO));
     double containerSize = TuningHelper.getContainerSize(recommendedMemory);
-    double recommendedHeapMemory = TuningHelper.getHeapSize(min(HEAP_MEMORY_TO_PHYSICAL_MEMORY_RATIO * containerSize,
-        maxUsedHeapMemory));
+    double recommendedHeapMemory = TuningHelper.getHeapSize(min(HEAP_MEMORY_TO_PHYSICAL_MEMORY_RATIO *
+        containerSize, maxUtilizedHeapMemory));
     setSuggestedMemoryParameter(taskType, containerSize, recommendedHeapMemory);
   }
 
@@ -209,46 +225,89 @@ public class PigHbtParameterRecommender {
   }
 
   /**
-   * Method to find the maximum value for give Heuristic Detail among the Job
-   * @param heuristicName heuristic name in which the detail will be present
-   * @param heuristicDetailName heuristic detail name for which max  value is required
-   * @return max value for heuristicDetailName
+   * Method to find the maximum values different properties such as used Heap memory, physical memory, etc..
    */
-  private Double getHeuristicDetailsMaxValueForJob(String heuristicName, String heuristicDetailName) {
-    List<AppHeuristicResult> appHeuristicResultList = new ArrayList<>();
+  private void setMaxParamValues() {
     for (AppResult appResult : appResultList) {
-      for (AppHeuristicResult appHeuristicResult : appResult.yarnAppHeuristicResults) {
-        if (appHeuristicResult.heuristicName.equals(heuristicName)) {
-          appHeuristicResultList.add(appHeuristicResult);
+      for(AppHeuristicResult appHeuristicResult : appResult.yarnAppHeuristicResults) {
+        if (appHeuristicResult.heuristicName.equals(MAPPER_MEMORY_HEURISTIC_NAME)) {
+          setMapperMemoryRelatedMaxParamValues(appHeuristicResult);
+        } else if (appHeuristicResult.heuristicName.equals(REDUCER_MEMORY_HEURISTIC_NAME)) {
+          setReducerMemoryRelatedMaxParamValues(appHeuristicResult);
+        } else if (appHeuristicResult.heuristicName.equals(MAPPER_SPILL_HEURISTIC_NAME)) {
+          setMapperSpillRelatedMaxParamValues(appHeuristicResult);
+        } else if (appHeuristicResult.heuristicName.equals(MAPPER_TIME_HEURISTIC_NAME)) {
+          setMapperTimeRelatedMaxParamValue(appHeuristicResult);
         }
       }
     }
-    return getHeuristicDetailsMaxValue(appHeuristicResultList, heuristicDetailName);
   }
 
-  /**
-   * Method to find the maximum value for give Heuristic Detail among the all the applications for the Job
-   * @param appHeuristicResultList List containing AppResult for all the application for a Job
-   * @param heuristicDetailName heuristic detail name for which max  value is required
-   * @return max value for heuristicDetailName
-   */
-  private Double getHeuristicDetailsMaxValue(List<AppHeuristicResult> appHeuristicResultList,
-      String heuristicDetailName) {
-    double maxHeuristicDetailValueForJob = 0D;
-    if (appHeuristicResultList != null) {
-      for (AppHeuristicResult appHeuristicResult : appHeuristicResultList) {
-        for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResult.yarnAppHeuristicResultDetails) {
-          if (appHeuristicResultDetail.name.equals(heuristicDetailName)) {
-            double maxHeuristicDetailValueForApplication = Double.parseDouble(appHeuristicResultDetail.value);
-            maxHeuristicDetailValueForJob =
-                Math.max(maxHeuristicDetailValueForJob, maxHeuristicDetailValueForApplication);
-          }
+  private void setMaxValueForProperty(String propertyName, double maxValue) {
+    if (maxHeuristicDetailValueMap.containsKey(propertyName)) {
+      maxValue = max(maxHeuristicDetailValueMap.get(propertyName), maxValue);
+    }
+    maxHeuristicDetailValueMap.put(propertyName, maxValue);
+  }
+
+  private void setMapperMemoryRelatedMaxParamValues (AppHeuristicResult appHeuristicResults) {
+      MaxMemoryHeuristicsProperties maxMapperMemoryHeuristic = setMemoryRelatedMaxParamValues(appHeuristicResults);
+      setMaxValueForProperty(MAPPER_MAX_USED_PHYSICAL_MEMORY, maxMapperMemoryHeuristic.maxUtilizedPhysicalMemory);
+      setMaxValueForProperty(MAPPER_MAX_USED_HEAP_MEMORY, maxMapperMemoryHeuristic.maxUtilizedHeapMemory);
+      setMaxValueForProperty(MAPPER_MAX_USED_VIRTUAL_MEMORY, maxMapperMemoryHeuristic.maxUtilizedVirtualMemory);
+  }
+
+  private void setReducerMemoryRelatedMaxParamValues (AppHeuristicResult appHeuristicResults) {
+    MaxMemoryHeuristicsProperties maxReducerMemoryHeuristic = setMemoryRelatedMaxParamValues(appHeuristicResults);
+    setMaxValueForProperty(REDUCER_MAX_USED_PHYSICAL_MEMORY, maxReducerMemoryHeuristic.maxUtilizedPhysicalMemory);
+    setMaxValueForProperty(REDUCER_MAX_USED_HEAP_MEMORY, maxReducerMemoryHeuristic.maxUtilizedHeapMemory);
+    setMaxValueForProperty(REDUCER_MAX_USED_VIRTUAL_MEMORY, maxReducerMemoryHeuristic.maxUtilizedVirtualMemory);
+  }
+
+  private MaxMemoryHeuristicsProperties setMemoryRelatedMaxParamValues(AppHeuristicResult appHeuristicResults) {
+    double maxUtilizedPhysicalMemory = 0D, maxUtilizedHeapMemory = 0D, maxUtilizedVirtualMemory = 0D;
+    MaxMemoryHeuristicsProperties maxMemoryHeuristicsProperties = new MaxMemoryHeuristicsProperties();
+    for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResults
+        .yarnAppHeuristicResultDetails) {
+      if (appHeuristicResultDetail.name.equals(MAX_PHYSICAL_MEMORY.getValue())) {
+        maxUtilizedPhysicalMemory = Math.max(Double.parseDouble(appHeuristicResultDetail.value),
+            maxUtilizedPhysicalMemory);
+      } else if (appHeuristicResultDetail.name.equals(MAX_TOTAL_COMMITTED_HEAP_USAGE_MEMORY.getValue())) {
+        maxUtilizedHeapMemory = Math.max(Double.parseDouble(appHeuristicResultDetail.value),
+            maxUtilizedHeapMemory);
+      } else if (appHeuristicResultDetail.name.equals(MAX_VIRTUAL_MEMORY.getValue())) {
+        maxUtilizedVirtualMemory = Math.max(Double.parseDouble(appHeuristicResultDetail.value),
+            maxUtilizedVirtualMemory);
+      }
+    }
+    maxMemoryHeuristicsProperties.maxUtilizedPhysicalMemory = maxUtilizedPhysicalMemory;
+    maxMemoryHeuristicsProperties.maxUtilizedHeapMemory = maxUtilizedHeapMemory;
+    maxMemoryHeuristicsProperties.maxUtilizedVirtualMemory = maxUtilizedVirtualMemory;
+    return maxMemoryHeuristicsProperties;
+  }
+
+  private void setMapperSpillRelatedMaxParamValues (AppHeuristicResult appHeuristicResults) {
+      double maxMapperSpilRatioForJob = 0;
+      for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResults
+          .yarnAppHeuristicResultDetails) {
+        if (appHeuristicResultDetail.name.equals(RATIO_OF_SPILLED_RECORDS_TO_OUTPUT_RECORDS.getValue())) {
+          maxMapperSpilRatioForJob = Math.max(Double.parseDouble(appHeuristicResultDetail.value),
+              maxMapperSpilRatioForJob);
         }
       }
-      return maxHeuristicDetailValueForJob;
-    } else {
-      throw new IllegalArgumentException("No heuristic analysis result found for any application");
+      setMaxValueForProperty(MAPPER_MAX_RECORD_SPILL_RATIO, maxMapperSpilRatioForJob);
+  }
+
+  private void setMapperTimeRelatedMaxParamValue (AppHeuristicResult appHeuristicResults) {
+    double maxAvgInputSizeInBytesForJob = 0;
+    for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResults
+        .yarnAppHeuristicResultDetails) {
+      if (appHeuristicResultDetail.name.equals(AVG_INPUT_SIZE_IN_BYTES.getValue())) {
+        maxAvgInputSizeInBytesForJob = Math.max(Long.parseLong(appHeuristicResultDetail.value),
+            maxAvgInputSizeInBytesForJob);
+      }
     }
+    setMaxValueForProperty(MAX_AVG_INPUT_SIZE_IN_BYTES, maxAvgInputSizeInBytesForJob);
   }
 
   /**
@@ -257,9 +316,7 @@ public class PigHbtParameterRecommender {
    */
   @VisibleForTesting
   void suggestSplitSize() {
-    long maxAvgInputSizeInBytes;
     int maxAvgRuntimeInSeconds;
-    maxAvgInputSizeInBytes = getHeuristicDetailsMaxValueForJob(MAPPER_TIME, AVG_INPUT_SIZE_IN_BYTES).longValue();
     maxAvgRuntimeInSeconds = getMaxAvgTaskRuntime();
     if (maxAvgRuntimeInSeconds == 0) {
       logger.error("Maximum Avg Runtime was 0 so not suggesting split size");
@@ -267,8 +324,15 @@ public class PigHbtParameterRecommender {
     }
     Double mapperHeapMemory = getMapperHeapMemory();
     long mapperHeapMemoryInBytes = mapperHeapMemory.longValue() * FileUtils.ONE_MB;
+    long maxAverageInputSizeInBytes;
+    try {
+      maxAverageInputSizeInBytes = maxHeuristicDetailValueMap.get(MAX_AVG_INPUT_SIZE_IN_BYTES).longValue();
+    } catch (NullPointerException npe) {
+      logger.error("Couldn't find max value for Average Input size in bytes, so not suggesting Spilt size.");
+      return;
+    }
     long suggestedSplitSizeInBytes =
-        (maxAvgInputSizeInBytes * OPTIMAL_MAPPER_SPEED_BYTES_PER_SECOND * 60) / (maxAvgRuntimeInSeconds);
+        (maxAverageInputSizeInBytes * OPTIMAL_MAPPER_SPEED_BYTES_PER_SECOND * 60) / (maxAvgRuntimeInSeconds);
     suggestedSplitSizeInBytes =
         min(suggestedSplitSizeInBytes, mapperHeapMemoryInBytes);
     logger.debug("Split size suggested  " + suggestedSplitSizeInBytes);
@@ -292,7 +356,7 @@ public class PigHbtParameterRecommender {
     int maxAvgRuntimeInSeconds = 0;
     for (AppResult appResult : appResultList) {
       for (AppHeuristicResult appHeuristicResult : appResult.yarnAppHeuristicResults) {
-        if (appHeuristicResult.heuristicName.equals(MAPPER_TIME)) {
+        if (appHeuristicResult.heuristicName.equals(MAPPER_TIME_HEURISTIC_NAME)) {
           for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResult.yarnAppHeuristicResultDetails) {
             if (appHeuristicResultDetail.name.equals(AVERAGE_TASK_RUNTIME.getValue())) {
               try {
@@ -317,11 +381,18 @@ public class PigHbtParameterRecommender {
   void suggestParametersForMemorySpill() {
     int suggestedBufferSize;
     double suggestedSpillPercentage = 0.0f;
-    double mapperSpillRatio = getHeuristicDetailsMaxValueForJob(MAPPER_SPILL, MAPPER_OUTPUT_RECORD_SPILL_RATIO);
     int previousAppliedSortBufferValue = latestAppliedParams.get(SORT_BUFFER_HADOOP_CONF.getValue()).intValue();
     double previousAppliedSpillPercentage = latestAppliedParams.get(SORT_SPILL_HADOOP_CONF.getValue());
-    if (mapperSpillRatio > MAPPER_MEMORY_SPILL_THRESHOLD_2) {
-      if (mapperSpillRatio > MAPPER_MEMORY_SPILL_THRESHOLD_1) {
+    double maxSpillRatio;
+    try {
+      maxSpillRatio = maxHeuristicDetailValueMap.get(MAPPER_MAX_RECORD_SPILL_RATIO);
+    } catch (NullPointerException npe) {
+      logger.error("Couldn't find max value for Ratio Spilled records to output records,"
+          + " so not suggesting parameters for Spill");
+      return;
+    }
+    if (maxSpillRatio > MAPPER_MEMORY_SPILL_THRESHOLD_2) {
+      if (maxSpillRatio > MAPPER_MEMORY_SPILL_THRESHOLD_1) {
         if (previousAppliedSpillPercentage <= SORT_SPILL_PERCENTAGE_THRESHOLD) {
           suggestedSpillPercentage = previousAppliedSpillPercentage + SPILL_PERCENTAGE_STEP_SIZE;
           suggestedBufferSize = (int) (previousAppliedSortBufferValue * 1.2);
