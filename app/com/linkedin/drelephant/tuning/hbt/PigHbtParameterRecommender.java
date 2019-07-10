@@ -164,28 +164,18 @@ public class PigHbtParameterRecommender {
    */
   @VisibleForTesting
   void suggestMemoryParam(MRJobTaskType taskType) {
-    double maxUtilizedPhysicalMemory, maxUtilizedHeapMemory, maxUtilizedVirtualMemory;
-    try {
-      if (taskType.equals(MRJobTaskType.MAP)) {
-        maxUtilizedPhysicalMemory = maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_PHYSICAL_MEMORY);
-        maxUtilizedHeapMemory = maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_HEAP_MEMORY);
-        maxUtilizedVirtualMemory = maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_VIRTUAL_MEMORY);
-      } else {
-        maxUtilizedPhysicalMemory = maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_PHYSICAL_MEMORY);
-        maxUtilizedHeapMemory = maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_HEAP_MEMORY);
-        maxUtilizedVirtualMemory = maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_VIRTUAL_MEMORY);
-        ;
-      }
-    } catch (NullPointerException npe) {
-      logger.error(String.format("Couldn't find max value for Memory related params for task type %s,"
-          + " not suggesting Memory parameters", taskType.toString()), npe);
+    MaxMemoryHeuristicsProperties maxMemoryHeuristicsProperties =
+        getMaxValuesForMemoryParamsForTask(taskType);
+    if (maxMemoryHeuristicsProperties == null) {
+      logger.error(String.format("Couldn't find max value for Memory related params for task type %s"
+          + " not suggesting Memory parameters", taskType));
       return;
     }
-    double recommendedMemory = max(maxUtilizedPhysicalMemory,
-        (maxUtilizedVirtualMemory / YARN_VMEM_TO_PMEM_RATIO));
+    double recommendedMemory = max(maxMemoryHeuristicsProperties.maxUtilizedPhysicalMemory,
+        (maxMemoryHeuristicsProperties.maxUtilizedVirtualMemory / YARN_VMEM_TO_PMEM_RATIO));
     double containerSize = TuningHelper.getContainerSize(recommendedMemory);
     double recommendedHeapMemory = TuningHelper.getHeapSize(min(HEAP_MEMORY_TO_PHYSICAL_MEMORY_RATIO *
-        containerSize, maxUtilizedHeapMemory));
+        containerSize, maxMemoryHeuristicsProperties.maxUtilizedHeapMemory));
     setSuggestedMemoryParameter(taskType, containerSize, recommendedHeapMemory);
   }
 
@@ -239,10 +229,18 @@ public class PigHbtParameterRecommender {
         } else if (appHeuristicResult.heuristicName.equals(MAPPER_TIME_HEURISTIC_NAME)) {
           setMapperTimeRelatedMaxParamValue(appHeuristicResult);
         }
+        /*
+        Todo: Add the logic for fixing Reducer Time Heuristic as soon as we are able to set number of reducers on Azkaban
+        */
       }
     }
   }
 
+  /**
+   * Method to set the max value of parameterName in maxHeuristicDetailValueMap
+   * @param propertyName name of the property whose max value to be set
+   * @param maxValue calculated max value, can be smaller than the current set max value if exists
+   */
   private void setMaxValueForProperty(String propertyName, double maxValue) {
     if (maxHeuristicDetailValueMap.containsKey(propertyName)) {
       maxValue = max(maxHeuristicDetailValueMap.get(propertyName), maxValue);
@@ -250,6 +248,10 @@ public class PigHbtParameterRecommender {
     maxHeuristicDetailValueMap.put(propertyName, maxValue);
   }
 
+  /**
+   * Method to set the max values for different memory properties for Mapper
+   * @param appHeuristicResults appHeuristicsResult list for Mapper Memory Heuristic
+   */
   private void setMapperMemoryRelatedMaxParamValues (AppHeuristicResult appHeuristicResults) {
       MaxMemoryHeuristicsProperties maxMapperMemoryHeuristic = setMemoryRelatedMaxParamValues(appHeuristicResults);
       setMaxValueForProperty(MAPPER_MAX_USED_PHYSICAL_MEMORY, maxMapperMemoryHeuristic.maxUtilizedPhysicalMemory);
@@ -257,6 +259,10 @@ public class PigHbtParameterRecommender {
       setMaxValueForProperty(MAPPER_MAX_USED_VIRTUAL_MEMORY, maxMapperMemoryHeuristic.maxUtilizedVirtualMemory);
   }
 
+  /**
+   * Method to set the max values for different memory properties for Reducer
+   * @param appHeuristicResults appHeuristicsResult list for Reducer Memory Heuristic
+   */
   private void setReducerMemoryRelatedMaxParamValues (AppHeuristicResult appHeuristicResults) {
     MaxMemoryHeuristicsProperties maxReducerMemoryHeuristic = setMemoryRelatedMaxParamValues(appHeuristicResults);
     setMaxValueForProperty(REDUCER_MAX_USED_PHYSICAL_MEMORY, maxReducerMemoryHeuristic.maxUtilizedPhysicalMemory);
@@ -264,6 +270,11 @@ public class PigHbtParameterRecommender {
     setMaxValueForProperty(REDUCER_MAX_USED_VIRTUAL_MEMORY, maxReducerMemoryHeuristic.maxUtilizedVirtualMemory);
   }
 
+  /**
+   * Method to find the max values for different memory properties
+   * @param appHeuristicResults appHeuristicsResult list for Memory Heuristic
+   * @return Object of class MaxMemoryHeuristicsProperties with the max values for present appHeuristicResult list
+   */
   private MaxMemoryHeuristicsProperties setMemoryRelatedMaxParamValues(AppHeuristicResult appHeuristicResults) {
     double maxUtilizedPhysicalMemory = 0D, maxUtilizedHeapMemory = 0D, maxUtilizedVirtualMemory = 0D;
     MaxMemoryHeuristicsProperties maxMemoryHeuristicsProperties = new MaxMemoryHeuristicsProperties();
@@ -286,6 +297,10 @@ public class PigHbtParameterRecommender {
     return maxMemoryHeuristicsProperties;
   }
 
+  /**
+   * Method to set the max values for different Mapper Spill related properties
+   * @param appHeuristicResults appHeuristicsResult list for Mapper Spill Heuristic
+   */
   private void setMapperSpillRelatedMaxParamValues (AppHeuristicResult appHeuristicResults) {
       double maxMapperSpilRatioForJob = 0;
       for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResults
@@ -298,6 +313,10 @@ public class PigHbtParameterRecommender {
       setMaxValueForProperty(MAPPER_MAX_RECORD_SPILL_RATIO, maxMapperSpilRatioForJob);
   }
 
+  /**
+   * Method to set the max values for different Mapper Time related properties
+   * @param appHeuristicResults appHeuristicsResult list for Mapper Time Heuristic
+   */
   private void setMapperTimeRelatedMaxParamValue (AppHeuristicResult appHeuristicResults) {
     double maxAvgInputSizeInBytesForJob = 0;
     for (AppHeuristicResultDetails appHeuristicResultDetail : appHeuristicResults
@@ -325,9 +344,9 @@ public class PigHbtParameterRecommender {
     Double mapperHeapMemory = getMapperHeapMemory();
     long mapperHeapMemoryInBytes = mapperHeapMemory.longValue() * FileUtils.ONE_MB;
     long maxAverageInputSizeInBytes;
-    try {
+    if (isMaxValuePresent(MAX_AVG_INPUT_SIZE_IN_BYTES)) {
       maxAverageInputSizeInBytes = maxHeuristicDetailValueMap.get(MAX_AVG_INPUT_SIZE_IN_BYTES).longValue();
-    } catch (NullPointerException npe) {
+    } else {
       logger.error("Couldn't find max value for Average Input size in bytes, so not suggesting Spilt size.");
       return;
     }
@@ -384,11 +403,9 @@ public class PigHbtParameterRecommender {
     int previousAppliedSortBufferValue = latestAppliedParams.get(SORT_BUFFER_HADOOP_CONF.getValue()).intValue();
     double previousAppliedSpillPercentage = latestAppliedParams.get(SORT_SPILL_HADOOP_CONF.getValue());
     double maxSpillRatio;
-    try {
+    if (isMaxValuePresent(MAPPER_MAX_RECORD_SPILL_RATIO)) {
       maxSpillRatio = maxHeuristicDetailValueMap.get(MAPPER_MAX_RECORD_SPILL_RATIO);
-    } catch (NullPointerException npe) {
-      logger.error("Couldn't find max value for Ratio Spilled records to output records,"
-          + " so not suggesting parameters for Spill");
+    } else {
       return;
     }
     if (maxSpillRatio > MAPPER_MEMORY_SPILL_THRESHOLD_2) {
@@ -473,5 +490,54 @@ public class PigHbtParameterRecommender {
       maxHeapSize = DEFAULT_CONTAINER_HEAP_MEMORY;
     }
     return maxHeapSize;
+  }
+
+  /**
+   * Method to check if for the given propertyName/s value exists in maxHeuristicDetailValueMap
+   * @param propertyNames Array of propertyName
+   * @return True if value exists for all the propertyName else false
+   */
+
+  private boolean isMaxValuePresent(String... propertyNames){
+    for (String propertyName : propertyNames) {
+      if (!maxHeuristicDetailValueMap.containsKey(propertyName)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Method to get the max values for the memory relates properties based on the task
+   * @param taskType Type of the task Map or Reduce
+   * @return MaxMemoryHeuristicsProperties object with max values for max physical memory,
+   *  heap memory, virtual memory used by the task
+   */
+  private MaxMemoryHeuristicsProperties getMaxValuesForMemoryParamsForTask(MRJobTaskType taskType) {
+    MaxMemoryHeuristicsProperties maxMemoryHeuristicsProperties = new MaxMemoryHeuristicsProperties();
+    if (taskType.equals(MRJobTaskType.MAP)) {
+      if (isMaxValuePresent(MAPPER_MAX_USED_VIRTUAL_MEMORY, MAPPER_MAX_USED_HEAP_MEMORY,
+          MAPPER_MAX_USED_VIRTUAL_MEMORY)) {
+        maxMemoryHeuristicsProperties.maxUtilizedPhysicalMemory =
+            maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_PHYSICAL_MEMORY);
+        maxMemoryHeuristicsProperties.maxUtilizedHeapMemory =
+            maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_HEAP_MEMORY);
+        maxMemoryHeuristicsProperties.maxUtilizedVirtualMemory =
+            maxHeuristicDetailValueMap.get(MAPPER_MAX_USED_VIRTUAL_MEMORY);
+        return maxMemoryHeuristicsProperties;
+      }
+    } else {
+      if (isMaxValuePresent(REDUCER_MAX_USED_PHYSICAL_MEMORY, REDUCER_MAX_USED_HEAP_MEMORY,
+          REDUCER_MAX_USED_VIRTUAL_MEMORY)) {
+        maxMemoryHeuristicsProperties.maxUtilizedPhysicalMemory =
+            maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_PHYSICAL_MEMORY);
+        maxMemoryHeuristicsProperties.maxUtilizedHeapMemory =
+            maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_HEAP_MEMORY);
+        maxMemoryHeuristicsProperties.maxUtilizedVirtualMemory =
+            maxHeuristicDetailValueMap.get(REDUCER_MAX_USED_VIRTUAL_MEMORY);
+        return maxMemoryHeuristicsProperties;
+      }
+    }
+    return null;
   }
 }
