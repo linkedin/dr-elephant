@@ -342,7 +342,7 @@ public class PigHbtParameterRecommenderTest {
         List<AppResult> appResultsList_1, appResultsList_2;
         appResultsList_1 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID1, TEST_PIG_HBT_FLOW_EXEC_ID1);
         PigHbtParameterRecommender pigHbtParameterRecommender_1 = new PigHbtParameterRecommender(appResultsList_1);
-        Map<String, Double> suggestedParameters = pigHbtParameterRecommender_1.suggestParameters();
+        Map<String, Double> suggestedParameters = pigHbtParameterRecommender_1.getSuggestedParamters();
         assertEquals("Number of failed heuristics should be four", pigHbtParameterRecommender_1.getFailedHeuristics().size(), 5);
         assertTrue("Reducer memory must be suggested",
             suggestedParameters.containsKey(REDUCER_MEMORY_HADOOP_CONF.getValue()));
@@ -376,7 +376,7 @@ public class PigHbtParameterRecommenderTest {
 
         appResultsList_2 = getAppResults(TEST_PIG_HBT_JOB_EXEC_ID3, TEST_PIG_HBT_FLOW_EXEC_ID3);
         PigHbtParameterRecommender pigHbtParameterRecommender_2 = new PigHbtParameterRecommender(appResultsList_2);
-        suggestedParameters = pigHbtParameterRecommender_2.suggestParameters();
+        suggestedParameters = pigHbtParameterRecommender_2.getSuggestedParamters();
         Map<String, Double> latestExecutionParameters = pigHbtParameterRecommender_2.getLatestAppliedParams();
         assertEquals(latestExecutionParameters.get(MAPPER_MEMORY_HADOOP_CONF.getValue()).intValue(), 2048);
         assertEquals(latestExecutionParameters.get(REDUCER_MEMORY_HADOOP_CONF.getValue()).intValue(), 3072);

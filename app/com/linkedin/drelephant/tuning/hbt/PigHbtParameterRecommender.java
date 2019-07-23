@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.Getter;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
@@ -113,7 +112,7 @@ public class PigHbtParameterRecommender {
    * in the next execution or if there is no failed heuristics then try to optimize Resource usage
    * @return Map with suggested parameter's name as key and its value
    */
-  public Map<String, Double> suggestParameters() {
+  public Map<String, Double> getSuggestedParamters() {
     loadLatestAppliedParametersAndMaxParamValue();
     List<String> failedHeuristicNameList = getFailedHeuristics();
     if (failedHeuristicNameList.size() == 0) {
@@ -479,8 +478,7 @@ public class PigHbtParameterRecommender {
    * @return Extracted heap size i.e. 200 for above example
    */
   double getHeapMemory(String mrHeapMemoryConfigValue) {
-    Pattern pattern = Pattern.compile(JVM_MAX_HEAP_MEMORY_REGEX);
-    Matcher matcher = pattern.matcher(mrHeapMemoryConfigValue);
+    Matcher matcher = jvmMaxHeapMemoryPattern.matcher(mrHeapMemoryConfigValue);
     double maxHeapSize;
     if (matcher.find()) {
       int memoryValue = Integer.parseInt(matcher.group(1));

@@ -10,6 +10,7 @@ import com.linkedin.drelephant.mapreduce.heuristics.MapperTimeHeuristic;
 import com.linkedin.drelephant.mapreduce.heuristics.ReducerMemoryHeuristic;
 import com.linkedin.drelephant.mapreduce.heuristics.ReducerTimeHeuristic;
 import java.util.List;
+import java.util.regex.Pattern;
 
 
 /**
@@ -26,6 +27,7 @@ public class Constant {
 
 
   public static final String JVM_MAX_HEAP_MEMORY_REGEX = ".*-Xmx([\\d]+)([mMgG]).*";
+  public static Pattern jvmMaxHeapMemoryPattern = Pattern.compile(JVM_MAX_HEAP_MEMORY_REGEX);
   public static final double YARN_VMEM_TO_PMEM_RATIO = 2.1;
   public static final int MB_IN_ONE_GB = 1024;
   public static final int SORT_BUFFER_CUSHION = 769;

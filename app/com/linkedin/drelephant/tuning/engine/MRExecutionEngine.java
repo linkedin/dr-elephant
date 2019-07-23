@@ -2,10 +2,11 @@ package com.linkedin.drelephant.tuning.engine;
 
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.ExpressionList;
+import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.mapreduce.heuristics.CommonConstantsHeuristic;
 import com.linkedin.drelephant.tuning.ExecutionEngine;
-import com.linkedin.drelephant.tuning.hbt.PigHbtParameterRecommender;
 import com.linkedin.drelephant.tuning.hbt.MRJob;
+import com.linkedin.drelephant.tuning.hbt.PigHbtParameterRecommender;
 import com.linkedin.drelephant.util.MemoryFormatUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -334,12 +335,19 @@ public class MRExecutionEngine implements ExecutionEngine {
 
   @Override
   public String parameterGenerationsHBT(List<AppResult> results, List<TuningParameter> tuningParameters) {
-    MRJob mrJob = new MRJob(results);
-    mrJob.analyzeAllApplications();
-    mrJob.processJobForParameter();
-    Map<String, Double> suggestedParameter = mrJob.getJobSuggestedParameter();
-    PigHbtParameterRecommender pigParameterRecommender = new PigHbtParameterRecommender(results);
-    suggestedParameter = pigParameterRecommender.suggestParameters();
+    int pigHbtVersion = ElephantContext.instance().getAutoTuningConf().getInt("pig.hbt.version", 1);
+    Map<String, Double> suggestedParameter = null;
+    if (pigHbtVersion == 1 ) {
+      logger.info("Using PIG Hbt version 1 for param set generation");
+      MRJob mrJob = new MRJob(results);
+      mrJob.analyzeAllApplications();
+      mrJob.processJobForParameter();
+      suggestedParameter = mrJob.getJobSuggestedParameter();
+    } else if (pigHbtVersion == 2) {
+      logger.info("Using PIG Hbt version 2 for param set generation");
+      PigHbtParameterRecommender pigParameterRecommender = new PigHbtParameterRecommender(results);
+      suggestedParameter = pigParameterRecommender.getSuggestedParamters();
+    }
     StringBuffer idParameters = new StringBuffer();
     for (TuningParameter tuningParameter : tuningParameters) {
       Double paramValue = suggestedParameter.get(tuningParameter.paramName);

@@ -88,6 +88,10 @@
       fitness from Dr Elephant APIs
     </description>
   </property>
+  <property>
+    <name>pig.hbt.version</name>
+    <value>1</value>
+  </property>
   <!--The below property is optional-->
   <!--<property>-->
   <!--<name>python.path</name>-->
