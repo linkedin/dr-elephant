@@ -96,7 +96,7 @@ public class TuningManagerTest {
 
   @Test
   public void testParamGenerterTestRunner() {
-//    running(testServer(TEST_SERVER_PORT, fakeApp), new ParameterGenerateManagerTestRunner());
+    running(testServer(TEST_SERVER_PORT, fakeApp), new ParameterGenerateManagerTestRunner());
   }
 
   @Test
