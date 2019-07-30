@@ -88,6 +88,15 @@ public class ParameterGenerateManagerHBT extends AbstractParameterGenerateManage
         .desc(JobExecution.TABLE.updatedTs)
         .setMaxRows(1)
         .findUnique();
+    /**
+     * Checking for JobExecution which can be null
+     * if none of the executions are in SUCCEEDED or IN_PROGRESS state
+     */
+    if(jobExecution == null){
+      logger.info("No succeeded execution found for this job: " + job.jobName + ", cannot use for param generation");
+      return "";
+    }
+
     logger.debug("Job Status " + jobExecution.executionState.name());
     if (jobExecution.executionState.name().equals(JobExecution.ExecutionState.IN_PROGRESS.name())) {
       logger.debug(" Job is still running , cannot use for param generation ");

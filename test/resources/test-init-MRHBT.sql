@@ -369,4 +369,16 @@ INSERT INTO `yarn_app_heuristic_result_details` VALUES
 (32271316,'Sort Buffer','100',NULL),
 (32271316,'Sort Factor','10',NULL),
 (32271316,'Sort Spill','0.80',NULL),
-(32271316,'Split Size','536870912',NULL)
+(32271316,'Split Size','536870912',NULL);
+
+INSERT INTO flow_definition(id, flow_def_id, flow_def_url) VALUES
+(10003,'https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow','https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow');
+
+INSERT INTO job_definition(id, job_def_id, flow_definition_id, job_name, job_def_url, scheduler, username, created_ts, updated_ts) VALUES
+(100003,'https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry',10003,'countByCountryFlow_countByCountry','https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry','azkaban','dukumar','2018-02-12 08:40:42','2018-02-12 08:40:43');
+
+INSERT INTO flow_execution(id, flow_exec_id, flow_exec_url, flow_definition_id) VALUES
+(1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293',10003);
+
+INSERT INTO job_execution(id, job_exec_id, job_exec_url, job_definition_id, flow_execution_id, execution_state, resource_usage, execution_time, input_size_in_bytes, created_ts, updated_ts) VALUES
+(1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0',100003,1541,'FAILED',21.132545572916666,3.2694833333333335,324713861757,'2018-02-14 05:30:42','2018-02-14 05:30:42');

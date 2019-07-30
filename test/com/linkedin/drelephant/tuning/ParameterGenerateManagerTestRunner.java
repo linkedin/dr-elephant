@@ -1,17 +1,21 @@
 package com.linkedin.drelephant.tuning;
 
-
+import com.linkedin.drelephant.tuning.engine.MRExecutionEngine;
 import com.linkedin.drelephant.tuning.hbt.MRApplicationData;
 import com.linkedin.drelephant.tuning.hbt.MRJob;
+import com.linkedin.drelephant.tuning.hbt.ParameterGenerateManagerHBT;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import models.AppHeuristicResult;
 import models.AppResult;
+import models.JobDefinition;
+import models.TuningParameter;
 
-
+import static common.DBTestUtil.*;
 import static org.junit.Assert.*;
 import static play.test.Helpers.*;
-import static common.DBTestUtil.*;
 
 
 
@@ -31,11 +35,37 @@ public class ParameterGenerateManagerTestRunner implements Runnable {
   @Override
   public void run() {
     populateTestData();
+    try {
+      testGenerateParamSet();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    }
     testMemoryAndNumberOfTaskRecommendations();
     testNumberOfReducerTaskAndMapperSpillRecommendations();
     testNoHeuristicFailRecommendations();
     testParseMaxHeapSizeInMB();
     testTimeInMinutes();
+  }
+
+  private void testGenerateParamSet() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    ParameterGenerateManagerHBT parameterGenerateManagerHBT = new ParameterGenerateManagerHBT(new MRExecutionEngine());
+    List<TuningParameter> tuningParameters = null;
+    JobDefinition job = JobDefinition.find.select("*")
+                        .where()
+                        .eq(JobDefinition.TABLE.id, 100003)
+                        .setMaxRows(1)
+                        .findUnique();
+
+    Method generateParamSet = ParameterGenerateManagerHBT.class.getDeclaredMethod("generateParamSet", List.class, JobDefinition.class);
+    generateParamSet.setAccessible(true);
+    String output = (String) generateParamSet.invoke(parameterGenerateManagerHBT, tuningParameters, job);
+
+    assertTrue("Generated Param sets are " + output, output.equals(""));
+
   }
 
   private void testMemoryAndNumberOfTaskRecommendations() {
