@@ -15,7 +15,6 @@
  */
 package com.linkedin.drelephant.tony.heuristics;
 
-import com.google.common.base.Strings;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.HeuristicResultDetails;

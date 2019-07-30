@@ -16,7 +16,6 @@
 package com.linkedin.drelephant.tony.util;
 
 import com.linkedin.drelephant.tony.data.TonyTaskData;
-import com.linkedin.tony.Constants;
 import com.linkedin.tony.events.Metric;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +62,8 @@ public class TonyUtils {
    * Returns the average metric value of all task of the specified type given metricName
    * Skips metrics collection for unavailable metric data
    * @param taskMap a map containing data for all tasks
-   * @param tasktype the task type
-   * @param metricsName the name of the metric to query
+   * @param taskType the task type
+   * @param metricName the name of the metric to query
    * @return the average metric value of any task of the specified type
    */
   public static double getAvgMetricForTaskTypeAndMetricName(Map<String, Map<Integer, TonyTaskData>> taskMap,

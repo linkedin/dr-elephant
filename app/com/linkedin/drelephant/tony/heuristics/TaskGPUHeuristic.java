@@ -23,14 +23,12 @@ import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationDa
 import com.linkedin.drelephant.tony.data.TonyApplicationData;
 import com.linkedin.drelephant.tony.data.TonyTaskData;
 import com.linkedin.drelephant.tony.util.TonyUtils;
-import com.linkedin.drelephant.util.Utils;
 import com.linkedin.tony.Constants;
 import com.linkedin.tony.TonyConfigurationKeys;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
