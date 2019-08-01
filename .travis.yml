@@ -1,7 +1,7 @@
 language: scala
 sudo: true
 jdk:
-  - oraclejdk8
+  - openjdk8
 scala:
   - 2.10.4  # should match version in build.sbt
 python: "2.6"
