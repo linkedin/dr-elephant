@@ -18,7 +18,6 @@ import static org.junit.Assert.*;
 import static play.test.Helpers.*;
 
 
-
 public class ParameterGenerateManagerTestRunner implements Runnable {
   private Map<String, Double> appliedParameter = null;
   private List<MRApplicationData> mrApplicationDatas = null;
@@ -35,15 +34,7 @@ public class ParameterGenerateManagerTestRunner implements Runnable {
   @Override
   public void run() {
     populateTestData();
-    try {
-      testGenerateParamSet();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    }
+    testGenerateParamSet();
     testMemoryAndNumberOfTaskRecommendations();
     testNumberOfReducerTaskAndMapperSpillRecommendations();
     testNoHeuristicFailRecommendations();
@@ -51,7 +42,8 @@ public class ParameterGenerateManagerTestRunner implements Runnable {
     testTimeInMinutes();
   }
 
-  private void testGenerateParamSet() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+  private void testGenerateParamSet() {
     ParameterGenerateManagerHBT parameterGenerateManagerHBT = new ParameterGenerateManagerHBT(new MRExecutionEngine());
     List<TuningParameter> tuningParameters = null;
     JobDefinition job = JobDefinition.find.select("*")
@@ -60,11 +52,12 @@ public class ParameterGenerateManagerTestRunner implements Runnable {
                         .setMaxRows(1)
                         .findUnique();
 
-    Method generateParamSet = ParameterGenerateManagerHBT.class.getDeclaredMethod("generateParamSet", List.class, JobDefinition.class);
-    generateParamSet.setAccessible(true);
-    String output = (String) generateParamSet.invoke(parameterGenerateManagerHBT, tuningParameters, job);
+    JobTuningInfo jobTuningInfo = new JobTuningInfo();
+    jobTuningInfo.setTuningJob(job);
+    jobTuningInfo.setParametersToTune(tuningParameters);
 
-    assertTrue("Generated Param sets are " + output, output.equals(""));
+    JobTuningInfo jobTuningInfoResult = parameterGenerateManagerHBT.generateParamSet(jobTuningInfo);
+    assertTrue("Resulting Tuner State : " + jobTuningInfoResult.getTunerState(), jobTuningInfoResult.getTunerState().equals(""));
 
   }
 
