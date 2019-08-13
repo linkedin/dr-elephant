@@ -634,13 +634,27 @@ public class AutoTuningAPIHelper {
    * @param jobSuggestedParamValues List of JobSuggestedParamValue
    * @return Map of string to double containing the parameter name and corresponding value
    */
-  private Map<String, Double> jobSuggestedParamValueListToMap(List<JobSuggestedParamValue> jobSuggestedParamValues) {
+  @VisibleForTesting
+  Map<String, Double> jobSuggestedParamValueListToMap(List<JobSuggestedParamValue> jobSuggestedParamValues) {
     Map<String, Double> paramValues = new HashMap<String, Double>();
-    if (jobSuggestedParamValues != null) {
-      for (JobSuggestedParamValue jobSuggestedParamValue : jobSuggestedParamValues) {
-        logger.debug("Param Name is " + jobSuggestedParamValue.tuningParameter.paramName + " And value is "
-            + jobSuggestedParamValue.paramValue);
-        paramValues.put(jobSuggestedParamValue.tuningParameter.paramName, jobSuggestedParamValue.paramValue);
+    if ((jobSuggestedParamValues != null) && jobSuggestedParamValues.size() > 0) {
+      /**
+       * If param values are not suggested values then
+       * return empty hashmap
+       */
+      JobSuggestedParamValue jobSuggestedParamValueFirst = jobSuggestedParamValues.get(0);
+      JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
+          .where()
+          .eq(JobSuggestedParamSet.TABLE.id, jobSuggestedParamValueFirst.jobSuggestedParamSet.id)
+          .setMaxRows(1)
+          .findUnique();
+
+      if(jobSuggestedParamSet.isParamSetSuggested){
+        for (JobSuggestedParamValue jobSuggestedParamValue : jobSuggestedParamValues) {
+          logger.debug("Param Name is " + jobSuggestedParamValue.tuningParameter.paramName + " And value is "
+              + jobSuggestedParamValue.paramValue);
+          paramValues.put(jobSuggestedParamValue.tuningParameter.paramName, jobSuggestedParamValue.paramValue);
+        }
       }
     }
     return paramValues;

@@ -167,6 +167,11 @@ INSERT INTO job_suggested_param_set VALUES
 INSERT INTO tuning_job_execution_param_set (job_suggested_param_set_id,job_execution_id,tuning_enabled,created_ts,updated_ts) VALUES
 (1137,1541,1,'2018-09-17 23:22:31','2018-09-17 10:52:31');
 
+INSERT INTO job_suggested_param_value VALUES
+(366044, 1137, 21, 6112.888799667358, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366045, 1137, 22, 1854.7078742980957, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366046, 1137, 23, 3, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366047, 1137, 24, 0.27054230043558763, '2018-12-21 14:55:36', '2018-12-21 14:55:37');
 
 
 

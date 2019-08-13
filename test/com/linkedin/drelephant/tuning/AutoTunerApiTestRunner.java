@@ -18,10 +18,14 @@ package com.linkedin.drelephant.tuning;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import models.FlowExecution;
+import models.JobSuggestedParamSet;
+import models.JobSuggestedParamValue;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 import static play.test.Helpers.*;
@@ -29,6 +33,15 @@ import static common.DBTestUtil.*;
 
 
 public class AutoTunerApiTestRunner implements Runnable {
+
+  private void populateTestData() {
+    try {
+      initParamGenerater();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
   @Override
   public void run() {
     ExecutorService executor = Executors.newFixedThreadPool(5);
@@ -55,5 +68,19 @@ public class AutoTunerApiTestRunner implements Runnable {
     }
     List<FlowExecution> flowExecution = FlowExecution.find.where().eq(FlowExecution.TABLE.flowExecId, 1).findList();
     assertTrue(" Flow Execution ", flowExecution.size()==1);
+
+    populateTestData();
+    testJobSuggestedParamValueListToMap();
+  }
+
+
+  private void testJobSuggestedParamValueListToMap(){
+    List<JobSuggestedParamValue> jobSuggestedParamValues = JobSuggestedParamValue.find.where()
+        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id, 1137)
+        .findList();
+
+    AutoTuningAPIHelper autoTuningAPIHelper = new AutoTuningAPIHelper();
+    Map<String, Double> paramValues = autoTuningAPIHelper.jobSuggestedParamValueListToMap(jobSuggestedParamValues);
+    assertTrue("Param values : " + paramValues, paramValues.isEmpty());
   }
 }
