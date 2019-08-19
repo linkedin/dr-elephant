@@ -20,7 +20,8 @@ import com.linkedin.drelephant.clients.WorkflowClient;
 import com.linkedin.drelephant.exceptions.JobState;
 import com.linkedin.drelephant.exceptions.LoggingEvent;
 import com.linkedin.drelephant.exceptions.azkaban.AzkabanJobLogAnalyzer;
-
+import com.linkedin.drelephant.exceptions.azkaban.InsufficientLogException;
+import com.linkedin.drelephant.exceptions.azkaban.LogNotFoundException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,12 +49,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -92,6 +91,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   private String _username;
   private String _password;
   private long _sessionUpdatedTime = 0;
+  private JSONArray jobInfo = null;
 
   private String AZKABAN_LOG_OFFSET = "0";
   private String AZKABAN_LOG_LENGTH_LIMIT = "9999999"; // limit the log limit to 10 mb
@@ -384,28 +384,74 @@ public class AzkabanWorkflowClient implements WorkflowClient {
    * Returns the jobs from the flow
    * @return The jobs from the flow
    */
-  public Map<String, String> getJobsFromFlow() {
-    List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-    urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
-    urlParameters.add(new BasicNameValuePair("ajax", "fetchexecflow"));
-    urlParameters.add(new BasicNameValuePair("execid", _executionId));
-    try {
+  private JSONArray getJobsInfoFromFlow() throws JSONException {
+    if (jobInfo == null) {
+      List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+      urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
+      urlParameters.add(new BasicNameValuePair("ajax", "fetchexecflow"));
+      urlParameters.add(new BasicNameValuePair("execid", _executionId));
       JSONObject jsonObject = fetchJson(urlParameters, _workflowExecutionUrl);
-      JSONArray jobs = jsonObject.getJSONArray("nodes");
+      jobInfo = jsonObject.getJSONArray("nodes");
+      return jobInfo;
+    } else {
+      return jobInfo;
+    }
+  }
+
+  public Map<String, String> getJobsFromFlow() {
+    JSONArray jobsInfoNode;
+    try {
+      jobsInfoNode = (jobInfo == null) ? getJobsInfoFromFlow() : jobInfo;
+    } catch (JSONException jsonEx) {
+      logger.error("Exception while fetching Job execution info from Azkaban", jsonEx);
+      return null;
+    }
+    try {
       Map<String, String> jobMap = new HashMap<String, String>();
-      addJobStatusForFlow(jobMap, jobs);
+      addJobStatusForFlow(jobMap, jobsInfoNode);
       return jobMap;
-    } catch (JSONException e) {
-      logger.error("Error in parsing azkaban output ", e);
+    } catch (JSONException ex) {
+      logger.error("Error while extracting Job status information from flow execution details", ex);
     }
     return null;
   }
 
-  public void addJobStatusForFlow(Map<String, String> jobMap, JSONArray jobs) throws JSONException {
+  public Map<String, String> getJobTypeFromFlow() {
+    JSONArray jobsInfoNode;
+    try {
+      jobsInfoNode = (jobInfo == null) ? getJobsInfoFromFlow() : jobInfo;
+    } catch (JSONException jsonEx) {
+      logger.error("Exception while fetching Job execution info from Azkaban", jsonEx);
+      return null;
+    }
+    try {
+      Map<String, String> jobTypeMap = new HashMap<String, String>();
+      addJobTypeForFlow(jobTypeMap, jobsInfoNode);
+      return jobTypeMap;
+    } catch (JSONException ex) {
+      logger.error("Error while extracting Job types information from flow execution details");
+    }
+    return null;
+  }
+
+  private void addJobStatusForFlow(Map<String, String> jobMap, JSONArray jobs) throws JSONException {
     if (jobs != null) {
       for (int i = 0; i < jobs.length(); i++) {
         JSONObject job = jobs.getJSONObject(i);
         jobMap.put(job.get("nestedId").toString(), job.get("status").toString());
+        if (!job.isNull("nodes")) {
+          JSONArray internalJobs = job.getJSONArray("nodes");
+          addJobStatusForFlow(jobMap, internalJobs);
+        }
+      }
+    }
+  }
+
+  private void addJobTypeForFlow(Map<String, String> jobMap, JSONArray jobs) throws JSONException {
+    if (jobs != null) {
+      for (int i = 0; i < jobs.length(); i++) {
+        JSONObject job = jobs.getJSONObject(i);
+        jobMap.put(job.get("nestedId").toString(), job.get("type").toString());
         if (!job.isNull("nodes")) {
           JSONArray internalJobs = job.getJSONArray("nodes");
           addJobStatusForFlow(jobMap, internalJobs);
@@ -441,8 +487,11 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   }
 
   @Override
-  public void analyzeJob(String jobId) {
+  public void analyzeJob(String jobId) throws LogNotFoundException, InsufficientLogException {
     String rawAzkabanJobLog = getAzkabanJobLog(jobId, AZKABAN_LOG_OFFSET, AZKABAN_LOG_LENGTH_LIMIT);
+    if (rawAzkabanJobLog == null || rawAzkabanJobLog.isEmpty()) {
+      throw new LogNotFoundException(String.format("Logs for job %s from Azkaban is empty", jobId));
+    }
     AzkabanJobLogAnalyzer analyzedLog = new AzkabanJobLogAnalyzer(rawAzkabanJobLog);
     jobIdToLog.put(jobId, analyzedLog);
   }
@@ -479,7 +528,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
    * @param length Maximum limit on length of log
    * @return Azkaban job log in the form of string
    */
-  public String getAzkabanJobLog(String jobId, String offset, String length) {
+   private String getAzkabanJobLog(String jobId, String offset, String length) {
     List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
     urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
     urlParameters.add(new BasicNameValuePair("ajax", "fetchExecJobLogs"));

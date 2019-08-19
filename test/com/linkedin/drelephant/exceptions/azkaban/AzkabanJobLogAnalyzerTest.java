@@ -85,11 +85,15 @@ public class AzkabanJobLogAnalyzerTest {
   private AzkabanJobLogAnalyzer analyzedAzkabanLevelFailedLog;
 
   public AzkabanJobLogAnalyzerTest(){
-    analyzedSucceededLog = new AzkabanJobLogAnalyzer(succeededAzkabanJobLog);
-    analyzedKilledLog = new AzkabanJobLogAnalyzer(killedAzkabanJobLog);
-    analyzedMRLevelFailedLog = new AzkabanJobLogAnalyzer(mrLevelFailedAzkabanJobLog);
-    analyzedScriptLevelFailedLog = new AzkabanJobLogAnalyzer(scriptLevelFailedAzkabanJobLog);
-    analyzedAzkabanLevelFailedLog = new AzkabanJobLogAnalyzer(azkabanLevelFailedAzkabanJobLog);
+    try {
+      analyzedSucceededLog = new AzkabanJobLogAnalyzer(succeededAzkabanJobLog);
+      analyzedKilledLog = new AzkabanJobLogAnalyzer(killedAzkabanJobLog);
+      analyzedMRLevelFailedLog = new AzkabanJobLogAnalyzer(mrLevelFailedAzkabanJobLog);
+      analyzedScriptLevelFailedLog = new AzkabanJobLogAnalyzer(scriptLevelFailedAzkabanJobLog);
+      analyzedAzkabanLevelFailedLog = new AzkabanJobLogAnalyzer(azkabanLevelFailedAzkabanJobLog);
+    } catch (InsufficientLogException ex) {
+      //do nothing
+    }
   }
   @Test
   public void getStateTest(){

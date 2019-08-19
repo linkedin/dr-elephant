@@ -16,19 +16,17 @@
 
 package com.linkedin.drelephant.clients.azkaban;
 
+import com.linkedin.drelephant.AutoTuner;
+import com.linkedin.drelephant.clients.WorkflowClient;
+import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
+import com.linkedin.drelephant.util.InfoExtractor;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.log4j.Logger;
-
-import com.linkedin.drelephant.AutoTuner;
-import com.linkedin.drelephant.clients.WorkflowClient;
-import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
-import com.linkedin.drelephant.util.InfoExtractor;
 
 
 /**
