@@ -33,6 +33,7 @@ import com.linkedin.drelephant.analysis.JobType;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.exceptions.ExceptionFinder;
 import com.linkedin.drelephant.exceptions.HadoopException;
+import com.linkedin.drelephant.exceptions.util.ExceptionUtils;
 import com.linkedin.drelephant.security.HadoopSecurity;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
@@ -51,16 +52,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.naming.AuthenticationException;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
+import models.JobsExceptionFingerPrinting;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
+import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+
+import static com.linkedin.drelephant.util.Utils.*;
 
 
 /**
@@ -81,6 +87,8 @@ public class Web extends Controller {
   private static final int SEARCH_DEFAULT_PAGE_OFFSET = 0;
   private static final int SEARCH_DEFAULT_PAGE_LIMIT = 25;
   private static final int SEARCH_APPLICATION_MAX_OFFSET = 500;
+  private static final String NOT_APPLICABLE = "NA";
+
 
   private static long _lastFetch = 0;
   private static int _numJobsAnalyzed = 0;
@@ -89,14 +97,6 @@ public class Web extends Controller {
   private static int _numJobsModerate = 0;
   private static int _numJobsLow = 0;
   private static int _numJobsNone = 0;
-
-  private static final String AZKABAN_TO_CLUSTER_MAP_KEY = "azkaban_to_cluster_map";
-  private static Map<String, String> azkabanKeyToClusterNameMap = new HashMap();
-
-  private enum CLUSTER_MAP {
-    KEY,
-    VALUE
-  }
 
   /**
    * Returns the json object for the dashboard summaries of jobs analzyed in last day.
@@ -1764,10 +1764,9 @@ public class Web extends Controller {
 
   /**
    * Controls Exceptions
-   * @throws URISyntaxException
+   * @throws IOException
    */
-  public static Result restExceptions() throws URISyntaxException, MalformedURLException, IOException,
-                                               AuthenticationException {
+  public static Result restExceptions() throws  IOException {
     DynamicForm form = Form.form().bindFromRequest(request());
     String url = form.get("flow-exec-url");
     JsonObject parent = new JsonObject();
@@ -1778,7 +1777,7 @@ public class Web extends Controller {
 
 
     logger.info(String.format("scheduler + %s", scheduler));
-    if(scheduler==null) {
+    if(scheduler == null) {
       scheduler = "azkaban";
       logger.info(String.format("Setting scheduler %s", scheduler));
     }
@@ -1792,85 +1791,50 @@ public class Web extends Controller {
       return notFound(new Gson().toJson(parent));
     } else {
       ExceptionFinder expGen;
-      HadoopException flowException;
+      List<JobsExceptionFingerPrinting> jobsExceptionDetailsList;
 
       try {
         expGen = new ExceptionFinder(url, scheduler);
-        flowException = expGen.getExceptions();
-      } catch (RuntimeException e) {
+        jobsExceptionDetailsList = fetchJobExceptionDataForFlow(url);
+      } catch (RuntimeException re) {
+        logger.error(re.getMessage(), re);
         parent.add("workflow-exceptions", new JsonArray());
         return status(500,"Unexpected error occured");
       } catch (Exception e) {
+        logger.error(e.getMessage(), e);
         parent.add("workflow-exceptions", new JsonArray());
         return status(500,"Unexpected error occured");
       }
 
       JsonArray jobsArray = new JsonArray();
 
-      if (!flowException.getChildExceptions().isEmpty()) {
-        for (HadoopException jobException : flowException.getChildExceptions()) {
+      if (jobsExceptionDetailsList != null) {
+        for (JobsExceptionFingerPrinting jobException : jobsExceptionDetailsList) {
           JsonObject job = new JsonObject();
-          job.addProperty(JsonKeys.NAME, jobException.getId());
-          job.addProperty(JsonKeys.TYPE, jobException.getType().toString());
-          job.addProperty(JsonKeys.ID, jobException.getId());
+          job.addProperty(JsonKeys.NAME, jobException.jobName);
+          job.addProperty(JsonKeys.TYPE, jobException.exceptionType);
+          job.addProperty(JsonKeys.ID, jobException.jobName);
 
-          if (jobException.getType() == HadoopException.HadoopExceptionType.SCHEDULER) {
-            if (jobException.getLoggingEvent() != null && jobException.getLoggingEvent().getLog() != null) {
-              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(jobException.getLoggingEvent().getLog()));
-              job.addProperty(JsonKeys.STATUS, "failed");
+          if (jobException.exceptionType.equals(HadoopException.HadoopExceptionType.MR.toString())) {
+            List<JobsExceptionFingerPrinting> mrJobExceptions = fetchMRJobExceptionList(url,
+                jobException.jobName);
+            JsonArray mrJobExceptionArray = new JsonArray();
+            if (!mrJobExceptions.isEmpty()) {
+              mrJobExceptionArray = getMrJobExceptionDetails(mrJobExceptions, url, jobException.jobName);
             } else {
-              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
-              job.addProperty(JsonKeys.STATUS, "failed");
+              JsonObject mrJob = new JsonObject();
+              mrJob.addProperty(JsonKeys.NAME,".....");
+              mrJob.add(JsonKeys.TASKS, new JsonArray());
+              mrJob.addProperty(JsonKeys.EXCEPTION_SUMMARY, jobException.exceptionLog);
+              mrJobExceptionArray.add(mrJob);
             }
+            job.add(JsonKeys.APPLICATIONS, mrJobExceptionArray);
+          } else if (jobException.exceptionType.equals(HadoopException.HadoopExceptionType.SPARK.toString())) {
+            job.add(JsonKeys.APPLICATIONS, getSparkJobExceptionDetails(url, jobException.jobName));
+          } else {
+            job.addProperty(JsonKeys.EXCEPTION_SUMMARY, jobException.exceptionLog);
           }
-
-
-          if (jobException.getType() == HadoopException.HadoopExceptionType.SCRIPT) {
-            if (jobException.getLoggingEvent() != null && jobException.getLoggingEvent().getLog() != null) {
-              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(jobException.getLoggingEvent().getLog()));
-              job.addProperty(JsonKeys.STATUS, "failed");
-            } else {
-              job.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
-              job.addProperty(JsonKeys.STATUS, "failed");
-            }
-          }
-
-          JsonArray mrExceptionsArray = new JsonArray();
-          if (jobException.getType() == HadoopException.HadoopExceptionType.MR) {
-            for (HadoopException mrJobException : jobException.getChildExceptions()) {
-              JsonObject child = new JsonObject();
-              child.addProperty(JsonKeys.NAME, mrJobException.getId());
-              if (mrJobException.getLoggingEvent() != null && mrJobException.getLoggingEvent().getLog() != null) {
-                child.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(mrJobException.getLoggingEvent().getLog()));
-              } else {
-                child.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
-              }
-
-              JsonArray taskExceptionsArray = new JsonArray();
-              for (HadoopException mrTaskException : mrJobException.getChildExceptions()) {
-                JsonObject task = new JsonObject();
-                task.addProperty(JsonKeys.NAME, mrTaskException.getId());
-                if (mrTaskException.getLoggingEvent() != null && mrTaskException.getLoggingEvent().getLog() != null) {
-                  task.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(mrTaskException.getLoggingEvent().getLog()));
-                } else {
-                  task.addProperty(JsonKeys.EXCEPTION_SUMMARY, "");
-                }
-                taskExceptionsArray.add(task);
-              }
-              child.add(JsonKeys.TASKS, taskExceptionsArray);
-              mrExceptionsArray.add(child);
-            }
-
-            if(jobException.getChildExceptions().isEmpty()) {
-              JsonObject child = new JsonObject();
-              child.addProperty(JsonKeys.NAME,"");
-              child.add(JsonKeys.TASKS, new JsonArray());
-              child.addProperty(JsonKeys.EXCEPTION_SUMMARY, getSchedulerLog(jobException.getLoggingEvent().getLog()));
-              mrExceptionsArray.add(child);
-            }
-            job.add(JsonKeys.APPLICATIONS, mrExceptionsArray);
-            job.addProperty(JsonKeys.STATUS, "failed");
-          }
+          job.addProperty(JsonKeys.STATUS, "failed");
           jobsArray.add(job);
         }
         parent.add(JsonKeys.WORKFLOW_EXCEPTIONS, jobsArray);
@@ -1879,25 +1843,6 @@ public class Web extends Controller {
       parent.add(JsonKeys.WORKFLOW_EXCEPTIONS, jobsArray);
       return ok(new Gson().toJson(parent));
     }
-  }
-
-  /**
-   * TAkes a list of strings and appends returns a single string
-   * @param logs The logs by the scheduler
-   * @return The scheduler logs
-   */
-  private static String getSchedulerLog(List<List<String>> logs) {
-    if(logs==null || logs.isEmpty()) {
-      return "";
-    }
-    StringBuilder builder = new StringBuilder();
-    for(List<String> lines: logs) {
-      for(String line: lines) {
-        builder.append(line);
-        builder.append("\n");
-      }
-    }
-    return builder.toString();
   }
 
 
@@ -2032,5 +1977,74 @@ public class Web extends Controller {
       cluster = "None";
     }
     return cluster;
+  }
+
+  private static List<JobsExceptionFingerPrinting> fetchJobExceptionDataForFlow(String flowExecUrl) {
+    return JobsExceptionFingerPrinting.find.select("*")
+        .where()
+        .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_ID, flowExecUrl)
+        .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, NOT_APPLICABLE)
+        .findList();
+  }
+
+  private static JsonArray getMrJobExceptionDetails(List<JobsExceptionFingerPrinting> mrJobExceptions,
+      String flowExecUrl, String jobName) {
+    JsonArray mrJobExceptionArray = new JsonArray();
+    for (JobsExceptionFingerPrinting mrJobException : mrJobExceptions) {
+      JsonObject child = new JsonObject();
+      child.addProperty(JsonKeys.NAME, mrJobException.appId);
+      child.addProperty(JsonKeys.EXCEPTION_SUMMARY, mrJobException.exceptionLog);
+      JsonArray taskExceptionsArray = new JsonArray();
+      List<JobsExceptionFingerPrinting> taskExceptions = fetchMRTaskExceptionList(flowExecUrl, jobName,
+          mrJobException.appId);
+      for (JobsExceptionFingerPrinting taskException : taskExceptions) {
+        JsonObject task = new JsonObject();
+        task.addProperty(JsonKeys.NAME, taskException.taskId);
+        task.addProperty(JsonKeys.EXCEPTION_SUMMARY, taskException.exceptionLog);
+        taskExceptionsArray.add(task);
+      }
+      child.add(JsonKeys.TASKS, taskExceptionsArray);
+      mrJobExceptionArray.add(child);
+    }
+
+    return mrJobExceptionArray;
+  }
+
+  private static JsonArray getSparkJobExceptionDetails(String flowExecUrl, String jobName) {
+     JobsExceptionFingerPrinting sparkJobsExceptionDetail = JobsExceptionFingerPrinting.find.select("*")
+        .where()
+        .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_ID, flowExecUrl)
+        .eq(JobsExceptionFingerPrinting.TABLE.JOB_NAME, jobName)
+        .ne(JobsExceptionFingerPrinting.TABLE.APP_ID, NOT_APPLICABLE)
+        .eq(JobsExceptionFingerPrinting.TABLE.EXCEPTION_TYPE, "DRIVER")
+        .findUnique();
+
+     JsonArray sparkJobArray = new JsonArray();
+     JsonObject sparkJobException = new JsonObject();
+     sparkJobException.addProperty(JsonKeys.NAME, sparkJobsExceptionDetail.appId);
+     sparkJobException.addProperty(JsonKeys.EXCEPTION_SUMMARY, sparkJobsExceptionDetail.exceptionLog);
+     sparkJobException.add(JsonKeys.TASKS, new JsonArray());
+     sparkJobArray.add(sparkJobException);
+     return sparkJobArray;
+  }
+
+
+  private static List<JobsExceptionFingerPrinting> fetchMRJobExceptionList(String flowExecUrl, String jobName) {
+    return JobsExceptionFingerPrinting.find.select("*")
+        .where()
+        .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_ID, flowExecUrl)
+        .eq(JobsExceptionFingerPrinting.TABLE.JOB_NAME, jobName)
+        .ne(JobsExceptionFingerPrinting.TABLE.APP_ID, NOT_APPLICABLE)
+        .eq(JobsExceptionFingerPrinting.TABLE.TASK_ID, NOT_APPLICABLE)
+        .findList();
+  }
+
+  private static List<JobsExceptionFingerPrinting> fetchMRTaskExceptionList(String flowUrl, String jobName,
+      String appId) {
+    return JobsExceptionFingerPrinting.find.select("*").where().eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_ID, flowUrl)
+        .eq(JobsExceptionFingerPrinting.TABLE.JOB_NAME, jobName)
+        .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, appId)
+        .ne(JobsExceptionFingerPrinting.TABLE.TASK_ID, NOT_APPLICABLE)
+        .findList();
   }
 }

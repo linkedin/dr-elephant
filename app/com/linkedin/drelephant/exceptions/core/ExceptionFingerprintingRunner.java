@@ -19,9 +19,14 @@ package com.linkedin.drelephant.exceptions.core;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
 import com.linkedin.drelephant.exceptions.ExceptionFingerprinting;
+import com.linkedin.drelephant.exceptions.HadoopException;
 import com.linkedin.drelephant.exceptions.util.ExceptionInfo;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import models.AppResult;
+import models.JobsExceptionFingerPrinting;
 import org.apache.log4j.Logger;
 
 import static com.linkedin.drelephant.exceptions.util.Constant.*;
@@ -38,6 +43,8 @@ public class ExceptionFingerprintingRunner implements Runnable {
   private AppResult _appResult;
   private HadoopApplicationData data;
   private ExecutionEngineType executionType;
+  private String jobNameRegex = ".*&job=(.*)&.*";
+  private Pattern jobNamePattern = Pattern.compile(jobNameRegex);
 
   public ExceptionFingerprintingRunner(AnalyticJob analyticJob, AppResult appResult, HadoopApplicationData data,
       ExecutionEngineType executionType) {
@@ -55,6 +62,7 @@ public class ExceptionFingerprintingRunner implements Runnable {
       ExceptionFingerprinting exceptionFingerprinting =
           ExceptionFingerprintingFactory.getExceptionFingerprinting(executionType, data);
       List<ExceptionInfo> exceptionInfos = exceptionFingerprinting.processRawData(_analyticJob);
+      saveDriverExceptionLogForExceptionFingerPrinting(exceptionInfos);
       LogClass logClass = exceptionFingerprinting.classifyException(exceptionInfos);
       boolean isAutoTuningFault = false;
       if (logClass != null && logClass.equals(LogClass.AUTOTUNING_ENABLED)) {
@@ -70,5 +78,43 @@ public class ExceptionFingerprintingRunner implements Runnable {
     long endTime = System.nanoTime();
     logger.info("Total time spent in exception fingerprinting in  " + _analyticJob.getAppId() + " "
         + (endTime - startTime) * 1.0 / (1000000000.0) + "s");
+  }
+
+  private void saveDriverExceptionLogForExceptionFingerPrinting(List<ExceptionInfo> exceptionInfoList) {
+    if (exceptionInfoList != null) {
+      final String NOT_APPLICABLE = "NA";
+      Optional<ExceptionInfo> driverExceptionInfo = exceptionInfoList.parallelStream()
+          .filter(ex -> ex.getExceptionSource().equals(ExceptionInfo.ExceptionSource.DRIVER))
+          .findFirst();
+      JobsExceptionFingerPrinting jobsExceptionFingerPrinting = new JobsExceptionFingerPrinting();
+      jobsExceptionFingerPrinting.appId = NOT_APPLICABLE;
+      jobsExceptionFingerPrinting.taskId = NOT_APPLICABLE;
+      jobsExceptionFingerPrinting.flowExecUrl = _appResult.flowExecUrl;
+      jobsExceptionFingerPrinting.jobName = getJobName(_appResult.jobExecUrl);
+      jobsExceptionFingerPrinting.exceptionLog = "";
+      jobsExceptionFingerPrinting.exceptionType = HadoopException.HadoopExceptionType.SPARK.toString();
+
+      JobsExceptionFingerPrinting sparkJobException = new JobsExceptionFingerPrinting();
+      sparkJobException.flowExecUrl = _appResult.flowExecUrl;
+      sparkJobException.appId = _appResult.id;
+      sparkJobException.taskId = NOT_APPLICABLE;
+      sparkJobException.jobName = getJobName(_appResult.jobExecUrl);
+      if (driverExceptionInfo.isPresent()) {
+        sparkJobException.exceptionLog = driverExceptionInfo.get().getExcptionStackTrace();
+      } else {
+        sparkJobException.exceptionLog = "Couldn't gather driver logs for the job";
+      }
+      sparkJobException.exceptionType = ExceptionInfo.ExceptionSource.DRIVER.toString();
+      sparkJobException.save();
+      jobsExceptionFingerPrinting.save();
+    }
+  }
+
+  private String getJobName(String jobExecUrl) {
+    Matcher matcher = jobNamePattern.matcher(jobExecUrl);
+    if (matcher.find()){
+      return matcher.group(1);
+    }
+    return matcher.group(1);
   }
 }

@@ -600,4 +600,23 @@ public final class Utils {
     }
     return datasets;
   }
+
+  /**
+   * Takes a list of strings and appends returns a single string
+   * @param logs The logs by the scheduler
+   * @return The scheduler logs
+   */
+  public static String getSchedulerLog(List<List<String>> logs) {
+    if(logs == null || logs.isEmpty()) {
+      return "";
+    }
+    StringBuilder builder = new StringBuilder();
+    for(List<String> lines: logs) {
+      for(String line: lines) {
+        builder.append(line);
+        builder.append("\n");
+      }
+    }
+    return builder.toString();
+  }
 }

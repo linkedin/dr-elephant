@@ -16,12 +16,12 @@
 
 package com.linkedin.drelephant.clients;
 
+import com.linkedin.drelephant.exceptions.JobState;
+import com.linkedin.drelephant.exceptions.LoggingEvent;
+import com.linkedin.drelephant.exceptions.azkaban.JobLogException;
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
-
-import com.linkedin.drelephant.exceptions.JobState;
-import com.linkedin.drelephant.exceptions.LoggingEvent;
 
 
 /**
@@ -53,10 +53,17 @@ public interface WorkflowClient {
   public Map<String, String> getJobsFromFlow();
 
   /**
+   * Return all the jobs with there types in the workflow. It returns a Map<String,String> where the key \n
+   * is the job name and the value is the status of the job.
+   * @return Return all the jobs with their jobTypes in the workflow
+   */
+  public Map<String, String> getJobTypeFromFlow();
+
+  /**
    * Given a job id, this method analyzes the job
    * @param jobId The execution id of the job
    */
-  public void analyzeJob(String jobId);
+  public void analyzeJob(String jobId) throws JobLogException;
 
   /**
    * This method extracts out all the yarn applications from the job and returns the set of them.

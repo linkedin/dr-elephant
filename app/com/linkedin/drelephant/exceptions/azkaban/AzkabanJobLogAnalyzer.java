@@ -19,12 +19,10 @@ package com.linkedin.drelephant.exceptions.azkaban;
 import com.linkedin.drelephant.exceptions.JobState;
 import com.linkedin.drelephant.exceptions.LoggingEvent;
 import java.util.LinkedHashSet;
-import org.apache.log4j.Logger;
-
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.log4j.Logger;
 
 
 /*
@@ -35,11 +33,11 @@ public class AzkabanJobLogAnalyzer {
 
   private static final Logger logger = Logger.getLogger(AzkabanJobLogAnalyzer.class);
   private Pattern _successfulAzkabanJobPattern =
-      Pattern.compile("Finishing job [^\\s]+ at [0-9]+ with status SUCCEEDED");
+      Pattern.compile("Finishing job [^\\s]+ (retry: \\d )?at [0-9]+ with status SUCCEEDED");
   private Pattern _failedAzkabanJobPattern =
-      Pattern.compile("Finishing job [^\\s]+ at [0-9]+ with status FAILED");
+      Pattern.compile("Finishing job [^\\s]+ (retry: \\d)?at [0-9]+ with status FAILED");
   private Pattern _killedAzkabanJobPattern =
-      Pattern.compile("Finishing job [^\\s]+ at [0-9]+ with status KILLED");
+      Pattern.compile("Finishing job [^\\s]+ (retry: \\d)?at [0-9]+ with status KILLED");
   private Pattern _scriptFailPattern = Pattern.compile("ERROR - Job run failed!");
   // Alternate pattern: (".+\\n(?:.+\\tat.+\\n)+(?:.+Caused by.+\\n(?:.*\\n)?(?:.+\\s+at.+\\n)*)*");
   private Pattern _scriptOrMRFailExceptionPattern = Pattern.compile("(Caused by.+\\n(?:.*\\n)?((?:.+\\s+at.+\\n)*))+");
@@ -61,7 +59,7 @@ public class AzkabanJobLogAnalyzer {
   private Set<String> _subEvents;
   private String _rawLog;
 
-  public AzkabanJobLogAnalyzer(String rawLog) {
+  public AzkabanJobLogAnalyzer(String rawLog) throws JobLogException {
     this._rawLog = rawLog;
     setSubEvents();
     analyzeLog();
@@ -70,7 +68,7 @@ public class AzkabanJobLogAnalyzer {
   /**
    * Analyzes the log to find the level of exception
    */
-  private void analyzeLog() {
+  private void analyzeLog() throws JobLogException {
     if (_successfulAzkabanJobPattern.matcher(_rawLog).find()) {
       succeededAzkabanJob();
     } else if (_failedAzkabanJobPattern.matcher(_rawLog).find()) {
@@ -83,6 +81,8 @@ public class AzkabanJobLogAnalyzer {
       }
     } else if (_killedAzkabanJobPattern.matcher(_rawLog).find()) {
       killedAzkabanJob();
+    } else {
+      throw new JobLogException("Couldn't determine the finish status of job using the azkaban logs.");
     }
   }
 

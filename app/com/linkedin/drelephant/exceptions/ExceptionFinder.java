@@ -18,23 +18,25 @@ package com.linkedin.drelephant.exceptions;
 
 import com.linkedin.drelephant.clients.WorkflowClient;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
+import com.linkedin.drelephant.exceptions.azkaban.JobLogException;
 import com.linkedin.drelephant.security.HadoopSecurity;
 import com.linkedin.drelephant.util.InfoExtractor;
-
+import com.linkedin.drelephant.util.Utils;
 import java.io.File;
 import java.io.IOException;
-import java.security.PrivilegedAction;
-
-import javax.naming.AuthenticationException;
-
-import org.apache.log4j.Logger;
-
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.naming.AuthenticationException;
+import models.JobsExceptionFingerPrinting;
+import org.apache.log4j.Logger;
+
+import static com.linkedin.drelephant.exceptions.util.Constant.*;
+import static com.linkedin.drelephant.util.Utils.*;
 
 
 /**
@@ -46,11 +48,15 @@ public class ExceptionFinder {
   private HadoopException _exception;
   private WorkflowClient _workflowClient;
   private MRClient _mrClient;
+  private Map<String, String> jobIdStatus;
+  private Map<String, String> jobTypeMap;
 
   private static String USERNAME = "username";
-  private static String PRIVATE_KEY  = "private_key";
+  private static String PRIVATE_KEY = "private_key";
   private static String PASSWORD = "password";
   private static int SAMPLE_SIZE = 3;
+  private static String DESCRIPTION_FOR_KILLED_JOB = "The job was killed";
+  private static String NOT_APPLICABLE = "NA";
 
   /**
    * Constructor for ExceptionFinder class
@@ -70,31 +76,36 @@ public class ExceptionFinder {
 
     // get the schedulerData
     SchedulerConfigurationData schedulerData = InfoExtractor.getSchedulerData(scheduler);
-
-    if(schedulerData==null) {
+    if (schedulerData == null) {
       throw new RuntimeException(String.format("Cannot find scheduler %s", scheduler));
     }
 
-    if (schedulerData.getParamMap().containsKey("exception_enabled") == false
-        || schedulerData.getParamMap().get("exception_enabled").equals("false")) {
-      throw new RuntimeException(String.format("Scheduler %s is not configured for Exception fingerprinting ",
-          scheduler));
+    if (!schedulerData.getParamMap().containsKey("exception_enabled") || schedulerData.getParamMap()
+        .get("exception_enabled").equals("false")) {
+      throw new RuntimeException(String.format("Scheduler %s is not configured for Exception fingerprinting ", scheduler));
     }
 
-    if(!schedulerData.getParamMap().containsKey(USERNAME)) {
+    if (!schedulerData.getParamMap().containsKey(USERNAME)) {
       throw new RuntimeException(String.format("Cannot find username for login"));
     }
 
     String username = schedulerData.getParamMap().get(USERNAME);
 
-    if(schedulerData.getParamMap().containsKey(PRIVATE_KEY)) {
+    if (schedulerData.getParamMap().containsKey(PRIVATE_KEY)) {
       _workflowClient.login(username, new File(schedulerData.getParamMap().get(PRIVATE_KEY)));
     } else if (schedulerData.getParamMap().containsKey(PASSWORD)) {
       _workflowClient.login(username, schedulerData.getParamMap().get(PASSWORD));
     } else {
       throw new RuntimeException("Neither private key nor password was specified");
     }
-    _exception = analyzeFlow(url);
+
+    jobIdStatus = _workflowClient.getJobsFromFlow();
+    jobTypeMap = _workflowClient.getJobTypeFromFlow();
+
+    if (!isExceptionPrintingDone(url)) {
+      _exception = analyzeFlow(url);
+      saveExceptionFingerPrintingResult(url);
+    }
   }
 
   /**
@@ -110,16 +121,16 @@ public class ExceptionFinder {
       public HadoopException run() {
         HadoopException flowLevelException = new HadoopException();
         List<HadoopException> childExceptions = new ArrayList<HadoopException>();
-        Map<String, String> jobIdStatus = _workflowClient.getJobsFromFlow();
 
         // Find exceptions in all the unsuccessful jobs of the workflow
         for (String unsuccessfulJobId : jobIdStatus.keySet()) {
-          if (jobIdStatus.get(unsuccessfulJobId).toLowerCase().equals("failed")) {
+          if (jobIdStatus.get(unsuccessfulJobId).toLowerCase().equals("failed") && !jobTypeMap.get(unsuccessfulJobId).equals("spark")) {
             HadoopException jobLevelException = analyzeJob(unsuccessfulJobId);
-            childExceptions.add(jobLevelException);
+            if (jobLevelException != null) {
+              childExceptions.add(jobLevelException);
+            }
           }
         }
-
         flowLevelException.setType(HadoopException.HadoopExceptionType.FLOW);
         flowLevelException.setId(execUrl);
         flowLevelException.setLoggingEvent(null); // No flow level exception
@@ -127,7 +138,7 @@ public class ExceptionFinder {
         return flowLevelException;
       }
     });
- }
+  }
 
   /**
    * Given a failed Job, this method analyzes the job and returns a HadoopException object which captures all the exception in the given job.
@@ -138,7 +149,12 @@ public class ExceptionFinder {
     HadoopException jobLevelException = new HadoopException();
     List<HadoopException> childExceptions = new ArrayList<HadoopException>();
 
-    _workflowClient.analyzeJob(jobId);
+    try {
+      _workflowClient.analyzeJob(jobId);
+    } catch (JobLogException ex) {
+      logger.error(ex);
+      return null;
+    }
 
     // get the set of all the yarn jobs from workflowClient
     Set<String> yarnJobIds = _workflowClient.getYarnApplicationsFromJob(jobId);
@@ -193,7 +209,7 @@ public class ExceptionFinder {
     // sampling of tasks
     int samplingSize = SAMPLE_SIZE;
     for (String failedMRTaskId : failedMRTaskIds) {
-      if(samplingSize<=0) {
+      if (samplingSize <= 0) {
         break;
       }
       String rawMRTaskLog = _mrClient.getMRTaskLog(mrJobId, failedMRTaskId);
@@ -232,5 +248,99 @@ public class ExceptionFinder {
    */
   public HadoopException getExceptions() {
     return this._exception;
+  }
+
+  private boolean isExceptionPrintingDone(String flowUrl) {
+    for (String jobName : jobIdStatus.keySet()) {
+      if (jobIdStatus.get(jobName).toLowerCase().equals("failed") && !jobTypeMap.get(jobName).equals("spark")) {
+        JobsExceptionFingerPrinting savedJobExceptionFingerPrintingResult = JobsExceptionFingerPrinting.find.select("*")
+            .where()
+            .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_ID, flowUrl)
+            .eq(JobsExceptionFingerPrinting.TABLE.JOB_NAME, jobName)
+            .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, NOT_APPLICABLE)
+            .eq(JobsExceptionFingerPrinting.TABLE.TASK_ID, NOT_APPLICABLE)
+            .findUnique();
+        logger.info(savedJobExceptionFingerPrintingResult);
+        if (savedJobExceptionFingerPrintingResult == null) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private void saveExceptionFingerPrintingResult(String flowExecUrl) {
+    HadoopException flowException = this.getExceptions();
+    if (!flowException.getChildExceptions().isEmpty()) {
+      for (HadoopException jobException : flowException.getChildExceptions()) {
+        JobsExceptionFingerPrinting jobsExceptionFingerPrinting = new JobsExceptionFingerPrinting();
+        jobsExceptionFingerPrinting.flowExecUrl = flowExecUrl;
+        jobsExceptionFingerPrinting.jobName = jobException.getId();
+        jobsExceptionFingerPrinting.appId = NOT_APPLICABLE;
+        jobsExceptionFingerPrinting.taskId = NOT_APPLICABLE;
+        jobsExceptionFingerPrinting.exceptionType = jobException.getType().toString();
+        if (jobException.getType().equals(HadoopException.HadoopExceptionType.MR)) {
+          if (!jobException.getChildExceptions().isEmpty()) {
+            saveMRJobException(jobException, flowExecUrl);
+            jobsExceptionFingerPrinting.exceptionLog = "";
+          } else {
+            jobsExceptionFingerPrinting.exceptionLog = jobException.getLoggingEvent().getLog() != null ?
+                Utils.truncateField(getSchedulerLog(jobException.getLoggingEvent().getLog()),
+                    EXCEPTION_LOG_LENGTH_LIMIT, jobException.getId()) : "";
+          }
+        } else {
+          if (jobException.getLoggingEvent() != null && jobException.getLoggingEvent().getLog() != null) {
+            jobsExceptionFingerPrinting.exceptionLog =
+                Utils.truncateField(getSchedulerLog(jobException.getLoggingEvent().getLog()),
+                    EXCEPTION_LOG_LENGTH_LIMIT, jobException.getId());
+          } else {
+            jobsExceptionFingerPrinting.exceptionLog = DESCRIPTION_FOR_KILLED_JOB;
+          }
+        }
+        jobsExceptionFingerPrinting.save();
+      }
+    }
+  }
+
+  private void saveTaskExceptionDetails(String flowExecUrl, HadoopException mrJobException,
+      HadoopException jobException, HadoopException mrTaskException) {
+    JobsExceptionFingerPrinting taskExceptionDetail = new JobsExceptionFingerPrinting();
+    taskExceptionDetail.flowExecUrl = flowExecUrl;
+    taskExceptionDetail.jobName = jobException.getId();
+    taskExceptionDetail.appId = mrJobException.getId();
+    taskExceptionDetail.taskId = mrTaskException.getId();
+    taskExceptionDetail.exceptionType = mrTaskException.getType().toString();
+    if (mrTaskException.getLoggingEvent() != null && mrTaskException.getLoggingEvent().getLog() != null) {
+      taskExceptionDetail.exceptionLog = Utils.truncateField(getSchedulerLog(mrTaskException.getLoggingEvent().getLog()),
+          EXCEPTION_LOG_LENGTH_LIMIT, jobException.getId());
+    } else {
+      taskExceptionDetail.exceptionLog = "";
+    }
+    taskExceptionDetail.save();
+  }
+
+  private void saveMRJobException(HadoopException jobException, String flowExecUrl) {
+    for (HadoopException mrJobException : jobException.getChildExceptions()) {
+      JobsExceptionFingerPrinting mrJobExceptionDetail = new JobsExceptionFingerPrinting();
+      mrJobExceptionDetail.flowExecUrl = flowExecUrl;
+      mrJobExceptionDetail.jobName = jobException.getId();
+      mrJobExceptionDetail.appId = mrJobException.getId();
+      mrJobExceptionDetail.taskId = NOT_APPLICABLE;
+      mrJobExceptionDetail.exceptionType = mrJobException.getType().toString();
+
+      if (!mrJobException.getChildExceptions().isEmpty()) {
+        for (HadoopException mrTaskException : mrJobException.getChildExceptions()) {
+          saveTaskExceptionDetails(flowExecUrl, mrJobException, jobException, mrTaskException);
+        }
+      }
+      if (mrJobException.getLoggingEvent() != null && mrJobException.getLoggingEvent().getLog() != null) {
+        mrJobExceptionDetail.exceptionLog =
+            Utils.truncateField(getSchedulerLog(mrJobException.getLoggingEvent().getLog()), EXCEPTION_LOG_LENGTH_LIMIT,
+                jobException.getId());
+      } else {
+        mrJobExceptionDetail.exceptionLog = "";
+      }
+      mrJobExceptionDetail.save();
+    }
   }
 }

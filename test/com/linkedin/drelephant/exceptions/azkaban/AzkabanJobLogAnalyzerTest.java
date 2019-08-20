@@ -17,6 +17,7 @@
 package com.linkedin.drelephant.exceptions.azkaban;
 
 import com.linkedin.drelephant.exceptions.JobState;
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -84,12 +85,18 @@ public class AzkabanJobLogAnalyzerTest {
   private AzkabanJobLogAnalyzer analyzedScriptLevelFailedLog;
   private AzkabanJobLogAnalyzer analyzedAzkabanLevelFailedLog;
 
+  private final Logger logger = Logger.getLogger(AzkabanJobLogAnalyzerTest.class);
+
   public AzkabanJobLogAnalyzerTest(){
-    analyzedSucceededLog = new AzkabanJobLogAnalyzer(succeededAzkabanJobLog);
-    analyzedKilledLog = new AzkabanJobLogAnalyzer(killedAzkabanJobLog);
-    analyzedMRLevelFailedLog = new AzkabanJobLogAnalyzer(mrLevelFailedAzkabanJobLog);
-    analyzedScriptLevelFailedLog = new AzkabanJobLogAnalyzer(scriptLevelFailedAzkabanJobLog);
-    analyzedAzkabanLevelFailedLog = new AzkabanJobLogAnalyzer(azkabanLevelFailedAzkabanJobLog);
+    try {
+      analyzedSucceededLog = new AzkabanJobLogAnalyzer(succeededAzkabanJobLog);
+      analyzedKilledLog = new AzkabanJobLogAnalyzer(killedAzkabanJobLog);
+      analyzedMRLevelFailedLog = new AzkabanJobLogAnalyzer(mrLevelFailedAzkabanJobLog);
+      analyzedScriptLevelFailedLog = new AzkabanJobLogAnalyzer(scriptLevelFailedAzkabanJobLog);
+      analyzedAzkabanLevelFailedLog = new AzkabanJobLogAnalyzer(azkabanLevelFailedAzkabanJobLog);
+    } catch (JobLogException ex) {
+      logger.error(ex);
+    }
   }
   @Test
   public void getStateTest(){

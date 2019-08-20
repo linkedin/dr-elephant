@@ -56,6 +56,10 @@ public class ExceptionInfo {
     return exceptionStackTrace;
   }
 
+  public ExceptionSource getExceptionSource() {
+    return this.exceptionSource;
+  }
+
   //TODO : Use exception source to prioritize  the exception
 
   @Override

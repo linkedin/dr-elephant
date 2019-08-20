@@ -16,15 +16,15 @@
 
 package com.linkedin.drelephant.exceptions;
 
-import org.apache.log4j.Logger;
-
 import java.util.List;
+import org.apache.log4j.Logger;
 
 
 public class HadoopException {
   private final Logger logger = Logger.getLogger(HadoopException.class);
   private String _id = "UNKNOWN";
-  public enum HadoopExceptionType {FLOW, SCHEDULER, SCRIPT, MR, KILL, MRJOB, MRTASK}
+  private String _appId;
+  public enum HadoopExceptionType {FLOW, SCHEDULER, SCRIPT, MR, KILL, MRJOB, MRTASK, SPARK, DRIVER}
   /**
   * FLOW: HadoopException object for Azkaban flow
   * SCHEDULER : HadoopException object for Azkaban job with Azkaban level failure
@@ -59,7 +59,15 @@ public class HadoopException {
     return _loggingEvent;
   }
 
-  public void setLoggingEvent(LoggingEvent e) {
+  public String getAppId() {
+    return _appId;
+  }
+
+  public void setAppId(String appId) {
+    this._appId = appId;
+  }
+
+  void setLoggingEvent(LoggingEvent e) {
     _loggingEvent = e;
   }
 
@@ -67,7 +75,7 @@ public class HadoopException {
     return _childExceptions;
   }
 
-  public void setChildExceptions(List<HadoopException> childExceptions) {
+  void setChildExceptions(List<HadoopException> childExceptions) {
     _childExceptions = childExceptions;
   }
 
