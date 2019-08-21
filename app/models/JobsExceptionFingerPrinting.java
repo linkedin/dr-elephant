@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -29,7 +30,7 @@ public class JobsExceptionFingerPrinting extends Model {
 
   @JsonIgnore
   @Id
-  @GeneratedValue
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   public int id;
 
   @Column(length = ID_LIMIT)
