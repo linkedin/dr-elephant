@@ -152,9 +152,6 @@ INSERT INTO tuning_job_definition(job_definition_id, client, tuning_algorithm_id
 VALUES
 (100003,'azkaban',4,1,null,5.178423333333334,324168876088,150,150,'2018-02-12 08:40:42','2018-02-12 08:40:43', NULL, 5, true);
 
-
-
-
 INSERT INTO flow_execution(id, flow_exec_id, flow_exec_url, flow_definition_id) VALUES
 (1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293',10003);
 

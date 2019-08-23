@@ -18,10 +18,15 @@ package com.linkedin.drelephant.tuning;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import models.FlowExecution;
+import models.JobSuggestedParamSet;
+import models.JobSuggestedParamValue;
+import models.TuningAlgorithm;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 import static play.test.Helpers.*;
@@ -29,6 +34,15 @@ import static common.DBTestUtil.*;
 
 
 public class AutoTunerApiTestRunner implements Runnable {
+
+  private void populateTestData() {
+    try {
+      initParamGenerater();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
   @Override
   public void run() {
     ExecutorService executor = Executors.newFixedThreadPool(5);
@@ -55,5 +69,55 @@ public class AutoTunerApiTestRunner implements Runnable {
     }
     List<FlowExecution> flowExecution = FlowExecution.find.where().eq(FlowExecution.TABLE.flowExecId, 1).findList();
     assertTrue(" Flow Execution ", flowExecution.size()==1);
+
+    populateTestData();
+    testGetCurrentRunParameters();
+  }
+
+  /**
+   * Testing processParameterTuningEnabled
+   */
+
+  private void testGetCurrentRunParameters() {
+    TuningInput tuningInput = new TuningInput();
+    tuningInput.setFlowDefId("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
+    tuningInput.setJobDefId("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowDefUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
+    tuningInput.setJobDefUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowExecId("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293");
+    tuningInput.setJobExecId("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0");
+    tuningInput.setFlowExecUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293");
+    tuningInput.setJobExecUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0");
+    tuningInput.setJobName("countByCountryFlow_countByCountry");
+    tuningInput.setUserName("dukumar");
+    tuningInput.setClient("azkaban");
+    tuningInput.setScheduler("azkaban");
+//    tuningInput.setDefaultParams(defaultParams);
+    tuningInput.setVersion(1);
+    tuningInput.setRetry(true);
+//    tuningInput.setSkipExecutionForOptimization(skipExecutionForOptimization);
+    tuningInput.setJobType("PIG");
+    tuningInput.setOptimizationAlgo("HBT");
+    tuningInput.setOptimizationAlgoVersion("4");
+    tuningInput.setOptimizationMetric("RESOURCE");
+    tuningInput.setAllowedMaxExecutionTimePercent(null);
+    tuningInput.setAllowedMaxResourceUsagePercent(null);
+
+    TuningAlgorithm tuningAlgorithm = TuningAlgorithm.find.select("*")
+        .where()
+        .eq(TuningAlgorithm.TABLE.jobType, tuningInput.getJobType())
+        .eq(TuningAlgorithm.TABLE.optimizationMetric, "RESOURCE")
+        .eq(TuningAlgorithm.TABLE.optimizationAlgo, tuningInput.getOptimizationAlgo())
+        .findUnique();
+    tuningInput.setTuningAlgorithm(tuningAlgorithm);
+
+    AutoTuningAPIHelper autoTuningAPIHelper = new AutoTuningAPIHelper();
+    Map<String, Double> paramValues = null;
+    try {
+      paramValues = autoTuningAPIHelper.getCurrentRunParameters(tuningInput);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    assertTrue("Param values : " + paramValues, paramValues.isEmpty());
   }
 }
