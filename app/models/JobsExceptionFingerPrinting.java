@@ -21,7 +21,7 @@ public class JobsExceptionFingerPrinting extends Model {
 
   public static class TABLE {
     public static final String TABLE_NAME = "job_exception_fingerprinting";
-    public static final String FLOW_EXEC_ID = "flow_exec_url";
+    public static final String FLOW_EXEC_URL = "flow_exec_url";
     public static final String JOB_NAME = "job_name";
     public static final String APP_ID = "app_id";
     public static final String TASK_ID = "task_id";

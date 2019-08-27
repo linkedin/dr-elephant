@@ -31,6 +31,7 @@ public class TestConstants {
   public static final String TEST_SPARK_HBT_PARAM_RECOMMENDER = "test/resources/test-SparkHBTParamRecommender.sql";
   public static final String TEST_AUTO_TUNING_MR_HBT="test/resources/test-init-MRHBT.sql";
   public static final String TEST_MR_PIG_HBT_PARAMETER_RECOMMENDER = "test/resources/test-pig-hbt.sql";
+  public static final String TEST_EXCEPTION_FINGERPRINTING = "test/resources/test-exception-fingerprinting.sql";
   public static final int RESPONSE_TIMEOUT = 3000; // milliseconds
 
   public static final String TEST_JOB_ID1 = "application_1458194917883_1453361";

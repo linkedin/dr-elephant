@@ -255,7 +255,7 @@ public class ExceptionFinder {
       if (jobIdStatus.get(jobName).toLowerCase().equals("failed") && !jobTypeMap.get(jobName).equals("spark")) {
         JobsExceptionFingerPrinting savedJobExceptionFingerPrintingResult = JobsExceptionFingerPrinting.find.select("*")
             .where()
-            .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_ID, flowUrl)
+            .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_URL, flowUrl)
             .eq(JobsExceptionFingerPrinting.TABLE.JOB_NAME, jobName)
             .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, NOT_APPLICABLE)
             .eq(JobsExceptionFingerPrinting.TABLE.TASK_ID, NOT_APPLICABLE)

@@ -71,7 +71,7 @@ public class IPSOManagerTestRunner implements Runnable {
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .where()
-        .eq(AppResult.TABLE.FLOW_EXEC_ID, jobExecution.flowExecution.flowExecId)
+        .eq(AppResult.TABLE.FLOW_EXEC_URL, jobExecution.flowExecution.flowExecId)
         .eq(AppResult.TABLE.JOB_EXEC_ID, jobExecution.jobExecId)
         .findList();
     assertTrue(" Apps for Jobs ", results.size() > 0);

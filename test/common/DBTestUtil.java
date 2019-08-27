@@ -66,6 +66,10 @@ public class DBTestUtil {
     initDBUtil(TEST_MR_PIG_HBT_PARAMETER_RECOMMENDER);
   }
 
+  public static void initDBForExceptionFingerPrinting() throws IOException, SQLException {
+    initDBUtil(TEST_EXCEPTION_FINGERPRINTING);
+  }
+
   public static void initDBUtil(String fileName) throws IOException, SQLException {
     String query = "";
     FileInputStream inputStream = new FileInputStream(fileName);
