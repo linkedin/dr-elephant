@@ -68,11 +68,9 @@ public class AutoTunerApiTestRunner implements Runnable {
     }
     List<FlowExecution> flowExecution = FlowExecution.find.where().eq(FlowExecution.TABLE.flowExecId, 1).findList();
     assertTrue(" Flow Execution ", flowExecution.size()==1);
-
     populateTestData();
     testJobSuggestedParamValueListToMap();
   }
-
 
   private void testJobSuggestedParamValueListToMap(){
     List<JobSuggestedParamValue> jobSuggestedParamValues = JobSuggestedParamValue.find.where()

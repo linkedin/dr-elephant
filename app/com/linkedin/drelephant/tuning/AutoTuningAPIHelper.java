@@ -651,8 +651,9 @@ public class AutoTuningAPIHelper {
 
       if(jobSuggestedParamSet.isParamSetSuggested){
         for (JobSuggestedParamValue jobSuggestedParamValue : jobSuggestedParamValues) {
-          logger.debug("Param Name is " + jobSuggestedParamValue.tuningParameter.paramName + " And value is "
-              + jobSuggestedParamValue.paramValue);
+          if (debugEnabled) {
+            logger.debug("Param Name is " + jobSuggestedParamValue.tuningParameter.paramName + " And value is " + jobSuggestedParamValue.paramValue);
+          }
           paramValues.put(jobSuggestedParamValue.tuningParameter.paramName, jobSuggestedParamValue.paramValue);
         }
       }
