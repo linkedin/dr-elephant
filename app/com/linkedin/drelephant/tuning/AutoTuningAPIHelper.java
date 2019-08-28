@@ -446,13 +446,16 @@ public class AutoTuningAPIHelper {
       logger.info(" Retried job execution " + tuningInput.getJobExecId());
       applyPenalty(tuningInput.getJobExecId());
     } else {
-      logger.debug("Finding parameter suggestion for job: " + jobExecution.job.jobName);
+      if (debugEnabled) {
+        logger.debug("Finding parameter suggestion for job: " + jobExecution.job.jobName);
+      }
       jobSuggestedParamSet = getNewSuggestedParamSet(jobExecution.job, tuningInput.getTuningAlgorithm());
       markParameterSetSent(jobSuggestedParamSet);
       addNewTuningJobExecutionParamSet(jobSuggestedParamSet, jobExecution);
       jobSuggestedParamValues = getParamSetValues(jobSuggestedParamSet.id);
-      logger.debug("Number of output parameters for execution " + tuningInput.getJobExecId() + " = "
-          + jobSuggestedParamValues.size());
+      if(debugEnabled) {
+        logger.debug("Number of output parameters for execution " + tuningInput.getJobExecId() + " = " + jobSuggestedParamValues.size());
+      }
     }
     logger.info("Finishing getCurrentRunParameters");
     return jobSuggestedParamValues;

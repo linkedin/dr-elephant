@@ -80,14 +80,14 @@ public class AutoTunerApiTestRunner implements Runnable {
 
   private void testGetCurrentRunParameters() {
     TuningInput tuningInput = new TuningInput();
-    tuningInput.setFlowDefId("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
-    tuningInput.setJobDefId("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
-    tuningInput.setFlowDefUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
-    tuningInput.setJobDefUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
-    tuningInput.setFlowExecId("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293");
-    tuningInput.setJobExecId("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0");
-    tuningInput.setFlowExecUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293");
-    tuningInput.setJobExecUrl("https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0");
+    tuningInput.setFlowDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
+    tuningInput.setJobDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
+    tuningInput.setJobDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowExecId("https://elephant.linkedin.com:8443/executor?execid=5416293");
+    tuningInput.setJobExecId("https://elephant.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0");
+    tuningInput.setFlowExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416293");
+    tuningInput.setJobExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0");
     tuningInput.setJobName("countByCountryFlow_countByCountry");
     tuningInput.setUserName("dukumar");
     tuningInput.setClient("azkaban");
