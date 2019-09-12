@@ -79,16 +79,16 @@ public class AutoTuningFailureHandler implements FailureHandler {
   }
 
   private JobSuggestedParamSet getBestParameter(List<JobSuggestedParamSet> jobSuggestedParamSets) {
-    JobSuggestedParamSet currentMax = jobSuggestedParamSets.get(0);
+    JobSuggestedParamSet currentMin = jobSuggestedParamSets.get(0);
     for (JobSuggestedParamSet tempJobSuggestedParamSet : jobSuggestedParamSets) {
-      if (tempJobSuggestedParamSet.fitness > currentMax.fitness) {
-        currentMax = tempJobSuggestedParamSet;
-      } else if (tempJobSuggestedParamSet.fitness.equals(currentMax.fitness)) {
-        if (TuningHelper.isNewParamBestParam(tempJobSuggestedParamSet, currentMax)) {
-          currentMax = tempJobSuggestedParamSet;
+      if (tempJobSuggestedParamSet.fitness < currentMin.fitness) {
+        currentMin = tempJobSuggestedParamSet;
+      } else if (tempJobSuggestedParamSet.fitness.equals(currentMin.fitness)) {
+        if (TuningHelper.isNewParamBestParam(tempJobSuggestedParamSet, currentMin)) {
+          currentMin = tempJobSuggestedParamSet;
         }
       }
     }
-    return currentMax;
+    return currentMin;
   }
 }
