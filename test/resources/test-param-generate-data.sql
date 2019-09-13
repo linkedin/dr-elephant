@@ -142,27 +142,29 @@ insert into yarn_app_heuristic_result_details (yarn_app_heuristic_result_id,name
  (137594640,'Number of tasks','20','NULL');
 
 INSERT INTO flow_definition(id, flow_def_id, flow_def_url) VALUES
-(10003,'https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow','https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow');
+(10003,'https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow','https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow'),
+(10004,'https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow','https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow');
 
 INSERT INTO job_definition(id, job_def_id, flow_definition_id, job_name, job_def_url, scheduler, username, created_ts, updated_ts) VALUES
-(100003,'https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry',10003,'countByCountryFlow_countByCountry','https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry','azkaban','pkumar2','2018-02-12 08:40:42','2018-02-12 08:40:43');
-
+(100003,'https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry',10003,'countByCountryFlow_countByCountry','https://ltx1-holdemaz01.grid.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry','azkaban','pkumar2','2018-02-12 08:40:42','2018-02-12 08:40:43'),
+(100004,'https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry',10004,'countByCountryFlow_countByCountry','https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry','azkaban','dukumar','2018-02-12 08:40:42','2018-02-12 08:40:43');
 
 INSERT INTO tuning_job_definition(job_definition_id, client, tuning_algorithm_id, tuning_enabled, average_resource_usage, average_execution_time, average_input_size_in_bytes, allowed_max_resource_usage_percent, allowed_max_execution_time_percent, created_ts, updated_ts, tuning_disabled_reason, number_of_iterations, auto_apply)
 VALUES
-(100003,'azkaban',4,1,null,5.178423333333334,324168876088,150,150,'2018-02-12 08:40:42','2018-02-12 08:40:43', NULL, 5, true);
-
-
-
+(100003,'azkaban',4,1,null,5.178423333333334,324168876088,150,150,'2018-02-12 08:40:42','2018-02-12 08:40:43', NULL, 5, true),
+(100004,'azkaban',4,1,null,5.178423333333334,324168876088,150,150,'2018-02-12 08:40:42','2018-02-12 08:40:43', NULL, 5, true);
 
 INSERT INTO flow_execution(id, flow_exec_id, flow_exec_url, flow_definition_id) VALUES
-(1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293',10003);
+(1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293',10003),
+(1542,'https://elephant.linkedin.com:8443/executor?execid=5416293','https://elephant.linkedin.com:8443/executor?execid=5416293',10004);
 
 INSERT INTO job_execution(id, job_exec_id, job_exec_url, job_definition_id, flow_execution_id, execution_state, resource_usage, execution_time, input_size_in_bytes, created_ts, updated_ts) VALUES
-(1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0',100003,1541,'SUCCEEDED',21.132545572916666,3.2694833333333335,324713861757,'2018-02-14 05:30:42','2018-02-14 05:30:42');
+(1541,'https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0','https://ltx1-holdemaz01.grid.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0',100004,1541,'SUCCEEDED',21.132545572916666,3.2694833333333335,324713861757,'2018-02-14 05:30:42','2018-02-14 05:30:42'),
+(1542,'https://elephant.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0','https://elephant.linkedin.com:8443/executor?execid=5416293&job=countByCountryFlow_countByCountry&attempt=0',100004,1542,'SUCCEEDED',21.132545572916666,3.2694833333333335,324713861757,'2018-02-14 05:30:42','2018-02-14 05:30:42');
 
 INSERT INTO job_suggested_param_set VALUES
-(1137,100003,4,'FITNESS_COMPUTED', 0 ,1 , 0 ,  1 ,   0 ,10000 , 1086,'2018-09-17 23:22:31' ,'2018-09-17 11:09:31');
+(1137,100003,4,'FITNESS_COMPUTED', 0 ,1 , 0 ,  1 ,   0 ,10000 , 1086,'2018-09-17 23:22:31' ,'2018-09-17 11:09:31'),
+(1138,100004,4,'FITNESS_COMPUTED', 0 ,1 , 0 ,  1 ,   0 ,10000 , 1542,'2018-09-17 23:22:31' ,'2018-09-17 11:09:31');
 
 INSERT INTO tuning_job_execution_param_set (job_suggested_param_set_id,job_execution_id,tuning_enabled,created_ts,updated_ts) VALUES
 (1137,1541,1,'2018-09-17 23:22:31','2018-09-17 10:52:31');
@@ -171,8 +173,8 @@ INSERT INTO job_suggested_param_value VALUES
 (366044, 1137, 21, 6112.888799667358, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
 (366045, 1137, 22, 1854.7078742980957, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
 (366046, 1137, 23, 3, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
-(366047, 1137, 24, 0.27054230043558763, '2018-12-21 14:55:36', '2018-12-21 14:55:37');
-
-
-
-
+(366047, 1137, 24, 0.27054230043558763, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366048, 1138, 21, 6112.888799667358, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366049, 1138, 22, 1854.7078742980957, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366050, 1138, 23, 3, '2018-12-21 14:55:36', '2018-12-21 14:55:37'),
+(366051, 1138, 24, 0.27054230043558763, '2018-12-21 14:55:36', '2018-12-21 14:55:37');

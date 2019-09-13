@@ -451,9 +451,19 @@ public class AutoTuningAPIHelper {
       markParameterSetSent(jobSuggestedParamSet);
     }
     addNewTuningJobExecutionParamSet(jobSuggestedParamSet, jobExecution);
-    List<JobSuggestedParamValue> jobSuggestedParamValues = getParamSetValues(jobSuggestedParamSet.id);
-    logger.debug("Number of output parameters for execution " + tuningInput.getJobExecId() + " = "
-        + jobSuggestedParamValues.size());
+    List<JobSuggestedParamValue> jobSuggestedParamValues = null;
+    if (jobSuggestedParamSet.isParamSetSuggested) {
+      jobSuggestedParamValues = getParamSetValues(jobSuggestedParamSet.id);
+      if(debugEnabled){
+        logger.debug("Number of output parameters for execution " + tuningInput.getJobExecId() + " = "
+            + jobSuggestedParamValues.size());
+      }
+    } else {
+      if(debugEnabled){
+        logger.debug("Sending empty parameter hashmap for execution " + tuningInput.getJobExecId() +
+            " as parameters to be sent are default parameters");
+      }
+    }
     logger.info("Finishing getCurrentRunParameters");
     return jobSuggestedParamValues;
   }
@@ -634,22 +644,9 @@ public class AutoTuningAPIHelper {
    * @param jobSuggestedParamValues List of JobSuggestedParamValue
    * @return Map of string to double containing the parameter name and corresponding value
    */
-  @VisibleForTesting
-  Map<String, Double> jobSuggestedParamValueListToMap(List<JobSuggestedParamValue> jobSuggestedParamValues) {
+  private Map<String, Double> jobSuggestedParamValueListToMap(List<JobSuggestedParamValue> jobSuggestedParamValues) {
     Map<String, Double> paramValues = new HashMap<String, Double>();
-    if ((jobSuggestedParamValues != null) && jobSuggestedParamValues.size() > 0) {
-      /**
-       * If param values are not suggested values then
-       * return empty hashmap
-       */
-      JobSuggestedParamValue jobSuggestedParamValueFirst = jobSuggestedParamValues.get(0);
-      JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
-          .where()
-          .eq(JobSuggestedParamSet.TABLE.id, jobSuggestedParamValueFirst.jobSuggestedParamSet.id)
-          .setMaxRows(1)
-          .findUnique();
-
-      if(jobSuggestedParamSet.isParamSetSuggested){
+    if (jobSuggestedParamValues != null) {
         for (JobSuggestedParamValue jobSuggestedParamValue : jobSuggestedParamValues) {
           if (debugEnabled) {
             logger.debug("Param Name is " + jobSuggestedParamValue.tuningParameter.paramName + " And value is " + jobSuggestedParamValue.paramValue);
@@ -657,7 +654,6 @@ public class AutoTuningAPIHelper {
           paramValues.put(jobSuggestedParamValue.tuningParameter.paramName, jobSuggestedParamValue.paramValue);
         }
       }
-    }
     return paramValues;
   }
 
