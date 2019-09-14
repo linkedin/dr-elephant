@@ -87,6 +87,7 @@ public class JsonKeys {
   public static final String HEURISTICS_SUMMARY = "heuristicsummary";
   public static final String TASKS_SEVERITY = "tasksseverity";
   public static final String TASKS_SUMMARIES = "taskssummaries";
+  public static final String CODE_SUMMARIES = "codesummaries";
   public static final String MAPREDUCE_JOB_NAME = "mapreducejobname";
   public static final String TRACKING_URL = "trackingurl";
   public static final String DETAILS = "details";

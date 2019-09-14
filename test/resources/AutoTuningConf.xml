@@ -87,4 +87,10 @@
     <value>corp.com</value>
     <description>company domain email address</description>
 </property>
+
+<property>
+    <name>ca.url.extract.code</name>
+    <value>http://abcd/efgh/api/v1/</value>
+    <description>Basic URL address for test</description>
+</property>
 </configuration>

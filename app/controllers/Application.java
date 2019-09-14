@@ -30,6 +30,7 @@ import com.google.gson.JsonObject;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
+import com.linkedin.drelephant.analysis.code.util.Constant;
 import com.linkedin.drelephant.tuning.AutoTuningAPIHelper;
 import com.linkedin.drelephant.tuning.Constant.AlgorithmType;
 import com.linkedin.drelephant.tuning.Constant.TuningType;
@@ -38,6 +39,8 @@ import com.linkedin.drelephant.tuning.engine.SparkConfigurationConstants;
 import com.linkedin.drelephant.util.Utils;
 import controllers.api.v1.JsonKeys;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
@@ -834,8 +837,15 @@ public class Application extends Controller {
     Html page = null;
     String title = "Help";
     if (topic != null && !topic.isEmpty()) {
-      // check if it is a heuristic help
-      page = ElephantContext.instance().getHeuristicToView().get(topic);
+      // Currently code heuristic view is loaded from the code and not from
+      // config file (since it has only one view)
+      // todo: load view for code level heuristic also from configuration file
+      if(topic.toLowerCase().equals(Constant.CODE_HEURISTIC_NAME)){
+        page = getView();
+      }
+      else {
+        page = ElephantContext.instance().getHeuristicToView().get(topic);
+      }
 
       // check if it is a metrics help
       if (page == null) {
@@ -851,6 +861,27 @@ public class Application extends Controller {
       return ok(helpPage.render(title, page));
     }
     return ok(oldHelpPage.render(title, page));
+  }
+
+  private static  Html getView(){
+    try {
+      Class<?> viewClass = Class.forName(Constant.CODE_HEURISTIC_VIEW_NAME);
+      Method render = viewClass.getDeclaredMethod("render");
+      Html page = (Html) render.invoke(null);
+      logger.info("Load View : " +viewClass);
+      return page;
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Could not find view ", e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException("Could not access render on view" , e);
+    } catch (RuntimeException e) {
+      // More descriptive on other runtime exception such as ClassCastException
+      throw new RuntimeException( " is not a valid view class.", e);
+    } catch (InvocationTargetException e) {
+      throw new RuntimeException("Could not invoke view " , e);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException("Could not find method render for view " , e);
+    }
   }
 
   /**

@@ -34,6 +34,7 @@ export default DS.Model.extend({
     flowdefid: DS.attr("string"),
     taskssummaries: DS.attr(),
     tasksseverity: DS.attr(),
+    codesummaries: DS.attr(),
     queue: DS.attr("string"),
     scheduler: DS.attr("string"),
     cluster: DS.attr("string"),

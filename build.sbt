@@ -25,6 +25,8 @@ organization := "com.linkedin.drelephant"
 
 javacOptions in Compile ++= Seq("-source", "1.8", "-target", "1.8")
 
+
+
 libraryDependencies ++= dependencies map { _.excludeAll(exclusionRules: _*) }
 
 // Create a new custom configuration called compileonly
@@ -38,3 +40,8 @@ playJavaSettings
 scalaVersion := "2.10.4"
 
 envVars in Test := Map("PSO_DIR_PATH" -> (baseDirectory.value / "scripts/pso").getAbsolutePath)
+
+resolvers += Resolver.mavenLocal
+
+resolvers += "Cascading repo" at "http://conjars.org/repo"
+

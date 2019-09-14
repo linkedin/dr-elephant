@@ -105,7 +105,13 @@
 
   <div class="shadow summary-list-container">
     <div class="summary-list-header">Applications</div>
-    {{application-list applications=model.jobs.taskssummaries}}
+        {{application-list applications=model.jobs.taskssummaries}}
   </div>
+
+  <div class="shadow summary-list-container">
+    <div class="summary-list-header">Code Heuristics</div>
+    {{heuristic-details-list heuristic-details = model.jobs.codesummaries}}
+  </div>
+
 
 </div>

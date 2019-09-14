@@ -41,7 +41,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final Logger logger = Logger.getLogger(AnalyticJobGeneratorHadoop2.class);
-  boolean debugEnabled = logger.isDebugEnabled();
+  private boolean debugEnabled = logger.isDebugEnabled();
   private static final String RESOURCE_MANAGER_ADDRESS = "yarn.resourcemanager.webapp.address";
   private static final String IS_RM_HA_ENABLED = "yarn.resourcemanager.ha.enabled";
   private static final String RESOURCE_MANAGER_IDS = "yarn.resourcemanager.ha.rm-ids";
@@ -259,6 +259,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         String amHostHttpAddress = app.get("amHostHttpAddress").getValueAsText();
         String jobState = app.get("state").getValueAsText();
 
+
         if (debugEnabled) {
           logger.debug(" AM Container logs URL " + amContainerLogsURL);
           logger.debug(" AM Host HTTP Address " + amHostHttpAddress);
@@ -268,9 +269,8 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         ApplicationType type =
             ElephantContext.instance().getApplicationTypeForName(app.get("applicationType").getValueAsText());
 
-
           AnalyticJob analyticJob = new AnalyticJob();
-          logger.info(" Analysis job " + analyticJob.getTrackingUrl());
+         // logger.info(" Analysis job " + analyticJob.getTrackingUrl());
           analyticJob.setAppId(appId)
               .setAppType(type)
               .setUser(user)
@@ -284,7 +284,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
               .setAmHostHttpAddress(amHostHttpAddress)
               .setState(jobState);
           appList.add(analyticJob);
-
       }
     }
     return appList;

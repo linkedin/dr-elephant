@@ -1,17 +1,14 @@
 package com.linkedin.drelephant.tuning;
 
 import com.linkedin.drelephant.tuning.Schduler.AzkabanJobStatusManager;
-import com.linkedin.drelephant.tuning.obt.BaselineManagerOBT;
 import java.util.List;
 import models.JobExecution;
 import models.JobSuggestedParamSet;
-import models.TuningJobDefinition;
 import models.TuningJobExecutionParamSet;
 
 import static common.DBTestUtil.*;
 import static org.junit.Assert.*;
 import static play.test.Helpers.*;
-import static common.DBTestUtil.*;
 
 
 public class JobStatusManagerTestRunner implements Runnable {
@@ -59,4 +56,7 @@ public class JobStatusManagerTestRunner implements Runnable {
     assertTrue(" Update Metrics   " , updateMetrics);
 
   }
+
+
+
 }

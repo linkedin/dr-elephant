@@ -101,7 +101,9 @@ object Dependencies {
     "javax.mail" % "mail" % "1.4",
     "com.linkedin.tony" % "tony-core" % tonyVersion intransitive(),
     "net.lingala.zip4j" % "zip4j" % "1.3.2",
-    "org.projectlombok" % "lombok" % "1.18.8"
+    "org.projectlombok" % "lombok" % "1.18.8",
+    "org.apache.hive" % "hive-exec" % "1.1.0",
+    "org.pentaho" % "pentaho-aggdesigner-algorithm" % "5.1.3-jhyde"
   ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)
@@ -111,4 +113,6 @@ object Dependencies {
     ExclusionRule(organization = "com.sun.jersey", name = "jersey-core"),
     ExclusionRule(organization = "com.sun.jersey", name = "jersey-server")
   )
+
+  
 }

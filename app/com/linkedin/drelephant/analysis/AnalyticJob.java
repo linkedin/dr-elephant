@@ -17,6 +17,16 @@
 package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.analysis.code.extractors.CodeExtractionFactory;
+import com.linkedin.drelephant.analysis.code.util.CodeAnalyzerException;
+import com.linkedin.drelephant.analysis.code.CodeExtractor;
+import com.linkedin.drelephant.analysis.code.CodeOptimizer;
+import com.linkedin.drelephant.analysis.code.dataset.JobCodeInfoDataSet;
+import com.linkedin.drelephant.analysis.code.dataset.Script;
+import com.linkedin.drelephant.analysis.code.extractors.AzkabanJarvisCodeExtractor;
+import com.linkedin.drelephant.analysis.code.optimizers.CodeOptimizerFactory;
+import com.linkedin.drelephant.analysis.code.util.Constant;
+import com.linkedin.drelephant.analysis.code.util.Helper;
 import com.linkedin.drelephant.exceptions.core.ExceptionFingerprintingRunner;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
@@ -26,8 +36,10 @@ import java.util.List;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
+import models.TuningJobExecutionCodeRecommendation;
 import org.apache.log4j.Logger;
 import com.linkedin.drelephant.exceptions.util.Constant.*;
+import org.apache.hadoop.conf.Configuration;
 
 
 /**
@@ -38,7 +50,7 @@ public class AnalyticJob {
   private static final Logger logger = Logger.getLogger(AnalyticJob.class);
 
   private static final String UNKNOWN_JOB_TYPE = "Unknown";   // The default job type when the data matches nothing.
-  private static final int _RETRY_LIMIT = 3;                  // Number of times a job needs to be tried before going into second retry queue
+  private static final int _RETRY_LIMIT = 3;  // Number of times a job needs to be tried before going into second retry queue
   private static final int _SECOND_RETRY_LIMIT = 5;           // Number of times a job needs to be tried before dropping
   private static final String EXCLUDE_JOBTYPE = "exclude_jobtypes_filter"; // excluded Job Types for heuristic
 
@@ -268,7 +280,8 @@ public class AnalyticJob {
         String confExcludedApps = heuristic.getHeuristicConfData().getParamMap().get(EXCLUDE_JOBTYPE);
 
         if (confExcludedApps == null || confExcludedApps.length() == 0 ||
-                !Arrays.asList(confExcludedApps.split(",")).contains(jobTypeName)) {
+            !Arrays.asList(confExcludedApps.split(","))
+            .contains(jobTypeName)) {
           HeuristicResult result = heuristic.apply(data);
           if (result != null) {
             analysisResults.add(result);
@@ -301,10 +314,11 @@ public class AnalyticJob {
     Severity worstSeverity = Severity.NONE;
     for (HeuristicResult heuristicResult : analysisResults) {
       AppHeuristicResult detail = new AppHeuristicResult();
-      detail.heuristicClass = Utils.truncateField(heuristicResult.getHeuristicClassName(),
-          AppHeuristicResult.HEURISTIC_CLASS_LIMIT, getAppId());
-      detail.heuristicName = Utils.truncateField(heuristicResult.getHeuristicName(),
-          AppHeuristicResult.HEURISTIC_NAME_LIMIT, getAppId());
+      detail.heuristicClass =
+          Utils.truncateField(heuristicResult.getHeuristicClassName(), AppHeuristicResult.HEURISTIC_CLASS_LIMIT,
+              getAppId());
+      detail.heuristicName =
+          Utils.truncateField(heuristicResult.getHeuristicName(), AppHeuristicResult.HEURISTIC_NAME_LIMIT, getAppId());
       detail.severity = heuristicResult.getSeverity();
       detail.score = heuristicResult.getScore();
 
@@ -312,12 +326,13 @@ public class AnalyticJob {
       for (HeuristicResultDetails heuristicResultDetails : heuristicResult.getHeuristicResultDetails()) {
         AppHeuristicResultDetails heuristicDetail = new AppHeuristicResultDetails();
         heuristicDetail.yarnAppHeuristicResult = detail;
-        heuristicDetail.name = Utils.truncateField(heuristicResultDetails.getName(),
-            AppHeuristicResultDetails.NAME_LIMIT, getAppId());
-        heuristicDetail.value = Utils.truncateField(heuristicResultDetails.getValue(),
-            AppHeuristicResultDetails.VALUE_LIMIT, getAppId());
-        heuristicDetail.details = Utils.truncateField(heuristicResultDetails.getDetails(),
-            AppHeuristicResultDetails.DETAILS_LIMIT, getAppId());
+        heuristicDetail.name =
+            Utils.truncateField(heuristicResultDetails.getName(), AppHeuristicResultDetails.NAME_LIMIT, getAppId());
+        heuristicDetail.value =
+            Utils.truncateField(heuristicResultDetails.getValue(), AppHeuristicResultDetails.VALUE_LIMIT, getAppId());
+        heuristicDetail.details =
+            Utils.truncateField(heuristicResultDetails.getDetails(), AppHeuristicResultDetails.DETAILS_LIMIT,
+                getAppId());
         // This was added for AnalyticTest. Commenting this out to fix a bug. Also disabling AnalyticJobTest.
         //detail.yarnAppHeuristicResultDetails = new ArrayList<AppHeuristicResultDetails>();
         detail.yarnAppHeuristicResultDetails.add(heuristicDetail);
@@ -331,6 +346,16 @@ public class AnalyticJob {
 
     // Retrieve information from job configuration like scheduler information and store them into result.
     InfoExtractor.loadInfo(result, data);
+
+    //Code Level optimization
+    try {
+      if (ElephantContext.instance().getAutoTuningConf().getBoolean(Constant.CODE_LEVEL_OPTIMIZATION_ENABLED, true)) {
+        codeLevelOptimization(result);
+      }
+    } catch (CodeAnalyzerException e) {
+      logger.error("Error in analysing the code for " + result.jobExecId, e);
+    }
+
     /**
      * Exception fingerprinting is applied (if required)
      */
@@ -339,6 +364,36 @@ public class AnalyticJob {
       logger.debug(" Exception Fingerprinting is successfully applied ");
     }
     return result;
+  }
+
+  private void codeLevelOptimization(AppResult result) throws CodeAnalyzerException {
+    logger.info(" Code Analysis Process Started  " + result.queueName);
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    Helper.ConfigurationBuilder.buildConfigurations(configuration);
+    CodeExtractor codeExtractor = CodeExtractionFactory.getCodeExtractor(result);
+    JobCodeInfoDataSet jobCodeInfoDataSet = codeExtractor.execute(result);
+    if (jobCodeInfoDataSet!=null && jobCodeInfoDataSet.getCodeOptimizer() != null) {
+      logger.info(" Optimizer is available for the code , hence optimizing it " + jobCodeInfoDataSet);
+      Script script = jobCodeInfoDataSet.getCodeOptimizer().execute(jobCodeInfoDataSet.getSourceCode());
+      saveOptimizationResultIntoDB(script, jobCodeInfoDataSet, result);
+    }
+  }
+
+  private void saveOptimizationResultIntoDB(Script script, JobCodeInfoDataSet jobCodeInfoDataSet, AppResult result) {
+    if (script != null && script.getOptimizationComment().length() > 0) {
+      TuningJobExecutionCodeRecommendation tuningJobExecutionCodeRecommendation =
+          new TuningJobExecutionCodeRecommendation();
+      tuningJobExecutionCodeRecommendation.jobDefId = result.jobDefId;
+      tuningJobExecutionCodeRecommendation.jobExecUrl = result.jobExecUrl;
+      tuningJobExecutionCodeRecommendation.codeLocation =
+          "SCM=" + jobCodeInfoDataSet.getScmType() + ",RepoName=" + jobCodeInfoDataSet.getRepoName() + ",FileName="
+              + jobCodeInfoDataSet.getFileName();
+
+      tuningJobExecutionCodeRecommendation.recommendation = script.getOptimizationComment().toString();
+      logger.info(" Severity of the script is " + jobCodeInfoDataSet.getCodeOptimizer().getSeverity());
+      tuningJobExecutionCodeRecommendation.severity = jobCodeInfoDataSet.getCodeOptimizer().getSeverity();
+      tuningJobExecutionCodeRecommendation.save();
+    }
   }
 
   /**
@@ -372,7 +427,7 @@ public class AnalyticJob {
    *
    * @return true if should retry, else false
    */
-  public boolean isSecondPhaseRetry(){
+  public boolean isSecondPhaseRetry() {
     return (_secondRetries++) < _SECOND_RETRY_LIMIT;
   }
 

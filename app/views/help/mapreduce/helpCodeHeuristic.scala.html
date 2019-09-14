@@ -1,0 +1,162 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+<p>
+    <b>This Heuristic analysis the whole script code , find out any possible optimizations in the code . Optimization <br>
+      will improve run time and compute efficiency of the code.</b><br><br>
+
+<h3>Explanation</h3>
+
+    This  Heuristic<br>
+<ol>
+  <li>Get the source code from code search</li>
+  <li>Analysis the complete source code and create DAG</li>
+  <li>Based on the shuffles happening inside each query generate the weight of the query</li>
+  <li>Then suggest based on the DAG analysis , what are the table can be converted to <b>Views in Spark</b> </li>
+</ol>
+
+</p>
+<p>
+  Specifically for ETL jobs , it is being observed that they follow a similar pattern in Hive .<br>
+  <ol>
+<li>Take the data from source tables</li>
+<li>Create a lot of temporary/staging  tables </li>
+<li> Create final tables and delete temporary tables.</li>
+</ol>
+<br><br>
+
+    If we convert temporary tables to views in Spark , then multiple queries will get combined and unnecessary <br>
+    shuffles and IO will be avoided in Spark . Since views in Spark consider as transformation , multiple hive <br>
+    queries will get combined in Spark DAG .But converting all temporary tables to Spark , may lead to vary narrow<br>
+    DAG in Spark ,which may lead to failure <br>
+
+<h3>Algorithm</h3>
+    <b><i>
+    Hence this heuristics parses the whole hive script , create DAG where ,each hive query is node and <br>
+    input and output tables are edges . Then based on number of shuffle operation in each node , complexity of the node<br>
+    is decided. Then we traverse the DAG and if the weight of the path(sum of weight of total nodes traversed so far)<br>
+    is greater then threshold , then that table would not be considered to convert into views . <br><br>
+
+    Above approach make sures that , there will be considerable tables converted in views and also make sure the Spark DAG <br>
+    is not very narrow.
+    </i>
+</b>
+
+<h5>Example</h5>
+<p>
+<div class="list-group">
+<a class="list-group-item list-group-item-danger" href="">
+  <h4 class="list-group-item-heading">Code Level Heuristic</h4>
+  <table class="list-group-item-text table table-condensed left-table">
+    <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>SCM</td>
+        <td>git</td>
+      </tr>
+      <tr>
+        <td>RepoName</td>
+        <td>metrics/metric-defs</td>
+      </tr>
+      <tr>
+        <td>FileName</td>
+        <td>metric-defs/provider/src/lss_sales_reps_productivity/genie_lss_csm_contract_details/lss_csm_contract_details.sql</td>
+      </tr>
+      <tr>
+        <td>Recommendation</td>
+        <td>Convert your code to Spark for better run time and resource utilization/compute efficiency</td>
+      </tr>
+      <tr>
+        <td>Convert following tables to views in spark.</td>
+        <td><pre>temp_nsn_field_contracts temp_ut_pmerk_int temp_ut_pmerk_nsn_master temp_nsn_member_master_metrics
+          temp_nsn_contract_master_metrics1 temp_wau_contract_level temp_biz_health_metrics temp_crm_accounts_with_date
+          temp_crmsource_data temp_nsn_contract_master_metrics2 temp_ml_chi_onboard0 temp_ml_chi_onboard temp_ml_chi_engage0
+          temp_ml_chi_engage temp_ml_chi_renew0 temp_ml_chi_renew temp_nsn_contract_master</pre></td>
+      </tr>
+    </tbody>
+  </table>
+</a>
+</div>
+
+<p> DAG of Hive Script </p>
+
+<img src="assets/images/dag.png" alt="dag" width="1000" height="1000">
+
+<ol>
+  <li>Red nodes are final table</li>
+  <li>Green nodes are source tables</li>
+  <li>Black nodes are temporary tables converted to views</li>
+  <li>Blue nodes are temporary table will remain same in Spark</li>
+  <li>Nodes have {tableName :Weight for path (while traversing from source) ,till that node} </li>
+</ol>
+
+
+<h3>Suggestions</h3>
+
+    Convert your code to Spark Sql . Change only above mentioned tables to views and rest of the table as is and run through Spark . For .eg
+
+  <pre>
+  create table $temp_cap_miniseat
+  as
+  select minseatid,
+  month_begin_id,
+  max(seatmap_contract_id) as contract_id,
+  max(member_id) as member_id,
+  min(date_created) as date_created,
+  max(active_mon_yn) as active_mon_yn,
+  max(admin_mon_yn) as admin_mon_yn,
+  max(contract_active) as contract_active,
+  max(contract_type) as contract_type,
+  max(account_id) as account_id,
+  max(account_active) as account_active,
+  max(li_seat_yn) as li_seat_yn,
+  max(hm_seat_yn) as hm_seat_yn,
+  max(recruiter_seat_yn) as recruiter_seat_yn,
+  max(jobmanager_seat_yn) as jobmanager_seat_yn,
+  max(contract_is_online) as contract_is_online
+  from $temp_cap_seatmap
+  group by minseatid,
+  month_begin_id ;
+  </pre>
+
+    <h3> Convert to</h3>
+<pre>
+spark.sql(s\"\"\"
+CREATE OR REPLACE TEMPORARY VIEW $temp_cap_miniseat
+as
+select minseatid,
+month_begin_id,
+max(seatmap_contract_id) as contract_id,
+max(member_id) as member_id,
+min(date_created) as date_created,
+max(active_mon_yn) as active_mon_yn,
+max(admin_mon_yn) as admin_mon_yn,
+max(contract_active) as contract_active,
+max(contract_type) as contract_type,
+max(account_id) as account_id,
+max(account_active) as account_active,
+max(li_seat_yn) as li_seat_yn,
+max(hm_seat_yn) as hm_seat_yn,
+max(recruiter_seat_yn) as recruiter_seat_yn,
+max(jobmanager_seat_yn) as jobmanager_seat_yn,
+max(contract_is_online) as contract_is_online
+from $temp_cap_seatmap
+group by minseatid,
+month_begin_id
+\"\"\")
+</pre>
+
+</p>
