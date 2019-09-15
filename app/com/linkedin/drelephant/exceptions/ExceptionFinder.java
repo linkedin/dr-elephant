@@ -56,7 +56,9 @@ public class ExceptionFinder {
   private static String PASSWORD = "password";
   private static int SAMPLE_SIZE = 3;
   private static String DESCRIPTION_FOR_KILLED_JOB = "The job was killed";
-  private static String NOT_APPLICABLE = "NA";
+  private static final String NOT_APPLICABLE = "NA";
+  private static final String EXCEPTION_LOG_LENGTH_LIMIT_PROPERTY_KEY = "exception_log_length_limit";
+  private static int EXCEPTION_LOG_LENGTH_LIMIT = DEFAULT_EXCEPTION_LOG_LENGTH_LIMIT;
 
   /**
    * Constructor for ExceptionFinder class
@@ -83,6 +85,11 @@ public class ExceptionFinder {
     if (!schedulerData.getParamMap().containsKey("exception_enabled") || schedulerData.getParamMap()
         .get("exception_enabled").equals("false")) {
       throw new RuntimeException(String.format("Scheduler %s is not configured for Exception fingerprinting ", scheduler));
+    }
+
+    if (schedulerData.getParamMap().containsKey(EXCEPTION_LOG_LENGTH_LIMIT_PROPERTY_KEY)) {
+      EXCEPTION_LOG_LENGTH_LIMIT = Integer.parseInt(schedulerData.getParamMap().get(
+          EXCEPTION_LOG_LENGTH_LIMIT_PROPERTY_KEY));
     }
 
     if (!schedulerData.getParamMap().containsKey(USERNAME)) {
@@ -121,11 +128,18 @@ public class ExceptionFinder {
       public HadoopException run() {
         HadoopException flowLevelException = new HadoopException();
         List<HadoopException> childExceptions = new ArrayList<HadoopException>();
+        final String SPARK = "spark";
+        final String FAILED_STATUS = "failed";
 
         // Find exceptions in all the unsuccessful jobs of the workflow
         for (String unsuccessfulJobId : jobIdStatus.keySet()) {
-          if (jobIdStatus.get(unsuccessfulJobId).toLowerCase().equals("failed") && !jobTypeMap.get(unsuccessfulJobId).equals("spark")) {
-            HadoopException jobLevelException = analyzeJob(unsuccessfulJobId);
+          if (jobIdStatus.get(unsuccessfulJobId).toLowerCase().equals(FAILED_STATUS) && !jobTypeMap.get(unsuccessfulJobId).equals(SPARK)) {
+            HadoopException jobLevelException = null;
+            try {
+              jobLevelException = analyzeJob(unsuccessfulJobId);
+            } catch (Exception ex) {
+              logger.error("Exception encountered while analyzing job " + unsuccessfulJobId, ex);
+            }
             if (jobLevelException != null) {
               childExceptions.add(jobLevelException);
             }

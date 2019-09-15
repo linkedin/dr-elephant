@@ -613,8 +613,8 @@ public final class Utils {
     StringBuilder builder = new StringBuilder();
     for(List<String> lines: logs) {
       for(String line: lines) {
-        builder.append(line);
-        builder.append("\n");
+        builder.append(line)
+            .append("\n");
       }
     }
     return builder.toString();

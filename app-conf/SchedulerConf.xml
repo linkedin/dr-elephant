@@ -29,7 +29,8 @@
         <name>azkaban</name>
         <classname>com.linkedin.drelephant.schedulers.AzkabanScheduler</classname>
         <params>
-          <!--<exception_enabled>true</exception_enabled>-->
+          <exception_enabled>true</exception_enabled>
+          <exception_log_length_limit>5120</exception_log_length_limit>
           <!--<workflow_client>com.linkedin.drelephant.exceptions.azkaban.AzkabanWorkflowClient</workflow_client>-->
           <!--<private_key>/home/key/private_key</private_key>-->
           <!--<userame>elephant</userame>-->

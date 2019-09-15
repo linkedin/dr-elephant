@@ -30,7 +30,7 @@ public final class Constant {
     RULE_BASE_CLASSIFIER, ML_BASED_CLASSIFIER
   }
 
-  public static int EXCEPTION_LOG_LENGTH_LIMIT = 5120;
+  public static int DEFAULT_EXCEPTION_LOG_LENGTH_LIMIT = 5120;
 
   /**
    * Classes in which classifier should classify the exceptions

@@ -46,14 +46,14 @@ public interface WorkflowClient {
   public void login(String username, File privateKey);
 
   /**
-   * Return all the jobs in the workflow. It returns a Map<String,String> where the key \n
+   * Return all the jobs in the workflow. It returns a Map<String,String> where the key
    * is the execution id of the job and the value is the status of the job.
    * @return Return all the jobs in the workflow
    */
   public Map<String, String> getJobsFromFlow();
 
   /**
-   * Return all the jobs with there types in the workflow. It returns a Map<String,String> where the key \n
+   * Return all the jobs with there types in the workflow. It returns a Map<String,String> where the key
    * is the job name and the value is the status of the job.
    * @return Return all the jobs with their jobTypes in the workflow
    */
