@@ -443,7 +443,7 @@ public class AutoTuningAPIHelper {
     logger.debug("Finding parameter suggestion for job: " + jobExecution.job.jobName);
     List<JobSuggestedParamValue> jobSuggestedParamValues = null;
     if (tuningInput.getRetry()) {
-      logger.info(" Retried job execution " + tuningInput.getJobExecId());
+      logger.info(" Retry job execution " + tuningInput.getJobExecId());
       applyPenalty(tuningInput.getJobExecId());
     } else {
       if (debugEnabled) {

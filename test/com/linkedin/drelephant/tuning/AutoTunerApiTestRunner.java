@@ -75,14 +75,14 @@ public class AutoTunerApiTestRunner implements Runnable {
 
   private void testGetcurrentRunParameter(){
     TuningInput tuningInput = new TuningInput();
-    tuningInput.setFlowDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
-    tuningInput.setJobDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
-    tuningInput.setFlowDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow");
-    tuningInput.setJobDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1");
+    tuningInput.setJobDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1");
+    tuningInput.setJobDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1&job=countByCountryFlow_countByCountry");
     tuningInput.setFlowExecId("https://elephant.linkedin.com:8443/executor?execid=5416294");
-    tuningInput.setJobExecId("https://elephant.linkedin.com:8443/executor?execid=5416294&job=countByCountryFlow_countByCountry&attempt=0");
+    tuningInput.setJobExecId("https://elephant.linkedin.com:8443/executor?execid=5416294&job=countByCountryFlow_1_countByCountry&attempt=0");
     tuningInput.setFlowExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416294");
-    tuningInput.setJobExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416294&job=countByCountryFlow_countByCountry&attempt=0");
+    tuningInput.setJobExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416294&job=countByCountryFlow_1_countByCountry&attempt=0");
     tuningInput.setJobName("countByCountryFlow_countByCountry");
 //    tuningInput.setUserName("dukumar");
     tuningInput.setClient("azkaban");
