@@ -59,7 +59,7 @@
 
             {{#cp-panels class='u-margin-bottom workflow-panel-cp' accordion=true as |panels|}}
               {{#panels.panel as |p|}}
-                {{#if (eq job.type "MR")}}
+                {{#if (or (eq job.type "MR") (eq job.type "SPARK"))}}
                   {{map-reduce-exception job=job}}
                 {{else if (eq job.type "SCRIPT")}}
                   {{#p.toggle}}
