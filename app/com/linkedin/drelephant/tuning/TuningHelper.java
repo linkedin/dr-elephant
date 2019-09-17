@@ -189,4 +189,27 @@ public class TuningHelper {
     }
     return timeInMinutes;
   }
+
+  static JobSuggestedParamSet getLatestCreatedJobSuggestedParamSet(
+      long jobDefinitionId) {
+    return JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id,
+            jobDefinitionId)
+        .order()
+        .desc(JobSuggestedParamSet.TABLE.updatedTs)
+        .setMaxRows(1)
+        .findUnique();
+  }
+
+  static JobSuggestedParamSet getDefaultParamSet(long jobDefinitionId) {
+    return JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.jobDefinition + "." + JobDefinition.TABLE.id,
+            jobDefinitionId)
+        .eq(JobSuggestedParamSet.TABLE.isParamSetDefault, true)
+        .ne(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus
+            .DISCARDED)
+        .findUnique();
+  }
 }

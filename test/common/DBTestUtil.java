@@ -66,6 +66,10 @@ public class DBTestUtil {
     initDBUtil(TEST_MR_PIG_HBT_PARAMETER_RECOMMENDER);
   }
 
+  public static void initTuneInReEnableMockDB() throws IOException, SQLException {
+    initDBUtil(TEST_TUNEIN_RE_ENABLE_DATA_FILE);
+  }
+
   public static void initDBForExceptionFingerPrinting() throws IOException, SQLException {
     initDBUtil(TEST_EXCEPTION_FINGERPRINTING);
   }

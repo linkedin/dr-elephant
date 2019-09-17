@@ -59,6 +59,11 @@ public final class Utils {
 
   private static final String TRUNCATE_SUFFIX = "...";
 
+  public static final int HOURS_IN_ONE_DAY = 24;
+  public static final int MINUTES_IN_ONE_HOURS = 60;
+  public static final int SECONDS_IN_ONE_MINUTE = 60;
+  public static final int MILLISECONDS_IN_ONE_SECOND = 1000;
+
   private Utils() {
     // do nothing
   }
@@ -618,5 +623,24 @@ public final class Utils {
       }
     }
     return builder.toString();
+  }
+
+  public static long getTimeInMilliSecondsFromDays(int numberOfDays) {
+    return getTimeInMilliSecondsFromHours(numberOfDays *
+        HOURS_IN_ONE_DAY);
+  }
+
+  public static long getTimeInMilliSecondsFromHours(int numberOfhours) {
+    return getTimeInMilliSecondsFromMinutes(numberOfhours *
+        MINUTES_IN_ONE_HOURS);
+  }
+
+  public static long getTimeInMilliSecondsFromMinutes(int numberOfminutes) {
+    return getTimeInMilliSecondsFromSeconds(numberOfminutes *
+        SECONDS_IN_ONE_MINUTE);
+  }
+
+  public static long getTimeInMilliSecondsFromSeconds(int numberOfseconds) {
+    return numberOfseconds * MILLISECONDS_IN_ONE_SECOND;
   }
 }

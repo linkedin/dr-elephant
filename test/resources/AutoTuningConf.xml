@@ -87,4 +87,20 @@
     <value>corp.com</value>
     <description>company domain email address</description>
 </property>
+
+
+  <property>
+    <name>re_enable_tunein_allowed</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>max_duration_for_tunein.disabled_in_days</name>
+    <value>2</value>
+  </property>
+  <property>
+    <name>max_iteration_after_tunein_re_enable</name>
+    <value>5</value>
+  </property>
+
 </configuration>

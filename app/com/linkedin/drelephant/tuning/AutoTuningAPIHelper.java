@@ -42,8 +42,11 @@ import models.TuningJobDefinition;
 import models.TuningJobExecutionParamSet;
 import models.TuningParameter;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+
+import static com.linkedin.drelephant.util.Utils.*;
 
 
 /**
@@ -55,6 +58,14 @@ public class AutoTuningAPIHelper {
       "autotuning.default.allowed_max_resource_usage_percent";
   private static final String ALLOWED_MAX_EXECUTION_TIME_PERCENT_DEFAULT =
       "autotuning.default.allowed_max_execution_time_percent";
+  private static final String TUNEIN_RE_ENABLE_ALLOWED =
+      "re_enable_tunein_allowed";
+  private static final String MAX_TUNEIN_DISABLED_DURATION_IN_DAYS =
+      "max_duration_for_tunein.disabled_in_days";
+  private static final String MAX_ITERATIONS_AFTER_TUNEIN_RE_ENABLE =
+      "max_iteration_after_tunein_re_enable";
+  private static final int DEFAULT_MAX_TUNEIN_DISABLED_DURATION_IN_DAYS = 14;
+  private static final int DEFAULT_MAX_ITERATION_AFTER_TUNEIN_RE_ENABLE = 3;
   private static final Logger logger = Logger.getLogger(AutoTuningAPIHelper.class);
   boolean debugEnabled = logger.isDebugEnabled();
 
@@ -382,6 +393,7 @@ public class AutoTuningAPIHelper {
       initializeOptimizationAlgoPrerequisite(tuningInput);
       return processForFirstExecution(tuningInput, jobExecution);
     } else {
+      reEnableAutoTuning(tuningJobDefinition, tuningInput);
       tuningInput.setTuningAlgorithm(tuningJobDefinition.tuningAlgorithm);
       logger.info(" Tuning Algorithm Type " + tuningInput.getTuningAlgorithm().optimizationAlgo.name());
       initializeOptimizationAlgoPrerequisite(tuningInput);
@@ -754,6 +766,100 @@ public class AutoTuningAPIHelper {
       jobSuggestedParamValue.save();
     } else {
       logger.warn("TuningAlgorithm param null " + paramName);
+    }
+  }
+
+  @VisibleForTesting
+  void reEnableAutoTuning(TuningJobDefinition tuningJobDefinition,
+      TuningInput tuningInput) {
+    logger.info("Re-enabling job definition id for tuning " + tuningJobDefinition.job.id);
+    Configuration configuration = ElephantContext.instance()
+        .getAutoTuningConf();
+    boolean shouldReEnableTunein = configuration.getBoolean(
+        TUNEIN_RE_ENABLE_ALLOWED, true);
+    if (!shouldReEnableTunein || tuningJobDefinition.tuningEnabled || !tuningJobDefinition.autoApply ||
+        tuningJobDefinition.tuningDisabledReason == null ) {
+      return;
+    }
+
+    if (isJobEligibleForTuneInReEnablement(configuration, tuningJobDefinition,
+        tuningInput)) {
+      logger.info("Job is eligible for tuning re-enablement");
+      processReEnablementForTuneIn(configuration, tuningJobDefinition,
+          tuningInput);
+      return;
+    }
+    logger.info("Job is not eligible for TuneIn re-enablement");
+  }
+
+  private boolean isJobEligibleForTuneInReEnablement(Configuration config,
+      TuningJobDefinition tuningJobDefinition, TuningInput tuningInput) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Checking for tuning re-enablement eligibility");
+    }
+    int maxAllowedTuneinDisableDurationInDays =
+          config.getInt(MAX_TUNEIN_DISABLED_DURATION_IN_DAYS, DEFAULT_MAX_TUNEIN_DISABLED_DURATION_IN_DAYS);
+    long maxAllowedTuneinDisableDurationInMs =
+        getTimeInMilliSecondsFromDays(maxAllowedTuneinDisableDurationInDays);
+
+    /* For adding more condition just add the respective condition method response
+     to the OR condition */
+    boolean isJobEligibleForTuneinReEnable = isTuneInDisabledForSpecifiedDuration(
+        tuningJobDefinition, maxAllowedTuneinDisableDurationInMs);
+
+    return isJobEligibleForTuneinReEnable;
+  }
+
+  private boolean isTuneInDisabledForSpecifiedDuration(TuningJobDefinition
+      tuningJobDefinition, long disabledDurationInMs) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Checking if job is disabled for more than duration in ms " + disabledDurationInMs);
+    }
+    JobSuggestedParamSet latestCreatedJobSuggestedParamSet =
+        TuningHelper.getLatestCreatedJobSuggestedParamSet(tuningJobDefinition.job.id);
+    long tuneinDisabledEpochTime = latestCreatedJobSuggestedParamSet.updatedTs
+        .getTime();
+    long currentEpochTime = System.currentTimeMillis();
+    return (currentEpochTime - tuneinDisabledEpochTime)
+        >= disabledDurationInMs;
+  }
+
+  private void processReEnablementForTuneIn(Configuration configuration,
+      TuningJobDefinition tuningJobDefinition, TuningInput tuningInput) {
+    logger.info("Initiating the process for re-enabling Auto-Tuning");
+    int maxTuneinIterationAfterReEnable = configuration.getInt(
+        MAX_ITERATIONS_AFTER_TUNEIN_RE_ENABLE,
+        DEFAULT_MAX_ITERATION_AFTER_TUNEIN_RE_ENABLE);
+    updateIterationCountForJob(tuningJobDefinition,
+        maxTuneinIterationAfterReEnable);
+    tuningJobDefinition.tuningDisabledReason = StringUtils.EMPTY;
+    updateJobSuggestedParamSetForReEnable(tuningJobDefinition, tuningInput);
+    tuningJobDefinition.tuningEnabled = true;
+    tuningJobDefinition.update();
+  }
+
+  private void updateIterationCountForJob(TuningJobDefinition
+      tuningJobDefinition, int maxTuneinIterationAfterReEnable) {
+    int iterationCountWithSuggestedParamSet = TuningHelper
+        .getNumberOfValidSuggestedParamExecution( TuningHelper
+            .getTuningJobExecutionFromDefinition(tuningJobDefinition.job));
+    tuningJobDefinition.numberOfIterations = Math.max( tuningJobDefinition.
+            numberOfIterations, (iterationCountWithSuggestedParamSet +
+        maxTuneinIterationAfterReEnable));
+    logger.info(new StringBuilder("Updating the iterationCount to ")
+        .append(tuningJobDefinition.numberOfIterations)
+        .append("for jobDefinitionId")
+        .append(tuningJobDefinition.job.id).toString());
+  }
+
+  private void updateJobSuggestedParamSetForReEnable(TuningJobDefinition
+      tuningJobDefinition, TuningInput tuningInput) {
+    JobSuggestedParamSet bestJobSuggestedParamSet = getBestParamSet(tuningJobDefinition
+        .job.jobDefId);
+    if (bestJobSuggestedParamSet != null) {
+      logger.info("For Re-Enable de-marking jobSuggestedParamSet as best " + bestJobSuggestedParamSet.id);
+      bestJobSuggestedParamSet.isParamSetBest = false;
+      bestJobSuggestedParamSet.update();
     }
   }
 }

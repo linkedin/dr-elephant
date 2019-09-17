@@ -16,21 +16,18 @@
 
 package com.linkedin.drelephant.util;
 
-
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 
 /**
  * This class tests the Utils class
  */
 public class UtilsTest {
-
   @Test
   public void testParseJavaOptions() {
     Map<String, String> options1 = Utils.parseJavaOptions("-Dfoo=bar");
@@ -186,8 +183,8 @@ public class UtilsTest {
     assertEquals("Hello world!", Utils.formatStringOrNull("%s %s!", "Hello", "world"));
     assertEquals(null, Utils.formatStringOrNull("%s %s!", "Hello", null));
   }
- 
-  @Test 
+
+  @Test
   public void testGetDurationBreakdown() {
     long []durations = {13423,432344,23423562,23,324252,1132141414141L};
     assertEquals("0:00:13", Utils.getDurationBreakdown(durations[0]));
@@ -232,6 +229,34 @@ public class UtilsTest {
     assertEquals("0.172 GB Hours", Utils.getResourceInGBHours(durations[3]));
     assertEquals("0 GB Hours", Utils.getResourceInGBHours(durations[4]));
 
+  }
+
+  @Test
+  public void testGetTimeInMilliSecondsFromDays() {
+    assertEquals(Utils.getTimeInMilliSecondsFromDays(1), 86400000);
+    assertEquals(Utils.getTimeInMilliSecondsFromDays(0), 0);
+  }
+
+  @Test
+  public void testGetTimeInMilliSecondsFromHours() {
+    assertEquals(Utils.getTimeInMilliSecondsFromHours(1), 3600000);
+    assertEquals(Utils.getTimeInMilliSecondsFromHours(24), 86400000);
+    assertEquals(Utils.getTimeInMilliSecondsFromHours(0), 0);
+  }
+
+  @Test
+  public void testGetTimeInMilliSecondsFromMinutes() {
+    assertEquals(Utils.getTimeInMilliSecondsFromMinutes(1), 60000);
+    assertEquals(Utils.getTimeInMilliSecondsFromMinutes(60), 3600000);
+    assertEquals(Utils.getTimeInMilliSecondsFromMinutes(3600), 216000000);
+    assertEquals(Utils.getTimeInMilliSecondsFromMinutes(0), 0);
+  }
+
+  @Test
+  public void testGetTimeInMilliSecondsFromSeconds() {
+    assertEquals(Utils.getTimeInMilliSecondsFromSeconds(1), 1000);
+    assertEquals(Utils.getTimeInMilliSecondsFromSeconds(60), 60000);
+    assertEquals(Utils.getTimeInMilliSecondsFromMinutes(0), 0);
   }
 
 }
