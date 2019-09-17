@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import models.FlowExecution;
 import models.JobSuggestedParamSet;
 import models.JobSuggestedParamValue;
+import models.TuningAlgorithm;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -69,16 +70,44 @@ public class AutoTunerApiTestRunner implements Runnable {
     List<FlowExecution> flowExecution = FlowExecution.find.where().eq(FlowExecution.TABLE.flowExecId, 1).findList();
     assertTrue(" Flow Execution ", flowExecution.size()==1);
     populateTestData();
-    testJobSuggestedParamValueListToMap();
+    testGetcurrentRunParameter();
   }
 
-  private void testJobSuggestedParamValueListToMap(){
-    List<JobSuggestedParamValue> jobSuggestedParamValues = JobSuggestedParamValue.find.where()
-        .eq(JobSuggestedParamValue.TABLE.jobSuggestedParamSet + '.' + JobSuggestedParamSet.TABLE.id, 1137)
-        .findList();
+  private void testGetcurrentRunParameter(){
+    TuningInput tuningInput = new TuningInput();
+    tuningInput.setFlowDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1");
+    tuningInput.setJobDefId("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1");
+    tuningInput.setJobDefUrl("https://elephant.linkedin.com:8443/manager?project=AzkabanHelloPigTest&flow=countByCountryFlow_1&job=countByCountryFlow_countByCountry");
+    tuningInput.setFlowExecId("https://elephant.linkedin.com:8443/executor?execid=5416294");
+    tuningInput.setJobExecId("https://elephant.linkedin.com:8443/executor?execid=5416294&job=countByCountryFlow_1_countByCountry&attempt=0");
+    tuningInput.setFlowExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416294");
+    tuningInput.setJobExecUrl("https://elephant.linkedin.com:8443/executor?execid=5416294&job=countByCountryFlow_1_countByCountry&attempt=0");
+    tuningInput.setJobName("countByCountryFlow_countByCountry");
+//    tuningInput.setUserName("dukumar");
+    tuningInput.setClient("azkaban");
+    tuningInput.setScheduler("azkaban");
+//    tuningInput.setDefaultParams(defaultParams);
+    tuningInput.setVersion(1);
+    tuningInput.setRetry(true);
+//    tuningInput.setSkipExecutionForOptimization(skipExecutionForOptimization);
+    tuningInput.setJobType("PIG");
+    tuningInput.setOptimizationAlgo("HBT");
+    tuningInput.setOptimizationAlgoVersion("4");
+    tuningInput.setOptimizationMetric("RESOURCE");
+    tuningInput.setAllowedMaxExecutionTimePercent(null);
+    tuningInput.setAllowedMaxResourceUsagePercent(null);
 
     AutoTuningAPIHelper autoTuningAPIHelper = new AutoTuningAPIHelper();
-    Map<String, Double> paramValues = autoTuningAPIHelper.jobSuggestedParamValueListToMap(jobSuggestedParamValues);
+    /**
+     * Testing for empty parameter hashMap if execution is retried.
+     */
+    Map<String, Double> paramValues = null;
+    try {
+      paramValues = autoTuningAPIHelper.getCurrentRunParameters(tuningInput);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     assertTrue("Param values : " + paramValues, paramValues.isEmpty());
   }
 }

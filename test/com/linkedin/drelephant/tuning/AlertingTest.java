@@ -12,6 +12,7 @@ import static play.test.Helpers.*;
 import static common.DBTestUtil.*;
 
 import models.TuningJobDefinition;
+import models.JobDefinition;
 import org.apache.hadoop.conf.Configuration;
 import static com.linkedin.drelephant.tuning.alerting.Constant.*;
 
@@ -47,7 +48,7 @@ public class AlertingTest implements Runnable {
 
 
 
-    JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*").where().findUnique();
+    JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*").where().eq(JobSuggestedParamSet.TABLE.id, "1137").findUnique();
     jobSuggestedParamSet.updatedTs = new Timestamp(startTime + 100);
     jobSuggestedParamSet.createdTs = new Timestamp(endTime+1-259200000);
     jobSuggestedParamSet.update();
@@ -77,7 +78,7 @@ public class AlertingTest implements Runnable {
     /**
      * If user want to test email functionality
      */
-   // assertTrue(" Email send successfully ", manager.sendNotification(notificationDataAfterUpdate));
+    // assertTrue(" Email send successfully ", manager.sendNotification(notificationDataAfterUpdate));
   }
 
   private void testSKAlerting(){
@@ -85,7 +86,7 @@ public class AlertingTest implements Runnable {
 
     long startTime = System.currentTimeMillis();
     long endTime = System.currentTimeMillis() + 1000;
-    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*").where().findUnique();
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*").where().eq(TuningJobDefinition.TABLE.job + "." + JobDefinition.TABLE.id, 100003).findUnique();
     tuningJobDefinition.updatedTs = new Timestamp(startTime + 100);
     tuningJobDefinition.tuningEnabled=false;
     tuningJobDefinition.autoApply=true;
