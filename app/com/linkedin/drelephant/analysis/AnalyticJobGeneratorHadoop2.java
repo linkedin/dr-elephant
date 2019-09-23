@@ -270,7 +270,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
 
           AnalyticJob analyticJob = new AnalyticJob();
-          logger.info(" Analysis job " + analyticJob.getTrackingUrl());
           analyticJob.setAppId(appId)
               .setAppType(type)
               .setUser(user)
