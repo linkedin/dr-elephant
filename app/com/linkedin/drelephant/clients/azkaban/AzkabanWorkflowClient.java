@@ -90,7 +90,6 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   private String _username;
   private String _password;
   private long _sessionUpdatedTime = 0;
-  private JSONArray jobInfo = null;
 
   private String AZKABAN_LOG_OFFSET = "0";
   private String AZKABAN_LOG_LENGTH_LIMIT = "9999999"; // limit the log limit to 10 mb
@@ -384,23 +383,18 @@ public class AzkabanWorkflowClient implements WorkflowClient {
    * @return The jobs from the flow
    */
   private JSONArray getJobsInfoFromFlow() throws JSONException {
-    if (jobInfo == null) {
       List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
       urlParameters.add(new BasicNameValuePair("session.id", _sessionId));
       urlParameters.add(new BasicNameValuePair("ajax", "fetchexecflow"));
       urlParameters.add(new BasicNameValuePair("execid", _executionId));
       JSONObject jsonObject = fetchJson(urlParameters, _workflowExecutionUrl);
-      jobInfo = jsonObject.getJSONArray("nodes");
-      return jobInfo;
-    } else {
-      return jobInfo;
-    }
+      return jsonObject.getJSONArray("nodes");
   }
 
   public Map<String, String> getJobsFromFlow() {
     JSONArray jobsInfoNode;
     try {
-      jobsInfoNode = (jobInfo == null) ? getJobsInfoFromFlow() : jobInfo;
+      jobsInfoNode =  getJobsInfoFromFlow();
     } catch (JSONException jsonEx) {
       logger.error("Exception while fetching Job execution info from Azkaban", jsonEx);
       return null;
@@ -418,7 +412,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   public Map<String, String> getJobTypeFromFlow() {
     JSONArray jobsInfoNode;
     try {
-      jobsInfoNode = (jobInfo == null) ? getJobsInfoFromFlow() : jobInfo;
+      jobsInfoNode =  getJobsInfoFromFlow();
     } catch (JSONException jsonEx) {
       logger.error("Exception while fetching Job execution info from Azkaban", jsonEx);
       return null;
