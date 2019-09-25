@@ -394,7 +394,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   public Map<String, String> getJobsFromFlow() {
     JSONArray jobsInfoNode;
     try {
-      jobsInfoNode =  getJobsInfoFromFlow();
+      jobsInfoNode = getJobsInfoFromFlow();
     } catch (JSONException jsonEx) {
       logger.error("Exception while fetching Job execution info from Azkaban", jsonEx);
       return null;
@@ -412,7 +412,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
   public Map<String, String> getJobTypeFromFlow() {
     JSONArray jobsInfoNode;
     try {
-      jobsInfoNode =  getJobsInfoFromFlow();
+      jobsInfoNode = getJobsInfoFromFlow();
     } catch (JSONException jsonEx) {
       logger.error("Exception while fetching Job execution info from Azkaban", jsonEx);
       return null;
