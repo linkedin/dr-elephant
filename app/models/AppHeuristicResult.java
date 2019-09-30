@@ -61,7 +61,7 @@ public class AppHeuristicResult extends Model {
 
   @JsonIgnore
   @Id
-  public int id;
+  public long id;
 
   @JsonBackReference
   @ManyToOne(cascade = CascadeType.ALL)
