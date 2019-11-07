@@ -19,6 +19,7 @@ package com.linkedin.drelephant.tuning;
 import com.google.common.annotations.VisibleForTesting;
 import com.linkedin.drelephant.DrElephant;
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.tuning.hbt.FitnessManagerHBTTest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -126,5 +127,10 @@ public class TuningManagerTest {
   @Test
   public void testAlerting() throws InterruptedException {
     running(testServer(TEST_SERVER_PORT, fakeApp), new AlertingTest());
+  }
+
+  @Test
+  public void testFitnessManagerHBT() throws InterruptedException {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new FitnessManagerHBTTest());
   }
 }

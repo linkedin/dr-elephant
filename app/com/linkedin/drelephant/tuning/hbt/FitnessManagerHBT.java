@@ -30,6 +30,7 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
   private final Logger logger = Logger.getLogger(getClass());
   private boolean isDebugEnabled = logger.isDebugEnabled();
   private final int MINIMUM_HBT_EXECUTION = 3;
+  private final int PARAMETER_RETRY_THRESHOLD = 2;
 
   public FitnessManagerHBT() {
     Configuration configuration = ElephantContext.instance().getAutoTuningConf();
@@ -159,6 +160,30 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
   private void handleJobSucceededAfterRetryScenarios(JobSuggestedParamSet jobSuggestedParamSet,
       JobExecution jobExecution) {
     FailureHandlerContext failureHandlerContext = new FailureHandlerContext();
+
+    /**
+     * Adding logic for identifying auto tuning failure for PIG jobs. Due to unavailability of
+     * exception fingerprinting for PIG, this is the criteria we are opting to
+     * identify auto tuning failure : param set is retried >= 2 times
+     */
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .where()
+        .eq(TuningJobDefinition.TABLE.job + '.' + JobDefinition.TABLE.id, jobExecution.job.id)
+        .findUnique();
+
+    if (tuningJobDefinition.tuningAlgorithm.jobType == TuningAlgorithm.JobType.PIG) {
+      List<TuningJobExecutionParamSet> tuningJobExecutionParamSets = TuningJobExecutionParamSet.find.select("*")
+          .where()
+          .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + "." + JobSuggestedParamSet.TABLE.id,
+              jobSuggestedParamSet.id)
+          .eq(TuningJobExecutionParamSet.TABLE.isRetried, true)
+          .findList();
+
+      if (tuningJobExecutionParamSets.size() >= PARAMETER_RETRY_THRESHOLD) {
+        jobExecution.autoTuningFault = true;
+      }
+    }
+
     if (jobExecution.autoTuningFault) {
       logger.info(" Job execution was failed because of autotuning but retry worked" + jobExecution.id);
       failureHandlerContext.setFailureHandler(new AutoTuningFailureHandler());

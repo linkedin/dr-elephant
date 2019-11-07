@@ -16,6 +16,8 @@
 
 package com.linkedin.drelephant.tuning.alerting;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.SqlRow;
 import com.linkedin.drelephant.tuning.NotificationData;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import models.JobSuggestedParamSet;
 import static com.linkedin.drelephant.tuning.alerting.Constant.*;
 
 import models.TuningJobDefinition;
+import models.TuningJobExecutionParamSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
@@ -43,6 +46,7 @@ public class NotificationDataGenerator {
   private List<NotificationData> notificationMessages = null;
   private static String EMAIL_DOMAIN_NAME = null;
   private static long RECENCY_WINDOW_IN_MS = 259200000;
+  private static long TWO_DAYS = 172800000;
 
   public NotificationDataGenerator(long windowStartTimeMS, long windowEndTimeMS, Configuration configuration) {
     this.windowStartTimeMS = windowStartTimeMS;
@@ -58,6 +62,7 @@ public class NotificationDataGenerator {
       bestParameterPenaltyDeveloperRule();
       jobTunedSKRule();
       failureBecauseOfAutotuningDeveloperRule();
+      paramFitnessNotComputedRule();
     } catch (Exception e) {
       logger.error(" Error generating notification data ", e);
     }
@@ -111,6 +116,33 @@ public class NotificationDataGenerator {
       notificationMessages.add(data);
     }
     logger.debug(" Failure Because of AutoTuning " + jobExecutions.size());
+  }
+
+  /**
+   *  This rule alerts if param is in EXECUTED state for last 2 days
+   */
+
+  private void paramFitnessNotComputedRule() {
+    List<JobSuggestedParamSet> jobSuggestedParamSets = JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.EXECUTED)
+        .between(JobSuggestedParamSet.TABLE.updatedTs, new Timestamp(windowStartTimeMS - TWO_DAYS), new Timestamp(windowEndTimeMS - TWO_DAYS))
+        .findList();
+
+    if (jobSuggestedParamSets != null && jobSuggestedParamSets.size() > 0) {
+      NotificationData data = new NotificationData(DEVELOPERS_RECIPIENT_ADDRESS);
+      data.setSubject(" Following are the parameter Ids which are in EXECUTED state from at least last 2 days");
+      data.setNotificationType(NotificationType.DEVELOPER);
+      for (JobSuggestedParamSet jobSuggestedParamSet : jobSuggestedParamSets) {
+        data.addContent(String.valueOf(jobSuggestedParamSet.id));
+      }
+      logger.info("[paramFitnessNotComputedRule] data : " + data.getContent());
+      notificationMessages.add(data);
+    }
+
+    if (debugEnabled) {
+      logger.debug(" No of parameters are in EXECUTED state : " + jobSuggestedParamSets.size());
+    }
   }
 
   /**

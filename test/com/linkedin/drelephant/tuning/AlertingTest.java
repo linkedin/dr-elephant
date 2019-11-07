@@ -13,6 +13,7 @@ import static common.DBTestUtil.*;
 
 import models.TuningJobDefinition;
 import org.apache.hadoop.conf.Configuration;
+
 import static com.linkedin.drelephant.tuning.alerting.Constant.*;
 
 public class AlertingTest implements Runnable {
@@ -45,11 +46,10 @@ public class AlertingTest implements Runnable {
 
     assertTrue("No data within the range provided ", notificationData.size() == 0);
 
-
-
     JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*").where().findUnique();
     jobSuggestedParamSet.updatedTs = new Timestamp(startTime + 100);
     jobSuggestedParamSet.createdTs = new Timestamp(endTime+1-259200000);
+    jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.EXECUTED;
     jobSuggestedParamSet.update();
 
     JobExecution jobExecution = JobExecution.find.select("*").where().eq(JobExecution.TABLE.id,"1541").findUnique();
@@ -57,21 +57,20 @@ public class AlertingTest implements Runnable {
     jobExecution.updatedTs = new Timestamp(startTime + 100);
     jobExecution.update();
 
-
-
-
-
     NotificationManager manager = new EmailNotificationManager(configuration);
 
     List<NotificationData> notificationDataAfterUpdate = manager.generateNotificationData(startTime, endTime);
-
     assertTrue(" Notification data size "+notificationDataAfterUpdate.size(), notificationDataAfterUpdate.size() == 2);
 
     NotificationType notificationType = notificationDataAfterUpdate.get(0).getNotificationType();
     assertTrue(" Developers Notification  ",
         notificationType.name().equals(NotificationType.DEVELOPER.name()));
 
-
+    /**
+     * for testing paramFitnessNotComputedRule
+     */
+    notificationDataAfterUpdate = manager.generateNotificationData(startTime + 172800000, endTime + 172800000 + 1000);
+    assertTrue(" Notification data size "+notificationDataAfterUpdate.size(), notificationDataAfterUpdate.size() == 1);
 
 
     /**
@@ -107,5 +106,4 @@ public class AlertingTest implements Runnable {
      */
     //assertTrue(" Email send successfully ", manager.sendNotification(notificationData));
   }
-
 }
