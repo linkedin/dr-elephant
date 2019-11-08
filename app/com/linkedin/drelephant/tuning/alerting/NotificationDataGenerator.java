@@ -16,8 +16,6 @@
 
 package com.linkedin.drelephant.tuning.alerting;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.SqlRow;
 import com.linkedin.drelephant.tuning.NotificationData;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import models.JobSuggestedParamSet;
 import static com.linkedin.drelephant.tuning.alerting.Constant.*;
 
 import models.TuningJobDefinition;
-import models.TuningJobExecutionParamSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
@@ -136,7 +133,6 @@ public class NotificationDataGenerator {
       for (JobSuggestedParamSet jobSuggestedParamSet : jobSuggestedParamSets) {
         data.addContent(String.valueOf(jobSuggestedParamSet.id));
       }
-      logger.info("[paramFitnessNotComputedRule] data : " + data.getContent());
       notificationMessages.add(data);
     }
 
