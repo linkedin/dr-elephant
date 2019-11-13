@@ -17,6 +17,7 @@
 package com.linkedin.drelephant.tuning.alerting;
 
 import com.linkedin.drelephant.tuning.NotificationData;
+import com.linkedin.drelephant.util.Utils;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,11 +40,15 @@ public class NotificationDataGenerator {
   boolean debugEnabled = logger.isDebugEnabled();
   private long windowStartTimeMS;
   private long windowEndTimeMS;
+
+//  Time for which a parameter set is in EXECUTED state before it gets alerted
+  private long paramExecutedStateStaleTime;
   private static String DEVELOPERS_RECIPIENT_ADDRESS = null;
   private List<NotificationData> notificationMessages = null;
   private static String EMAIL_DOMAIN_NAME = null;
   private static long RECENCY_WINDOW_IN_MS = 259200000;
-  private static long TWO_DAYS = 172800000;
+  private static final String PARAM_EXECUTED_STATE_STALE_TIME = "tuning.stale.data.timeout.ms";
+  private static long DEFAULT_PARAM_EXECUTED_STATE_STALE_TIME = 172800000;
 
   public NotificationDataGenerator(long windowStartTimeMS, long windowEndTimeMS, Configuration configuration) {
     this.windowStartTimeMS = windowStartTimeMS;
@@ -51,6 +56,8 @@ public class NotificationDataGenerator {
     DEVELOPERS_RECIPIENT_ADDRESS = configuration.get(ALERTING_DEVELOPERS_RECIPIENT_ADDRESS_PROPERTY);
     EMAIL_DOMAIN_NAME = configuration.get(EMAIL_DOMAIN_NAME_PROPERTY);
     notificationMessages = new ArrayList<NotificationData>();
+    paramExecutedStateStaleTime =
+        Utils.getNonNegativeLong(configuration, PARAM_EXECUTED_STATE_STALE_TIME, DEFAULT_PARAM_EXECUTED_STATE_STALE_TIME);
   }
 
   //todo: Create Rule Interface and then extends specific rule from that interface .
@@ -116,19 +123,20 @@ public class NotificationDataGenerator {
   }
 
   /**
-   *  This rule alerts if param is in EXECUTED state for last 2 days
+   *  This rule alerts if param is in EXECUTED state for last couple of days
    */
 
   private void paramFitnessNotComputedRule() {
     List<JobSuggestedParamSet> jobSuggestedParamSets = JobSuggestedParamSet.find.select("*")
         .where()
         .eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.EXECUTED)
-        .between(JobSuggestedParamSet.TABLE.updatedTs, new Timestamp(windowStartTimeMS - TWO_DAYS), new Timestamp(windowEndTimeMS - TWO_DAYS))
+        .between(JobSuggestedParamSet.TABLE.updatedTs,
+            new Timestamp(windowStartTimeMS - paramExecutedStateStaleTime), new Timestamp(windowEndTimeMS - paramExecutedStateStaleTime))
         .findList();
 
     if (jobSuggestedParamSets != null && jobSuggestedParamSets.size() > 0) {
       NotificationData data = new NotificationData(DEVELOPERS_RECIPIENT_ADDRESS);
-      data.setSubject(" Following are the parameter Ids which are in EXECUTED state from at least last 2 days");
+      data.setSubject(" Following are the parameter Ids which are in EXECUTED state from couple of days");
       data.setNotificationType(NotificationType.DEVELOPER);
       for (JobSuggestedParamSet jobSuggestedParamSet : jobSuggestedParamSets) {
         data.addContent(String.valueOf(jobSuggestedParamSet.id));

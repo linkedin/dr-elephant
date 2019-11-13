@@ -166,18 +166,11 @@ public class FitnessManagerHBT extends AbstractFitnessManager {
      * exception fingerprinting for PIG, this is the criteria we are opting to
      * identify auto tuning failure : param set is retried >= 2 times
      */
-    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
-        .where()
-        .eq(TuningJobDefinition.TABLE.job + '.' + JobDefinition.TABLE.id, jobExecution.job.id)
-        .findUnique();
+    TuningJobDefinition tuningJobDefinition = TuningHelper.getTuningJobDefinitionFromExecution(jobExecution);
 
     if (tuningJobDefinition.tuningAlgorithm.jobType == TuningAlgorithm.JobType.PIG) {
-      List<TuningJobExecutionParamSet> tuningJobExecutionParamSets = TuningJobExecutionParamSet.find.select("*")
-          .where()
-          .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + "." + JobSuggestedParamSet.TABLE.id,
-              jobSuggestedParamSet.id)
-          .eq(TuningJobExecutionParamSet.TABLE.isRetried, true)
-          .findList();
+      List<TuningJobExecutionParamSet> tuningJobExecutionParamSets =
+          TuningHelper.getTuningJobExecutionFromParamSet(jobSuggestedParamSet);
 
       if (tuningJobExecutionParamSets.size() >= PARAMETER_RETRY_THRESHOLD) {
         jobExecution.autoTuningFault = true;

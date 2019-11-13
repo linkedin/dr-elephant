@@ -30,6 +30,7 @@ public class AlertingTest implements Runnable {
     populateTestData();
     testDeveloperAlerting();
     testSKAlerting();
+    testParamFitnessNotComputedRule();
   }
 
   private void testDeveloperAlerting() {
@@ -49,7 +50,6 @@ public class AlertingTest implements Runnable {
     JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*").where().findUnique();
     jobSuggestedParamSet.updatedTs = new Timestamp(startTime + 100);
     jobSuggestedParamSet.createdTs = new Timestamp(endTime+1-259200000);
-    jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.EXECUTED;
     jobSuggestedParamSet.update();
 
     JobExecution jobExecution = JobExecution.find.select("*").where().eq(JobExecution.TABLE.id,"1541").findUnique();
@@ -65,13 +65,6 @@ public class AlertingTest implements Runnable {
     NotificationType notificationType = notificationDataAfterUpdate.get(0).getNotificationType();
     assertTrue(" Developers Notification  ",
         notificationType.name().equals(NotificationType.DEVELOPER.name()));
-
-    /**
-     * for testing paramFitnessNotComputedRule
-     */
-    notificationDataAfterUpdate = manager.generateNotificationData(startTime + 172800000, endTime + 172800000 + 1000);
-    assertTrue(" Notification data size "+notificationDataAfterUpdate.size(), notificationDataAfterUpdate.size() == 1);
-
 
     /**
      * If user want to test email functionality
@@ -105,5 +98,36 @@ public class AlertingTest implements Runnable {
      * If user want to test email functionality
      */
     //assertTrue(" Email send successfully ", manager.sendNotification(notificationData));
+  }
+
+  private void testParamFitnessNotComputedRule(){
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    configuration.setBoolean("alerting.enabled", true);
+
+    long startTime = System.currentTimeMillis();
+    long endTime = System.currentTimeMillis() + 1000;
+
+    List<NotificationData> notificationDataBeforeUpdate =
+        new EmailNotificationManager(configuration).generateNotificationData(startTime, endTime);
+
+    assertTrue("No data within the range provided ", notificationDataBeforeUpdate.size() == 0);
+
+    JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.id, "1137")
+        .findUnique();
+    jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.EXECUTED;
+    jobSuggestedParamSet.update();
+
+    NotificationManager manager = new EmailNotificationManager(configuration);
+
+    List<NotificationData> notificationDataAfterUpdate =
+        manager.generateNotificationData(startTime + 172800000, endTime + 172800000 + 1000);
+
+    assertTrue(" Notification data size "+notificationDataAfterUpdate.size(), notificationDataAfterUpdate.size() == 1);
+    NotificationType notificationType = notificationDataAfterUpdate.get(0).getNotificationType();
+    assertTrue(" Developers Notification  ",
+        notificationType.name().equals(NotificationType.DEVELOPER.name()));
+
   }
 }

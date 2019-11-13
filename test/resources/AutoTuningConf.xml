@@ -87,4 +87,10 @@
     <value>corp.com</value>
     <description>company domain email address</description>
 </property>
+
+  <property>
+    <name>tuning.stale.data.timeout.ms</name>
+    <value>172800000</value>
+    <description>Generalized timeout property for data update</description>
+  </property>
 </configuration>

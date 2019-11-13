@@ -81,6 +81,24 @@ public class TuningHelper {
     return tuningJobExecutionParamSets;
   }
 
+  public static TuningJobDefinition getTuningJobDefinitionFromExecution(JobExecution jobExecution) {
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .where()
+        .eq(TuningJobDefinition.TABLE.job + '.' + JobDefinition.TABLE.id, jobExecution.job.id)
+        .findUnique();
+    return tuningJobDefinition;
+  }
+
+  public static List<TuningJobExecutionParamSet> getTuningJobExecutionFromParamSet(JobSuggestedParamSet jobSuggestedParamSet) {
+    List<TuningJobExecutionParamSet> tuningJobExecutionParamSets = TuningJobExecutionParamSet.find.select("*")
+        .where()
+        .eq(TuningJobExecutionParamSet.TABLE.jobSuggestedParamSet + "." + JobSuggestedParamSet.TABLE.id,
+            jobSuggestedParamSet.id)
+        .eq(TuningJobExecutionParamSet.TABLE.isRetried, true)
+        .findList();
+    return tuningJobExecutionParamSets;
+  }
+
   public static int getNumberOfValidSuggestedParamExecution(
       List<TuningJobExecutionParamSet> tuningJobExecutionParamSets) {
     int autoAppliedExecution = 0;
