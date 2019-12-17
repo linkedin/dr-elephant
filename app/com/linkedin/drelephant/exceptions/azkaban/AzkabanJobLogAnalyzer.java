@@ -35,9 +35,9 @@ public class AzkabanJobLogAnalyzer {
   private Pattern _successfulAzkabanJobPattern =
       Pattern.compile("Finishing job [^\\s]+ (retry: \\d )?at [0-9]+ with status SUCCEEDED");
   private Pattern _failedAzkabanJobPattern =
-      Pattern.compile("Finishing job [^\\s]+ (retry: \\d)?at [0-9]+ with status FAILED");
+      Pattern.compile("Finishing job [^\\s]+ (retry: \\d )?at [0-9]+ with status FAILED");
   private Pattern _killedAzkabanJobPattern =
-      Pattern.compile("Finishing job [^\\s]+ (retry: \\d)?at [0-9]+ with status KILLED");
+      Pattern.compile("Finishing job [^\\s]+ (retry: \\d )?at [0-9]+ with status KILLED");
   private Pattern _scriptFailPattern = Pattern.compile("ERROR - Job run failed!");
   // Alternate pattern: (".+\\n(?:.+\\tat.+\\n)+(?:.+Caused by.+\\n(?:.*\\n)?(?:.+\\s+at.+\\n)*)*");
   private Pattern _scriptOrMRFailExceptionPattern = Pattern.compile("(Caused by.+\\n(?:.*\\n)?((?:.+\\s+at.+\\n)*))+");
