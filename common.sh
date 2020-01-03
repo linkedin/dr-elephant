@@ -27,7 +27,7 @@
 #
 ########################################################
 # Base path for most of the quality tool reports
-readonly REPORTS_BASE_PATH="target/scala-2.10/"
+readonly REPORTS_BASE_PATH="target/scala-2.12/"
 
 # ******************** Constants for Findbugs *********************
 # Default path for Findbugs report

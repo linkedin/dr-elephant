@@ -908,7 +908,7 @@ public class Application extends Controller {
   public static Result getCurrentRunParameters() {
     final Timer.Context context = AutoTuningMetricsController.getCurrentRunParametersTimerContext();
     String jsonString = request().body().asJson().toString();
-    logger.debug("Started processing getCurrentRunParameters request with following parameters " + jsonString);
+    logger.info("Started processing getCurrentRunParameters request with following parameters " + jsonString);
     ObjectMapper mapper = new ObjectMapper();
     Map<String, String> paramValueMap = new HashMap<String, String>();
     TuningInput tuningInput = new TuningInput();

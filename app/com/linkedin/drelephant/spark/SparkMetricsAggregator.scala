@@ -99,11 +99,13 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
 
   private def executorInstancesOf(data: SparkApplicationData): Option[Int] = {
     val appConfigurationProperties = data.appConfigurationProperties
+    logger.info(s"${SPARK_EXECUTOR_INSTANCES_KEY}: ${appConfigurationProperties.get(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)}")
     appConfigurationProperties.get(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)
   }
 
   private def executorMemoryBytesOf(data: SparkApplicationData): Option[Long] = {
     val appConfigurationProperties = data.appConfigurationProperties
+    logger.info(s"${SPARK_EXECUTOR_MEMORY_KEY}: ${appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)}")
     appConfigurationProperties.get(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)
   }
 

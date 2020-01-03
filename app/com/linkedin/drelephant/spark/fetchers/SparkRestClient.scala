@@ -93,8 +93,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(appTarget, SparkRestObjectMapper.readValue[Seq[ApplicationInfoImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading jobData ${appTarget.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
+        logger.info(s"error reading jobData ${appTarget.getUri}. Exception Message = " + e.getMessage)
+        logger.info(e)
         throw e
       }
     }
@@ -188,8 +188,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(appTarget, SparkRestObjectMapper.readValue[ApplicationInfoImpl])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading applicationInfo ${appTarget.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
+        logger.info(s"error reading applicationInfo ${appTarget.getUri}. Exception Message = " + e.getMessage)
+        logger.info(e)
         throw e
       }
     }
@@ -213,8 +213,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       new ZipInputStream(new BufferedInputStream(is))
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading logs ${logTarget.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
+        logger.info(s"error reading logs ${logTarget.getUri}. Exception Message = " + e.getMessage)
+        logger.info(e)
         throw e
       }
     }
@@ -226,7 +226,7 @@ class SparkRestClient(sparkConf: SparkConf) {
     // we trust Spark to get it right.
     val entry = zis.getNextEntry
     if (entry == null) {
-      logger.warn(s"failed to resolve log for ${attemptTarget.getUri}")
+      logger.info(s"failed to resolve log for ${attemptTarget.getUri}")
       (None, "")
     } else {
       val entryName = entry.getName
@@ -247,8 +247,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[JobDataImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading jobData ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
+        logger.info(s"error reading jobData ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.info(e)
         throw e
       }
     }
@@ -260,8 +260,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.warn(s"error reading stageData ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
+        logger.info(s"error reading stageData ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.info(e)
         throw e
       }
     }
@@ -273,8 +273,8 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading executorSummary ${target.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
+        logger.info(s"error reading executorSummary ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.info(e)
         throw e
       }
     }

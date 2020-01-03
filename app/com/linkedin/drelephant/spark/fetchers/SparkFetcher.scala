@@ -95,7 +95,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
         Success(data)
       },
       e => {
-        logger.warn(s"Failed fetching data for ${appId}." + " I will retry after some time! " + "Exception Message is: " + e.getMessage)
+        logger.info(s"Failed fetching data for ${appId}." + " I will retry after some time! " + "Exception Message is: " + e.getMessage)
         Failure(e)
       }
     )

@@ -142,7 +142,7 @@ public class BaselineComputeUtil {
         + "AND yahrd.name='" + CommonConstantsHeuristic.TOTAL_INPUT_SIZE_IN_MB + "' "
         + "GROUP BY job_exec_id ORDER BY start_time DESC LIMIT :num ) temp";
 
-    logger.debug("Running query for average input size computation " + sql);
+    logger.info("Running query for average input size computation " + sql);
 
     SqlRow baseline = Ebean.createSqlQuery(sql)
         .setParameter("jobDefId", jobDefId)
