@@ -24,7 +24,7 @@ public class HadoopException {
   private final Logger logger = Logger.getLogger(HadoopException.class);
   private String _id = "UNKNOWN";
   private String _appId;
-  public enum HadoopExceptionType {FLOW, SCHEDULER, SCRIPT, MR, KILL, MRJOB, MRTASK, SPARK, DRIVER}
+  public enum HadoopExceptionType {FLOW, SCHEDULER, SCRIPT, MR, KILL, MRJOB, MRTASK, SPARK, DRIVER, TONY}
   /**
   * FLOW: HadoopException object for Azkaban flow
   * SCHEDULER : HadoopException object for Azkaban job with Azkaban level failure

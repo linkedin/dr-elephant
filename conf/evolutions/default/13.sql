@@ -14,4 +14,11 @@
 # the License.
 #
 
-sbt.version=0.13.6
+# --- !Ups
+ALTER TABLE exception_fingerprinting MODIFY exception_log text;
+ALTER TABLE exception_fingerprinting MODIFY exception_type enum('FLOW', 'SCHEDULER', 'SCRIPT', 'MR', 'KILL', 'MRJOB', 'MRTASK', 'SPARK', 'DRIVER', 'TONY') NOT NULL COMMENT 'Reason of the exception';
+
+
+# --- !Downs
+ALTER TABLE exception_fingerprinting MODIFY exception_log varchar(10000);
+ALTER TABLE exception_fingerprinting MODIFY exception_type enum('FLOW', 'SCHEDULER', 'SCRIPT', 'MR', 'KILL', 'MRJOB', 'MRTASK', 'SPARK', 'DRIVER') NOT NULL COMMENT 'Reason of the exception';

@@ -16,11 +16,15 @@
 
 package com.linkedin.drelephant.exceptions.core;
 
+import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
 import com.linkedin.drelephant.exceptions.ExceptionFingerprinting;
 import com.linkedin.drelephant.exceptions.HadoopException;
+import com.linkedin.drelephant.exceptions.TonYExceptionFingerprinting;
 import com.linkedin.drelephant.exceptions.util.ExceptionInfo;
+import com.linkedin.drelephant.exceptions.util.ExceptionUtils;
+import com.linkedin.drelephant.tuning.ExecutionEngine;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,8 +57,10 @@ public class ExceptionFingerprintingRunner implements Runnable {
   private AppResult _appResult;
   private HadoopApplicationData data;
   private ExecutionEngineType executionType;
-  private String jobNameRegex = ".*&job=(.*)&.*";
-  private Pattern jobNamePattern = Pattern.compile(jobNameRegex);
+
+  static {
+    ConfigurationBuilder.buildConfigurations(ElephantContext.instance().getAutoTuningConf());
+  }
 
   public ExceptionFingerprintingRunner(AnalyticJob analyticJob, AppResult appResult, HadoopApplicationData data,
       ExecutionEngineType executionType) {
@@ -68,27 +74,32 @@ public class ExceptionFingerprintingRunner implements Runnable {
   public void run() {
     long startTime = System.nanoTime();
     try {
-      logger.info(" Exception Fingerprinting thread started for app " + _analyticJob.getAppId());
-      ExceptionFingerprinting exceptionFingerprinting =
-          ExceptionFingerprintingFactory.getExceptionFingerprinting(executionType, data);
-      List<ExceptionInfo> exceptionInfos = exceptionFingerprinting.processRawData(_analyticJob);
-      saveDriverExceptionLogForExceptionFingerPrinting(exceptionInfos,
-          exceptionFingerprinting.getExceptionLogSourceInformation());
-      LogClass logClass = exceptionFingerprinting.classifyException(exceptionInfos);
-      boolean isAutoTuningFault = false;
-      if (logClass != null && logClass.equals(LogClass.AUTOTUNING_ENABLED)) {
-        isAutoTuningFault = true;
+      if (executionType.equals(ExecutionEngineType.TONY)) {
+        logger.info("Executing exception fingerprinting for TonY application " + _analyticJob.getAppId());
+        new TonYExceptionFingerprinting(_analyticJob, _appResult).doExceptionPrinting();
+      } else {
+        logger.info(" Exception Fingerprinting thread started for app " + _analyticJob.getAppId());
+        ExceptionFingerprinting exceptionFingerprinting =
+            ExceptionFingerprintingFactory.getExceptionFingerprinting(executionType, data);
+        List<ExceptionInfo> exceptionInfos = exceptionFingerprinting.processRawData(_analyticJob);
+        saveDriverExceptionLogForExceptionFingerPrinting(exceptionInfos, exceptionFingerprinting.getExceptionLogSourceInformation());
+        LogClass logClass = exceptionFingerprinting.classifyException(exceptionInfos);
+        boolean isAutoTuningFault = false;
+        if (logClass != null && logClass.equals(LogClass.AUTOTUNING_ENABLED)) {
+          isAutoTuningFault = true;
+        }
+        if (isAutoTuningFault) {
+          logger.info(" Since auto tuning fault , saving information into db for execution id " + _appResult.jobExecId);
+          exceptionFingerprinting.saveData(_appResult.jobExecId);
+        }
       }
-      if (isAutoTuningFault) {
-        logger.info(" Since auto tuning fault , saving information into db for execution id " + _appResult.jobExecId);
-        exceptionFingerprinting.saveData(_appResult.jobExecId);
-      }
-    } catch (Exception e) {
-      logger.error(" Error while processing exception fingerprinting for app " + _analyticJob.getAppId(), e);
+    } catch(Exception e){
+        logger.error(" Error while processing exception fingerprinting for app " + _analyticJob.getAppId(), e);
     }
     long endTime = System.nanoTime();
     logger.info("Total time spent in exception fingerprinting in  " + _analyticJob.getAppId() + " "
-        + (endTime - startTime) * 1.0 / (1000000000.0) + "s");
+          + (endTime - startTime) * 1.0 / (1000000000.0) + "s");
+
   }
 
   /**
@@ -215,11 +226,4 @@ public class ExceptionFingerprintingRunner implements Runnable {
     return logSource.toString();
   }
 
-  private String getJobName(String jobExecUrl) {
-    Matcher matcher = jobNamePattern.matcher(jobExecUrl);
-    if (matcher.find()) {
-      return matcher.group(1);
-    }
-    return matcher.group(1);
-  }
 }

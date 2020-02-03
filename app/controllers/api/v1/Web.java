@@ -28,7 +28,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.JsonElement;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.ApplicationType;
@@ -37,7 +36,6 @@ import com.linkedin.drelephant.analysis.JobType;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.exceptions.ExceptionFinder;
 import com.linkedin.drelephant.exceptions.HadoopException;
-import com.linkedin.drelephant.exceptions.util.ExceptionInfo;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import controllers.Application;
@@ -62,7 +60,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
-import org.codehaus.jackson.map.ObjectMapper;
 import play.mvc.Controller;
 import play.mvc.Result;
 
@@ -1880,8 +1877,9 @@ public class Web extends Controller {
             mrJobExceptionArray.add(mrJob);
           }
           job.add(JsonKeys.APPLICATIONS, mrJobExceptionArray);
-        } else if (jobException.exceptionType.equals(HadoopException.HadoopExceptionType.SPARK.toString())) {
-          job.add(JsonKeys.APPLICATIONS, getSparkJobExceptionDetails(flowExecUrl, jobException.jobName));
+        } else if (jobException.exceptionType.equals(HadoopException.HadoopExceptionType.SPARK.toString())  ||
+        jobException.exceptionType.equals(HadoopException.HadoopExceptionType.TONY.toString())) {
+          job.add(JsonKeys.APPLICATIONS, getJobExceptionDetails(flowExecUrl, jobException.jobName));
         } else {
           job.addProperty(JsonKeys.EXCEPTION_SUMMARY, jobException.exceptionLog);
         }
@@ -2017,8 +2015,8 @@ public class Web extends Controller {
     return mrJobExceptionArray;
   }
 
-  private static JsonArray getSparkJobExceptionDetails(String flowExecUrl, String jobName) {
-       List<JobsExceptionFingerPrinting> sparkJobsExceptionDetails = JobsExceptionFingerPrinting.find.select("*")
+  private static JsonArray getJobExceptionDetails(String flowExecUrl, String jobName) {
+       List<JobsExceptionFingerPrinting> jobsExceptionDetails = JobsExceptionFingerPrinting.find.select("*")
         .where()
         .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_URL, flowExecUrl)
         .eq(JobsExceptionFingerPrinting.TABLE.JOB_NAME, jobName)
@@ -2026,19 +2024,19 @@ public class Web extends Controller {
         .eq(JobsExceptionFingerPrinting.TABLE.EXCEPTION_TYPE, "DRIVER")
         .findList();
 
-     JsonArray sparkJobArray = new JsonArray();
-     for(JobsExceptionFingerPrinting jobsExceptionFingerPrinting : sparkJobsExceptionDetails) {
-       JsonObject sparkJobException = new JsonObject();
-       sparkJobException.addProperty(JsonKeys.NAME, jobsExceptionFingerPrinting.appId);
-       sparkJobException.add(JsonKeys.EXCEPTION_SUMMARY, getSparkExceptionDetails(jobsExceptionFingerPrinting.exceptionLog));
+     JsonArray jobExceptionInfoArray = new JsonArray();
+     for(JobsExceptionFingerPrinting jobsExceptionFingerPrinting : jobsExceptionDetails) {
+       JsonObject jobException = new JsonObject();
+       jobException.addProperty(JsonKeys.NAME, jobsExceptionFingerPrinting.appId);
+       jobException.add(JsonKeys.EXCEPTION_SUMMARY, getSparkExceptionDetails(jobsExceptionFingerPrinting.exceptionLog));
        if (jobsExceptionFingerPrinting.logSourceInformation != null
            && jobsExceptionFingerPrinting.logSourceInformation.length() > 0) {
-         sparkJobException.addProperty(JsonKeys.EXCEPTION_LOG_SOURCE, jobsExceptionFingerPrinting.logSourceInformation);
+         jobException.addProperty(JsonKeys.EXCEPTION_LOG_SOURCE, jobsExceptionFingerPrinting.logSourceInformation);
        }
-       sparkJobException.add(JsonKeys.TASKS, new JsonArray());
-       sparkJobArray.add(sparkJobException);
+       jobException.add(JsonKeys.TASKS, new JsonArray());
+       jobExceptionInfoArray.add(jobException);
      }
-     return sparkJobArray;
+     return jobExceptionInfoArray;
   }
 
   private static JsonArray getSparkExceptionDetails(String exceptionLog) {

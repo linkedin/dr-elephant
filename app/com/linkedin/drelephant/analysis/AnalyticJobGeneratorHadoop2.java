@@ -18,16 +18,18 @@ package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
-
 import controllers.MetricsController;
-
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 import models.AppResult;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -258,6 +260,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         String amContainerLogsURL = app.get("amContainerLogs").getValueAsText();
         String amHostHttpAddress = app.get("amHostHttpAddress").getValueAsText();
         String jobState = app.get("state").getValueAsText();
+        String jobDiagnostics = app.get("diagnostics").getValueAsText();
         long memorySeconds = app.get("memorySeconds").getLongValue();
         if (debugEnabled) {
           logger.debug(" AM Container logs URL " + amContainerLogsURL);
@@ -282,6 +285,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
               .setSucceeded(isSucceeded)
               .setAmHostHttpAddress(amHostHttpAddress)
               .setState(jobState)
+              .setJobDiagnostics(jobDiagnostics)
               .setMemorySeconds(memorySeconds);
           appList.add(analyticJob);
         }

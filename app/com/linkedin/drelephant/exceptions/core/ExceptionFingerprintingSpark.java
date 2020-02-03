@@ -76,10 +76,6 @@ public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
   private long startIndex = 0;
   private String targetURIofFailedStage;
 
-  static {
-    ConfigurationBuilder.buildConfigurations(ElephantContext.instance().getAutoTuningConf());
-  }
-
   public ExceptionFingerprintingSpark(List<StageData> failedStageData, String targetURIofFailedStage) {
     this.failedStageData = failedStageData;
     this.logSourceInfo = new HashMap<String, String>();

@@ -23,6 +23,7 @@ import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.Getter;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
@@ -70,6 +71,8 @@ public class AnalyticJob {
   // Job final state is finished or failed
   private String _state;
   private Long memorySeconds;
+  @Getter
+  private String jobDiagnostics;
 
   public Long getMemorySeconds() {
     return memorySeconds;
@@ -359,16 +362,18 @@ public class AnalyticJob {
 
   public boolean applyExceptionFingerprinting(AppResult result, HadoopApplicationData data) {
     try {
-      if (!this.isSucceeded() && this.getAppType()
-          .getName()
-          .toLowerCase()
-          .equals(ExecutionEngineType.SPARK.name().toLowerCase())) {
-        logger.info("Exception fingerprinting is called for following appID " + this.getAppId());
-        // TODO: Create a separate thread do all EF heavy processing and then update data base will in the main
-        // thread . For this to be done InfoExtractor.loadInfo(result, data); has to be separated out.
-        // As job_execution_id is the common key between auto tuning and dr elephant processing
-        new ExceptionFingerprintingRunner(this, result, data, ExecutionEngineType.SPARK).run();
-        return true;
+      if (!this.isSucceeded()) {
+        if (this.getAppType().getName().toLowerCase().equals(ExecutionEngineType.SPARK.name().toLowerCase())) {
+          logger.info("Exception fingerprinting is called for following appID " + this.getAppId());
+          // TODO: Create a separate thread do all EF heavy processing and then update data base will in the main
+          // thread . For this to be done InfoExtractor.loadInfo(result, data); has to be separated out.
+          // As job_execution_id is the common key between auto tuning and dr elephant processing
+          new ExceptionFingerprintingRunner(this, result, data, ExecutionEngineType.SPARK).run();
+          return true;
+        } else if (this.getAppType().getName().toUpperCase().equals(ExecutionEngineType.TONY.name())) {
+          new ExceptionFingerprintingRunner(this, result, data, ExecutionEngineType.TONY).run();
+          return true;
+        }
       }
     } catch (Exception e) {
       logger.error(" Exception while applying exception fingerprinting  ", e);
@@ -466,6 +471,17 @@ public class AnalyticJob {
    */
   public AnalyticJob setState(String state) {
     _state = state;
+    return this;
+  }
+
+  /**
+   * Sets the diagnostics provided by AM to RM for the job
+   *
+   * @param jobDiagnostics The url to track the job
+   * @return The analytic job
+   */
+  public AnalyticJob setJobDiagnostics(String jobDiagnostics) {
+    this.jobDiagnostics = jobDiagnostics;
     return this;
   }
 }

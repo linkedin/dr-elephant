@@ -16,6 +16,9 @@
 
 package com.linkedin.drelephant.exceptions.util;
 
+import java.util.regex.Pattern;
+
+
 /**
  * Thic class have Constants which are used across
  * exception fingerprinting classes or configuration properties name
@@ -46,12 +49,16 @@ public final class Constant {
    *  So different type of execution engines .
    */
   public enum ExecutionEngineType {
-    SPARK, MR
+    SPARK, MR, TONY
   }
 
   public enum RulePriority {LOW, MEDIUM, HIGH}
 
   public static final String REGEX_FOR_EXCEPTION_IN_LOGS_NAME = "ef.regex.for.exception";
+  public static final String REGEX_FOR_EXACT_EXCEPTION_PATTERN_IN_TONY_LOGS_KEY =
+      "ef.tony.exact.regex.for.exception";
+  public static final String REGEX_FOR_PARTIAL_EXCEPTION_PATTERN_IN_TONY_LOGS_KEY =
+      "ef.tony.partial.pattern.regex.for.exception";
   public static final String REGEX_AUTO_TUNING_FAULT_NAME = "ef.regex.for.autotuning.fault";
   public static final String FIRST_THRESHOLD_LOG_LENGTH_NAME = "ef.first.threshold.loglength";
   public static final String LAST_THRESHOLD_LOG_LENGTH_NAME = "ef.last.threshold.loglength";

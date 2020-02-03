@@ -266,7 +266,8 @@ public class ExceptionFinder {
 
   private boolean isExceptionPrintingDone(String flowUrl) {
     for (String jobName : jobIdStatus.keySet()) {
-      if (jobIdStatus.get(jobName).toLowerCase().equals("failed") && !jobTypeMap.get(jobName).equals("spark")) {
+      if (jobIdStatus.get(jobName).toLowerCase().equals("failed") && (jobTypeMap.get(jobName).toLowerCase().equals("hadoopjava") ||
+      jobTypeMap.get(jobName).toLowerCase().equals("pig") || jobTypeMap.get(jobName).toLowerCase().equals("hive"))) {
         JobsExceptionFingerPrinting savedJobExceptionFingerPrintingResult = JobsExceptionFingerPrinting.find.select("*")
             .where()
             .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_URL, flowUrl)

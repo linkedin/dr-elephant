@@ -31,11 +31,13 @@
                     {{/p.toggle}}
 
                     {{#p.body}}
-                      {{#if (eq job.type "SPARK")}}
+                      {{#if (or (eq job.type "SPARK") (eq job.type "TONY"))}}
                         {{#each application.exceptionSummary as |exception|}}
                         <div class="box">
                           <pre>{{exception.exceptionStackTrace}}</pre>
-                          <pre>{{exception.exceptionTrackingURL}}</pre>
+                          {{#unless (eq exception.exceptionTrackingURL "")}}
+                            <pre><a href={{exception.exceptionTrackingURL}} target="_blank">Check above log's Source</a></pre>
+                          {{/unless}}
                         </div>
                         {{/each}}
                       {{else}}

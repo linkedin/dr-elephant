@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 import com.linkedin.drelephant.spark.exception.ExceptionFingerprintingSparkUtilities._
 import com.linkedin.drelephant.spark.heuristics.SparkTestUtilities._
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.{FunSpec, Matchers, BeforeAndAfter}
 import org.apache.hadoop.conf.Configuration
 import java.util
 
@@ -38,13 +38,17 @@ import com.linkedin.drelephant.exceptions.util.Constant._
 import com.linkedin.drelephant.exceptions.util.{Constant, ExceptionInfo}
 import com.linkedin.drelephant.exceptions.util.ExceptionUtils._
 
-class ExceptionFingerprintingSparkTest extends FunSpec with Matchers {
+class ExceptionFingerprintingSparkTest extends FunSpec with Matchers with BeforeAndAfter {
   private val sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
   val dbConn = new util.HashMap[String, String]
   dbConn.put(DB_DEFAULT_DRIVER_KEY, DB_DEFAULT_DRIVER_VALUE)
   dbConn.put(DB_DEFAULT_URL_KEY, DB_DEFAULT_URL_VALUE)
   dbConn.put(EVOLUTION_PLUGIN_KEY, EVOLUTION_PLUGIN_VALUE)
   dbConn.put(APPLY_EVOLUTIONS_DEFAULT_KEY, APPLY_EVOLUTIONS_DEFAULT_VALUE)
+
+  before {
+    ConfigurationBuilder.buildConfigurations(ElephantContext.instance().getAutoTuningConf);
+  }
 
   val gs = new GlobalSettings() {
     override def onStart(app: Application): Unit = {

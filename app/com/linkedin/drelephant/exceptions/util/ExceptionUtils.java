@@ -16,11 +16,10 @@
 
 package com.linkedin.drelephant.exceptions.util;
 
+import com.linkedin.drelephant.ElephantContext;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +40,8 @@ public class ExceptionUtils {
   private static final Logger logger = Logger.getLogger(ExceptionUtils.class);
   static boolean debugEnabled = logger.isDebugEnabled();
   private static final List<Pattern> patterns = new ArrayList<Pattern>();
+  private static String jobNameRegex = ".*&job=(.*)&.*";
+  private static  Pattern jobNamePattern = Pattern.compile(jobNameRegex);
 
   static {
     for (String regex : ConfigurationBuilder.REGEX_FOR_EXCEPTION_IN_LOGS.getValue()) {
@@ -80,7 +81,16 @@ public class ExceptionUtils {
     }
   }
 
-  public static void debugLog(String message) {
+  public static String getJobName(String jobExecUrl) {
+    Matcher matcher = jobNamePattern.matcher(jobExecUrl);
+    if (matcher.find()) {
+      return matcher.group(1);
+    }
+    logger.error("Couldn't find Job Name from in Job execution url " + jobExecUrl);
+    return null;
+  }
+
+    public static void debugLog(String message) {
     if (debugEnabled) {
       logger.debug(message);
     }
@@ -98,6 +108,8 @@ public class ExceptionUtils {
     public static EFConfiguration<Integer> NUMBER_OF_STACKTRACE_LINE = null;
     public static EFConfiguration<Integer> JHS_TIME_OUT = null;
     public static EFConfiguration<String[]> REGEX_FOR_EXCEPTION_IN_LOGS = null;
+    public static EFConfiguration<String[]> REGEX_FOR_PARTIAL_EXCEPTION_PATTERN_IN_TONY_LOGS = null;
+    public static EFConfiguration<String[]> REGEX_FOR_EXACT_EXCEPTION_PATTERN_IN_TONY_LOGS = null;
     public static EFConfiguration<String[]> REGEX_AUTO_TUNING_FAULT = null;
     public static EFConfiguration<Integer> THRESHOLD_LOG_LINE_LENGTH = null;
     public static EFConfiguration<Integer> NUMBER_OF_EXCEPTION_TO_PUT_IN_DB = null;
@@ -116,6 +128,13 @@ public class ExceptionUtils {
             ".*Container killed on request. Exit code is 104.*"};
 
     private static final String[] DEFAULT_BLACK_LISTED_EXCEPTION_PATTERN = {"-XX:OnOutOfMemoryError='kill %p'"};
+
+    private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
+        {"^.+Exception.*\n?", "ERROR ApplicationMaster:.*\n?"};
+
+    private static final String[] DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
+        {"(?m)^(Traceback \\(most recent call last\\)):\\n(.+\\n?)*",
+            "(?m)(Container exited with a non-zero exit code (.*))\\n(.+\\n?)*"};
 
     public static void buildConfigurations(Configuration configuration) {
       FIRST_THRESHOLD_LOG_LENGTH_IN_BYTES =
@@ -169,6 +188,20 @@ public class ExceptionUtils {
               REGEX_FOR_EXCEPTION_IN_LOGS_NAME)
               .setValue(configuration.getStrings(REGEX_FOR_EXCEPTION_IN_LOGS_NAME, DEFAULT_REGEX_FOR_EXCEPTION_IN_LOGS))
               .setDoc("These are the regex used to search for exception in logs ");
+
+      REGEX_FOR_PARTIAL_EXCEPTION_PATTERN_IN_TONY_LOGS =
+          new com.linkedin.drelephant.exceptions.util.EFConfiguration<String[]>().setConfigurationName(
+              REGEX_FOR_PARTIAL_EXCEPTION_PATTERN_IN_TONY_LOGS_KEY)
+              .setValue(configuration.getStrings(REGEX_FOR_PARTIAL_EXCEPTION_PATTERN_IN_TONY_LOGS_KEY,
+                  DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS))
+              .setDoc("These are the regex for exact exception patterns in TONY logs");
+
+      REGEX_FOR_EXACT_EXCEPTION_PATTERN_IN_TONY_LOGS =
+          new com.linkedin.drelephant.exceptions.util.EFConfiguration<String[]>().setConfigurationName(
+              REGEX_FOR_EXACT_EXCEPTION_PATTERN_IN_TONY_LOGS_KEY)
+              .setValue(configuration.getStrings(REGEX_FOR_EXACT_EXCEPTION_PATTERN_IN_TONY_LOGS_KEY,
+                  DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS))
+              .setDoc("These are the regex for partial exception patterns in TONY logs");
 
       REGEX_AUTO_TUNING_FAULT = new EFConfiguration<String[]>().setConfigurationName(REGEX_AUTO_TUNING_FAULT_NAME)
           .setValue(configuration.getStrings(REGEX_AUTO_TUNING_FAULT_NAME, DEFAULT_REGEX_AUTO_TUNING_FAULT))
