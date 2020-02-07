@@ -16,6 +16,8 @@
 
 package com.linkedin.drelephant.tuning.alerting;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.SqlRow;
 import com.linkedin.drelephant.tuning.NotificationData;
 import com.linkedin.drelephant.util.Utils;
 import java.sql.Timestamp;
@@ -49,6 +51,11 @@ public class NotificationDataGenerator {
   private static long RECENCY_WINDOW_IN_MS = 259200000;
   private static final String PARAM_EXECUTED_STATE_STALE_TIME = "tuning.stale.data.timeout.ms";
   private static long DEFAULT_PARAM_EXECUTED_STATE_STALE_TIME = 172800000;
+
+  private String autoTuningJobsInExecutedStateQuery = "select jsps.id from job_suggested_param_set jsps"
+      + "INNER JOIN tuning_job_definition tjd ON jsps.job_definition_id=tjd.job_definition_id"
+      + "AND jsps.param_set_state = 'EXECUTED' AND tjd.auto_apply=1"
+      + "AND jsps.updated_ts BETWEEN :start_ts AND :end_ts";
 
   public NotificationDataGenerator(long windowStartTimeMS, long windowEndTimeMS, Configuration configuration) {
     this.windowStartTimeMS = windowStartTimeMS;
@@ -127,25 +134,25 @@ public class NotificationDataGenerator {
    */
 
   private void paramFitnessNotComputedRule() {
-    List<JobSuggestedParamSet> jobSuggestedParamSets = JobSuggestedParamSet.find.select("*")
-        .where()
-        .eq(JobSuggestedParamSet.TABLE.paramSetState, JobSuggestedParamSet.ParamSetStatus.EXECUTED)
-        .between(JobSuggestedParamSet.TABLE.updatedTs,
-            new Timestamp(windowStartTimeMS - paramExecutedStateStaleTime), new Timestamp(windowEndTimeMS - paramExecutedStateStaleTime))
-        .findList();
 
-    if (jobSuggestedParamSets != null && jobSuggestedParamSets.size() > 0) {
+       List<SqlRow> jobSuggestedParamIds = Ebean.createSqlQuery(autoTuningJobsInExecutedStateQuery)
+      .setParameter("start_ts", new Timestamp(windowStartTimeMS - paramExecutedStateStaleTime))
+      .setParameter("end_ts", new Timestamp(windowEndTimeMS - paramExecutedStateStaleTime))
+      .findList();
+
+    if (jobSuggestedParamIds != null && jobSuggestedParamIds.size() > 0) {
       NotificationData data = new NotificationData(DEVELOPERS_RECIPIENT_ADDRESS);
       data.setSubject(" Following are the parameter Ids which are in EXECUTED state from couple of days");
       data.setNotificationType(NotificationType.DEVELOPER);
-      for (JobSuggestedParamSet jobSuggestedParamSet : jobSuggestedParamSets) {
-        data.addContent(String.valueOf(jobSuggestedParamSet.id));
+      for (SqlRow row : jobSuggestedParamIds) {
+        String jobSuggestedParamSetId = row.getString("id");
+        data.addContent(jobSuggestedParamSetId);
       }
       notificationMessages.add(data);
     }
 
     if (debugEnabled) {
-      logger.debug(" No of parameters are in EXECUTED state : " + jobSuggestedParamSets.size());
+      logger.debug(" No of parameters are in EXECUTED state : " + jobSuggestedParamIds.size());
     }
   }
 
