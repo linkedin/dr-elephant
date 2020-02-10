@@ -1,0 +1,340 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+<title>
+
+</title>
+<link rel="stylesheet" href="/static/yarn.css">
+<style type="text/css">
+  #layout { height: 100%; }
+  #layout thead td { height: 3em; }
+  #layout #navcell { width: 11em; padding: 0 1em; }
+  #layout td.content { padding-top: 0 }
+  #layout tbody { vertical-align: top; }
+  #layout tfoot td { height: 4em; }
+</style>
+<link rel="stylesheet" href="/static/jquery/themes-1.9.1/base/jquery-ui.css">
+<link rel="stylesheet" href="/static/dt-1.9.4/css/jui-dt.css">
+<script type="text/javascript" src="/static/jquery/jquery-1.8.2.min.js">
+</script>
+<script type="text/javascript" src="/static/jquery/jquery-ui-1.9.1.custom.min.js">
+</script>
+<script type="text/javascript" src="/static/dt-1.9.4/js/jquery.dataTables.min.js">
+</script>
+<script type="text/javascript" src="/static/yarn.dt.plugins.js">
+</script>
+<script type="text/javascript" src="/static/dt-sorting/natural.js">
+</script>
+<style type="text/css">
+  #jsnotice { padding: 0.2em; text-align: center; }
+  .ui-progressbar { height: 1em; min-width: 5em }
+</style>
+<script type="text/javascript">
+  $(function() {
+    $('#nav').accordion({autoHeight:false, active:1});
+  });
+</script>
+<div id="jsnotice" class="ui-state-error">
+  This page will not function without javascript enabled. Please enable javascript on your browser.
+</div>
+<script type="text/javascript">
+  $('#jsnotice').hide();
+</script>
+<table id="layout" class="ui-widget-content">
+  <thead>
+  <tr>
+    <td colspan="2">
+      <div id="header" class="ui-widget">
+        <div id="user">
+          Logged in as: user
+        </div>
+        <div id="logo">
+          <img src="/static/hadoop-st.png">
+        </div>
+        <h1>
+
+        </h1>
+      </div>
+    </td>
+  </tr>
+  </thead>
+  <tfoot>
+  <tr>
+    <td colspan="2">
+      <div id="footer" class="ui-widget">
+      </div>
+    </td>
+  </tr>
+  </tfoot>
+  <tbody>
+  <tr>
+    <td id="navcell">
+      <div id="nav">
+        <h3>
+          Application
+        </h3>
+        <ul>
+          <li>
+            <a href="/jobhistory/about">About</a>
+          <li>
+            <a href="/jobhistory/app">Jobs</a>
+        </ul>
+        <h3>
+          Tools
+        </h3>
+        <ul>
+          <li>
+            <a href="/conf">Configuration</a>
+          <li>
+            <a href="/logs">Local logs</a>
+          <li>
+            <a href="/stacks">Server stacks</a>
+          <li>
+            <a href="/jmx?qry=Hadoop:*">Server metrics</a>
+        </ul>
+      </div>
+    </td>
+    <td class="content">
+      <p>
+        Log Type: amstdout.log
+      <p>
+        Log Upload Time: Wed Feb 05 02:56:23 +0000 2020
+      <p>
+        Log Length: 33514
+      <pre>2020-02-05 02:52:22 WARN  NativeCodeLoader:62 - Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+2020-02-05 02:52:23 WARN  DomainSocketFactory:116 - The short-circuit local reads feature cannot be used because libhadoop cannot be loaded.
+2020-02-05 02:52:23 INFO  ApplicationMaster:379 - Preparing application master..
+2020-02-05 02:52:23 INFO  NMClientAsyncImpl:137 - Upper bound of the thread pool size is 500
+2020-02-05 02:52:23 INFO  RMProxy:133 - Connecting to ResourceManager at ltx1-mlearn-alpha-rm01.grid.linkedin.com/10.150.1.183:8030
+2020-02-05 02:52:23 INFO  Configuration:2590 - found resource resource-types.xml at file:/export/apps/hadoop/ltx1-mlearn-alpha-hadoopconf_21001202/nodemanager/etc/hadoop/resource-types.xml
+2020-02-05 02:52:23 INFO  ResourceUtils:253 - Adding resource type - name = yarn.io/gpu, units = , type = COUNTABLE
+2020-02-05 02:52:23 INFO  ResourceUtils:126 - Adding resource type - name = memory-mb, units = Mi, type = COUNTABLE
+2020-02-05 02:52:23 INFO  ResourceUtils:135 - Adding resource type - name = vcores, units = , type = COUNTABLE
+2020-02-05 02:52:23 INFO  ApplicationMaster:449 - Starting application RPC server at: ltx1-node.linkedin.com:10892
+2020-02-05 02:52:23 INFO  ApplicationMaster:452 - Starting metrics RPC server at: executor.linkedin.com:31155
+2020-02-05 02:52:24 INFO  CallQueueManager:84 - Using callQueue: class java.util.concurrent.LinkedBlockingQueue queueCapacity: 100 scheduler: class org.apache.hadoop.ipc.DefaultRpcScheduler
+2020-02-05 02:52:24 INFO  CallQueueManager:84 - Using callQueue: class java.util.concurrent.LinkedBlockingQueue queueCapacity: 100 scheduler: class org.apache.hadoop.ipc.DefaultRpcScheduler
+2020-02-05 02:52:24 INFO  Server:1214 - Starting Socket Reader #1 for port 31155
+2020-02-05 02:52:24 INFO  Server:1214 - Starting Socket Reader #1 for port 10892
+2020-02-05 02:52:24 INFO  Server:1455 - IPC Server Responder: starting
+2020-02-05 02:52:24 INFO  Server:1293 - IPC Server listener on 10892: starting
+2020-02-05 02:52:24 INFO  Server:1293 - IPC Server listener on 31155: starting
+2020-02-05 02:52:24 INFO  Server:1455 - IPC Server Responder: starting
+2020-02-05 02:52:24 INFO  EventHandler:51 - Writing events to hdfs://ltx1-holdemnn02.grid.linkedin.com:9000/system/mlearn-alpha/tony-history/intermediate/application_1576097000949_37909/application_1576097000949_37909-1580871142426-user2.jhist.inprogress
+2020-02-05 02:52:24 INFO  EventHandler:94 - Checking if jhist file is ready...
+2020-02-05 02:52:24 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;APPLICATION_INITED&quot;, &quot;event&quot;: {&quot;applicationId&quot;: &quot;application_1576097000949_37909&quot;, &quot;numTasks&quot;: 4, &quot;host&quot;: &quot;executor.linkedin.com&quot;}, &quot;timestamp&quot;: 1580871144095}
+2020-02-05 02:52:24 INFO  TaskScheduler:114 - Requested container ask: Capability[&lt;memory:32768, vCores:1&gt;]Priority[0]AllocationRequestId[0]ExecutionTypeRequest[{Execution Type: GUARANTEED, Enforce Execution Type: false}]
+2020-02-05 02:52:24 INFO  TaskScheduler:114 - Requested container ask: Capability[&lt;memory:32768, vCores:1, yarn.io/gpu: 1&gt;]Priority[1]AllocationRequestId[0]ExecutionTypeRequest[{Execution Type: GUARANTEED, Enforce Execution Type: false}]
+2020-02-05 02:52:24 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:24 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.TensorFlowCluster
+2020-02-05 02:52:24 INFO  Utils:552 - Completed 0 out of 2 tracked tasks.
+2020-02-05 02:52:25 INFO  ApplicationMaster:1008 - Allocated: 4 containers.
+2020-02-05 02:52:25 INFO  ApplicationMaster:1010 - Launching a task in container, containerId = container_e42_1576097000949_37909_01_000002, containerNode = executor.linkedin.com:8041, resourceRequest = &lt;memory:32768, vCores:1, yarn.io/gpu: 1&gt;, priority = 1
+2020-02-05 02:52:25 INFO  ApplicationMaster:1010 - Launching a task in container, containerId = container_e42_1576097000949_37909_01_000003, containerNode = executor.linkedin.com:8041, resourceRequest = &lt;memory:32768, vCores:1&gt;, priority = 0
+2020-02-05 02:52:25 INFO  ApplicationMaster:1010 - Launching a task in container, containerId = container_e42_1576097000949_37909_01_000005, containerNode = executor.linkedin.com:8041, resourceRequest = &lt;memory:32768, vCores:1&gt;, priority = 0
+2020-02-05 02:52:25 INFO  ApplicationMaster:1010 - Launching a task in container, containerId = container_e42_1576097000949_37909_01_000006, containerNode = executor.linkedin.com:8041, resourceRequest = &lt;memory:32768, vCores:1, yarn.io/gpu: 1&gt;, priority = 1
+2020-02-05 02:52:25 INFO  ApplicationMaster:1067 - Setting Container [container_e42_1576097000949_37909_01_000006] for task [worker:1]..
+2020-02-05 02:52:25 INFO  ApplicationMaster:1067 - Setting Container [container_e42_1576097000949_37909_01_000003] for task [ps:0]..
+2020-02-05 02:52:25 INFO  ApplicationMaster:1067 - Setting Container [container_e42_1576097000949_37909_01_000005] for task [ps:1]..
+2020-02-05 02:52:25 INFO  ApplicationMaster:1067 - Setting Container [container_e42_1576097000949_37909_01_000002] for task [worker:0]..
+2020-02-05 02:52:25 INFO  ApplicationMaster:1095 - Constructed command: [$JAVA_HOME/bin/java -Xmx1536m com.linkedin.tony.TaskExecutor 1&gt;&lt;LOG_DIR&gt;/stdout 2&gt;&lt;LOG_DIR&gt;/stderr]
+2020-02-05 02:52:25 INFO  ApplicationMaster:1095 - Constructed command: [$JAVA_HOME/bin/java -Xmx1536m com.linkedin.tony.TaskExecutor 1&gt;&lt;LOG_DIR&gt;/stdout 2&gt;&lt;LOG_DIR&gt;/stderr]
+2020-02-05 02:52:25 INFO  ApplicationMaster:1095 - Constructed command: [$JAVA_HOME/bin/java -Xmx1536m com.linkedin.tony.TaskExecutor 1&gt;&lt;LOG_DIR&gt;/stdout 2&gt;&lt;LOG_DIR&gt;/stderr]
+2020-02-05 02:52:25 INFO  ApplicationMaster:1095 - Constructed command: [$JAVA_HOME/bin/java -Xmx1536m com.linkedin.tony.TaskExecutor 1&gt;&lt;LOG_DIR&gt;/stdout 2&gt;&lt;LOG_DIR&gt;/stderr]
+2020-02-05 02:52:25 INFO  ApplicationMaster:1096 - Container environment: {METRICS_RPC_PORT=31155, IS_CHIEF=true, TASK_INDEX=0, TASK_NUM=2, SESSION_ID=0, AM_HOST=executor.linkedin.com, CLASSPATH={{CLASSPATH}}&lt;CPS&gt;./*&lt;CPS&gt;$HADOOP_CONF_DIR&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/*&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/lib/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*&lt;CPS&gt;/export/apps/hadoop/site/lib/*, AM_PORT=10892, ATTEMPT_NUMBER=0, JOB_NAME=worker}
+2020-02-05 02:52:25 INFO  ApplicationMaster:1096 - Container environment: {METRICS_RPC_PORT=31155, TASK_INDEX=1, TASK_NUM=2, SESSION_ID=0, AM_HOST=executor.linkedin.com, CLASSPATH={{CLASSPATH}}&lt;CPS&gt;./*&lt;CPS&gt;$HADOOP_CONF_DIR&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/*&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/lib/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*&lt;CPS&gt;/export/apps/hadoop/site/lib/*, AM_PORT=10892, ATTEMPT_NUMBER=0, JOB_NAME=worker}
+2020-02-05 02:52:25 INFO  ApplicationMaster:1096 - Container environment: {METRICS_RPC_PORT=31155, TASK_INDEX=0, TASK_NUM=2, SESSION_ID=0, AM_HOST=executor.linkedin.com, CLASSPATH={{CLASSPATH}}&lt;CPS&gt;./*&lt;CPS&gt;$HADOOP_CONF_DIR&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/*&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/lib/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*&lt;CPS&gt;/export/apps/hadoop/site/lib/*, AM_PORT=10892, ATTEMPT_NUMBER=0, JOB_NAME=ps}
+2020-02-05 02:52:25 INFO  ApplicationMaster:1096 - Container environment: {METRICS_RPC_PORT=31155, TASK_INDEX=1, TASK_NUM=2, SESSION_ID=0, AM_HOST=executor.linkedin.com, CLASSPATH={{CLASSPATH}}&lt;CPS&gt;./*&lt;CPS&gt;$HADOOP_CONF_DIR&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/*&lt;CPS&gt;$HADOOP_COMMON_HOME/share/hadoop/common/lib/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/*&lt;CPS&gt;$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/*&lt;CPS&gt;$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*&lt;CPS&gt;/export/apps/hadoop/site/lib/*, AM_PORT=10892, ATTEMPT_NUMBER=0, JOB_NAME=ps}
+2020-02-05 02:52:25 INFO  ApplicationMaster:221 - Logs for ps 0 at: http://executor.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000003/user2
+2020-02-05 02:52:25 INFO  ApplicationMaster:221 - Logs for worker 1 at: http://executor.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000006/user2
+2020-02-05 02:52:25 INFO  ApplicationMaster:221 - Logs for worker 0 at: http://executor.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000002/user2
+2020-02-05 02:52:25 INFO  ApplicationMaster:221 - Logs for ps 1 at: http://executor.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000005/user2
+2020-02-05 02:52:25 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_STARTED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;ps&quot;, &quot;taskIndex&quot;: 1, &quot;host&quot;: &quot;executor.linkedin.com&quot;}, &quot;timestamp&quot;: 1580871145664}
+2020-02-05 02:52:25 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_STARTED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;worker&quot;, &quot;taskIndex&quot;: 0, &quot;host&quot;: &quot;executor.linkedin.com&quot;}, &quot;timestamp&quot;: 1580871145664}
+2020-02-05 02:52:25 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_STARTED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;ps&quot;, &quot;taskIndex&quot;: 0, &quot;host&quot;: &quot;executor.linkedin.com&quot;}, &quot;timestamp&quot;: 1580871145664}
+2020-02-05 02:52:25 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_STARTED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;worker&quot;, &quot;taskIndex&quot;: 1, &quot;host&quot;: &quot;executor.linkedin.com&quot;}, &quot;timestamp&quot;: 1580871145664}
+2020-02-05 02:52:25 INFO  NMClientAsyncImpl:954 - Processing Event EventType: START_CONTAINER for Container container_e42_1576097000949_37909_01_000003
+2020-02-05 02:52:25 INFO  NMClientAsyncImpl:954 - Processing Event EventType: START_CONTAINER for Container container_e42_1576097000949_37909_01_000005
+2020-02-05 02:52:25 INFO  NMClientAsyncImpl:954 - Processing Event EventType: START_CONTAINER for Container container_e42_1576097000949_37909_01_000006
+2020-02-05 02:52:25 INFO  NMClientAsyncImpl:954 - Processing Event EventType: START_CONTAINER for Container container_e42_1576097000949_37909_01_000002
+2020-02-05 02:52:25 INFO  ApplicationMaster:951 - Successfully started container container_e42_1576097000949_37909_01_000006
+2020-02-05 02:52:25 INFO  ApplicationMaster:951 - Successfully started container container_e42_1576097000949_37909_01_000002
+2020-02-05 02:52:25 INFO  ApplicationMaster:951 - Successfully started container container_e42_1576097000949_37909_01_000005
+2020-02-05 02:52:25 INFO  ApplicationMaster:951 - Successfully started container container_e42_1576097000949_37909_01_000003
+2020-02-05 02:52:40 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:40 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:40 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.TensorFlowCluster
+2020-02-05 02:52:40 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.MetricsRpc
+2020-02-05 02:52:40 INFO  ApplicationMaster:823 - Received cluster spec registration request from task ps:1 with spec: executor.linkedin.com:9662
+2020-02-05 02:52:40 INFO  ApplicationMaster:830 - [ps:1] Received Registration for HB !!
+2020-02-05 02:52:40 INFO  ApplicationMaster:844 - Received registrations from 1 tasks, awaiting registration from 3 tasks.
+2020-02-05 02:52:40 INFO  ApplicationMaster:846 - Awaiting registration from task worker 0 in container_e42_1576097000949_37909_01_000002 on host executor.linkedin.com
+2020-02-05 02:52:40 INFO  ApplicationMaster:846 - Awaiting registration from task worker 1 in container_e42_1576097000949_37909_01_000006 on host executor.linkedin.com
+2020-02-05 02:52:40 INFO  ApplicationMaster:846 - Awaiting registration from task ps 0 in container_e42_1576097000949_37909_01_000003 on host executor.linkedin.com
+2020-02-05 02:52:40 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:40 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.TensorFlowCluster
+2020-02-05 02:52:40 INFO  ApplicationMaster:891 - Got request to update TensorBoard URL: executor.linkedin.com:7441
+2020-02-05 02:52:40 INFO  ApplicationMaster:823 - Received cluster spec registration request from task worker:0 with spec: executor.linkedin.com:5020
+2020-02-05 02:52:40 INFO  ApplicationMaster:830 - [worker:0] Received Registration for HB !!
+2020-02-05 02:52:40 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:40 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.MetricsRpc
+2020-02-05 02:52:41 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:41 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.TensorFlowCluster
+2020-02-05 02:52:41 INFO  ApplicationMaster:823 - Received cluster spec registration request from task worker:1 with spec: executor.linkedin.com:26610
+2020-02-05 02:52:41 INFO  ApplicationMaster:830 - [worker:1] Received Registration for HB !!
+2020-02-05 02:52:41 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:41 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.MetricsRpc
+2020-02-05 02:52:41 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:41 INFO  Server:1979 - Auth successful for user2 (auth:SIMPLE)
+2020-02-05 02:52:41 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.TensorFlowCluster
+2020-02-05 02:52:41 INFO  ApplicationMaster:823 - Received cluster spec registration request from task ps:0 with spec: executor.linkedin.com:3040
+2020-02-05 02:52:41 INFO  ApplicationMaster:830 - [ps:0] Received Registration for HB !!
+2020-02-05 02:52:41 INFO  ApplicationMaster:838 - All 4 expected tasks registered.
+2020-02-05 02:52:41 INFO  ServiceAuthorizationManager:138 - Authorization successful for user2 (auth:TOKEN) for protocol=interface com.linkedin.tony.rpc.MetricsRpc
+2020-02-05 02:52:43 INFO  ApplicationMaster:838 - All 4 expected tasks registered.
+2020-02-05 02:52:43 INFO  ApplicationMaster:838 - All 4 expected tasks registered.
+2020-02-05 02:52:44 INFO  ApplicationMaster:838 - All 4 expected tasks registered.
+2020-02-05 02:54:04 INFO  Utils:552 - Completed 0 out of 2 tracked tasks.
+2020-02-05 02:55:44 INFO  Utils:552 - Completed 0 out of 2 tracked tasks.
+2020-02-05 02:56:17 INFO  ApplicationMaster:873 - Received result registration request with exit code 1 from worker 0
+2020-02-05 02:56:17 INFO  ApplicationMaster:880 - Unregistering task [worker:0] from Heartbeat monitor..
+2020-02-05 02:56:18 INFO  ApplicationMaster:973 - Completed containers: 1
+2020-02-05 02:56:18 INFO  ApplicationMaster:978 - ContainerID = container_e42_1576097000949_37909_01_000002, state = COMPLETE, exitStatus = 1
+2020-02-05 02:56:18 ERROR ApplicationMaster:983 - [2020-02-05 02:56:18.039]Exception from container-launch.
+Container id: container_e42_1576097000949_37909_01_000002
+Exit code: 1
+Shell output: main : command provided 1
+main : run as user is user2
+main : requested yarn user is user2
+Getting exit code file...
+Creating script paths...
+Writing pid file...
+Writing to tmp file /grid/a/tmp/yarn/nmPrivate/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/container_e42_1576097000949_37909_01_000002.pid.tmp
+Writing to cgroup task files...
+Creating local dirs...
+Launching container...
+Getting exit code file...
+Creating script paths...
+
+
+[2020-02-05 02:56:18.081]Container exited with a non-zero exit code 1. Error file: prelaunch.err.
+Last 4096 bytes of prelaunch.err :
+Last 4096 bytes of stderr :
+ib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 354, in train
+    loss = self._train_model(input_fn, hooks, saving_listeners)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1207, in _train_model
+    return self._train_model_default(input_fn, hooks, saving_listeners)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1237, in _train_model_default
+    features, labels, model_fn_lib.ModeKeys.TRAIN, self.config)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1195, in _call_model_fn
+    model_fn_results = self._model_fn(features=features, **kwargs)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/train/train.py&quot;, line 266, in model_fn
+    save_model_scoring_mode=save_model_scoring_mode)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/deep_match.py&quot;, line 81, in __init__
+    self.scoring_model = bert_model.BertModel(query, doc_fields, usr_fields, hparams, mode)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert_model.py&quot;, line 36, in __init__
+    self.query_ftrs, self.doc_ftrs, self.usr_ftrs = self.apply_bert()
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert_model.py&quot;, line 127, in apply_bert
+    self.hparams.bert_checkpoint)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert/modeling.py&quot;, line 327, in get_assignment_map_from_checkpoint
+    init_vars = tf.train.list_variables(init_checkpoint)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/training/checkpoint_utils.py&quot;, line 95, in list_variables
+    reader = load_checkpoint(ckpt_dir_or_file)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/training/checkpoint_utils.py&quot;, line 64, in load_checkpoint
+    return pywrap_tensorflow.NewCheckpointReader(filename)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/pywrap_tensorflow_internal.py&quot;, line 326, in NewCheckpointReader
+    return CheckpointReader(compat.as_bytes(filepattern), status)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/framework/errors_impl.py&quot;, line 528, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.InvalidArgumentError: Unsuccessful TensorSliceReader constructor: Failed to get matching files on hdfs://ltx1-namenode.linkedin.com:9000/jobs/deepnlp/GBert/bert-base/checkpoints/model.ckpt-1724730: Not found: hdfs://ltx1-namenode.linkedin.com:9000/jobs/deepnlp/GBert/bert-base/checkpoints; No such file or directory
+
+
+[2020-02-05 02:56:18.081]Container exited with a non-zero exit code 1. Error file: prelaunch.err.
+Last 4096 bytes of prelaunch.err :
+Last 4096 bytes of stderr :
+ib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 354, in train
+    loss = self._train_model(input_fn, hooks, saving_listeners)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1207, in _train_model
+    return self._train_model_default(input_fn, hooks, saving_listeners)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1237, in _train_model_default
+    features, labels, model_fn_lib.ModeKeys.TRAIN, self.config)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1195, in _call_model_fn
+    model_fn_results = self._model_fn(features=features, **kwargs)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/train/train.py&quot;, line 266, in model_fn
+    save_model_scoring_mode=save_model_scoring_mode)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/deep_match.py&quot;, line 81, in __init__
+    self.scoring_model = bert_model.BertModel(query, doc_fields, usr_fields, hparams, mode)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert_model.py&quot;, line 36, in __init__
+    self.query_ftrs, self.doc_ftrs, self.usr_ftrs = self.apply_bert()
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert_model.py&quot;, line 127, in apply_bert
+    self.hparams.bert_checkpoint)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert/modeling.py&quot;, line 327, in get_assignment_map_from_checkpoint
+    init_vars = tf.train.list_variables(init_checkpoint)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/training/checkpoint_utils.py&quot;, line 95, in list_variables
+    reader = load_checkpoint(ckpt_dir_or_file)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/training/checkpoint_utils.py&quot;, line 64, in load_checkpoint
+    return pywrap_tensorflow.NewCheckpointReader(filename)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/pywrap_tensorflow_internal.py&quot;, line 326, in NewCheckpointReader
+    return CheckpointReader(compat.as_bytes(filepattern), status)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/framework/errors_impl.py&quot;, line 528, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.InvalidArgumentError: Unsuccessful TensorSliceReader constructor: Failed to get matching files on hdfs://ltx1-namenode.linkedin.com:9000/jobs/deepnlp/GBert/bert-base/checkpoints/model.ckpt-1724730: Not found: hdfs://ltx1-namenode.linkedin.com:9000/jobs/deepnlp/GBert/bert-base/checkpoints; No such file or directory
+
+
+
+2020-02-05 02:56:18 INFO  ApplicationMaster:1141 - Container container_e42_1576097000949_37909_01_000002 for task worker:0 finished with exitStatus 1.
+2020-02-05 02:56:18 INFO  TonySession:251 - Job worker:0 exited with 1
+2020-02-05 02:56:18 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;worker&quot;, &quot;taskIndex&quot;: 0, &quot;status&quot;: &quot;FAILED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 2.877566976E9}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 2.2034837876363635E9}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: 1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: 0.022727272727272728}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: 1.2253694581280787}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: 0.9859913793103449}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: 0.0244140625}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: 0.022749467329545456}]}, &quot;timestamp&quot;: 1580871378923}
+2020-02-05 02:56:19 INFO  ApplicationMaster:583 - Training has finished.
+2020-02-05 02:56:19 INFO  ApplicationMaster:638 - Tony session failed: Exit status: 1
+2020-02-05 02:56:19 INFO  ApplicationMaster:349 - Result: false, retry count: 0
+2020-02-05 02:56:19 INFO  NMClientAsyncImpl:954 - Processing Event EventType: STOP_CONTAINER for Container container_e42_1576097000949_37909_01_000003
+2020-02-05 02:56:19 INFO  NMClientAsyncImpl:954 - Processing Event EventType: STOP_CONTAINER for Container container_e42_1576097000949_37909_01_000006
+2020-02-05 02:56:19 INFO  NMClientAsyncImpl:954 - Processing Event EventType: STOP_CONTAINER for Container container_e42_1576097000949_37909_01_000005
+2020-02-05 02:56:19 INFO  ApplicationMaster:1141 - Container container_e42_1576097000949_37909_01_000005 for task ps:1 finished with exitStatus -105.
+2020-02-05 02:56:19 INFO  ApplicationMaster:1141 - Container container_e42_1576097000949_37909_01_000003 for task ps:0 finished with exitStatus -105.
+2020-02-05 02:56:19 INFO  TonySession:251 - Job ps:1 exited with -105
+2020-02-05 02:56:19 INFO  TonySession:251 - Job ps:0 exited with -105
+2020-02-05 02:56:19 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;ps&quot;, &quot;taskIndex&quot;: 1, &quot;status&quot;: &quot;FINISHED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 7.873536E8}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 7.538111767272729E8}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}]}, &quot;timestamp&quot;: 1580871379430}
+2020-02-05 02:56:19 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;ps&quot;, &quot;taskIndex&quot;: 0, &quot;status&quot;: &quot;FINISHED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 7.86792448E8}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 7.623624145454545E8}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}]}, &quot;timestamp&quot;: 1580871379430}
+2020-02-05 02:56:19 INFO  ApplicationMaster:1141 - Container container_e42_1576097000949_37909_01_000006 for task worker:1 finished with exitStatus -105.
+2020-02-05 02:56:19 INFO  TonySession:251 - Job worker:1 exited with -105
+2020-02-05 02:56:19 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;worker&quot;, &quot;taskIndex&quot;: 1, &quot;status&quot;: &quot;FINISHED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 2.2040576E9}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 1.4137802938181822E9}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: 1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: 0.022727272727272728}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: 1.0714285714285714}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: 0.3729567845947157}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: 0.0244140625}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: 0.012761896306818182}]}, &quot;timestamp&quot;: 1580871379430}
+2020-02-05 02:56:19 INFO  ApplicationMaster:973 - Completed containers: 2
+2020-02-05 02:56:19 INFO  ApplicationMaster:978 - ContainerID = container_e42_1576097000949_37909_01_000003, state = COMPLETE, exitStatus = -105
+2020-02-05 02:56:19 ERROR ApplicationMaster:983 - [2020-02-05 02:56:19.426]Container killed by the ApplicationMaster.
+[2020-02-05 02:56:19.431]Container killed on request. Exit code is 143
+[2020-02-05 02:56:19.535]Container exited with a non-zero exit code 143.
+
+2020-02-05 02:56:19 INFO  ApplicationMaster:1141 - Container container_e42_1576097000949_37909_01_000003 for task ps:0 finished with exitStatus -105.
+2020-02-05 02:56:19 INFO  TonySession:251 - Job ps:0 exited with -105
+2020-02-05 02:56:19 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;ps&quot;, &quot;taskIndex&quot;: 0, &quot;status&quot;: &quot;FINISHED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 7.86792448E8}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 7.623624145454545E8}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}]}, &quot;timestamp&quot;: 1580871379917}
+2020-02-05 02:56:19 INFO  ApplicationMaster:978 - ContainerID = container_e42_1576097000949_37909_01_000005, state = COMPLETE, exitStatus = -105
+2020-02-05 02:56:19 ERROR ApplicationMaster:983 - [2020-02-05 02:56:19.427]Container killed by the ApplicationMaster.
+[2020-02-05 02:56:19.431]Container killed on request. Exit code is 143
+[2020-02-05 02:56:19.536]Container exited with a non-zero exit code 143.
+
+2020-02-05 02:56:19 INFO  ApplicationMaster:1141 - Container container_e42_1576097000949_37909_01_000005 for task ps:1 finished with exitStatus -105.
+2020-02-05 02:56:19 INFO  TonySession:251 - Job ps:1 exited with -105
+2020-02-05 02:56:19 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;ps&quot;, &quot;taskIndex&quot;: 1, &quot;status&quot;: &quot;FINISHED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 7.873536E8}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 7.538111767272729E8}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}]}, &quot;timestamp&quot;: 1580871379919}
+2020-02-05 02:56:20 INFO  Utils:91 - Poll function finished within 15 seconds
+2020-02-05 02:56:20 INFO  AMRMClientImpl:483 - Waiting for application to be successfully unregistered.
+2020-02-05 02:56:21 INFO  ApplicationMaster:897 - Client signals AM to finish application.
+2020-02-05 02:56:21 INFO  Utils:91 - Poll function finished within 15 seconds
+2020-02-05 02:56:21 INFO  ApplicationMaster:221 - Logs for ps 0 at: http://node.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000003/user2
+2020-02-05 02:56:21 INFO  ApplicationMaster:221 - Logs for ps 1 at: http://node.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000005/user2
+2020-02-05 02:56:21 INFO  ApplicationMaster:221 - Logs for worker 0 at: http://node.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000002/user2
+2020-02-05 02:56:21 INFO  ApplicationMaster:221 - Logs for worker 1 at: http://node.linkedin.com:8042/node/containerlogs/container_e42_1576097000949_37909_01_000006/user2
+2020-02-05 02:56:21 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;APPLICATION_FINISHED&quot;, &quot;event&quot;: {&quot;applicationId&quot;: &quot;application_1576097000949_37909&quot;, &quot;finishedTasks&quot;: 4, &quot;failedTasks&quot;: 1, &quot;metrics&quot;: []}, &quot;timestamp&quot;: 1580871381533}
+2020-02-05 02:56:21 INFO  EventHandler:139 - Stopping event handler thread
+2020-02-05 02:56:21 INFO  EventHandler:66 - Event writer interrupted
+2020-02-05 02:56:21 INFO  EventHandler:72 - Draining queue
+2020-02-05 02:56:21 INFO  EventHandler:123 - Moving hdfs://holdemnn02.grid.linkedin.com:9000/system/mlearn-alpha/tony-history/intermediate/application_1576097000949_37909/application_1576097000949_37909-1580871142426-user2.jhist.inprogress to hdfs://holdemnn02.grid.linkedin.com:9000/system/mlearn-alpha/tony-history/intermediate/application_1576097000949_37909/application_1576097000949_37909-1580871142426-1580871381530-user2-FAILED.jhist.
+2020-02-05 02:56:21 INFO  ApplicationMaster:303 - Application Master failed. Exiting
+</pre>
+    </td>
+  </tr>
+  </tbody>
+</table>
+</html>

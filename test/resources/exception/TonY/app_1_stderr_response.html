@@ -1,0 +1,214 @@
+<html>
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+<title>
+
+</title>
+<link rel="stylesheet" href="/static/yarn.css">
+<style type="text/css">
+  #layout { height: 100%; }
+  #layout thead td { height: 3em; }
+  #layout #navcell { width: 11em; padding: 0 1em; }
+  #layout td.content { padding-top: 0 }
+  #layout tbody { vertical-align: top; }
+  #layout tfoot td { height: 4em; }
+</style>
+<link rel="stylesheet" href="/static/jquery/themes-1.9.1/base/jquery-ui.css">
+<link rel="stylesheet" href="/static/dt-1.9.4/css/jui-dt.css">
+<script type="text/javascript" src="/static/jquery/jquery-1.8.2.min.js">
+</script>
+<script type="text/javascript" src="/static/jquery/jquery-ui-1.9.1.custom.min.js">
+</script>
+<script type="text/javascript" src="/static/dt-1.9.4/js/jquery.dataTables.min.js">
+</script>
+<script type="text/javascript" src="/static/yarn.dt.plugins.js">
+</script>
+<script type="text/javascript" src="/static/dt-sorting/natural.js">
+</script>
+<style type="text/css">
+  #jsnotice { padding: 0.2em; text-align: center; }
+  .ui-progressbar { height: 1em; min-width: 5em }
+</style>
+<script type="text/javascript">
+  $(function() {
+    $('#nav').accordion({autoHeight:false, active:1});
+  });
+</script>
+<div id="jsnotice" class="ui-state-error">
+  This page will not function without javascript enabled. Please enable javascript on your browser.
+</div>
+<script type="text/javascript">
+  $('#jsnotice').hide();
+</script>
+<table id="layout" class="ui-widget-content">
+  <thead>
+  <tr>
+    <td colspan="2">
+      <div id="header" class="ui-widget">
+        <div id="user">
+          Logged in as: sgupta7
+        </div>
+        <div id="logo">
+          <img src="/static/hadoop-st.png">
+        </div>
+        <h1>
+
+        </h1>
+      </div>
+    </td>
+  </tr>
+  </thead>
+  <tfoot>
+  <tr>
+    <td colspan="2">
+      <div id="footer" class="ui-widget">
+      </div>
+    </td>
+  </tr>
+  </tfoot>
+  <tbody>
+  <tr>
+    <td id="navcell">
+      <div id="nav">
+        <h3>
+          Application
+        </h3>
+        <ul>
+          <li>
+            <a href="/jobhistory/about">About</a>
+          <li>
+            <a href="/jobhistory/app">Jobs</a>
+        </ul>
+        <h3>
+          Tools
+        </h3>
+        <ul>
+          <li>
+            <a href="/conf">Configuration</a>
+          <li>
+            <a href="/logs">Local logs</a>
+          <li>
+            <a href="/stacks">Server stacks</a>
+          <li>
+            <a href="/jmx?qry=Hadoop:*">Server metrics</a>
+        </ul>
+      </div>
+    </td>
+    <td class="content">
+      <p>
+        Log Type: amstderr.log
+      <p>
+        Log Upload Time: Fri Jan 24 21:28:57 +0000 2020
+      <p>
+        Log Length: 146294
+      <pre>20/01/24 21:28:40 INFO tony.ApplicationMaster: All 12 expected tasks registered.
+20/01/24 21:28:41 INFO tony.ApplicationMaster: All 12 expected tasks registered.
+20/01/24 21:28:46 INFO tony.ApplicationMaster: Received result registration request with exit code 1 from worker 6
+20/01/24 21:28:46 INFO tony.ApplicationMaster: Unregistering task [worker:6] from Heartbeat monitor..
+20/01/24 21:28:46 INFO tony.ApplicationMaster: Received result registration request with exit code 1 from worker 5
+20/01/24 21:28:46 INFO tony.ApplicationMaster: Unregistering task [worker:5] from Heartbeat monitor..
+20/01/24 21:28:47 INFO tony.ApplicationMaster: Received result registration request with exit code 1 from worker 0
+20/01/24 21:28:47 INFO tony.ApplicationMaster: Unregistering task [worker:0] from Heartbeat monitor..
+20/01/24 21:28:47 INFO tony.ApplicationMaster: Completed containers: 2
+20/01/24 21:28:47 INFO tony.ApplicationMaster: ContainerID = container_e42_1576097000949_30598_01_000013, state = COMPLETE, exitStatus = 1
+20/01/24 21:28:47 ERROR tony.ApplicationMaster: [2020-01-24 21:28:46.848]Exception from container-launch.
+Container id: container_e42_1576097000949_30598_01_000013
+Exit code: 1
+Shell output: main : command provided 1
+main : run as user is user1
+main : requested yarn user is user1
+Getting exit code file...
+Creating script paths...
+Writing pid file...
+Writing to tmp file /grid/c/tmp/yarn/nmPrivate/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/container_e42_1576097000949_30598_01_000013.pid.tmp
+Writing to cgroup task files...
+Creating local dirs...
+Launching container...
+Getting exit code file...
+Creating script paths...
+
+
+[2020-01-24 21:28:46.869]Container exited with a non-zero exit code 1. Error file: prelaunch.err.
+Last 4096 bytes of prelaunch.err :
+Last 4096 bytes of stderr :
+k-tensorflow/cohort-data/tf-pymkData/validationData', 'working_dir': 'hdfs://namenode.linkedin.com:9000/jobs/user1/users/yyoon/pymk-tensorflow/cohort-deep-needle-models/pymk-needle-model-cosinesim-50-25', 'hdfs_model_config_path': None, 'metadata_path': 'hdfs://namenode.linkedin.com:9000/jobs/user1/users/yyoon/pymk-tensorflow/cohort-data/tf-pymkData/metadata/tensor_metadata.json', 'linear_bags': ['features'], 'embedding_bags': ['src_embedding', 'dest_embedding'], 'num_classes': 2, 'num_epochs': 1, 'max_steps': 1000000, 'eval_steps': None, 'batch_size': 512, 'response_name': 'label', 'response_data_type': 'int32', 'save_summary_steps': 100, 'save_checkpoints_secs': 1200, 'sample_weight_name': 'weight', 'log_step_count_steps': 100, 'eval_interval': 180, 'hidden_layer_dims': [50, 25, 5], 'l2_regularization_weight': 0.001, 'linear_learning_rate': 0.001, 'interaction_op': 'cosine_similarity', 'dnn_learning_rate': 0.0001, 'linear_optimizer': 'Ftrl', 'dnn_optimizer': 'Adam', 'embed_dim': 50, 'logging_steps': 1000, 'dropout_prob': 0.0, 'batch_norm': False, 'map_num_parallel_calls': 5, 'shuffle_buffer_size': 512, 'num_prefetch_batches': 1, 'cycle_length': 2, 'avro_dataset_buffer_size': 1048576, 'buffer_output_elements': 1024, 'enable_full_histogram': False, 'warm_start': False, 'enable_profiler': False}
+20/01/24 21:28:45 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+20/01/24 21:28:46 WARN shortcircuit.DomainSocketFactory: The short-circuit local reads feature cannot be used because libhadoop cannot be loaded.
+Traceback (most recent call last):
+  File &quot;linkedin/pymktensorflow/widendeep_training.py&quot;, line 741, in &lt;module&gt;
+    starter.run(WideNDeepPymkModel())
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/starter.py&quot;, line 30, in run
+    executor.run(model, unparsed_args)
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 34, in run
+    self.run_worker(tony_params, args)
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 87, in run_worker
+    self.model.run_model(model_args)
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/basemodel/EstimatorBaseModel.py&quot;, line 65, in run_model
+    self.run_tensorflow(args)
+  File &quot;linkedin/pymktensorflow/widendeep_training.py&quot;, line 675, in run_tensorflow
+    train_files = tf.gfile.Glob(os.path.join(params[TRAIN_PATH], AVRO_EXT))
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/tensorflow/python/lib/io/file_io.py&quot;, line 342, in get_matching_files
+    for single_filename in filename
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/tensorflow/python/framework/errors_impl.py&quot;, line 528, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.NotFoundError: hdfs://namenode.linkedin.com:9000/jobs/user1/users/yyoon/pymk-tensorflow/cohort-data/tf-pymkData/trainingData; No such file or directory
+20/01/24 21:28:46 INFO util.Utils: pollTillNonNull function finished within 60 seconds
+20/01/24 21:28:46 INFO tony.TaskExecutor: AM response for result execution run: RECEIVED
+20/01/24 21:28:46 INFO tony.TaskExecutor: Child process exited with exit code 1
+
+
+[2020-01-24 21:28:46.872]Container exited with a non-zero exit code 1. Error file: prelaunch.err.
+Last 4096 bytes of prelaunch.err :
+Last 4096 bytes of stderr :
+k-tensorflow/cohort-data/tf-pymkData/validationData', 'working_dir': 'hdfs://namenode.linkedin.com:9000/jobs/user1/users/yyoon/pymk-tensorflow/cohort-deep-needle-models/pymk-needle-model-cosinesim-50-25', 'hdfs_model_config_path': None, 'metadata_path': 'hdfs://namenode.linkedin.com:9000/jobs/user1/users/yyoon/pymk-tensorflow/cohort-data/tf-pymkData/metadata/tensor_metadata.json', 'linear_bags': ['features'], 'embedding_bags': ['src_embedding', 'dest_embedding'], 'num_classes': 2, 'num_epochs': 1, 'max_steps': 1000000, 'eval_steps': None, 'batch_size': 512, 'response_name': 'label', 'response_data_type': 'int32', 'save_summary_steps': 100, 'save_checkpoints_secs': 1200, 'sample_weight_name': 'weight', 'log_step_count_steps': 100, 'eval_interval': 180, 'hidden_layer_dims': [50, 25, 5], 'l2_regularization_weight': 0.001, 'linear_learning_rate': 0.001, 'interaction_op': 'cosine_similarity', 'dnn_learning_rate': 0.0001, 'linear_optimizer': 'Ftrl', 'dnn_optimizer': 'Adam', 'embed_dim': 50, 'logging_steps': 1000, 'dropout_prob': 0.0, 'batch_norm': False, 'map_num_parallel_calls': 5, 'shuffle_buffer_size': 512, 'num_prefetch_batches': 1, 'cycle_length': 2, 'avro_dataset_buffer_size': 1048576, 'buffer_output_elements': 1024, 'enable_full_histogram': False, 'warm_start': False, 'enable_profiler': False}
+20/01/24 21:28:45 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+20/01/24 21:28:46 WARN shortcircuit.DomainSocketFactory: The short-circuit local reads feature cannot be used because libhadoop cannot be loaded.
+Traceback (most recent call last):
+  File &quot;linkedin/pymktensorflow/widendeep_training.py&quot;, line 741, in &lt;module&gt;
+    starter.run(WideNDeepPymkModel())
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/starter.py&quot;, line 30, in run
+    executor.run(model, unparsed_args)
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 34, in run
+    self.run_worker(tony_params, args)
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 87, in run_worker
+    self.model.run_model(model_args)
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/linkedin/tensorflowtraining/basemodel/EstimatorBaseModel.py&quot;, line 65, in run_model
+    self.run_tensorflow(args)
+  File &quot;linkedin/pymktensorflow/widendeep_training.py&quot;, line 675, in run_tensorflow
+    train_files = tf.gfile.Glob(os.path.join(params[TRAIN_PATH], AVRO_EXT))
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/tensorflow/python/lib/io/file_io.py&quot;, line 342, in get_matching_files
+    for single_filename in filename
+  File &quot;/grid/a/tmp/yarn/usercache/user1/appcache/application_1576097000949_30598/container_e42_1576097000949_30598_01_000013/venv/Python/lib/python3.6/site-packages/tensorflow/python/framework/errors_impl.py&quot;, line 528, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.NotFoundError: hdfs://namenode.linkedin.com:9000/jobs/user1/users/yyoon/pymk-tensorflow/cohort-data/tf-pymkData/trainingData; No such file or directory
+20/01/24 21:28:46 INFO util.Utils: pollTillNonNull function finished within 60 seconds
+20/01/24 21:28:46 INFO tony.TaskExecutor: AM response for result execution run: RECEIVED
+20/01/24 21:28:46 INFO tony.TaskExecutor: Child process exited with exit code 1
+
+
+
+20/01/24 21:28:47 INFO tony.ApplicationMaster: Container container_e42_1576097000949_30598_01_000013 for task worker:6 finished with exitStatus 1.
+20/01/24 21:28:47 INFO tensorflow.TonySession: Job worker:6 exited with 1
+20/01/24 21:28:47 INFO events.EventHandler: Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;worker&quot;, &quot;taskIndex&quot;: 6, &quot;status&quot;: &quot;FAILED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 7.28301568E8}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 6.1868032E8}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: -1.0}]}, &quot;timestamp&quot;: 1579901327587}
+20/01/24 21:28:47 INFO tony.ApplicationMaster: ContainerID = container_e42_1576097000949_30598_01_000012, state = COMPLETE, exitStatus = 1
+20/01/24 21:28:47 ERROR tony.ApplicationMaster: [2020-01-24 21:28:46.854]Exception from container-launch.
+Container id: container_e42_1576097000949_30598_01_000012
+Exit code: 1
+Shell output: main : command provided 1
+main : run as user is user1
+main : requested yarn user is user1
+Getting exit code file...
+Creating script paths...
+Writing pid file...
+Writing to tmp file /grid/a/tmp/yarn/nmPrivate/application_1576097000949_30598/container_e42_1576097000949_30598_01_000012/container_e42_1576097000949_30598_01_000012.pid.tmp
+Writing to cgroup task files...
+Creating local dirs...
+Launching container...
+Getting exit code file...
+Creating script paths...
+      </pre>
+    </td>
+  </tr>
+  </tbody>
+</table>
+</html>
