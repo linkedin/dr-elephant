@@ -26,6 +26,7 @@ public class JobsExceptionFingerPrinting extends Model {
     public static final String APP_ID = "app_id";
     public static final String TASK_ID = "task_id";
     public static final String EXCEPTION_TYPE = "exception_type";
+    public static final String EXCEPTION_LOG = "exception_log";
     public static final String LOG_SOURCE_INFORMATION = "log_source_information";
   }
 

@@ -130,11 +130,11 @@ public class ExceptionUtils {
     private static final String[] DEFAULT_BLACK_LISTED_EXCEPTION_PATTERN = {"-XX:OnOutOfMemoryError='kill %p'"};
 
     private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"^.+Exception.*\n?", "ERROR ApplicationMaster:.*\n?"};
+        {"^.+Exception.*\n?", "ERROR (?:.*)ApplicationMaster:.*\n?"};
 
     private static final String[] DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"(?m)^(Traceback \\(most recent call last\\)):\\n(.+\\n?)*",
-            "(?m)(Container exited with a non-zero exit code (.*))\\n(.+\\n?)*"};
+        {"(?m)(Container exited with a non-zero exit code (.*))\\n(.+\\n?)*",
+            "(?m)^(Traceback \\(most recent call last\\)):\\n(.+\\n?)*"};
 
     public static void buildConfigurations(Configuration configuration) {
       FIRST_THRESHOLD_LOG_LENGTH_IN_BYTES =
