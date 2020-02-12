@@ -53,9 +53,9 @@ public class NotificationDataGenerator {
   private static long DEFAULT_PARAM_EXECUTED_STATE_STALE_TIME = 172800000;
 
   private String autoTuningJobsInExecutedStateQuery = "select jsps.id from job_suggested_param_set jsps"
-      + "INNER JOIN tuning_job_definition tjd ON jsps.job_definition_id=tjd.job_definition_id"
-      + "AND jsps.param_set_state = 'EXECUTED' AND tjd.auto_apply=1"
-      + "AND jsps.updated_ts BETWEEN :start_ts AND :end_ts";
+      + " INNER JOIN tuning_job_definition tjd ON jsps.job_definition_id=tjd.job_definition_id"
+      + " AND jsps.param_set_state = 'EXECUTED' AND tjd.auto_apply=1"
+      + " AND jsps.updated_ts BETWEEN :start_ts AND :end_ts";
 
   public NotificationDataGenerator(long windowStartTimeMS, long windowEndTimeMS, Configuration configuration) {
     this.windowStartTimeMS = windowStartTimeMS;
