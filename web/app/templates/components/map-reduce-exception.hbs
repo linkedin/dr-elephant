@@ -59,7 +59,7 @@
                             {{/panels.panel}}
                             {{/cp-panels}}
                         {{/each}}
-                      {{#if (eq job.type "SPARK")}}
+                      {{#if (or (eq job.type "SPARK") (eq job.type "TONY"))}}
                         <div class="box">
                           <pre>{{application.exceptionLogSource}}</pre>
                         </div>

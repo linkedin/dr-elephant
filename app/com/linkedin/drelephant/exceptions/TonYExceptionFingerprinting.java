@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -45,10 +46,11 @@ public class TonYExceptionFingerprinting {
   private AppResult _appResult;
   private String amContainerStderrLogData = null;
   private String amContainerStdoutLogData = null;
-  String TONY_STDERR_LOG_URL_SUFFIX = "/amstderr.log";
-  String TONY_STDOUT_LOG_URL_SUFFIX = "/amstdout.log";
+  private String TONY_STDERR_LOG_URL_SUFFIX = "/amstderr.log";
+  private String TONY_STDOUT_LOG_URL_SUFFIX = "/amstdout.log";
   private int START_INDEX = 0;
   private String LOG_START_OFFSET_PARAM = "?start=";
+  private int MAX_NUMBER_OF_LINES_IN_STACKTRACE = 200;
 
   private HashSet<Integer> exceptionIdSet = new HashSet<>();
   @Getter
@@ -106,24 +108,25 @@ public class TonYExceptionFingerprinting {
    */
   public void collectExceptionInfoFromLogData() {
     List<ExceptionInfo> exceptionInfos = new ArrayList<>();
-    if (amContainerStderrLogData.length() != 0) {
+    if (!Strings.isNullOrEmpty(amContainerStderrLogData)) {
       exceptionInfos = filterOutRelevantLogSnippetsFromData(amContainerStderrLogData,
           _analyticJob.getAmContainerLogsURL() + TONY_STDERR_LOG_URL_SUFFIX);
     }
 
-    if (exceptionInfos.size() == 0 && amContainerStdoutLogData.length() != 0) {
-        logger.warn("No error information found in AM Stderr logs");
+    if (exceptionInfos.size() == 0 && !Strings.isNullOrEmpty(amContainerStdoutLogData)) {
+        logger.warn("No error information found in AM Stderr logs for " + _analyticJob.getAppId());
         exceptionInfos = filterOutRelevantLogSnippetsFromData(amContainerStdoutLogData,
             _analyticJob.getAmContainerLogsURL() + TONY_STDOUT_LOG_URL_SUFFIX);
       }
       if (exceptionInfos.size() == 0) {
-        logger.error("No Error information found neither in AMStderr log nor in AMStdout log");
+        logger.error("No Error information found neither in AMStderr log nor in AMStdout log " +
+            _analyticJob.getAppId());
       }
       _exceptionInfoList.addAll(exceptionInfos);
   }
 
   /**
-   * Filter out relevant exception stacktraces snippets from given log
+   * Filter out relevant exception stackTraces snippets from given log
    */
   private List<ExceptionInfo> filterOutRelevantLogSnippetsFromData(String logData,
       String logLocationUrl) {
@@ -159,8 +162,8 @@ public class TonYExceptionFingerprinting {
           exceptionInfo.setExceptionID(exceptionId);
           exceptionInfo.setExceptionName(exact_exception_pattern_matcher.group(1));
           exceptionInfo.setExceptionSource(ExceptionInfo.ExceptionSource.DRIVER);
-          exceptionInfo.setExceptionStackTrace(exact_exception_pattern_matcher.group(0));
-          logger.info("Offset exact " + exact_exception_pattern_matcher.start());
+          exceptionInfo.setExceptionStackTrace(truncateStackTrace(exact_exception_pattern_matcher.group(0),
+              MAX_NUMBER_OF_LINES_IN_STACKTRACE));
           exceptionInfo.setExceptionTrackingURL(logLocationURL + LOG_START_OFFSET_PARAM +
               exact_exception_pattern_matcher.start());
           exactlyMatchingExceptionList.add(exceptionInfo);
@@ -189,13 +192,11 @@ public class TonYExceptionFingerprinting {
         if (!isExceptionLogDuplicate(exceptionId)) {
           ExceptionInfo exceptionInfo = new ExceptionInfo();
           exceptionInfo.setExceptionID(partial_pattern_matcher.group(0).hashCode());
-          exceptionInfo.setExceptionName(partial_pattern_matcher.group(0).split("\n", 2)[0]);
+          exceptionInfo.setExceptionName(partial_pattern_matcher.group(1));
           exceptionInfo.setExceptionSource(ExceptionInfo.ExceptionSource.DRIVER);
           exceptionInfo.setExceptionStackTrace(partial_pattern_matcher.group(0));
-          logger.info("Offset partial " + partial_pattern_matcher.start());
-          logger.info("Match for partial exception pattern " + exceptionInfo.getExceptionStackTrace());
-
-          exceptionInfo.setExceptionTrackingURL(logLocationURL + LOG_START_OFFSET_PARAM + partial_pattern_matcher.start());
+          exceptionInfo.setExceptionTrackingURL(logLocationURL + LOG_START_OFFSET_PARAM +
+              partial_pattern_matcher.start());
           exceptionInfoList.add(exceptionInfo);
         }
       }
@@ -225,7 +226,6 @@ public class TonYExceptionFingerprinting {
       tonyJobException.taskId = NOT_APPLICABLE;
       tonyJobException.jobName = getJobName(_appResult.jobExecUrl);
       tonyJobException.logSourceInformation = _analyticJob.getAmContainerLogsURL();
-      //sparkJobException.exceptionLog = exceptionsTrace;
       if (exceptionsTrace.trim().length() > 2) {
         tonyJobException.exceptionLog = exceptionsTrace;
       } else {
@@ -262,7 +262,7 @@ public class TonYExceptionFingerprinting {
         connection.disconnect();
         return logDataString;
       } catch (IOException ex) {
-        logger.error("Error occured while fetching log data from " + containerURL, ex);
+        logger.error("Error occurred while fetching log data from " + containerURL, ex);
       }
       return null;
   }
@@ -291,15 +291,15 @@ public class TonYExceptionFingerprinting {
     String exceptionInJson = null;
     try {
       exceptionInJson = Obj.writeValueAsString(exceptionInfoList.subList(0,
-          Math.min(exceptionInfoList.size(), NUMBER_OF_EXCEPTION_TO_PUT_IN_DB.getValue())));
+          Math.min(exceptionInfoList.size(), NUMBER_OF_TONY_EXCEPTION_TO_PUT_IN_DB.getValue())));
     } catch (IOException ex) {
-      logger.error(" Exception while serializing exception info list to JSON ", ex);
+      logger.error("Exception while serializing exception info list to JSON ", ex);
     }
     return exceptionInJson;
   }
 
   /**
-   * @param  appId
+   * @param  appId Application id
    * @return Whether exception fingerprinting is done for this APP_ID earlier
    */
   private boolean isExceptionFingerPrintingAlreadyDone(String appId) {
@@ -324,5 +324,15 @@ public class TonYExceptionFingerprinting {
       return false;
     }
     return true;
+  }
+
+  /**
+   * @param stackTrace String containing stackTrace of exception seperated by new line
+   * @param limit maximum number of lines required in stackTrace
+   * @return stackTrace with given number of lines or less
+   */
+  private String truncateStackTrace(String stackTrace, int limit) {
+    List<String> stackTraceSplitList = Arrays.asList(stackTrace.split("\n"));
+    return String.join("\n", stackTraceSplitList.subList(0, Math.min(limit, stackTraceSplitList.size())));
   }
 }

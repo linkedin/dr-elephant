@@ -113,6 +113,7 @@ public class ExceptionUtils {
     public static EFConfiguration<String[]> REGEX_AUTO_TUNING_FAULT = null;
     public static EFConfiguration<Integer> THRESHOLD_LOG_LINE_LENGTH = null;
     public static EFConfiguration<Integer> NUMBER_OF_EXCEPTION_TO_PUT_IN_DB = null;
+    public static EFConfiguration<Integer> NUMBER_OF_TONY_EXCEPTION_TO_PUT_IN_DB = null;
     public static EFConfiguration<String[]> BLACK_LISTED_EXCEPTION_PATTERN = null;
     public static EFConfiguration<Integer> MAX_LINE_LENGTH_OF_EXCEPTION = null;
     public static EFConfiguration<Integer> NUMBER_OF_RETRIES_FOR_FETCHING_DRIVER_LOGS = null;
@@ -130,11 +131,14 @@ public class ExceptionUtils {
     private static final String[] DEFAULT_BLACK_LISTED_EXCEPTION_PATTERN = {"-XX:OnOutOfMemoryError='kill %p'"};
 
     private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"^.+Exception.*\n?", "ERROR (?:.*)ApplicationMaster:.*\n?"};
+        {"(?m)^.*(ERROR.+)\n?"};
 
     private static final String[] DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"(?m)(Container exited with a non-zero exit code (.*))\\n(.+\\n?)*",
-            "(?m)^(Traceback \\(most recent call last\\)):\\n(.+\\n?)*"};
+        {"(?m)(^.+Exception(.+\n))(\t+at .+\n?)+",
+            "(?m)(Container exited with a non-zero exit code (.*))\n(.+\n?)*"
+                + "((\nResourceExhaustedError \\(see above for traceback\\):.+\n(.+\n?)*))?"
+                + "((\n(WARNING.+\\n?\\n?)*)\n(Traceback \\(most recent call last\\)):\n(.+\n?)*)?",
+            "(?m)^(Traceback \\(most recent call last\\)):\n(.+\n?)*"};
 
     public static void buildConfigurations(Configuration configuration) {
       FIRST_THRESHOLD_LOG_LENGTH_IN_BYTES =
@@ -218,6 +222,11 @@ public class ExceptionUtils {
           new EFConfiguration<Integer>().setConfigurationName(NUMBER_OF_EXCEPTION_TO_PUT_IN_DB_NAME)
               .setValue(configuration.getInt(NUMBER_OF_EXCEPTION_TO_PUT_IN_DB_NAME, 10))
               .setDoc(" Number of exception to put in database for UI");
+
+      NUMBER_OF_TONY_EXCEPTION_TO_PUT_IN_DB =
+          new EFConfiguration<Integer>().setConfigurationName(NUMBER_OF_TONY_EXCEPTION_TO_PUT_IN_DB_NAME)
+              .setValue(configuration.getInt(NUMBER_OF_TONY_EXCEPTION_TO_PUT_IN_DB_NAME, 20))
+              .setDoc(" Number of TonY exceptions to store in database");
 
       BLACK_LISTED_EXCEPTION_PATTERN =
           new com.linkedin.drelephant.exceptions.util.EFConfiguration<String[]>().setConfigurationName(

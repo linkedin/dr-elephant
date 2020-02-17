@@ -54,7 +54,6 @@ public class TonYExceptionFingerprintingTest {
   private String stderrContainerLogParameters = "/amstderr.log?start=0";
   private String stdoutContainerLogParameters = "/amstdout.log?start=0";
 
-  private final String MOCK_RM_HOST = "localhost";
   private final Integer MOCK_RM_PORT = 8042;
   private final String TEST_APPLICATION_ID_1 = "app_1";
   private final String TEST_WORKFLOW_URL_1 = "https://elephant.linkedin.com:8443/executor?execid=1";

@@ -69,6 +69,7 @@ public final class Constant {
   public static final String JHS_TIME_OUT_NAME = "ef.jhs.timeout";
   public static final String THRESHOLD_LOG_LINE_LENGTH_NAME = "ef.log.line.threshold";
   static final String NUMBER_OF_EXCEPTION_TO_PUT_IN_DB_NAME = "ef.number.put.db";
+  static final String NUMBER_OF_TONY_EXCEPTION_TO_PUT_IN_DB_NAME = "ef.tony.exception.count.to.save";
   static final String BLACK_LISTED_EXCEPTION_CONF_NAME = "ef.blacklisted.exception";
   static final String MAX_LINE_LENGTH_OF_EXCEPTION_NAME = "ef.max.line.length.exception";
   static final String NUMBER_OF_RETRIES_FOR_FETCHING_DRIVER_LOGS_NAME = "ef.number.retries.fetching.driver.logs";
