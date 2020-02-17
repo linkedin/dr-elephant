@@ -73,7 +73,7 @@ public class TaskGPUHeuristic implements Heuristic<TonyApplicationData> {
 
     for (String taskType : taskTypes) {
       details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
-          Integer.toString(taskMap.get(taskType).size())));
+          taskMap.containsKey(taskType) ? Integer.toString(taskMap.get(taskType).size()) : "0"));
 
       // get number of GPU resource requested, if any
       int numGPUsRequested = conf.getInt(TonyConfigurationKeys.getResourceKey(taskType, Constants.GPUS), 0);
