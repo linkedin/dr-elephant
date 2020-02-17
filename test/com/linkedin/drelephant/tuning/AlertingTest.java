@@ -31,6 +31,7 @@ public class AlertingTest implements Runnable {
     testDeveloperAlerting();
     testSKAlerting();
     testParamFitnessNotComputedRule();
+    testParamFitnessNotComputedRuleAutoApplyDisabled();
   }
 
   private void testDeveloperAlerting() {
@@ -119,6 +120,13 @@ public class AlertingTest implements Runnable {
     jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.EXECUTED;
     jobSuggestedParamSet.update();
 
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .where()
+        .eq("job_definition_id", jobSuggestedParamSet.jobDefinition.id)
+        .findUnique();
+    tuningJobDefinition.autoApply = true;
+    tuningJobDefinition.update();
+
     NotificationManager manager = new EmailNotificationManager(configuration);
 
     List<NotificationData> notificationDataAfterUpdate =
@@ -128,6 +136,41 @@ public class AlertingTest implements Runnable {
     NotificationType notificationType = notificationDataAfterUpdate.get(0).getNotificationType();
     assertTrue(" Developers Notification  ",
         notificationType.name().equals(NotificationType.DEVELOPER.name()));
+
+  }
+
+  private void testParamFitnessNotComputedRuleAutoApplyDisabled(){
+    Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+    configuration.setBoolean("alerting.enabled", true);
+
+    long startTime = System.currentTimeMillis();
+    long endTime = System.currentTimeMillis() + 1000;
+
+    List<NotificationData> notificationDataBeforeUpdate =
+        new EmailNotificationManager(configuration).generateNotificationData(startTime, endTime);
+
+    assertTrue("No data within the range provided ", notificationDataBeforeUpdate.size() == 0);
+
+    JobSuggestedParamSet jobSuggestedParamSet = JobSuggestedParamSet.find.select("*")
+        .where()
+        .eq(JobSuggestedParamSet.TABLE.id, "1137")
+        .findUnique();
+    jobSuggestedParamSet.paramSetState = JobSuggestedParamSet.ParamSetStatus.EXECUTED;
+    jobSuggestedParamSet.update();
+
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .where()
+        .eq("job_definition_id", jobSuggestedParamSet.jobDefinition.id)
+        .findUnique();
+    tuningJobDefinition.autoApply = false;
+    tuningJobDefinition.update();
+
+    NotificationManager manager = new EmailNotificationManager(configuration);
+
+    List<NotificationData> notificationDataAfterUpdate =
+        manager.generateNotificationData(startTime + 172800000, endTime + 172800000 + 1000);
+
+    assertTrue(" Notification data size "+notificationDataAfterUpdate.size(), notificationDataAfterUpdate.size() == 0);
 
   }
 }
