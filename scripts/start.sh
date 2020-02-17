@@ -100,8 +100,8 @@ db_loc="jdbc:mysql://"$db_url"/"$db_name"?characterEncoding=UTF-8"
 # db_password is optional. default is ""
 db_password="${db_password:-""}"
 
-#port is optional. default is 8080
-port="${port:-8080}"
+#http port is optional. default is 8080
+http_port="${http_port:-8080}"
 echo "http port: " $port
 
 # Check for keytab_user, keytab_location and application_secret in the elephant.conf
@@ -171,7 +171,17 @@ else
 fi
 
 OPTS+=" $jvm_args -Djava.library.path=$JAVA_LIB_PATH"
-OPTS+=" -Dhttp.port=$port"
+OPTS+=" -Dhttp.port=$http_port"
+
+if [ -n "${https_port}" ]; then
+  echo "https port: " ${https_port}
+  echo "https_keystore_location: " ${https_keystore_location}
+  echo "https_keystore_type: " ${https_keystore_type}
+
+  OPTS+=" -Dhttps.port=${https_port} -Dhttps.keyStore=${https_keystore_location}
+  -Dhttps.keyStoreType=${https_keystore_type} -Dhttps.keyStorePassword=${https_keystore_password}"
+fi
+
 OPTS+=" -Ddb.default.url=$db_loc -Ddb.default.user=$db_user -Ddb.default.password=$db_password"
 
 # set Java related options (e.g. -Xms1024m -Xmx1024m)
