@@ -66,6 +66,7 @@ public final class Constant {
   public static final String THRESHOLD_LOG_INDEX_FROM_END_IN_BYTES_NAME = "ef.threshold.log.index";
   public static final String MINIMUM_LOG_LENGTH_TO_SKIP_IN_BYTES_NAME = "ef.minimum.loglength.skip.start";
   public static final String NUMBER_OF_STACKTRACE_LINE_NAME = "ef.stacktrace.lines";
+  public static final String MAX_NUMBER_OF_STACKTRACE_LINE_TONY_KEY = "ef.max.stacktrace.lines.tony";
   public static final String JHS_TIME_OUT_NAME = "ef.jhs.timeout";
   public static final String THRESHOLD_LOG_LINE_LENGTH_NAME = "ef.log.line.threshold";
   static final String NUMBER_OF_EXCEPTION_TO_PUT_IN_DB_NAME = "ef.number.put.db";

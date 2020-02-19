@@ -106,6 +106,7 @@ public class ExceptionUtils {
     public static EFConfiguration<Long> THRESHOLD_LOG_INDEX_FROM_END_IN_BYTES = null;
     public static EFConfiguration<Long> MINIMUM_LOG_LENGTH_TO_SKIP_IN_BYTES = null;
     public static EFConfiguration<Integer> NUMBER_OF_STACKTRACE_LINE = null;
+    public static EFConfiguration<Integer> MAX_NUMBER_OF_STACKTRACE_LINE_TONY = null;
     public static EFConfiguration<Integer> JHS_TIME_OUT = null;
     public static EFConfiguration<String[]> REGEX_FOR_EXCEPTION_IN_LOGS = null;
     public static EFConfiguration<String[]> REGEX_FOR_PARTIAL_EXCEPTION_PATTERN_IN_TONY_LOGS = null;
@@ -181,6 +182,12 @@ public class ExceptionUtils {
               NUMBER_OF_STACKTRACE_LINE_NAME)
               .setValue(configuration.getInt(NUMBER_OF_STACKTRACE_LINE_NAME, 5))
               .setDoc("Number of stack trace lines read , after the exception encountered");
+
+      MAX_NUMBER_OF_STACKTRACE_LINE_TONY =
+          new com.linkedin.drelephant.exceptions.util.EFConfiguration<Integer>().setConfigurationName(
+              MAX_NUMBER_OF_STACKTRACE_LINE_TONY_KEY)
+              .setValue(configuration.getInt(MAX_NUMBER_OF_STACKTRACE_LINE_TONY_KEY, 200))
+              .setDoc("Number of stack trace lines to store for a TonY Exception");
 
       JHS_TIME_OUT =
           new com.linkedin.drelephant.exceptions.util.EFConfiguration<Integer>().setConfigurationName(JHS_TIME_OUT_NAME)

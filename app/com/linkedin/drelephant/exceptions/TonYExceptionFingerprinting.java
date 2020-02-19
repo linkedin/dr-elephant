@@ -50,9 +50,8 @@ public class TonYExceptionFingerprinting {
   private String TONY_STDOUT_LOG_URL_SUFFIX = "/amstdout.log";
   private int START_INDEX = 0;
   private String LOG_START_OFFSET_PARAM = "?start=";
-  private int MAX_NUMBER_OF_LINES_IN_STACKTRACE = 200;
 
-  private HashSet<Integer> exceptionIdSet = new HashSet<>();
+  private HashSet<String> exceptionIdSet = new HashSet<>();
   @Getter
   private List<ExceptionInfo> _exceptionInfoList = new ArrayList<>();
 
@@ -108,6 +107,11 @@ public class TonYExceptionFingerprinting {
    */
   public void collectExceptionInfoFromLogData() {
     List<ExceptionInfo> exceptionInfos = new ArrayList<>();
+
+    if (Strings.isNullOrEmpty(amContainerStderrLogData) && Strings.isNullOrEmpty(amContainerStdoutLogData)) {
+      logger.warn("Both AM stdout and stderr logs empty.");
+      return;
+    }
     if (!Strings.isNullOrEmpty(amContainerStderrLogData)) {
       exceptionInfos = filterOutRelevantLogSnippetsFromData(amContainerStderrLogData,
           _analyticJob.getAmContainerLogsURL() + TONY_STDERR_LOG_URL_SUFFIX);
@@ -117,12 +121,13 @@ public class TonYExceptionFingerprinting {
         logger.warn("No error information found in AM Stderr logs for " + _analyticJob.getAppId());
         exceptionInfos = filterOutRelevantLogSnippetsFromData(amContainerStdoutLogData,
             _analyticJob.getAmContainerLogsURL() + TONY_STDOUT_LOG_URL_SUFFIX);
-      }
-      if (exceptionInfos.size() == 0) {
-        logger.error("No Error information found neither in AMStderr log nor in AMStdout log " +
-            _analyticJob.getAppId());
-      }
-      _exceptionInfoList.addAll(exceptionInfos);
+    }
+
+    if (exceptionInfos.size() == 0) {
+      logger.error("No Error information found neither in AMStderr log nor in AMStdout log " +
+          _analyticJob.getAppId());
+    }
+    _exceptionInfoList.addAll(exceptionInfos);
   }
 
   /**
@@ -156,14 +161,13 @@ public class TonYExceptionFingerprinting {
     for (Pattern exactExceptionPattern : exactExceptionRegexList) {
       Matcher exact_exception_pattern_matcher = exactExceptionPattern.matcher(logData);
       while (exact_exception_pattern_matcher.find()) {
-        int exceptionId = exact_exception_pattern_matcher.group(0).hashCode();
-        if (!isExceptionLogDuplicate(exceptionId)) {
+        if (!isExceptionLogDuplicate(exact_exception_pattern_matcher.group(0))) {
           ExceptionInfo exceptionInfo = new ExceptionInfo();
-          exceptionInfo.setExceptionID(exceptionId);
+          exceptionInfo.setExceptionID(exact_exception_pattern_matcher.group(0).hashCode());
           exceptionInfo.setExceptionName(exact_exception_pattern_matcher.group(1));
           exceptionInfo.setExceptionSource(ExceptionInfo.ExceptionSource.DRIVER);
           exceptionInfo.setExceptionStackTrace(truncateStackTrace(exact_exception_pattern_matcher.group(0),
-              MAX_NUMBER_OF_LINES_IN_STACKTRACE));
+              MAX_NUMBER_OF_STACKTRACE_LINE_TONY.getValue()));
           exceptionInfo.setExceptionTrackingURL(logLocationURL + LOG_START_OFFSET_PARAM +
               exact_exception_pattern_matcher.start());
           exactlyMatchingExceptionList.add(exceptionInfo);
@@ -188,8 +192,7 @@ public class TonYExceptionFingerprinting {
     for (Pattern exactExceptionPattern : partialExceptionRegexList) {
       Matcher partial_pattern_matcher = exactExceptionPattern.matcher(logData);
       while (partial_pattern_matcher.find()) {
-        int exceptionId = partial_pattern_matcher.group(0).hashCode();
-        if (!isExceptionLogDuplicate(exceptionId)) {
+        if (!isExceptionLogDuplicate(partial_pattern_matcher.group(0))) {
           ExceptionInfo exceptionInfo = new ExceptionInfo();
           exceptionInfo.setExceptionID(partial_pattern_matcher.group(0).hashCode());
           exceptionInfo.setExceptionName(partial_pattern_matcher.group(1));
@@ -315,15 +318,19 @@ public class TonYExceptionFingerprinting {
   }
 
   /**
-   * @param exceptionLogHashCode HashCode for filterOut exception stackTrace
+   * @param exceptionStackTrace HashCode for filterOut exception stackTrace
    * @return where this exception stackTrace is parsed and saved before
    */
-  private boolean isExceptionLogDuplicate(int exceptionLogHashCode) {
-    if (!exceptionIdSet.contains(exceptionLogHashCode)) {
-      exceptionIdSet.add(exceptionLogHashCode);
-      return false;
+  private boolean isExceptionLogDuplicate(String exceptionStackTrace) {
+    if (exceptionIdSet.contains(exceptionStackTrace)) {
+      for (String uniqueExceptions : exceptionIdSet) {
+        if (uniqueExceptions.equals(exceptionStackTrace)) {
+          return true;
+        }
+      }
     }
-    return true;
+    exceptionIdSet.add(exceptionStackTrace);
+    return false;
   }
 
   /**
