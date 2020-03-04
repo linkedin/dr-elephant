@@ -101,7 +101,8 @@ object Dependencies {
     "javax.mail" % "mail" % "1.4",
     "com.linkedin.tony" % "tony-core" % tonyVersion intransitive(),
     "net.lingala.zip4j" % "zip4j" % "1.3.2",
-    "org.projectlombok" % "lombok" % "1.18.8"
+    "org.projectlombok" % "lombok" % "1.18.8",
+    "org.apache.commons" % "commons-text" % "1.8"
   ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)

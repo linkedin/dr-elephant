@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.text.similarity.CosineDistance;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
@@ -103,10 +104,15 @@ public class ExceptionUtils {
     return null;
   }
 
-    public static void debugLog(String message) {
+  public static void debugLog(String message) {
     if (debugEnabled) {
       logger.debug(message);
     }
+  }
+
+  public static int getLogSimilarityPercentage(String log1, String log2) {
+    Double cosineNonSimilarity = new CosineDistance().apply(log1.toLowerCase(), log2.toLowerCase());
+    return (int) ((1-cosineNonSimilarity) * 100);
   }
 
   /**
@@ -139,6 +145,7 @@ public class ExceptionUtils {
     public static EFConfiguration<Integer> AZKABAN_JOB_LOG_MAX_LENGTH = null;
     public static EFConfiguration<Boolean> SHOULD_PROCESS_AZKABAN_LOG = null;
 
+    public static EFConfiguration<Integer> MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD = null;
 
     private static final String[] DEFAULT_REGEX_FOR_EXCEPTION_IN_LOGS =
         {"^.+Exception.*", "^.+Error.*", ".*Container\\s+killed.*"};
@@ -303,6 +310,11 @@ public class ExceptionUtils {
               .setValue(configuration.getInt(TOTAL_LENGTH_OF_LOG_SAVED_IN_DB_NAME, 9500))
               .setDoc(" Length of logs saved in db . Buffer size is 500 . It means string of length of "
                   + "this configuration will be stored in db which have size TOTAL_LENGTH_OF_LOG_SAVED_IN_DB+ 500");
+
+      MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD =
+          new EFConfiguration<Integer>().setConfigurationName(MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD_KEY)
+          .setValue(configuration.getInt(MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD_KEY, 90))
+          .setDoc("Max allowed percentage of similarity between two logs to consider them distinct");
 
       AZKABAN_JOB_LOG_START_OFFSET =
           new EFConfiguration<Integer>().setConfigurationName(AZKABAN_JOB_LOG_START_OFFSET_CONFIG_KEY)

@@ -83,4 +83,5 @@ public final class Constant {
   static final String AZKABAN_JOB_LOG_START_OFFSET_CONFIG_KEY = "ef.azkaban.job.log.start.offset" ;
   static final String AZKABAN_JOB_LOG_MAX_LENGTH_CONFIG_KEY = "ef.azkaban.job.log.max.length" ;
   static final String SHOULD_PROCESS_AZKABAN_LOG_CONFIG_NAME = "ef.azkaban.log.processing.enable" ;
+  static final String MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD_KEY = "ef.max.log.similarity.percentage" ;
 }

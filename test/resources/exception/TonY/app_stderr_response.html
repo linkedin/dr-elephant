@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+<title>
+  Logs for container_e42_123456789568_34567_01_000001
+</title>
+<link rel="stylesheet" href="/static/yarn.css">
+<style type="text/css">
+  #layout { height: 100%; }
+  #layout thead td { height: 3em; }
+  #layout #navcell { width: 11em; padding: 0 1em; }
+  #layout td.content { padding-top: 0 }
+  #layout tbody { vertical-align: top; }
+  #layout tfoot td { height: 4em; }
+</style>
+<link rel="stylesheet" href="/static/jquery/themes-1.9.1/base/jquery-ui.css">
+<link rel="stylesheet" href="/static/dt-1.9.4/css/jui-dt.css">
+<script type="text/javascript" src="/static/jquery/jquery-1.8.2.min.js">
+</script>
+<script type="text/javascript" src="/static/jquery/jquery-ui-1.9.1.custom.min.js">
+</script>
+<script type="text/javascript" src="/static/dt-1.9.4/js/jquery.dataTables.min.js">
+</script>
+<script type="text/javascript" src="/static/yarn.dt.plugins.js">
+</script>
+<script type="text/javascript" src="/static/dt-sorting/natural.js">
+</script>
+<style type="text/css">
+  #jsnotice { padding: 0.2em; text-align: center; }
+  .ui-progressbar { height: 1em; min-width: 5em }
+</style>
+<script type="text/javascript">
+  $(function() {
+    $('#nav').accordion({autoHeight:false, active:0});
+  });
+</script>
+<div id="jsnotice" class="ui-state-error">
+  This page will not function without javascript enabled. Please enable javascript on your browser.
+</div>
+<script type="text/javascript">
+  $('#jsnotice').hide();
+</script>
+<table id="layout" class="ui-widget-content">
+  <thead>
+  <tr>
+    <td colspan="2">
+      <div id="header" class="ui-widget">
+        <div id="user">
+          Logged in as: sgupta7
+        </div>
+        <div id="logo">
+          <img src="/static/hadoop-st.png">
+        </div>
+        <h1>
+          Logs for container_e42_123456789568_34567_01_000001
+        </h1>
+      </div>
+    </td>
+  </tr>
+  </thead>
+  <tfoot>
+  <tr>
+    <td colspan="2">
+      <div id="footer" class="ui-widget">
+      </div>
+    </td>
+  </tr>
+  </tfoot>
+  <tbody>
+  <tr>
+    <td id="navcell">
+      <div id="nav">
+        <h3>
+          Logs
+        </h3>
+      </div>
+    </td>
+    <td class="content">
+      <p>
+        Log Type: amstdout.log
+      <p>
+        Log Upload Time: Fri Feb 07 06:52:52 +0000 2020
+      <p>
+        Log Length: 262775
+      <p>
+        Showing 188124 bytes of 262775 total. Click
+        <a href="node.linkedin.com:8041/container_e42_123456789568_34567_01_000001/container_e42_123456789568_34567_01_000001/abcde/amstdout.log/?start=0">here</a>
+        for the full log.
+      <pre>Container exited with a non-zero exit code 1. Error file: prelaunch.err.
+Last 4096 bytes of prelaunch.err :
+Last 4096 bytes of stderr :
+eated&quot;:&quot;@1580956614.554321828&quot;,&quot;description&quot;:&quot;OS Error&quot;,&quot;errno&quot;:98,&quot;file&quot;:&quot;external/grpc/src/core/lib/iomgr/tcp_server_utils_posix_common.cc&quot;,&quot;file_line&quot;:190,&quot;os_error&quot;:&quot;Address already in use&quot;,&quot;syscall&quot;:&quot;bind&quot;}]},{&quot;created&quot;:&quot;@1580956614.554336870&quot;,&quot;description&quot;:&quot;Unable to configure socket&quot;,&quot;fd&quot;:273,&quot;file&quot;:&quot;external/grpc/src/core/lib/iomgr/tcp_server_utils_posix_common.cc&quot;,&quot;file_line&quot;:217,&quot;referenced_errors&quot;:[{&quot;created&quot;:&quot;@1580956614.554334914&quot;,&quot;description&quot;:&quot;OS Error&quot;,&quot;errno&quot;:98,&quot;file&quot;:&quot;external/grpc/src/core/lib/iomgr/tcp_server_utils_posix_common.cc&quot;,&quot;file_line&quot;:190,&quot;os_error&quot;:&quot;Address already in use&quot;,&quot;syscall&quot;:&quot;bind&quot;}]}]}]}
+2020-02-06 02:36:54.554437: E tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:466] Unknown: Could not start gRPC server
+Traceback (most recent call last):
+  File &quot;linkedin/recruiterrelevance/train_listwise_model.py&quot;, line 307, in &lt;module&gt;
+    starter.run(ListwiseModelRunner())
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/starter.py&quot;, line 30, in run
+    executor.run(model, unparsed_args)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 34, in run
+    self.run_worker(tony_params, args)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 87, in run_worker
+    self.model.run_model(model_args)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/basemodel/EstimatorBaseModel.py&quot;, line 65, in run_model
+    self.run_tensorflow(args)
+  File &quot;linkedin/recruiterrelevance/train_listwise_model.py&quot;, line 303, in run_tensorflow
+    main(args)
+  File &quot;linkedin/recruiterrelevance/train_listwise_model.py&quot;, line 242, in main
+    tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 471, in train_and_evaluate
+    return executor.run()
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 638, in run
+    getattr(self, task_to_run)()
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 648, in run_worker
+    return self._start_distributed_training()
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 769, in _start_distributed_training
+    self._start_std_server(config)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 757, in _start_std_server
+    protocol=config.protocol)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000008/venv/Python/lib/python3.7/site-packages/tensorflow/python/training/server_lib.py&quot;, line 148, in __init__
+    self._server = c_api.TF_NewServer(self._server_def.SerializeToString())
+tensorflow.python.framework.errors_impl.UnknownError: Could not start gRPC server
+
+
+[2020-02-06 02:36:55.292]Container exited with a non-zero exit code 1. Error file: prelaunch.err.
+Last 4096 bytes of prelaunch.err :
+Last 4096 bytes of stderr :
+eated&quot;:&quot;@1580956614.554321828&quot;,&quot;description&quot;:&quot;OS Error&quot;,&quot;errno&quot;:98,&quot;file&quot;:&quot;external/grpc/src/core/lib/iomgr/tcp_server_utils_posix_common.cc&quot;,&quot;file_line&quot;:190,&quot;os_error&quot;:&quot;Address already in use&quot;,&quot;syscall&quot;:&quot;bind&quot;}]},{&quot;created&quot;:&quot;@1580956614.554336870&quot;,&quot;description&quot;:&quot;Unable to configure socket&quot;,&quot;fd&quot;:273,&quot;file&quot;:&quot;external/grpc/src/core/lib/iomgr/tcp_server_utils_posix_common.cc&quot;,&quot;file_line&quot;:217,&quot;referenced_errors&quot;:[{&quot;created&quot;:&quot;@1580956614.554334914&quot;,&quot;description&quot;:&quot;OS Error&quot;,&quot;errno&quot;:98,&quot;file&quot;:&quot;external/grpc/src/core/lib/iomgr/tcp_server_utils_posix_common.cc&quot;,&quot;file_line&quot;:190,&quot;os_error&quot;:&quot;Address already in use&quot;,&quot;syscall&quot;:&quot;bind&quot;}]}]}]}
+2020-02-06 02:36:54.554437: E tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:466] Unknown: Could not start gRPC server
+Traceback (most recent call last):
+  File &quot;linkedin/recruiterrelevance/train_listwise_model.py&quot;, line 307, in &lt;module&gt;
+    starter.run(ListwiseModelRunner())
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/starter.py&quot;, line 30, in run
+    executor.run(model, unparsed_args)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 34, in run
+    self.run_worker(tony_params, args)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/executor/TonYEstimatorExecutor.py&quot;, line 87, in run_worker
+    self.model.run_model(model_args)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/linkedin/tensorflowtraining/basemodel/EstimatorBaseModel.py&quot;, line 65, in run_model
+    self.run_tensorflow(args)
+  File &quot;linkedin/recruiterrelevance/train_listwise_model.py&quot;, line 303, in run_tensorflow
+    main(args)
+  File &quot;linkedin/recruiterrelevance/train_listwise_model.py&quot;, line 242, in main
+    tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 471, in train_and_evaluate
+    return executor.run()
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 638, in run
+    getattr(self, task_to_run)()
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 648, in run_worker
+    return self._start_distributed_training()
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 769, in _start_distributed_training
+    self._start_std_server(config)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/tensorflow_estimator/python/estimator/training.py&quot;, line 757, in _start_std_server
+    protocol=config.protocol)
+  File &quot;cache/abcde/appcache/application_123456789568_34567/container_e42_123456789568_34567_01_000009/venv/Python/lib/python3.7/site-packages/tensorflow/python/training/server_lib.py&quot;, line 148, in __init__
+    self._server = c_api.TF_NewServer(self._server_def.SerializeToString())
+tensorflow.python.framework.errors_impl.UnknownError: Could not start gRPC server
+
+2020-02-07 06:51:31 ERROR ApplicationMaster:983 - [2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of 67.2 GB virtual memory used. Killing container.
+Dump of the process-tree for container_e42_123456789568_34567_01_000027 :
+	|- PID PPID PGRPID SESSID CMD_NAME USER_MODE_TIME(MILLIS) SYSTEM_TIME(MILLIS) VMEM_USAGE(BYTES) RSSMEM_USAGE(PAGES) FULL_CMD_LINE
+	|- 15791 15762 15762 15762 (java) 140431 43518 3649773568 58210 /usr/java/default/bin/java -Xmx1536m com.linkedin.tony.TaskExecutor
+	|- 17049 15791 15762 15762 (python) 70463750 3813289 106773319680 8340711 venv/Python/bin/python linkedin/recruiterrelevance/train_listwise_model.py --train_path hdfs://linkedinnn01.grid.linkedin.com:9000/jobs/abcde/recruiter/tf/aiahuja/v12_backfilled/L2-TF-ranking-111feat-continuous-features-and-sparse-ids/preprocessing/idValueConversion/listTrainingData --validation_path hdfs://linkedinnn01.grid.linkedin.com:9000/jobs/abcde/recruiter/tf/aiahuja/v12_backfilled/L2-TF-ranking-111feat-continuous-features-and-sparse-ids/preprocessing/idValueConversion/listTestData --schema_path hdfs://linkedinnn01.grid.linkedin.com:9000/jobs/abcde/recruiter/tf/schemas/ListExampleWithSparseIdFeatures.avsc --response_name labels --params_json_path hdfs://linkedinnn01.grid.linkedin.com:9000/jobs/abcde/recruiter/tf/welu/configs/l2_model_with_company_50k_school_weight.json --loss_fn softmax_loss --lambda_weights none --optimizer Adagrad --batch_size 16 --list_size 125 --train_steps 20000000 --learning_rate 0.1 --eval_steps 2000 --eval_start_delay_secs 0 --eval_throttle_secs 1 --disable_data_parallelism --num_reader_threads 4 --num_parser_threads 4 --num_prefetch_batches 8 --avro_record_dataset_buffer_size 134217728 --tensorboard --hdfs_working_dir hdfs://linkedinnn01.grid.linkedin.com:9000/jobs/abcde/recruiter/tf/welu/checkpoints/model_l2_company_50k_school_weight_20200205_17_55 --executor tonyestimator --disable_profiler
+	|- 15762 15760 15762 15762 (bash) 0 0 115900416 355 /bin/bash -c /usr/java/default/bin/java -Xmx1536m com.linkedin.tony.TaskExecutor 1&gt;logs/application_123456789568_34567/container_e42_123456789568_34567_01_000027/stdout 2&gt;logs/application_123456789568_34567/container_e42_123456789568_34567_01_000027/stderr
+
+2020-02-07 06:51:31 INFO  ApplicationMaster:1141 - Container container_e42_123456789568_34567_01_000027 for task worker:20 finished with exitStatus -104.
+2020-02-07 06:51:31 INFO  TonySession:251 - Job worker:20 exited with -104
+2020-02-07 06:51:31 INFO  EventHandler:85 - Emitting event: {&quot;type&quot;: &quot;TASK_FINISHED&quot;, &quot;event&quot;: {&quot;taskType&quot;: &quot;worker&quot;, &quot;taskIndex&quot;: 20, &quot;status&quot;: &quot;FAILED&quot;, &quot;metrics&quot;: [{&quot;name&quot;: &quot;MAX_MEMORY_BYTES&quot;, &quot;value&quot;: 3.4338607104E10}, {&quot;name&quot;: &quot;AVG_MEMORY_BYTES&quot;, &quot;value&quot;: 1.9731543217152344E10}, {&quot;name&quot;: &quot;MAX_GPU_UTILIZATION&quot;, &quot;value&quot;: 0.0}, {&quot;name&quot;: &quot;AVG_GPU_UTILIZATION&quot;, &quot;value&quot;: 0.0}, {&quot;name&quot;: &quot;MAX_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: 0.0}, {&quot;name&quot;: &quot;AVG_GPU_FB_MEMORY_USAGE&quot;, &quot;value&quot;: 0.0}, {&quot;name&quot;: &quot;MAX_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: 0.006103515625}, {&quot;name&quot;: &quot;AVG_GPU_MAIN_MEMORY_USAGE&quot;, &quot;value&quot;: 0.006103515625}]}, &quot;timestamp&quot;: 1581058291440}
+2020-02-07 06:52:49 ERROR ApplicationMaster:1127 - Task with id [worker:20] has missed [25] heartbeats. Ending application!
+2020-02-07 06:52:49 INFO  AbstractLivelinessMonitor:148 - Expired:worker:20 Timed out after 25 secs
+2020-02-07 06:52:49 ERROR ApplicationMaster:630 - Thread interrupted
+java.lang.InterruptedException: sleep interrupted
+	at java.lang.Thread.sleep(Native Method)
+	at com.linkedin.tony.ApplicationMaster.monitor(ApplicationMaster.java:628)
+	at com.linkedin.tony.ApplicationMaster.run(ApplicationMaster.java:347)
+	at com.linkedin.tony.ApplicationMaster.main(ApplicationMaster.java:298)
+2020-02-07 06:52:49 ERROR ApplicationMaster:598 - Application failed due to missed heartbeats
+2020-02-07 06:52:49 INFO  ApplicationMaster:638 - Tony session failed: Task with id [worker:20] has missed [25] heartbeats. Ending application!
+2020-02-07 06:52:49 INFO  ApplicationMaster:349 - Result: false, retry count: 0
+2020-02-07 06:52:50 ERROR NMClientImpl:124 - Failed to stop Container container_e42_123456789568_34567_01_000008when stopping NMClientImpl
+2020-02-07 06:52:50 INFO  ApplicationMaster:303 - Application Master failed. Exiting
+</pre>
+    </td>
+  </tr>
+  </tbody>
+</table>
+</html>
