@@ -135,7 +135,7 @@ public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
            */
           //TODO : ID should be same for simillar exceptions
           addExceptions((stageData.failureReason().toString() + "" + stageData.details()).hashCode(),
-              stageData.failureReason().toString(), stageData.details(), ExceptionSource.EXECUTOR, exceptions,
+              stageData.failureReason().toString(), stageData.failureReason().toString()+"\n"+stageData.details(), ExceptionSource.EXECUTOR, exceptions,
               processExceptionTrackingURL(stageData.stageId()));
         }
       } else {
