@@ -43,7 +43,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
 
     val fetcherConfigurationData = newFakeFetcherConfigurationData()
 
-    var appId = "application_1"
+    val appId = "application_1"
 
     val t2 = System.currentTimeMillis
     val t1 = t2 - 1
