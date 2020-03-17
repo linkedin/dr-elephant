@@ -223,7 +223,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[ApplicationConfigImpl])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading sparkConfigs ${target.getUri}. Exception Message = " + e.getMessage, e)
+        logger.warn(s"error reading sparkConfigs ${target.getUri}. Exception Message = " + e.getMessage, e)
         logger.debug(e)
         throw e
       }
@@ -249,7 +249,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading executorSummary ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.warn(s"error reading executorSummary ${target.getUri}. Exception Message = " + e.getMessage)
         logger.debug(e)
         throw e
       }
@@ -263,7 +263,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading failedTasks ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.warn(s"error reading failedTasks ${target.getUri}. Exception Message = " + e.getMessage)
         logger.debug(e)
         throw e
       }
