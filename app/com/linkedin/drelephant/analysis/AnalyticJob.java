@@ -484,4 +484,20 @@ public class AnalyticJob {
     this.jobDiagnostics = jobDiagnostics;
     return this;
   }
+
+  /**
+   * To return the second retries done till now
+   *@return The secondRetries count
+   */
+  public int getSecondRetries() {
+    return this._secondRetries;
+  }
+
+  /**
+   * To return the max Second Retries Allowed limit
+   *@return The SECOND RETRY LIMIT count
+   */
+  public int getSecondRetryLimit() {
+    return this._SECOND_RETRY_LIMIT;
+  }
 }

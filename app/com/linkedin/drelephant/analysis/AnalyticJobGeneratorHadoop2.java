@@ -73,7 +73,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
   private final Queue<AnalyticJob> _firstRetryQueue = new ConcurrentLinkedQueue<AnalyticJob>();
 
-  private final ArrayList<AnalyticJob> _secondRetryQueue = new ArrayList<AnalyticJob>();
+  private final ArrayList<AnalyticJob> _secondRetryQueue = new ArrayList<>();
 
   public void updateResourceManagerAddresses() {
     if (Boolean.valueOf(configuration.get(IS_RM_HA_ENABLED))) {

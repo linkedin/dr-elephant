@@ -20,7 +20,6 @@ import java.nio.file.Files
 import java.util.Date
 import java.util.concurrent.TimeoutException
 
-import scala.concurrent.{ExecutionContext, Future}
 import com.linkedin.drelephant.analysis.{AnalyticJob, ApplicationType}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
@@ -31,8 +30,10 @@ import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.mockito.Mockito
-import org.scalatest.{FunSpec, Matchers}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{FunSpec, Matchers}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
   import SparkFetcherTest._
@@ -42,7 +43,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
 
     val fetcherConfigurationData = newFakeFetcherConfigurationData()
 
-    val appId = "application_1"
+    var appId = "application_1"
 
     val t2 = System.currentTimeMillis
     val t1 = t2 - 1
@@ -67,10 +68,12 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
 
     val analyticJob = new AnalyticJob().setAppId(appId)
 
+    val remainingRetries = analyticJob.getSecondRetryLimit - analyticJob.getSecondRetries
+
     it("returns data") {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
-        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
+        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData), remainingRetries)
         override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData))
       }
       val data = sparkFetcher.fetchData(analyticJob)
@@ -80,7 +83,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
     it("throws an exception if the REST client fails") {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
-        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future { throw new Exception() })
+        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future { throw new Exception() }, remainingRetries)
         override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData))
       }
 
@@ -91,7 +94,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
           .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
-        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData))
+        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future(restDerivedData), remainingRetries)
         override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future { throw new Exception() })
       }
 
@@ -295,12 +298,13 @@ object SparkFetcherTest {
 
   def newFakeSparkRestClient(
     appId: String,
-    restDerivedData: Future[SparkRestDerivedData]
+    restDerivedData: Future[SparkRestDerivedData],
+    remainingRetries: Int
   )(
     implicit ec: ExecutionContext
   ): SparkRestClient = {
     val sparkRestClient = Mockito.mock(classOf[SparkRestClient])
-    Mockito.when(sparkRestClient.fetchData(appId)).thenReturn(restDerivedData)
+    Mockito.when(sparkRestClient.fetchData(appId, false, remainingRetries)).thenReturn(restDerivedData)
     sparkRestClient
   }
 
