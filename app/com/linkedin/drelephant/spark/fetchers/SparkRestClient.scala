@@ -87,7 +87,7 @@ class SparkRestClient(sparkConf: SparkConf) {
           Option(getSparkConfigs(attemptTarget))
         }
       } else Future.successful(None: Option[ApplicationConfigImpl])
-      
+
       val futureStageDatas = Future {
         getStageDatas(attemptTarget)
       }
@@ -210,7 +210,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       get(target, SparkRestObjectMapper.readValue[Seq[JobDataImpl]])
     } catch {
       case NonFatal(e) => {
-        logger.error(s"error reading jobData ${target.getUri}. Exception Message = " + e.getMessage)
+        logger.warn(s"error reading jobData ${target.getUri}. Exception Message = " + e.getMessage)
         logger.debug(e)
         throw e
       }
@@ -229,7 +229,7 @@ class SparkRestClient(sparkConf: SparkConf) {
       }
     }
   }
-  
+
   private def getStageDatas(attemptTarget: WebTarget): Seq[StageDataImpl] = {
     val target = attemptTarget.path("stages/withSummaries")
     try {
