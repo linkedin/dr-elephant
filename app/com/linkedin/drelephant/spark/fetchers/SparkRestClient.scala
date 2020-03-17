@@ -87,7 +87,6 @@ class SparkRestClient(sparkConf: SparkConf) {
           Option(getSparkConfigs(attemptTarget))
         }
       } else Future.successful(None: Option[ApplicationConfigImpl])
-
       val futureStageDatas = Future {
         getStageDatas(attemptTarget)
       }
