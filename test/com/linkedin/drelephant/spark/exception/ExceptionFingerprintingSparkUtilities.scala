@@ -106,7 +106,7 @@ private [spark] object ExceptionFingerprintingSparkUtilities {
     }
   }
 
-  def getAnalyticalJob(isSucceeded : Boolean, amContainerLogsURL : String, amHostHttpAddress : String)={
+  def getAnalyticalJob(isSucceeded : Boolean, amContainerLogsURL : String, amHostHttpAddress : String, jobDiagnosticMessage: String = null)={
     new AnalyticJob()
       .setAppId(TEST_JOB_ID1)
       .setFinishTime(1462178403)
@@ -119,5 +119,6 @@ private [spark] object ExceptionFingerprintingSparkUtilities {
       .setAmContainerLogsURL(amContainerLogsURL)
       .setAmHostHttpAddress(amHostHttpAddress)
       .setAppType(new ApplicationType("spark"))
+      .setJobDiagnostics(jobDiagnosticMessage)
   }
 }

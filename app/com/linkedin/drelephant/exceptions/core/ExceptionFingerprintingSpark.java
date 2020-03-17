@@ -16,6 +16,7 @@
 
 package com.linkedin.drelephant.exceptions.core;
 
+import com.google.common.base.Strings;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.exceptions.Classifier;
@@ -26,26 +27,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
-import java.util.Set;
 import models.JobDefinition;
 import models.JobExecution;
 import models.TuningJobDefinition;
-import org.apache.log4j.Logger;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.log4j.Logger;
 
-import static com.linkedin.drelephant.exceptions.util.ExceptionInfo.*;
 import static com.linkedin.drelephant.exceptions.util.Constant.*;
-import static com.linkedin.drelephant.exceptions.util.ExceptionUtils.*;
+import static com.linkedin.drelephant.exceptions.util.ExceptionInfo.*;
 import static com.linkedin.drelephant.exceptions.util.ExceptionUtils.ConfigurationBuilder.*;
+import static com.linkedin.drelephant.exceptions.util.ExceptionUtils.*;
 
 
 public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
@@ -106,6 +102,7 @@ public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
     this.analyticJob = analyticJob;
     List<ExceptionInfo> exceptions = new ArrayList<ExceptionInfo>();
 
+    addJobDiagnostics(analyticJob.getJobDiagnostics(), exceptions);
     processStageLogs(exceptions);
     logger.info("Total exception after parsing stages logs " + exceptions.size());
     //TODO : If there are enough information from stage log then we should not call
@@ -116,6 +113,28 @@ public class ExceptionFingerprintingSpark implements ExceptionFingerprinting {
     processExceptionsFromBlackListingPattern(exceptions);
     logger.info("Total exception after removing black listed exceptions  " + exceptions.size());
     return exceptions;
+  }
+
+  /**
+   *
+   * @param jobDiagnostics Job Diagnostics message provided to RM by AM/Driver
+   * @param exceptionInfoList Contains all the relevant filtered out exceptions
+   */
+  private void addJobDiagnostics(String jobDiagnostics, List<ExceptionInfo> exceptionInfoList) {
+    String exceptionName = "Job Diagnostics";
+    String NOT_AVAILABLE = "Not Available";
+    ExceptionInfo jobDiagnosticsInfo = new ExceptionInfo();
+    jobDiagnosticsInfo.setExceptionName(exceptionName);
+    if (Strings.isNullOrEmpty(jobDiagnostics)) {
+      jobDiagnosticsInfo.setExceptionStackTrace(NOT_AVAILABLE);
+      //Since No job diagnostic message is present so show this at bottom of results
+      jobDiagnosticsInfo.setWeightOfException(Integer.MIN_VALUE);
+    } else {
+      jobDiagnosticsInfo.setExceptionID(jobDiagnostics.hashCode());
+      jobDiagnosticsInfo.setExceptionStackTrace(jobDiagnostics);
+      jobDiagnosticsInfo.setWeightOfException(Integer.MAX_VALUE);
+    }
+    exceptionInfoList.add(jobDiagnosticsInfo);
   }
 
   /**

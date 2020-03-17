@@ -69,14 +69,15 @@ class ExceptionFingerprintingSparkTest extends FunSpec with Matchers with Before
 
       val analyticJob = getAnalyticalJob(false,
         "http://hostname:8042/node/containerlogs/container_e24_1547063162911_185371_01_000001/dssadmin",
-        "hostname:8042")
+        "hostname:8042", "Mock diagnostic message")
       val exceptionInfoList = exceptionFingerprinting.processRawData(analyticJob)
       val classificationValue = exceptionFingerprinting.classifyException(exceptionInfoList)
       // Test to check for log source Information
       val logSourceInformation = exceptionFingerprinting.getExceptionLogSourceInformation
       className should be("ExceptionFingerprintingSpark")
-      exceptionInfoList.size() should be(1)
+      exceptionInfoList.size() should be(2)
       classificationValue.name() should be("USER_ENABLED")
+      exceptionInfoList.get(0).getExceptionStackTrace should be("Mock diagnostic message")
       logSourceInformation.containsKey("DRIVER") should be(true)
       logSourceInformation.get("DRIVER") should be("http://0.0.0.0:19888/jobhistory/nmlogs/hostname:0" +
         "/container_e24_1547063162911_185371_01_000001/container_e24_1547063162911_185371_01_000001/dssadmin/stderr/?start=0")
@@ -98,7 +99,7 @@ class ExceptionFingerprintingSparkTest extends FunSpec with Matchers with Before
       val exceptionInfoList = exceptionFingerprinting.processRawData(analyticJob)
       val classificationValue = exceptionFingerprinting.classifyException(exceptionInfoList)
       className should be("ExceptionFingerprintingSpark")
-      exceptionInfoList.size() should be(1)
+      exceptionInfoList.size() should be(2)
       classificationValue.name() should be("AUTOTUNING_ENABLED")
     }
     it("check for build URL for query driver logs ") {
@@ -211,10 +212,11 @@ class ExceptionFingerprintingSparkTest extends FunSpec with Matchers with Before
       val blackListedPatterns = Array("ABCD")
       ConfigurationBuilder.BLACK_LISTED_EXCEPTION_PATTERN.setValue(blackListedPatterns)
       val exceptionInfoList = exceptionFingerprinting.processRawData(analyticJob)
-      exceptionInfoList.size() should be(2)
+      exceptionInfoList.size() should be(3)
+      exceptionInfoList.get(0).getExceptionStackTrace should be("Not Available")
       val blackListedPatternsEnhanced = blackListedPatterns :+ "-XX:OnOutOfMemoryError='kill %p'"
       ConfigurationBuilder.BLACK_LISTED_EXCEPTION_PATTERN.setValue(blackListedPatternsEnhanced)
-      exceptionFingerprinting.processRawData(analyticJob).size() should be(1)
+      exceptionFingerprinting.processRawData(analyticJob).size() should be(2)
     }
 
     it("check for driver log processing for Exception fingerprinting spark") {
