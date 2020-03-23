@@ -423,8 +423,7 @@ public class ElephantRunner implements Runnable {
         logger.warn("Timed out while fetching data. Exception message is: " + e.getMessage());
         jobFate(finishTimeInfo, appType, applicableFinishTime, jobFinishTime);
       } catch (Exception e) {
-        logger.error(e.getMessage());
-        logger.error(ExceptionUtils.getStackTrace(e));
+        logger.error(String.format("Failed to analyze %s", analysisName), e);
         jobFate(finishTimeInfo, appType, applicableFinishTime, jobFinishTime);
       }
     }
