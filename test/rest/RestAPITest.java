@@ -42,6 +42,7 @@ import models.JobExecution;
 import models.JobExecution.ExecutionState;
 import models.JobSuggestedParamSet;
 import models.JobSuggestedParamSet.ParamSetStatus;
+import models.JobsExceptionFingerPrinting;
 import models.TuningJobDefinition;
 import models.TuningJobExecutionParamSet;
 import org.apache.hadoop.conf.Configuration;
@@ -1310,6 +1311,69 @@ public class RestAPITest {
   }
 
   @Test
+  public void testRestRecordExceptionFingerprintingFeedbackWhenHelpful() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      @Override
+      public void run() {
+        populateExceptionFingerprintingTestData();
+        JsonNode requestJson = null;
+        JsonObject parent = new JsonObject();
+        try {
+          parent.addProperty(FLOW_EXEC_URL, TEST_EF_FLOW_EXEC_URL_1);
+          parent.addProperty(IS_HELPFUL, true);
+          requestJson = new ObjectMapper().readTree(parent.toString());
+        } catch (IOException ex) {
+          logger.error("Exception while creating request body for EF Feedback APIs mock request", ex);
+        }
+        final WS.Response response = WS.url(BASE_URL + REST_EXCEPTION_FINGERPRINTING_FEEDBACK).
+            post(requestJson).get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        assertEquals(response.getStatus(), OK);
+
+        List<JobsExceptionFingerPrinting> efResult = JobsExceptionFingerPrinting.find.select("*")
+            .where()
+            .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_URL, TEST_EF_FLOW_EXEC_URL_1)
+            .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, "NA")
+        .findList();
+        efResult.forEach(row -> {
+          assertEquals("EF result should be marked helpful", row.isHelpful, true);
+        });
+      }
+    });
+  }
+
+  @Test
+  public void testRestRecordExceptionFingerprintingFeedbackWhenNotHelpful() {
+    running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      @Override
+      public void run() {
+        populateExceptionFingerprintingTestData();
+        JsonNode requestJson = null;
+        JsonObject parent = new JsonObject();
+        try {
+          parent.addProperty(FLOW_EXEC_URL, TEST_EF_FLOW_EXEC_URL_2);
+          parent.addProperty(IS_HELPFUL, false);
+          requestJson = new ObjectMapper().readTree(parent.toString());
+        } catch (IOException ex) {
+          logger.error("Exception while creating request body for EF Feedback APIs mock request", ex);
+        }
+        final WS.Response response = WS.url(BASE_URL + REST_EXCEPTION_FINGERPRINTING_FEEDBACK).
+            post(requestJson).get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
+        assertEquals(response.getStatus(), OK);
+
+        List<JobsExceptionFingerPrinting> efResult = JobsExceptionFingerPrinting.find.select("*")
+            .where()
+            .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_URL, TEST_EF_FLOW_EXEC_URL_2)
+            .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, "NA")
+            .findList();
+        efResult.forEach(row -> {
+          assertEquals("EF result should be marked unHelpful", row.isHelpful, false);
+        });
+      }
+    });
+  }
+
+
+  @Test
   public void testRestUpdateTuneinDetailsWithOnlyModifiedIterationCount() {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       @Override
@@ -1452,5 +1516,13 @@ public class RestAPITest {
 
   private String getAuthorizationQueryParamString(String projectName, String ajaxMethodName, String sessionId) {
     return String.format("?project=%s&ajax=%s&session.id=%s", projectName, ajaxMethodName, sessionId);
+  }
+
+  private void populateExceptionFingerprintingTestData() {
+    try {
+      initDBForExceptionFingerPrinting();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

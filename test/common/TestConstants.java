@@ -93,6 +93,7 @@ public class TestConstants {
   public static final String REST_LOGIN_ENDPOINT = "/rest/login";
   public static final String REST_USER_AUTHORIZATION_API_ENDPOINT = "/rest/userAuthorization";
   public static final String REST_TUNEIN_DETAILS_API_ENDPOINT = "/rest/tunein";
+  public static final String REST_EXCEPTION_FINGERPRINTING_FEEDBACK = "/rest/exceptionFingerprinting/feedback";
 
   public static final String DEFAULT_ENCODING = "UTF-8";
 
@@ -153,4 +154,7 @@ public class TestConstants {
   public static final int FAKE_JOB_DEFINITION_ID = 100136;
   public static final String FAKE_JOB_SUGGESTED_PARAM_SET_ID = "1439";
 
+  //Exception Fingerprinting constants
+  public static final String TEST_EF_FLOW_EXEC_URL_1 = "https://elephant.linkedin.com:8443/executor?execid=1";
+  public static final String TEST_EF_FLOW_EXEC_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2";
 }

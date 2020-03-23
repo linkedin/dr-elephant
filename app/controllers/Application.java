@@ -22,6 +22,7 @@ import com.codahale.metrics.Timer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
@@ -62,6 +63,7 @@ import models.JobDefinition;
 import models.JobExecution;
 import models.JobSuggestedParamSet;
 import models.JobSuggestedParamValue;
+import models.JobsExceptionFingerPrinting;
 import models.TuningAlgorithm;
 import models.TuningAlgorithm.JobType;
 import models.TuningJobDefinition;
@@ -139,6 +141,8 @@ public class Application extends Controller {
   public static final String COMPARE_FLOW_ID1 = "flow-exec-id1";
   public static final String COMPARE_FLOW_ID2 = "flow-exec-id2";
   public static final String PAGE = "page";
+
+  public static final String NOT_AVAILABLE = "NA";
 
   private enum Version {OLD,NEW};
 
@@ -2044,6 +2048,26 @@ public class Application extends Controller {
     }
     logger.info("TuneIn update was successful");
     return ok(new Gson().toJson(parent));
+  }
+
+  public static Result recordExceptionfingerprintingFeedback() {
+    JsonNode requestBodyRoot = request().body().asJson();
+    String flowExecUrl = requestBodyRoot.path(FLOW_EXEC_URL).asText();
+    boolean isHelpful = requestBodyRoot.path(IS_HELPFUL).asBoolean();
+    logger.info("Updating the Helpful property for ExceptionFingerprinting result " + flowExecUrl);
+    if (Strings.isNullOrEmpty(flowExecUrl)) {
+      return badRequest("Flow Execution Url is not provided");
+    }
+    List<JobsExceptionFingerPrinting> exceptionFingerPrintingResult = JobsExceptionFingerPrinting.find.select("*")
+        .where()
+        .eq(JobsExceptionFingerPrinting.TABLE.FLOW_EXEC_URL, flowExecUrl)
+        .eq(JobsExceptionFingerPrinting.TABLE.APP_ID, NOT_AVAILABLE)
+        .findList();
+    exceptionFingerPrintingResult.forEach(row ->  {
+      row.isHelpful = isHelpful;
+      row.save();
+    });
+    return ok("Successfully updated helpful status for the flow");
   }
 
   /**

@@ -70,6 +70,8 @@ public class JsonKeys {
   public static final String FLOW_DEF_ID = "flowdefid";
   public static final String FLOW_EXEC_ID = "flowexecid";
   public static final String TOTAL_WORKFLOWS = "totalworkflows";
+  public static final String FLOW_EXEC_URL = "flowExecUrl";
+  public static final String IS_HELPFUL = "isHelpful";
 
   // Jobs
   public static final String JOB_SUMMARIES = "job-summaries";
