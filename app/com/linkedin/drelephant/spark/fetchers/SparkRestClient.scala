@@ -57,6 +57,7 @@ class SparkRestClient(sparkConf: SparkConf) {
   private val client: Client = ClientBuilder.newClient()
 
   private val THRESHOLD_REMAINING_RETRIES_FOR_TIMEOUT_CHANGE = 3;
+  private val DEFAULT_REMAINING_RETRIES = 20;
 
   private val historyServerUri: URI = sparkConf.getOption(HISTORY_SERVER_ADDRESS_KEY) match {
     case Some(historyServerAddress) =>
@@ -78,12 +79,12 @@ class SparkRestClient(sparkConf: SparkConf) {
     .property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT).target(historyServerUri).path(API_V1_MOUNT_PATH)
 
 
-  def fetchData(appId: String, fetchLogs: Boolean = false, retriesRemaining: Int = Int.MaxValue, fetchFailedTasks: Boolean = true)(
-    implicit ec: ExecutionContext
+  def fetchData(appId: String, fetchLogs: Boolean = false, retriesRemaining: Int = DEFAULT_REMAINING_RETRIES,
+    fetchFailedTasks: Boolean = true)(implicit ec: ExecutionContext
   ): Future[SparkRestDerivedData] = {
     val (applicationInfo, attemptTarget) = getApplicationMetaData(appId)
     val REQUEST_TIMEOUT =
-      if (retriesRemaining > THRESHOLD_REMAINING_RETRIES_FOR_TIMEOUT_CHANGE) DEFAULT_TIMEOUT else TEN_SECONDS_TIMEOUT
+      if (retriesRemaining > THRESHOLD_REMAINING_RETRIES_FOR_TIMEOUT_CHANGE) DEFAULT_TIMEOUT else MAX_PERMITTED_TIMEOUT
     val jobData = Await.result(Future {getJobDatas(attemptTarget)}, REQUEST_TIMEOUT)
     Future {
       val appConfigurationProperties = if (fetchLogs) {
@@ -279,7 +280,7 @@ object SparkRestClient {
   val API_V1_MOUNT_PATH = "api/v1"
   val IN_PROGRESS = ".inprogress"
   val DEFAULT_TIMEOUT = Duration(5, SECONDS)
-  val TEN_SECONDS_TIMEOUT = Duration(10, SECONDS)
+  val MAX_PERMITTED_TIMEOUT = Duration(10, SECONDS)
   val CONNECTION_TIMEOUT = 10000
   val READ_TIMEOUT = 10000
 
