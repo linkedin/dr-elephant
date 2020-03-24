@@ -18,6 +18,9 @@
 import Ember from 'ember';
 
 export default Ember.Controller.extend({
+  ajax: Ember.inject.service(),
+  notifications: Ember.inject.service('notification-messages'),
+
   queryParams: ['workflowId', 'scheduler'],
   workflowId: null,
   workflowIdValue: null,
@@ -95,6 +98,33 @@ export default Ember.Controller.extend({
         }
       });
 
+    },
+
+    updateResultFeedback(flowExecUrl, isHelpful) {
+      Ember.$.ajax({
+        url: '/rest/exceptionFingerprinting/feedback',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          flowExecUrl: flowExecUrl,
+          isHelpful: isHelpful
+        })
+      }).then((response) => {
+        this.get('notifications').success('Feedback Received', {
+          autoClear: true
+        });
+      }, (error) => {
+        switch (error.status) {
+          case 400:
+            this.showError(error.responseText);
+            break;
+          case 500:
+            this.showError('The server was unable to complete your request');
+            break;
+          default:
+            this.showError('Oops!! Something went wrong.');
+        }
+      });
     }
   }
 });

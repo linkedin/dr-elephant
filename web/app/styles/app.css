@@ -163,6 +163,11 @@
   font-size: 18px;
 }
 
+.feedback-container {
+  float: right;
+  margin: 0px 2px 0px 2px;
+}
+
 .bold {
   font-weight: bold;
 }
