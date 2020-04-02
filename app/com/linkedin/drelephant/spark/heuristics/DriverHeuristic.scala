@@ -118,7 +118,7 @@ object DriverHeuristic {
   val JVM_USED_MEMORY = "jvmUsedMemory"
   val DRIVER_PEAK_JVM_USED_MEMORY_HEURISTIC_NAME="Max driver peak JVM used memory"
   val SUGGESTED_SPARK_DRIVER_MEMORY_HEURISTIC_NAME="Suggested spark.driver.memory"
-  val BUFFER_FRACTION = 0.2
+  val BUFFER_FRACTION = 0.5
 
   // 300 * FileUtils.ONE_MB (300 * 1024 * 1024)
   val reservedMemory : Long = 314572800
