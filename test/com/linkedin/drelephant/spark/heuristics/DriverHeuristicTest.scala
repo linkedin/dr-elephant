@@ -4,9 +4,10 @@ import java.util.Date
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl}
 import com.linkedin.drelephant.spark.heuristics.DriverHeuristic.Evaluator
+import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.collection.JavaConverters
@@ -22,6 +23,7 @@ class DriverHeuristicTest extends FunSpec with Matchers {
   val heuristicConfigurationData = newFakeHeuristicConfigurationData()
 
   val driverHeuristic = new DriverHeuristic(heuristicConfigurationData)
+  val appConfigurationProperties = Map("spark.driver.memory"->"40000000000", "spark.executor.memory"->"50000000000")
 
   val executorData = Seq(
     newDummyExecutorData("1", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94567), null, 0, 0),
@@ -32,10 +34,21 @@ class DriverHeuristicTest extends FunSpec with Matchers {
     newDummyExecutorData("driver", 400000, Map("executionMemory" -> 300000, "storageMemory" -> 94561), Map("jvmUsedMemory" -> 394567123),
       totalGCTime = Duration("2min").toMillis, totalDuration = Duration("15min").toMillis)
   )
+
+  val executorData1 = Seq(
+    newDummyExecutorData("2", 50000000000L, Map("executionMemory" -> 200, "storageMemory" -> 200),null, 0, 0),
+    newDummyExecutorData("driver", 40000000000L, Map("executionMemory" -> 300000, "storageMemory" -> 94567), Map("jvmUsedMemory" -> 394567123),
+      totalGCTime = Duration("2min").toMillis, totalDuration = Duration("15min").toMillis)
+  )
+
   describe(".apply") {
     val data = newFakeSparkApplicationData(executorData)
+    val data1 = newFakeSparkApplicationData1(appConfigurationProperties, executorData1)
     val heuristicResult = driverHeuristic.apply(data)
+    val heuristicResult1 = driverHeuristic.apply(data1)
     val heuristicResultDetails = heuristicResult.getHeuristicResultDetails
+    val heuristicResultDetails1 = heuristicResult1.getHeuristicResultDetails
+    val evaluator1 = new Evaluator(driverHeuristic, data1)
 
     it("has severity") {
       heuristicResult.getSeverity should be(Severity.SEVERE)
@@ -45,8 +58,19 @@ class DriverHeuristicTest extends FunSpec with Matchers {
       heuristicResult.getScore should be(Severity.SEVERE.getValue * 1)
     }
 
+    it("has jvm used memory severity") {
+      evaluator1.severityJvmUsedMemory should be(Severity.CRITICAL)
+    }
+
+    it("suggests reasonable driver memory") {
+      val details = heuristicResultDetails1.get(5)
+      details.getName should be("Suggested spark.driver.memory")
+      details.getValue should be("1015 MB")
+    }
+
     describe("Evaluator") {
       val evaluator = new Evaluator(driverHeuristic, data)
+
       it("has max driver peak JVM memory") {
         evaluator.maxDriverPeakJvmUsedMemory should be(394567123)
       }
@@ -108,6 +132,24 @@ object DriverHeuristicTest {
     )
 
     SparkApplicationData(appId, restDerivedData, logDerivedData = None)
+  }
+
+  def newFakeSparkApplicationData1(
+    appConfigurationProperties: Map[String, String],
+    executorSummaries: Seq[ExecutorSummaryImpl]): SparkApplicationData =
+  {
+    val appId = "application_2"
+    val restDerivedData = SparkRestDerivedData(
+      new ApplicationInfoImpl(appId, name = "app", Seq.empty),
+      jobDatas = Seq.empty,
+      stageDatas = Seq.empty,
+      executorSummaries = executorSummaries,
+      stagesWithFailedTasks = Seq.empty
+    )
+    val logDerivedData = SparkLogDerivedData(
+      SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
+    )
+    SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
   }
 }
 
