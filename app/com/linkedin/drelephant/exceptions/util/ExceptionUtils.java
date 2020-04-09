@@ -16,6 +16,9 @@
 
 package com.linkedin.drelephant.exceptions.util;
 
+
+import com.linkedin.drelephant.exceptions.ExceptionCategorization;
+import com.linkedin.drelephant.util.Utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -27,6 +30,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.text.similarity.CosineDistance;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
 
 import static com.linkedin.drelephant.exceptions.util.Constant.*;
 import static com.linkedin.drelephant.exceptions.util.ExceptionUtils.ConfigurationBuilder.*;
@@ -41,7 +45,7 @@ public class ExceptionUtils {
   static boolean debugEnabled = logger.isDebugEnabled();
   private static final List<Pattern> patterns = new ArrayList<Pattern>();
   private static String jobNameRegex = ".*&job=(.*)&.*";
-  private static  Pattern jobNamePattern = Pattern.compile(jobNameRegex);
+  private static Pattern jobNamePattern = Pattern.compile(jobNameRegex);
 
   static {
     for (String regex : ConfigurationBuilder.REGEX_FOR_EXCEPTION_IN_LOGS.getValue()) {
@@ -140,11 +144,16 @@ public class ExceptionUtils {
     public static EFConfiguration<Integer> NUMBER_OF_RETRIES_FOR_FETCHING_DRIVER_LOGS = null;
     public static EFConfiguration<Integer> DURATION_FOR_THREAD_SLEEP_FOR_FETCHING_DRIVER_LOGS = null;
     public static EFConfiguration<Integer> TOTAL_LENGTH_OF_LOG_SAVED_IN_DB = null;
+
     public static EFConfiguration<Integer> AZKABAN_JOB_LOG_START_OFFSET = null;
     public static EFConfiguration<Integer> AZKABAN_JOB_LOG_MAX_LENGTH = null;
     public static EFConfiguration<Boolean> SHOULD_PROCESS_AZKABAN_LOG = null;
 
+
     public static EFConfiguration<Integer> MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD = null;
+    public static EFConfiguration<ExceptionCategorization> EXCEPTION_CATEGORIZATION_CONFIGURATION = null;
+
+
 
     private static final String[] DEFAULT_REGEX_FOR_EXCEPTION_IN_LOGS =
         {"^.+Exception.*", "^.+Error.*", ".*Container\\s+killed.*"};
@@ -156,14 +165,12 @@ public class ExceptionUtils {
 
     private static final String[] DEFAULT_BLACK_LISTED_EXCEPTION_PATTERN = {"-XX:OnOutOfMemoryError='kill %p'"};
 
-    private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"(?m)^.*(ERROR.+)\n?"};
+    private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS = {"(?m)^.*(ERROR.+)\n?"};
 
     private static final String[] DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"(?m)(^.+Exception(.+\n))(\t+at .+\n?)+",
-            "(?m)(Container exited with a non-zero exit code (.*))\n(.+\n?)*"
-                + "((\nResourceExhaustedError \\(see above for traceback\\):.+\n(.+\n?)*))?"
-                + "((\n(WARNING.+\\n?\\n?)*)\n(Traceback \\(most recent call last\\)):\n(.+\n?)*)?",
+        {"(?m)(^.+Exception(.+\n))(\t+at .+\n?)+", "(?m)(Container exited with a non-zero exit code (.*))\n(.+\n?)*"
+            + "((\nResourceExhaustedError \\(see above for traceback\\):.+\n(.+\n?)*))?"
+            + "((\n(WARNING.+\\n?\\n?)*)\n(Traceback \\(most recent call last\\)):\n(.+\n?)*)?",
             "(?m)^(Traceback \\(most recent call last\\)):\n(.+\n?)*"};
 
     private static final String[] DEFAULT_EXCEPTION_PATTERN_REGEX_IN_AZKABAN_LOGS =
@@ -340,6 +347,15 @@ public class ExceptionUtils {
         logger.debug(NUMBER_OF_STACKTRACE_LINE);
         logger.debug(JHS_TIME_OUT);
       }
+      buildExceptionClassificationConfiguration();
+    }
+
+    public static void buildExceptionClassificationConfiguration() {
+      Document document = Utils.loadXMLDoc("EFClassificationConf.xml");
+      ExceptionCategorization exceptionCategorizationConfiguration =
+          new ExceptionCategorization(document.getDocumentElement());
+      EXCEPTION_CATEGORIZATION_CONFIGURATION =
+          new EFConfiguration<ExceptionCategorization>().setValue(exceptionCategorizationConfiguration).setDoc("Rules for exception classification ");
     }
   }
 }

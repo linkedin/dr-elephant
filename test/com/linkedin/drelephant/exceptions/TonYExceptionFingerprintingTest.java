@@ -62,20 +62,22 @@ public class TonYExceptionFingerprintingTest {
   private final String TEST_WORKFLOW_URL_1 = "https://elephant.linkedin.com:8443/executor?execid=1";
   private final String TEST_JOB_EXEC_URL_1 = "https://elephant.linkedin.com:8443/executor?execid=1&job=job_1&attempt=0";
   private final String TEST_JOB_NAME_1 = "job_1";
-  private final String TEST_AM_LOG_CONTAINER_URL_1 = "http://localhost:8042/node/containerlogs/container_e42_1576097000949_30598_01_000001/user1";
-
+  private final String TEST_AM_LOG_CONTAINER_URL_1 =
+      "http://localhost:8042/node/containerlogs/container_e42_1576097000949_30598_01_000001/user1";
 
   private final String TEST_APPLICATION_ID_2 = "app_2";
   private final String TEST_WORKFLOW_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2";
   private final String TEST_JOB_EXEC_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2&job=job_2&attempt=0";
   private final String TEST_JOB_NAME_2 = "job_2";
-  private final String TEST_AM_LOG_CONTAINER_URL_2 = "http://localhost:8042/node/containerlogs/container_e42_157609980900_57489_01_000001/user2";
+  private final String TEST_AM_LOG_CONTAINER_URL_2 =
+      "http://localhost:8042/node/containerlogs/container_e42_157609980900_57489_01_000001/user2";
 
   private final String TEST_APPLICATION_ID_3 = "app_3";
   private final String TEST_WORKFLOW_URL_3 = "https://elephant.linkedin.com:8443/executor?execid=3";
   private final String TEST_JOB_EXEC_URL_3 = "https://elephant.linkedin.com:8443/executor?execid=3&job=job_3&attempt=0";
   private final String TEST_JOB_NAME_3 = "job_3";
-  private final String TEST_AM_LOG_CONTAINER_URL_3 = "http://localhost:8042/node/containerlogs/container_e42_157609980900_38479_01_000001/user3";
+  private final String TEST_AM_LOG_CONTAINER_URL_3 =
+      "http://localhost:8042/node/containerlogs/container_e42_157609980900_38479_01_000001/user3";
 
   private final String FAKE_RESPONSE_APP_1_STDERR_PATH = "test/resources/exception/TonY/app_1_stderr_response.html";
   private final String FAKE_RESPONSE_APP_1_STDOUT_PATH = "test/resources/exception/TonY/app_1_stdout_response.html";
@@ -120,9 +122,9 @@ public class TonYExceptionFingerprintingTest {
     _wireMockServer.stop();
   }
 
-  private AnalyticJob getFakeAnalyticalJob(String appId, String jobName, boolean isSucceeded, String amContainerLogsURL, String amDiagnostic) {
-    return new AnalyticJob()
-        .setAppId(appId)
+  private AnalyticJob getFakeAnalyticalJob(String appId, String jobName, boolean isSucceeded, String amContainerLogsURL,
+      String amDiagnostic) {
+    return new AnalyticJob().setAppId(appId)
         .setName(jobName)
         .setSucceeded(isSucceeded)
         .setAmContainerLogsURL(amContainerLogsURL)
@@ -139,15 +141,12 @@ public class TonYExceptionFingerprintingTest {
   }
 
   private void mockResponseForContainerLogs(String containerUrl, String response, int statusCode) {
-    _wireMockServer.stubFor(get(urlEqualTo(containerUrl))
-        .willReturn(aResponse()
-            .withBody(response)
-            .withStatus(statusCode)));
+    _wireMockServer.stubFor(
+        get(urlEqualTo(containerUrl)).willReturn(aResponse().withBody(response).withStatus(statusCode)));
   }
 
   @Test
-  public void testTonYExceptionFingerprinting()
-  {
+  public void testTonYExceptionFingerprinting() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_1).getPath() + stderrContainerLogParameters,
@@ -164,18 +163,20 @@ public class TonYExceptionFingerprintingTest {
       TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(fakeJob1, fakeAppResult1);
       tonyEF.doExceptionPrinting();
       List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
+
       assertEquals(3, exceptionInfos.size());
       assertEquals("Job Diagnostics", exceptionInfos.get(0).getExceptionName());
       assertEquals("Job Diagnostics: \n" + fakeJob1.getJobDiagnostics(), exceptionInfos.get(0)
           .getExceptionStackTrace());
       assertEquals("Container exited with a non-zero exit code 1. Error file: prelaunch.err.",
           exceptionInfos.get(1).getExceptionName());
+      assertEquals("USER_ERROR/FILE_NOT_FOUND", tonyEF.classifyException());
+
     });
   }
 
   @Test
-  public void testTonyExceptionFingerprintingWhenStderrLogEmpty()
-  {
+  public void testTonyExceptionFingerprintingWhenStderrLogEmpty() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_2).getPath() + stderrContainerLogParameters,
@@ -194,14 +195,15 @@ public class TonYExceptionFingerprintingTest {
       List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
       assertEquals(5, exceptionInfos.size());
       assertEquals("Job Diagnostics", exceptionInfos.get(0).getExceptionName());
-      assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), exceptionInfos.get(0)
-          .getExceptionStackTrace());
+      assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), exceptionInfos.get(0).getExceptionStackTrace());
       assertEquals("Container exited with a non-zero exit code 1. Error file: prelaunch.err.",
           exceptionInfos.get(1).getExceptionName());
       assertEquals("ERROR ApplicationMaster:983 - [2020-02-05 02:56:19.426]Container killed by the ApplicationMaster.",
           exceptionInfos.get(4).getExceptionName());
       assertEquals(ExceptionUtils.ConfigurationBuilder.NUMBER_OF_STACKTRACE_LINE.getValue() + 1,
           (exceptionInfos.get(4).getExceptionStackTrace().split("\n")).length);
+      assertEquals("USER_ERROR/FILE_NOT_FOUND", tonyEF.classifyException());
+
     });
   }
 
@@ -209,10 +211,10 @@ public class TonYExceptionFingerprintingTest {
   public void testTonyExceptionFingerprintingWhenNoLogFound() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
-        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stderrContainerLogParameters,
-            "", NOT_FOUND);
-        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stdoutContainerLogParameters,
-            "", NOT_FOUND);
+        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stderrContainerLogParameters, "",
+            NOT_FOUND);
+        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stdoutContainerLogParameters, "",
+            NOT_FOUND);
       } catch (MalformedURLException ex) {
         logger.error("URL for test is not formed properly");
       }
@@ -238,6 +240,10 @@ public class TonYExceptionFingerprintingTest {
         assertEquals("log_1", results.get(1).getExceptionStackTrace());
         assertEquals("log_2", results.get(2).getExceptionStackTrace());
         assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), results.get(0).getExceptionStackTrace());
+
+        assertEquals("Job Diagnostics", results.get(0).getExceptionName());
+        assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), results.get(0).getExceptionStackTrace());
+        assertEquals("USER_ERROR/UNKNOWN", tonYExceptionFingerprintingSpy.classifyException());
       } catch (Exception ex) {
         logger.info("Exception while mocking method getAzkabanExceptionInfoResults");
       }
@@ -245,14 +251,13 @@ public class TonYExceptionFingerprintingTest {
   }
 
   @Test
-  public void testTonyExceptionFingerprintingWhenSimilarLogsArePresent()
-  {
+  public void testTonyExceptionFingerprintingWhenSimilarLogsArePresent() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_1).getPath() + stderrContainerLogParameters,
             getFakeResponse(FAKE_RESPONSE_APP_STDERR_PATH), OK);
-        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_1).getPath() + stdoutContainerLogParameters,
-            "", OK);
+        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_1).getPath() + stdoutContainerLogParameters, "",
+            OK);
       } catch (MalformedURLException ex) {
         logger.error("URL for test case is not formed properly");
       }
@@ -264,22 +269,87 @@ public class TonYExceptionFingerprintingTest {
       tonyEF.doExceptionPrinting();
       List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
       assertEquals(6, exceptionInfos.size());
-      assertTrue(exceptionInfos.get(2).getExceptionStackTrace().contains("Container exited with a non-zero exit code 1."
-          + " Error file: prelaunch.err.\n" + "Last 4096 bytes of prelaunch.err :\n" + "Last 4096 bytes of stderr :"));
-      assertTrue(exceptionInfos.get(3).getExceptionStackTrace().contains("ERROR ApplicationMaster:983 - "
-          + "[2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is "
-          + "running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of "
-          + "67.2 GB virtual memory used. Killing container.\n"
-          + "Dump of the process-tree for container_e42_123456789568_34567_01_000027"));
+      assertTrue(exceptionInfos.get(2)
+          .getExceptionStackTrace()
+          .contains("Container exited with a non-zero exit code 1." + " Error file: prelaunch.err.\n" + "Last 4096 bytes of prelaunch.err :\n" + "Last 4096 bytes of stderr :"));
+      assertTrue(exceptionInfos.get(3)
+          .getExceptionStackTrace()
+          .contains("ERROR ApplicationMaster:983 - " + "[2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is "
+              + "running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of "
+              + "67.2 GB virtual memory used. Killing container.\n" + "Dump of the process-tree for container_e42_123456789568_34567_01_000027"));
       /*
         Log has two similar stackTraces and only difference between them is containerId
         Log with containerId container_e42_123456789568_34567_01_000008 will be present in result and not with containerId
         container_e42_123456789568_34567_01_000009
        */
-      List<ExceptionInfo> similarLogList = exceptionInfos.stream().filter(el -> el.getExceptionStackTrace().contains(
-          "container_e42_123456789568_34567_01_000009")).collect(Collectors.toList());
+      List<ExceptionInfo> similarLogList = exceptionInfos.stream()
+          .filter(el -> el.getExceptionStackTrace().contains("container_e42_123456789568_34567_01_000009"))
+          .collect(Collectors.toList());
       assertEquals(0, similarLogList.size());
     });
+  }
+
+  @Test
+  public void testTonyCategorizationInfraError() {
+    ExceptionInfo exceptionInfo = new ExceptionInfo(1, "__exit__\n" + "    c_api.TF_GetCode(self.status.status))\n"
+        + "tensorflow.python.framework.errors_impl.UnknownError: Could not start gRPC server\n",
+        "__exit__\n" + "    c_api.TF_GetCode(self.status.status))\n"
+            + "tensorflow.python.framework.errors_impl.UnknownError: Could not start gRPC server\n",
+        ExceptionInfo.ExceptionSource.DRIVER, 5, "fakeURL");
+    TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(null, null);
+    tonyEF.get_exceptionInfoList().add(exceptionInfo);
+    assertEquals("TONY_INFRA_ERROR", tonyEF.classifyException());
+  }
+
+  @Test
+  public void testTonyCategorizationTensorFlowError() {
+    ExceptionInfo exceptionInfo = new ExceptionInfo(1, "test",
+        "usERKNS1_4ArgsESB_RKNS_6TensorEbEE+0xbb)[0x7f5a30faedbb]\n"
+            + "*** Error in `venv/Python/bin/python': corrupted double-linked list: 0x00007f4fc21857c0 \n",
+        ExceptionInfo.ExceptionSource.DRIVER, 5, "fakeURL");
+    TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(null, null);
+    tonyEF.get_exceptionInfoList().add(exceptionInfo);
+    assertEquals("TENSORFLOW_ERROR", tonyEF.classifyException());
+    tonyEF.get_exceptionInfoList().add(new ExceptionInfo(1, "__exit__\n" + "    c_api.TF_GetCode(self.status.status))\n"
+        + "tensorflow.python.framework.errors_impl.UnknownError: Could not start gRPC server\n",
+        "__exit__\n" + "    c_api.TF_GetCode(self.status.status))\n"
+            + "tensorflow.python.framework.errors_impl.UnknownError: Could not start gRPC server\n",
+        ExceptionInfo.ExceptionSource.DRIVER, 3, "fakeURL"));
+    //Since Tony infra error have higher priority.
+    assertEquals("TONY_INFRA_ERROR", tonyEF.classifyException());
+  }
+
+  @Test
+  public void testTonyCategorizationUserError() {
+    ExceptionInfo exceptionInfo = new ExceptionInfo(1, "test",
+        "keyError: field does not exist",
+        ExceptionInfo.ExceptionSource.DRIVER, 5, "fakeURL");
+    TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(null, null);
+    tonyEF.get_exceptionInfoList().add(exceptionInfo);
+    assertEquals("USER_ERROR/PYTHON_ERROR", tonyEF.classifyException());
+    tonyEF.get_exceptionInfoList().clear();
+    tonyEF.get_exceptionInfoList().add(new ExceptionInfo(1, "test",
+        "net.lingala.zip4j.exception.ZipException: Probably not a zip file or a corrupted zip file\n",
+        ExceptionInfo.ExceptionSource.DRIVER, 3, "fakeURL"));
+    //Since Tony infra error have higher priority.
+    assertEquals("USER_ERROR/ZIP_EXCEPTION", tonyEF.classifyException());
+
+    tonyEF.get_exceptionInfoList().clear();
+    tonyEF.get_exceptionInfoList().add(new ExceptionInfo(1, "test",
+        "hdfsPread: NewByteArray error:\n" + "java.lang.OutOfMemoryError: Java heap space\n",
+        ExceptionInfo.ExceptionSource.DRIVER, 3, "fakeURL"));
+    //Since Tony infra error have higher priority.
+    assertEquals("USER_ERROR/OUT_OF_MEMORY", tonyEF.classifyException());
+
+    tonyEF.get_exceptionInfoList().clear();
+    tonyEF.get_exceptionInfoList().add(new ExceptionInfo(1, "test",
+        " File \"./tensorflow-starter-kit.pyz/_bootstrap/interpreter.py\", line 12, in _exec_function\n"
+            + "  File \"linkedin/tensorflowstarterkit/tony/mnist_single_node_tony.py\", line 17, in <module>\n"
+            + "    exec(open(activate_this).read(), dict(__file__=activate_this))\n"
+            + "FileNotFoundError: [Errno 2] No such file or directory: './venv/Python/bin/activate_this.py'\n",
+        ExceptionInfo.ExceptionSource.DRIVER, 3, "fakeURL"));
+    //Since Tony infra error have higher priority.
+    assertEquals("USER_ERROR/FILE_NOT_FOUND", tonyEF.classifyException());
   }
 
   private String getFakeResponse(String path) {

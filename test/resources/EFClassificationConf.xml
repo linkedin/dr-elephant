@@ -1,0 +1,71 @@
+<classificationrules>
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>tonyinfraerror</rulename>>
+    <ruletrigger>address already in use,java.net.bindexception,
+                 connection reset by peer,java.net.unknownhostexception,
+                 rpcexception,java.io.filenotfoundexception,permission denied,
+                 Could not start gRPC server
+    </ruletrigger>
+    <rulepriority>1</rulepriority>
+    <category>TONY_INFRA_ERROR</category>
+  </classificationrule>
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>tensforflowerror</rulename>
+    <ruletrigger>======= memory map: ========,failed initializing streamexecutor for cuda,
+                 cuda runtime error,double free or corruption, corrupted double-linked list
+    </ruletrigger>
+    <rulepriority>2</rulepriority>
+    <category>TENSORFLOW_ERROR</category>
+  </classificationrule>
+
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>outofmemory</rulename>
+    <ruletrigger>running beyond physical memory limits,java.lang.outofmemoryerror,resourceexhaustederror</ruletrigger>	
+    <rulepriority>3</rulepriority>
+    <category>USER_ERROR/OUT_OF_MEMORY</category>
+  </classificationrule>
+
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>filenotfound</rulename>
+    <ruletrigger>no such file or directory,invalid path,java.io.filenotfoundexception,notadirectoryerror,framework.errors_impl.NotFoundError</ruletrigger>
+    <rulepriority>4</rulepriority>
+    <category>USER_ERROR/FILE_NOT_FOUND</category>
+  </classificationrule>
+
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>syntaxerror</rulename>
+    <ruletrigger>syntaxerror:</ruletrigger>
+    <rulepriority>5</rulepriority>
+   <category>USER_ERROR/SYNTAX_ERROR</category>
+  </classificationrule>
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>zipexception</rulename>
+    <ruletrigger>zipexception</ruletrigger>
+    <rulepriority>6</rulepriority>
+    <category>USER_ERROR/ZIP_EXCEPTION</category>
+  </classificationrule>
+
+<classificationrule>
+    <applicationtype>tony</applicationtype>
+    <rulename>pythonerror</rulename>
+    <ruletrigger>
+    NameError:,IOError:,TimeoutError:,UnboundLocalError:,OSError.strerror:,ModuleNotFoundError:,ValueError:,IsADirectoryError:,WindowsError:,FileNotFoundError:,NotADirectoryError:,TabError:,ArithmeticError:,PermissionError:,TypeError:,SystemError:,UnicodeTranslateError:,FileExistsError:,ZeroDivisionError:,ProcessLookupError:,EOFError:,FloatingPointError:,UnicodeError.reason:,UnicodeError.object:,AttributeError:
+,OverflowError:,RuntimeError:,KeyError:,OSError.errno:,RecursionError:,InvalidArgumentError:,UnicodeError.start:,BufferError:,ConnectionError:,ConnectionAbortedError:,ChildProcessError:,UnicodeEncodeError:,EnvironmentError:,ReferenceError:,UnicodeDecodeError:,
+sb.toString.containsIndentationError:,ConnectionRefusedError:,LookupError:,InterruptedError:,MemoryError:,BrokenPipeError:,NotImplementedError:,UnicodeError.end:,OSError:,BlockingIOError.characters_written:,BlockingIOError:,ConnectionResetError:,AssertionError:,UnicodeError:,IndexError:,ImportError:
+    </ruletrigger>
+    <rulepriority>7</rulepriority>
+    <category>USER_ERROR/PYTHON_ERROR</category>
+  </classificationrule>
+</classificationrules>

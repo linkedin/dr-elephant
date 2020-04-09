@@ -29,6 +29,7 @@ public class JobsExceptionFingerPrinting extends Model {
     public static final String EXCEPTION_LOG = "exception_log";
     public static final String LOG_SOURCE_INFORMATION = "log_source_information";
     public static final String IS_HELPFUL = "is_helpful";
+    public static final String CLASSIFICATION = "classification";
   }
 
   @JsonIgnore
@@ -62,6 +63,9 @@ public class JobsExceptionFingerPrinting extends Model {
 
   @Column
   public Boolean isHelpful;
+
+  @Column(nullable = true)
+  public String classification;
 
   public static Finder<Integer, JobsExceptionFingerPrinting> find =
       new Finder<Integer, JobsExceptionFingerPrinting>(Integer.class, JobsExceptionFingerPrinting.class);

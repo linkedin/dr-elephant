@@ -25,10 +25,13 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import lombok.Getter;
 import models.AppResult;
 import models.JobsExceptionFingerPrinting;
@@ -55,6 +58,7 @@ public class TonYExceptionFingerprinting {
   private HashSet<String> exceptionIdSet = new HashSet<>();
   @Getter
   private List<ExceptionInfo> _exceptionInfoList = new ArrayList<>();
+  private String className = null;
 
   private static final Logger logger = Logger.getLogger(TonYExceptionFingerprinting.class);
 
@@ -74,6 +78,7 @@ public class TonYExceptionFingerprinting {
     fetchLogData();
     collectJobDiagnosticsInfoFromRM();
     collectExceptionInfoFromLogData();
+    className = classifyException();
     saveExceptionFingerprintingData();
   }
 
@@ -259,6 +264,7 @@ public class TonYExceptionFingerprinting {
       }
       tonyJobException.exceptionType = ExceptionInfo.ExceptionSource.DRIVER.toString();
       tonyJobException.exceptionLog = exceptionsTrace;
+      tonyJobException.classification = className;
       tonyJobException.save();
       jobsExceptionFingerPrinting.save();
     }
@@ -361,4 +367,36 @@ public class TonYExceptionFingerprinting {
     }
     return false;
   }
+
+
+  /**
+   * @param stackTrace String containing stackTrace of exception seperated by new line
+   * @param limit maximum number of lines required in stackTrace
+   * @return stackTrace with given number of lines or less
+   */
+  private String truncateStackTrace(String stackTrace, int limit) {
+    List<String> stackTraceSplitList = Arrays.asList(stackTrace.split("\n"));
+    return String.join("\n", stackTraceSplitList.subList(0, Math.min(limit, stackTraceSplitList.size())));
+  }
+
+  public String classifyException() {
+    List<ExceptionCategorizationData> exceptionCategorizationData =
+        EXCEPTION_CATEGORIZATION_CONFIGURATION.getValue().getExceptionCategorizationData().get("tony");
+    Collections.sort(exceptionCategorizationData);
+    String className = "USER_ERROR/UNKNOWN";
+    for (ExceptionCategorizationData exceptionData : exceptionCategorizationData) {
+        String[] searchPattern = exceptionData.getRuleTrigger().toLowerCase().replaceAll("\n", "").split(",");
+        logger.info(" Search pattern " + exceptionData.getRuleTrigger());
+        for (ExceptionInfo exceptionInfo : this._exceptionInfoList) {
+          for (String pattern : searchPattern) {
+            logger.info(" "+pattern+" "+exceptionInfo.getExceptionStackTrace());
+            if (exceptionInfo.getExceptionStackTrace().toLowerCase().trim().contains(pattern.trim())) {
+              className = exceptionData.getCategory();
+              return className;
+            }
+          }
+        }
+      }
+    return className;
+    }
 }
