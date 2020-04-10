@@ -43,6 +43,7 @@ import play.test.FakeApplication;
 import play.test.Helpers;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.linkedin.drelephant.exceptions.util.ExceptionUtils.ConfigurationBuilder.*;
 import static common.TestConstants.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
@@ -350,7 +351,13 @@ public class TonYExceptionFingerprintingTest {
         ExceptionInfo.ExceptionSource.DRIVER, 3, "fakeURL"));
     //Since Tony infra error have higher priority.
     assertEquals("USER_ERROR/FILE_NOT_FOUND", tonyEF.classifyException());
+
+
+    TonYExceptionFingerprinting tonyEFNoData = new TonYExceptionFingerprinting(null, null);
+    assertEquals("CANNOT CLASSIFY DATA", tonyEFNoData.classifyException());
+
   }
+
 
   private String getFakeResponse(String path) {
     try {

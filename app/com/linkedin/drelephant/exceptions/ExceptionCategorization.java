@@ -15,6 +15,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 
+/**
+ * This class parsed EFCategorization.xml and create List<ExceptionCategorizationData>
+ * per application type
+ */
+
 public class ExceptionCategorization {
   private static final Logger logger = Logger.getLogger(ExceptionCategorization.class);
   private Map<String, List<ExceptionCategorizationData>> applicationTypeExceptionCategorizationData = null;
@@ -22,18 +27,18 @@ public class ExceptionCategorization {
 
   public ExceptionCategorization(Element element) {
     applicationTypeExceptionCategorizationData = new HashMap<>();
-    parseTonyExceptionCategorization(element);
+    parseExceptionCategorization(element);
   }
 
   public Map<String, List<ExceptionCategorizationData>> getExceptionCategorizationData() {
     return this.applicationTypeExceptionCategorizationData;
   }
 
-  private void parseTonyExceptionCategorization(Element configuration) {
+  private void parseExceptionCategorization(Element configuration) {
 
     NodeList nodes = configuration.getChildNodes();
-    for (int i = 0; i < nodes.getLength(); i++) {
-      Node node = nodes.item(i);
+    for (int index = 0; index < nodes.getLength(); index++) {
+      Node node = nodes.item(index);
       if (node.getNodeType() == Node.ELEMENT_NODE) {
         Element classificationRule = (Element) node;
         Node applicationTypeNode = classificationRule.getElementsByTagName("applicationtype").item(0);
@@ -63,7 +68,7 @@ public class ExceptionCategorization {
         if (exceptionCategorizationData == null) {
           exceptionCategorizationData = new ArrayList<>();
         }
-        exceptionCategorizationData.add(new ExceptionCategorizationData(ruleName, ruleTrigger, rulePriority, category));
+        exceptionCategorizationData.add(new ExceptionCategorizationData(ruleName,ruleTrigger, rulePriority, category));
         applicationTypeExceptionCategorizationData.put(applicationType, exceptionCategorizationData);
       }
     }

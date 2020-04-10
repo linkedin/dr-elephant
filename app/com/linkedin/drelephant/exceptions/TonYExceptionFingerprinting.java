@@ -59,9 +59,12 @@ public class TonYExceptionFingerprinting {
   @Getter
   private List<ExceptionInfo> _exceptionInfoList = new ArrayList<>();
   private String className = null;
+  private static final String ERROR_CLASSIFICATION = "CANNOT CLASSIFY DATA";
+  private static final String UNKNOWN_CLASSIFICATION = "USER_ERROR/UNKNOWN";
+  private static final String APPLICATION_TYPE = "tony";
 
   private static final Logger logger = Logger.getLogger(TonYExceptionFingerprinting.class);
-
+  private static final boolean isDebugEnabled = logger.isDebugEnabled();
   public TonYExceptionFingerprinting(AnalyticJob analyticJob, AppResult appResult) {
     this._analyticJob = analyticJob;
     this._appResult = appResult;
@@ -379,24 +382,43 @@ public class TonYExceptionFingerprinting {
     return String.join("\n", stackTraceSplitList.subList(0, Math.min(limit, stackTraceSplitList.size())));
   }
 
+  /**
+   *
+   * @return Return the classification for the exception .
+   */
   public String classifyException() {
+    if (EXCEPTION_CATEGORIZATION_CONFIGURATION == null || this._exceptionInfoList == null
+        || this._exceptionInfoList.size() == 0) {
+      logger.error(" Necessary information is not available for classifying exceptions ");
+      return ERROR_CLASSIFICATION;
+    }
     List<ExceptionCategorizationData> exceptionCategorizationData =
-        EXCEPTION_CATEGORIZATION_CONFIGURATION.getValue().getExceptionCategorizationData().get("tony");
+        EXCEPTION_CATEGORIZATION_CONFIGURATION.getValue().getExceptionCategorizationData().get(APPLICATION_TYPE);
+    if (exceptionCategorizationData == null || exceptionCategorizationData.size() == 0) {
+      logger.error(" No exception categorization rules for tony application ");
+      return ERROR_CLASSIFICATION;
+    }
     Collections.sort(exceptionCategorizationData);
-    String className = "USER_ERROR/UNKNOWN";
+    String className = UNKNOWN_CLASSIFICATION;
     for (ExceptionCategorizationData exceptionData : exceptionCategorizationData) {
-        String[] searchPattern = exceptionData.getRuleTrigger().toLowerCase().replaceAll("\n", "").split(",");
-        logger.info(" Search pattern " + exceptionData.getRuleTrigger());
-        for (ExceptionInfo exceptionInfo : this._exceptionInfoList) {
-          for (String pattern : searchPattern) {
-            logger.info(" "+pattern+" "+exceptionInfo.getExceptionStackTrace());
-            if (exceptionInfo.getExceptionStackTrace().toLowerCase().trim().contains(pattern.trim())) {
-              className = exceptionData.getCategory();
-              return className;
-            }
+      List<String> searchPattern = exceptionData.getRuleTrigger();
+      if (isDebugEnabled) {
+        logger.debug(" Search pattern " + exceptionData.getRuleTrigger());
+      }
+      for (ExceptionInfo exceptionInfo : this._exceptionInfoList) {
+        for (String pattern : searchPattern) {
+          if (isDebugEnabled) {
+            logger.info(" " + pattern + " " + exceptionInfo.getExceptionStackTrace());
+          }
+          if (exceptionInfo.getExceptionStackTrace().toLowerCase().contains(pattern)) {
+            className = exceptionData.getCategory();
+            return className;
           }
         }
       }
-    return className;
     }
+    return className;
+  }
+
+
 }

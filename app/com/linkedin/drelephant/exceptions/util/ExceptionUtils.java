@@ -179,6 +179,8 @@ public class ExceptionUtils {
     private static final String[] DEFAULT_REDUNDANT_LOG_PATTERN_REGEX_IN_AZKABAN_LOGS =
         {"(?m)(^\\d{2}-\\d{2}-\\d{4} (\\d{2}:?){3} [A-Z]{3} .+ (INFO|WARN|DEBUG) - )"};
 
+    private static final String EXCEPTION_CATEGORIZATION_FILE_NAME = "EFClassificationConf.xml";
+
     public static void buildConfigurations(Configuration configuration) {
       FIRST_THRESHOLD_LOG_LENGTH_IN_BYTES =
           new com.linkedin.drelephant.exceptions.util.EFConfiguration<Long>().setConfigurationName(
@@ -350,8 +352,11 @@ public class ExceptionUtils {
       buildExceptionClassificationConfiguration();
     }
 
-    public static void buildExceptionClassificationConfiguration() {
-      Document document = Utils.loadXMLDoc("EFClassificationConf.xml");
+    /**
+     * Build the exception categorization data from configuration file
+     */
+    private static void buildExceptionClassificationConfiguration() {
+      Document document = Utils.loadXMLDoc(EXCEPTION_CATEGORIZATION_FILE_NAME);
       ExceptionCategorization exceptionCategorizationConfiguration =
           new ExceptionCategorization(document.getDocumentElement());
       EXCEPTION_CATEGORIZATION_CONFIGURATION =
