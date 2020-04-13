@@ -38,3 +38,7 @@ playJavaSettings
 scalaVersion := "2.10.4"
 
 envVars in Test := Map("PSO_DIR_PATH" -> (baseDirectory.value / "scripts/pso").getAbsolutePath)
+
+licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+
+bintrayOrganization := Some("linkedin")
