@@ -1888,12 +1888,15 @@ public class Web extends Controller {
         long endTime = System.nanoTime();
         logger.info(" Processing of  "+ jobException.jobName +" took "+ (endTime - startTime) * 1.0 / (1000000000.0) + "s");
       }
+      logger.info(" Testing JSON Array "+jobsArray);
       root.add(JsonKeys.WORKFLOW_EXCEPTIONS, jobsArray);
       return root;
     } else {
       return null;
     }
   }
+
+
 
   /**
    * Maps the sort key to the actual field values
@@ -2009,6 +2012,7 @@ public class Web extends Controller {
         taskExceptionsArray.add(task);
       }
       child.add(JsonKeys.TASKS, taskExceptionsArray);
+      child.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, "UNKNOWN");
       mrJobExceptionArray.add(child);
     }
 
@@ -2033,6 +2037,14 @@ public class Web extends Controller {
            && jobsExceptionFingerPrinting.logSourceInformation.length() > 0) {
          jobException.addProperty(JsonKeys.EXCEPTION_LOG_SOURCE, jobsExceptionFingerPrinting.logSourceInformation);
        }
+       if (jobsExceptionFingerPrinting.classification != null
+           && jobsExceptionFingerPrinting.classification.length() > 0) {
+         jobException.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, jobsExceptionFingerPrinting.classification);
+       }
+       else{
+         jobException.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, "UNKNOWN");
+       }
+
        jobException.add(JsonKeys.TASKS, new JsonArray());
        jobExceptionInfoArray.add(jobException);
      }

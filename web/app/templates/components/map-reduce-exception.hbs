@@ -29,7 +29,9 @@
                     {{#p.toggle}}
                         <p>{{application.name}}</p>
                     {{/p.toggle}}
-
+                   <div class="box">
+                    <pre>{{application.classification}}</pre>
+                   </div>
                     {{#p.body}}
                       {{#if (or (eq job.type "SPARK") (eq job.type "TONY"))}}
                         {{#each application.exceptionSummary as |exception|}}
@@ -39,6 +41,7 @@
                             <pre><a href={{exception.exceptionTrackingURL}} target="_blank">Check above log's Source</a></pre>
                           {{/unless}}
                         </div>
+
                         {{/each}}
                       {{else}}
                       {{#unless (eq application.exceptionSummary "")}}
