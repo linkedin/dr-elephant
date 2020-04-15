@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +44,9 @@ import play.test.Helpers;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static common.TestConstants.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static play.test.Helpers.*;
-
 
 public class TonYExceptionFingerprintingTest {
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -198,8 +200,7 @@ public class TonYExceptionFingerprintingTest {
   }
 
   @Test
-  public void testTonyExceptionFingerprintingWhenNoLogFound()
-  {
+  public void testTonyExceptionFingerprintingWhenNoLogFound() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stderrContainerLogParameters,
@@ -210,15 +211,30 @@ public class TonYExceptionFingerprintingTest {
         logger.error("URL for test is not formed properly");
       }
       AnalyticJob fakeJob =
-          getFakeAnalyticalJob(TEST_APPLICATION_ID_3, TEST_JOB_NAME_3, false, TEST_AM_LOG_CONTAINER_URL_3, "Exit with status code 1.");
+          getFakeAnalyticalJob(TEST_APPLICATION_ID_3, TEST_JOB_NAME_3, false, TEST_AM_LOG_CONTAINER_URL_3,
+              "Exit with status code 1.");
       AppResult fakeAppResult = getFakeAppResult(TEST_APPLICATION_ID_3, TEST_JOB_EXEC_URL_3, TEST_WORKFLOW_URL_3);
-      TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(fakeJob, fakeAppResult);
-      tonyEF.doExceptionPrinting();
-      List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
-      assertEquals(1, exceptionInfos.size());
-      assertEquals("Job Diagnostics", exceptionInfos.get(0).getExceptionName());
-      assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), exceptionInfos.get(0)
-          .getExceptionStackTrace());
+      TonYExceptionFingerprinting tonYExceptionFingerprintingSpy = spy(new TonYExceptionFingerprinting(fakeJob, fakeAppResult));
+      List<ExceptionInfo> mockExceptionInfoListForAzkaban = new ArrayList<>();
+      mockExceptionInfoListForAzkaban.add(getMockExceptionInfo("exceptionName_1",
+          ExceptionInfo.ExceptionSource.SCHEDULER, "log_1", 1));
+      mockExceptionInfoListForAzkaban.add(getMockExceptionInfo("exceptionName_2",
+          ExceptionInfo.ExceptionSource.SCHEDULER, "log_2", 2));
+      try {
+        doReturn(mockExceptionInfoListForAzkaban).when(tonYExceptionFingerprintingSpy).getAzkabanExceptionInfoResults();
+        tonYExceptionFingerprintingSpy.doExceptionPrinting();
+        verify(tonYExceptionFingerprintingSpy, times(1)).getAzkabanExceptionInfoResults();
+        List<ExceptionInfo> results = tonYExceptionFingerprintingSpy.get_exceptionInfoList();
+        assertEquals(3, results.size());
+        assertEquals("Job Diagnostics", results.get(0).getExceptionName());
+        assertEquals("exceptionName_1", results.get(1).getExceptionName());
+        assertEquals("exceptionName_2", results.get(2).getExceptionName());
+        assertEquals("log_1", results.get(1).getExceptionStackTrace());
+        assertEquals("log_2", results.get(2).getExceptionStackTrace());
+        assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), results.get(0).getExceptionStackTrace());
+      } catch (Exception ex) {
+        logger.info("Exception while mocking method getAzkabanExceptionInfoResults");
+      }
     });
   }
 
@@ -230,5 +246,11 @@ public class TonYExceptionFingerprintingTest {
       logger.error("Exception while parsing fake response");
       return "";
     }
+  }
+
+  private ExceptionInfo getMockExceptionInfo(String exceptionName, ExceptionInfo.ExceptionSource exceptionSource,
+      String exceptionStackTrace, int exceptionWeight) {
+    return new ExceptionInfo(exceptionName.hashCode(), exceptionName, exceptionStackTrace,
+        exceptionSource, exceptionWeight, "");
   }
 }

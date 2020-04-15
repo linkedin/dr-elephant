@@ -47,7 +47,6 @@ public class AzkabanExceptionLogAnalyzerTest {
     azkabanExceptionLogAnalyzerSpy.getExceptionInfoList();
 
     List<ExceptionInfo> result = azkabanExceptionLogAnalyzerSpy.getExceptionInfoList();
-    Assert.assertTrue(SHOULD_PROCESS_AZKABAN_LOG.getValue());
     Assert.assertEquals(2, result.size());
     Assert.assertEquals(1, result.get(0).getWeightOfException().intValue());
     Assert.assertEquals(ExceptionInfo.ExceptionSource.SCHEDULER, result.get(0).getExceptionSource());
@@ -70,15 +69,6 @@ public class AzkabanExceptionLogAnalyzerTest {
     azkabanExceptionLogAnalyzerSpy.getExceptionInfoList();
     List<ExceptionInfo> result = azkabanExceptionLogAnalyzerSpy.getExceptionInfoList();
     Assert.assertEquals(0, result.size());
-  }
-
-  private void write(String path, String data) {
-    try {
-      FileOutputStream inputStream = new FileOutputStream(path);
-      inputStream.write(data.getBytes(), 0 , data.length());
-    } catch (IOException ex) {
-      logger.error("Exception while reading mock logs from path " + path);
-    }
   }
 
   private String getLog(String path) {

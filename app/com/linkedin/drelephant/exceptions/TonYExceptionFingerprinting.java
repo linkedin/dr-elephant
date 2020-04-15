@@ -112,6 +112,9 @@ public class TonYExceptionFingerprinting {
 
     if (Strings.isNullOrEmpty(amContainerStderrLogData) && Strings.isNullOrEmpty(amContainerStdoutLogData)) {
       logger.warn("Both AM stdout and stderr logs empty.");
+      if (SHOULD_PROCESS_AZKABAN_LOG.getValue()) {
+        _exceptionInfoList.addAll(getAzkabanExceptionInfoResults());
+      }
       return;
     }
     if (!Strings.isNullOrEmpty(amContainerStderrLogData)) {
@@ -128,6 +131,10 @@ public class TonYExceptionFingerprinting {
     if (exceptionInfos.size() == 0) {
       logger.error("No Error information found neither in AMStderr log nor in AMStdout log " +
           _analyticJob.getAppId());
+      //If no logs or only Job Diagnostic found then check for Azkaban logs
+      if (SHOULD_PROCESS_AZKABAN_LOG.getValue() && exceptionInfos.size() == 0) {
+        exceptionInfos.addAll(getAzkabanExceptionInfoResults());
+      }
     }
     _exceptionInfoList.addAll(exceptionInfos);
   }
@@ -146,14 +153,10 @@ public class TonYExceptionFingerprinting {
     relevantLogSnippets.addAll(filterOutExactExceptionPattern(logData,
         logLocationUrl));
     relevantLogSnippets.addAll(filterOutPartialExceptionPattern(logData, logLocationUrl));
-    //If no logs or onl Job Diagnostic found then check for Azkaban logs
-    if (SHOULD_PROCESS_AZKABAN_LOG.getValue() && relevantLogSnippets.size() == 0) {
-      relevantLogSnippets.addAll(getAzkabanExceptionInfoResults());
-    }
     return relevantLogSnippets;
   }
 
-  private List<ExceptionInfo> getAzkabanExceptionInfoResults() {
+  protected List<ExceptionInfo> getAzkabanExceptionInfoResults() {
     List<ExceptionInfo> azkabanExceptionInfo = new ArrayList<>();
     try {
       logger.info("Fetching Azkaban logs for " + _appResult.jobExecUrl);
