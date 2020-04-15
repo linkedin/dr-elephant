@@ -63,22 +63,19 @@ public class TonYExceptionFingerprintingTest {
   private final String TEST_WORKFLOW_URL_1 = "https://elephant.linkedin.com:8443/executor?execid=1";
   private final String TEST_JOB_EXEC_URL_1 = "https://elephant.linkedin.com:8443/executor?execid=1&job=job_1&attempt=0";
   private final String TEST_JOB_NAME_1 = "job_1";
-  private final String TEST_AM_LOG_CONTAINER_URL_1 =
-      "http://localhost:8042/node/containerlogs/container_e42_1576097000949_30598_01_000001/user1";
+  private final String TEST_AM_LOG_CONTAINER_URL_1 = "http://localhost:8042/node/containerlogs/container_e42_1576097000949_30598_01_000001/user1";
 
   private final String TEST_APPLICATION_ID_2 = "app_2";
   private final String TEST_WORKFLOW_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2";
   private final String TEST_JOB_EXEC_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2&job=job_2&attempt=0";
   private final String TEST_JOB_NAME_2 = "job_2";
-  private final String TEST_AM_LOG_CONTAINER_URL_2 =
-      "http://localhost:8042/node/containerlogs/container_e42_157609980900_57489_01_000001/user2";
+  private final String TEST_AM_LOG_CONTAINER_URL_2 = "http://localhost:8042/node/containerlogs/container_e42_157609980900_57489_01_000001/user2";
 
   private final String TEST_APPLICATION_ID_3 = "app_3";
   private final String TEST_WORKFLOW_URL_3 = "https://elephant.linkedin.com:8443/executor?execid=3";
   private final String TEST_JOB_EXEC_URL_3 = "https://elephant.linkedin.com:8443/executor?execid=3&job=job_3&attempt=0";
   private final String TEST_JOB_NAME_3 = "job_3";
-  private final String TEST_AM_LOG_CONTAINER_URL_3 =
-      "http://localhost:8042/node/containerlogs/container_e42_157609980900_38479_01_000001/user3";
+  private final String TEST_AM_LOG_CONTAINER_URL_3 = "http://localhost:8042/node/containerlogs/container_e42_157609980900_38479_01_000001/user3";
 
   private final String FAKE_RESPONSE_APP_1_STDERR_PATH = "test/resources/exception/TonY/app_1_stderr_response.html";
   private final String FAKE_RESPONSE_APP_1_STDOUT_PATH = "test/resources/exception/TonY/app_1_stdout_response.html";
@@ -123,9 +120,9 @@ public class TonYExceptionFingerprintingTest {
     _wireMockServer.stop();
   }
 
-  private AnalyticJob getFakeAnalyticalJob(String appId, String jobName, boolean isSucceeded, String amContainerLogsURL,
-      String amDiagnostic) {
-    return new AnalyticJob().setAppId(appId)
+  private AnalyticJob getFakeAnalyticalJob(String appId, String jobName, boolean isSucceeded, String amContainerLogsURL, String amDiagnostic) {
+    return new AnalyticJob()
+        .setAppId(appId)
         .setName(jobName)
         .setSucceeded(isSucceeded)
         .setAmContainerLogsURL(amContainerLogsURL)
@@ -142,12 +139,15 @@ public class TonYExceptionFingerprintingTest {
   }
 
   private void mockResponseForContainerLogs(String containerUrl, String response, int statusCode) {
-    _wireMockServer.stubFor(
-        get(urlEqualTo(containerUrl)).willReturn(aResponse().withBody(response).withStatus(statusCode)));
+    _wireMockServer.stubFor(get(urlEqualTo(containerUrl))
+        .willReturn(aResponse()
+            .withBody(response)
+            .withStatus(statusCode)));
   }
 
   @Test
-  public void testTonYExceptionFingerprinting() {
+  public void testTonYExceptionFingerprinting()
+  {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_1).getPath() + stderrContainerLogParameters,
@@ -158,8 +158,7 @@ public class TonYExceptionFingerprintingTest {
         logger.error("URL for test is not formed properly");
       }
       AnalyticJob fakeJob1 =
-          getFakeAnalyticalJob(TEST_APPLICATION_ID_1, TEST_JOB_NAME_1, false, TEST_AM_LOG_CONTAINER_URL_1,
-              "diagnostic 1");
+          getFakeAnalyticalJob(TEST_APPLICATION_ID_1, TEST_JOB_NAME_1, false, TEST_AM_LOG_CONTAINER_URL_1, "diagnostic 1");
       AppResult fakeAppResult1 = getFakeAppResult(TEST_APPLICATION_ID_1, TEST_JOB_EXEC_URL_1, TEST_WORKFLOW_URL_1);
       TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(fakeJob1, fakeAppResult1);
       tonyEF.doExceptionPrinting();
@@ -167,10 +166,15 @@ public class TonYExceptionFingerprintingTest {
 
       assertEquals(3, exceptionInfos.size());
       assertEquals("Job Diagnostics", exceptionInfos.get(0).getExceptionName());
+
       assertEquals("Job Diagnostics: \n" + fakeJob1.getJobDiagnostics(), exceptionInfos.get(0)
           .getExceptionStackTrace());
       assertEquals("Container exited with a non-zero exit code 1. Error file: prelaunch.err.",
           exceptionInfos.get(1).getExceptionName());
+
+      assertEquals("Job Diagnostics: \n" + fakeJob1.getJobDiagnostics(), exceptionInfos.get(0).getExceptionStackTrace());
+      assertEquals("Container exited with a non-zero exit code 1. Error file: prelaunch.err.", exceptionInfos.get(1).getExceptionName());
+
       assertEquals("USER_ERROR/FILE_NOT_FOUND", tonyEF.classifyException());
 
     });
@@ -188,15 +192,15 @@ public class TonYExceptionFingerprintingTest {
         logger.error("URL for test is not formed properly");
       }
       AnalyticJob fakeJob =
-          getFakeAnalyticalJob(TEST_APPLICATION_ID_2, TEST_JOB_NAME_2, false, TEST_AM_LOG_CONTAINER_URL_2,
-              "Exit with status code 1.");
+          getFakeAnalyticalJob(TEST_APPLICATION_ID_2, TEST_JOB_NAME_2, false, TEST_AM_LOG_CONTAINER_URL_2, "Exit with status code 1.");
       AppResult fakeAppResult = getFakeAppResult(TEST_APPLICATION_ID_2, TEST_JOB_EXEC_URL_2, TEST_WORKFLOW_URL_2);
       TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(fakeJob, fakeAppResult);
       tonyEF.doExceptionPrinting();
       List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
       assertEquals(5, exceptionInfos.size());
       assertEquals("Job Diagnostics", exceptionInfos.get(0).getExceptionName());
-      assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), exceptionInfos.get(0).getExceptionStackTrace());
+      assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), exceptionInfos.get(0)
+          .getExceptionStackTrace());
       assertEquals("Container exited with a non-zero exit code 1. Error file: prelaunch.err.",
           exceptionInfos.get(1).getExceptionName());
       assertEquals("ERROR ApplicationMaster:983 - [2020-02-05 02:56:19.426]Container killed by the ApplicationMaster.",
@@ -212,10 +216,10 @@ public class TonYExceptionFingerprintingTest {
   public void testTonyExceptionFingerprintingWhenNoLogFound() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
-        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stderrContainerLogParameters, "",
-            NOT_FOUND);
-        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stdoutContainerLogParameters, "",
-            NOT_FOUND);
+        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stderrContainerLogParameters,
+            "", NOT_FOUND);
+        mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stdoutContainerLogParameters,
+            "", NOT_FOUND);
       } catch (MalformedURLException ex) {
         logger.error("URL for test is not formed properly");
       }

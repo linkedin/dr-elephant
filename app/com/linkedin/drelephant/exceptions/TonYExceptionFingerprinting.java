@@ -398,7 +398,6 @@ public class TonYExceptionFingerprinting {
       logger.error(" No exception categorization rules for tony application ");
       return ERROR_CLASSIFICATION;
     }
-    Collections.sort(exceptionCategorizationData);
     String className = UNKNOWN_CLASSIFICATION;
     for (ExceptionCategorizationData exceptionData : exceptionCategorizationData) {
       List<String> searchPattern = exceptionData.getRuleTrigger();
@@ -408,10 +407,12 @@ public class TonYExceptionFingerprinting {
       for (ExceptionInfo exceptionInfo : this._exceptionInfoList) {
         for (String pattern : searchPattern) {
           if (isDebugEnabled) {
-            logger.info(" " + pattern + " " + exceptionInfo.getExceptionStackTrace());
+            logger.debug(" " + pattern + " " + exceptionInfo.getExceptionStackTrace());
           }
           if (exceptionInfo.getExceptionStackTrace().toLowerCase().contains(pattern)) {
             className = exceptionData.getCategory();
+            logger.info(
+                " Class of the exception " + className + "\t because " + exceptionInfo.getExceptionStackTrace());
             return className;
           }
         }

@@ -165,7 +165,8 @@ public class ExceptionUtils {
 
     private static final String[] DEFAULT_BLACK_LISTED_EXCEPTION_PATTERN = {"-XX:OnOutOfMemoryError='kill %p'"};
 
-    private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS = {"(?m)^.*(ERROR.+)\n?"};
+    private static final String[] DEFAULT_PARTIAL_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
+        {"(?m)^.*(ERROR.+)\n?"};
 
     private static final String[] DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
         {"(?m)(^.+Exception(.+\n))(\t+at .+\n?)+", "(?m)(Container exited with a non-zero exit code (.*))\n(.+\n?)*"

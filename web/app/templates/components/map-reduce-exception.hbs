@@ -30,7 +30,7 @@
                         <p>{{application.name}}</p>
                     {{/p.toggle}}
                    <div class="box">
-                    <pre>{{application.classification}}</pre>
+                    <pre>Classification :  <b>{{application.exceptionClassification}}</b></pre>
                    </div>
                     {{#p.body}}
                       {{#if (or (eq job.type "SPARK") (eq job.type "TONY"))}}
