@@ -228,7 +228,7 @@ public class TonYExceptionFingerprintingTest {
       AnalyticJob fakeJob =
           getFakeAnalyticalJob(TEST_APPLICATION_ID_3, TEST_JOB_NAME_3, false, TEST_AM_LOG_CONTAINER_URL_3, "Exit with status code 1.");
       AppResult fakeAppResult = getFakeAppResult(TEST_APPLICATION_ID_3, TEST_JOB_EXEC_URL_3, TEST_WORKFLOW_URL_3);
-<<<<<<< HEAD
+
       TonYExceptionFingerprinting tonYExceptionFingerprintingSpy = spy(new TonYExceptionFingerprinting(fakeJob, fakeAppResult));
       List<ExceptionInfo> mockExceptionInfoListForAzkaban = new ArrayList<>();
       mockExceptionInfoListForAzkaban.add(getMockExceptionInfo("exceptionName_1",
