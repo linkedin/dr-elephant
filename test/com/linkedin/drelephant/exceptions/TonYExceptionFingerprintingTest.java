@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import models.AppResult;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -248,10 +249,21 @@ public class TonYExceptionFingerprintingTest {
       tonyEF.doExceptionPrinting();
       List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
       assertEquals(6, exceptionInfos.size());
-      assertTrue(exceptionInfos.get(2).getExceptionStackTrace().contains("Container exited with a non-zero exit code 1. Error file: prelaunch.err.\n"
-          + "Last 4096 bytes of prelaunch.err :\n" + "Last 4096 bytes of stderr :"));
-      assertTrue(exceptionInfos.get(3).getExceptionStackTrace().contains("ERROR ApplicationMaster:983 - [2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of 67.2 GB virtual memory used. Killing container.\n"
+      assertTrue(exceptionInfos.get(2).getExceptionStackTrace().contains("Container exited with a non-zero exit code 1."
+          + " Error file: prelaunch.err.\n" + "Last 4096 bytes of prelaunch.err :\n" + "Last 4096 bytes of stderr :"));
+      assertTrue(exceptionInfos.get(3).getExceptionStackTrace().contains("ERROR ApplicationMaster:983 - "
+          + "[2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is "
+          + "running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of "
+          + "67.2 GB virtual memory used. Killing container.\n"
           + "Dump of the process-tree for container_e42_123456789568_34567_01_000027"));
+      /*
+        Log has two similar stackTraces and only difference between them is containerId
+        Log with containerId container_e42_123456789568_34567_01_000008 will be present in result and not with containerId
+        container_e42_123456789568_34567_01_000009
+       */
+      List<ExceptionInfo> similarLogList = exceptionInfos.stream().filter(el -> el.getExceptionStackTrace().contains(
+          "container_e42_123456789568_34567_01_000009")).collect(Collectors.toList());
+      assertEquals(0, similarLogList.size());
     });
   }
 

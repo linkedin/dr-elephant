@@ -16,7 +16,6 @@
 
 package com.linkedin.drelephant.exceptions.util;
 
-import com.linkedin.drelephant.ElephantContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;

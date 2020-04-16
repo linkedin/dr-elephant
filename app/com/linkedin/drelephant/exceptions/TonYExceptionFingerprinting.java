@@ -179,7 +179,7 @@ public class TonYExceptionFingerprinting {
     for (Pattern exactExceptionPattern : exactExceptionRegexList) {
       Matcher exact_exception_pattern_matcher = exactExceptionPattern.matcher(logData);
       while (exact_exception_pattern_matcher.find()) {
-        if (!isExceptionLogDuplicateOrSimilar(exact_exception_pattern_matcher.group(0))) {
+        if (!isExceptionLogSimilar(exact_exception_pattern_matcher.group(0))) {
           exceptionIdSet.add(exact_exception_pattern_matcher.group(0));
           ExceptionInfo exceptionInfo = new ExceptionInfo();
           exceptionInfo.setExceptionID(exact_exception_pattern_matcher.group(0).hashCode());
@@ -211,7 +211,7 @@ public class TonYExceptionFingerprinting {
     for (Pattern exactExceptionPattern : partialExceptionRegexList) {
       Matcher partial_pattern_matcher = exactExceptionPattern.matcher(logData);
       while (partial_pattern_matcher.find()) {
-        if (!(isExceptionLogDuplicateOrSimilar(partial_pattern_matcher.group(0)))) {
+        if (!(isExceptionLogSimilar(partial_pattern_matcher.group(0)))) {
           exceptionIdSet.add(partial_pattern_matcher.group(0));
           ExceptionInfo exceptionInfo = new ExceptionInfo();
           exceptionInfo.setExceptionID(partial_pattern_matcher.group(0).hashCode());
@@ -339,10 +339,10 @@ public class TonYExceptionFingerprinting {
   }
 
   /**
-   * @param exceptionStackTrace HashCode for filterOut exception stackTrace
-   * @return where this exception stackTrace is parsed and saved before
+   * @param exceptionStackTrace HashCode for filterOut Duplicate or Similar exception stackTrace
+   * @return whether this exception stackTrace is parsed and saved before
    */
-  private boolean isExceptionLogDuplicateOrSimilar(String exceptionStackTrace) {
+  private boolean isExceptionLogSimilar(String exceptionStackTrace) {
     if (exceptionIdSet.contains(exceptionStackTrace)) {
       for (String uniqueExceptions : exceptionIdSet) {
         if (uniqueExceptions.equals(exceptionStackTrace)) {
