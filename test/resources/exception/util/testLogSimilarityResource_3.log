@@ -1,0 +1,27 @@
+b/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 354, in train
+    loss = self._train_model(input_fn, hooks, saving_listeners)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1207, in _train_model
+    return self._train_model_default(input_fn, hooks, saving_listeners)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1237, in _train_model_default
+    features, labels, model_fn_lib.ModeKeys.TRAIN, self.config)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/estimator/estimator.py&quot;, line 1195, in _call_model_fn
+    model_fn_results = self._model_fn(features=features, **kwargs)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/train/train.py&quot;, line 266, in model_fn
+    save_model_scoring_mode=save_model_scoring_mode)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/deep_match.py&quot;, line 81, in __init__
+    self.scoring_model = bert_model.BertModel(query, doc_fields, usr_fields, hparams, mode)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert_model.py&quot;, line 36, in __init__
+    self.query_ftrs, self.doc_ftrs, self.usr_ftrs = self.apply_bert()
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert_model.py&quot;, line 127, in apply_bert
+    self.hparams.bert_checkpoint)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib64/python3.6/site-packages/linkedin/deepmatchin/model/bert/modeling.py&quot;, line 327, in get_assignment_map_from_checkpoint
+    init_vars = tf.train.list_variables(init_checkpoint)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/training/checkpoint_utils.py&quot;, line 95, in list_variables
+    reader = load_checkpoint(ckpt_dir_or_file)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/training/checkpoint_utils.py&quot;, line 64, in load_checkpoint
+    return pywrap_tensorflow.NewCheckpointReader(filename)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/pywrap_tensorflow_internal.py&quot;, line 326, in NewCheckpointReader
+    return CheckpointReader(compat.as_bytes(filepattern), status)
+  File &quot;/grid/b/tmp/yarn/usercache/user2/appcache/application_1576097000949_37909/container_e42_1576097000949_37909_01_000002/venv/Python/lib/python3.6/site-packages/tensorflow/python/framework/errors_impl.py&quot;, line 528, in __exit__
+    c_api.TF_GetCode(self.status.status))
+tensorflow.python.framework.errors_impl.InvalidArgumentError: Unsuccessful TensorSliceReader constructor: Failed to get matching files on hdfs://ltx1-namenode.linkedin.com:9000/jobs/deepnlp/GBert/bert-base/checkpoints/model.ckpt-1724730: Not found: hdfs://ltx1-namenode.linkedin.com:9000/jobs/deepnlp/GBert/bert-base/checkpoints; No such file or directory
