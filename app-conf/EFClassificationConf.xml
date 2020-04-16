@@ -29,7 +29,8 @@ fingerprinting -->
                  java.net.unknownhostexception,
                  rpcexception,
                  java.io.filenotfoundexception,permission denied,
-                 Could not start gRPC server
+                 Could not start gRPC server,
+		 LeaseExpiredException
     </ruletrigger>
     <rulepriority>1</rulepriority>
     <category>TONY_INFRA_ERROR</category>
