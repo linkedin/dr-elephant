@@ -20,11 +20,12 @@ package com.linkedin.drelephant.exceptions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.Data;
 
 /**
  * Exception categorization data
  */
+@Data
 public class ExceptionCategorizationData implements Comparable<ExceptionCategorizationData> {
   private String ruleName;
   private List<String> ruleTriggers;
@@ -41,22 +42,6 @@ public class ExceptionCategorizationData implements Comparable<ExceptionCategori
             .collect(Collectors.toList());
     this.priority = priority;
     this.category = category;
-  }
-
-  public String getRuleName() {
-    return ruleName;
-  }
-
-  public List<String> getRuleTrigger() {
-    return ruleTriggers;
-  }
-
-  public String getPriority() {
-    return priority;
-  }
-
-  public String getCategory() {
-    return category;
   }
 
   @Override

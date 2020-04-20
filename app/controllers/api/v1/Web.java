@@ -83,6 +83,7 @@ public class Web extends Controller {
   private static final int SEARCH_DEFAULT_PAGE_LIMIT = 25;
   private static final int SEARCH_APPLICATION_MAX_OFFSET = 500;
   private static final String NOT_APPLICABLE = "NA";
+  private static final String UNKNOWN_CLASSIFICATION = "UNKNOWN";
 
 
   private static long _lastFetch = 0;
@@ -1888,7 +1889,6 @@ public class Web extends Controller {
         long endTime = System.nanoTime();
         logger.info(" Processing of  "+ jobException.jobName +" took "+ (endTime - startTime) * 1.0 / (1000000000.0) + "s");
       }
-      logger.info(" Testing JSON Array "+jobsArray);
       root.add(JsonKeys.WORKFLOW_EXCEPTIONS, jobsArray);
       return root;
     } else {
@@ -2012,7 +2012,7 @@ public class Web extends Controller {
         taskExceptionsArray.add(task);
       }
       child.add(JsonKeys.TASKS, taskExceptionsArray);
-      child.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, "UNKNOWN");
+      child.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, UNKNOWN_CLASSIFICATION);
       mrJobExceptionArray.add(child);
     }
 
@@ -2042,7 +2042,7 @@ public class Web extends Controller {
          jobException.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, jobsExceptionFingerPrinting.classification);
        }
        else{
-         jobException.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, "UNKNOWN");
+         jobException.addProperty(JsonKeys.EXCEPTION_CLASSIFICATION, UNKNOWN_CLASSIFICATION);
        }
 
        jobException.add(JsonKeys.TASKS, new JsonArray());

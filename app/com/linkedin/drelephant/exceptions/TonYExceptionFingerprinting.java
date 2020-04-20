@@ -56,7 +56,7 @@ public class TonYExceptionFingerprinting {
   private HashSet<String> exceptionIdSet = new HashSet<>();
   @Getter
   private List<ExceptionInfo> _exceptionInfoList = new ArrayList<>();
-  private String className = null;
+  private String exceptionCategoryName = null;
   private static final String ERROR_CLASSIFICATION = "CANNOT CLASSIFY DATA";
   private static final String UNKNOWN_CLASSIFICATION = "USER_ERROR/UNKNOWN";
   private static final String APPLICATION_TYPE = "tony";
@@ -79,7 +79,7 @@ public class TonYExceptionFingerprinting {
     fetchLogData();
     collectJobDiagnosticsInfoFromRM();
     collectExceptionInfoFromLogData();
-    className = classifyException();
+    exceptionCategoryName = classifyException();
     saveExceptionFingerprintingData();
   }
 
@@ -265,7 +265,7 @@ public class TonYExceptionFingerprinting {
       }
       tonyJobException.exceptionType = ExceptionInfo.ExceptionSource.DRIVER.toString();
       tonyJobException.exceptionLog = exceptionsTrace;
-      tonyJobException.classification = className;
+      tonyJobException.classification = exceptionCategoryName;
       tonyJobException.save();
       jobsExceptionFingerPrinting.save();
     }
@@ -396,11 +396,11 @@ public class TonYExceptionFingerprinting {
       logger.error(" No exception categorization rules for tony application ");
       return ERROR_CLASSIFICATION;
     }
-    String className = UNKNOWN_CLASSIFICATION;
+    String exceptionCategoryName = UNKNOWN_CLASSIFICATION;
     for (ExceptionCategorizationData exceptionData : exceptionCategorizationData) {
-      List<String> searchPattern = exceptionData.getRuleTrigger();
+      List<String> searchPattern = exceptionData.getRuleTriggers();
       if (isDebugEnabled) {
-        logger.debug(" Search pattern " + exceptionData.getRuleTrigger());
+        logger.debug(" Search pattern " + exceptionData.getRuleTriggers());
       }
       for (ExceptionInfo exceptionInfo : this._exceptionInfoList) {
         for (String pattern : searchPattern) {
@@ -408,15 +408,15 @@ public class TonYExceptionFingerprinting {
             logger.debug(" " + pattern + " " + exceptionInfo.getExceptionStackTrace());
           }
           if (exceptionInfo.getExceptionStackTrace().toLowerCase().contains(pattern)) {
-            className = exceptionData.getCategory();
+            exceptionCategoryName = exceptionData.getCategory();
             logger.info(
-                " Class of the exception " + className + "\t because " + exceptionInfo.getExceptionStackTrace());
-            return className;
+                " Class of the exception " + exceptionCategoryName + "\t because " + exceptionInfo.getExceptionStackTrace());
+            return exceptionCategoryName;
           }
         }
       }
     }
-    return className;
+    return exceptionCategoryName;
   }
 
 
