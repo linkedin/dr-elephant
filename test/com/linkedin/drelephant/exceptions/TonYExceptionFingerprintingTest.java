@@ -164,16 +164,13 @@ public class TonYExceptionFingerprintingTest {
       TonYExceptionFingerprinting tonyEF = new TonYExceptionFingerprinting(fakeJob1, fakeAppResult1);
       tonyEF.doExceptionPrinting();
       List<ExceptionInfo> exceptionInfos = tonyEF.get_exceptionInfoList();
-
       assertEquals(3, exceptionInfos.size());
       assertEquals("Job Diagnostics", exceptionInfos.get(0).getExceptionName());
-
       assertEquals("Job Diagnostics: \n" + fakeJob1.getJobDiagnostics(), exceptionInfos.get(0)
           .getExceptionStackTrace());
       assertEquals("Container exited with a non-zero exit code 1. Error file: prelaunch.err.",
           exceptionInfos.get(1).getExceptionName());
       assertEquals("USER_ERROR/FILE_NOT_FOUND", tonyEF.classifyException());
-
     });
   }
 
@@ -244,6 +241,7 @@ public class TonYExceptionFingerprintingTest {
         assertEquals("exceptionName_2", results.get(2).getExceptionName());
         assertEquals("log_1", results.get(1).getExceptionStackTrace());
         assertEquals("log_2", results.get(2).getExceptionStackTrace());
+        assertEquals("Job Diagnostics: \n" + fakeJob.getJobDiagnostics(), results.get(0).getExceptionStackTrace());
         assertEquals("USER_ERROR/UNKNOWN", tonYExceptionFingerprintingSpy.classifyException());
       } catch (Exception ex) {
         logger.info("Exception while mocking method getAzkabanExceptionInfoResults");
@@ -252,7 +250,8 @@ public class TonYExceptionFingerprintingTest {
   }
 
   @Test
-  public void testTonyExceptionFingerprintingWhenSimilarLogsArePresent() {
+  public void testTonyExceptionFingerprintingWhenSimilarLogsArePresent()
+  {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_1).getPath() + stderrContainerLogParameters,
@@ -273,10 +272,10 @@ public class TonYExceptionFingerprintingTest {
       assertTrue(exceptionInfos.get(2).getExceptionStackTrace().contains("Container exited with a non-zero exit code 1."
           + " Error file: prelaunch.err.\n" + "Last 4096 bytes of prelaunch.err :\n" + "Last 4096 bytes of stderr :"));
       assertTrue(exceptionInfos.get(3).getExceptionStackTrace().contains("ERROR ApplicationMaster:983 - "
-              + "[2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is "
-              + "running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of "
-              + "67.2 GB virtual memory used. Killing container.\n"
-              + "Dump of the process-tree for container_e42_123456789568_34567_01_000027"));
+          + "[2020-02-07 06:51:28.868]Container [pid=15762,containerID=container_e42_123456789568_34567_01_000027] is "
+          + "running beyond physical memory limits. Current usage: 32.0 GB of 32 GB physical memory used; 102.9 GB of "
+          + "67.2 GB virtual memory used. Killing container.\n"
+          + "Dump of the process-tree for container_e42_123456789568_34567_01_000027"));
       /*
         Log has two similar stackTraces and only difference between them is containerId
         Log with containerId container_e42_123456789568_34567_01_000008 will be present in result and not with containerId
