@@ -175,6 +175,7 @@ public class WebTest {
     Assert.assertEquals(jobExceptionJsonObject.get(JsonKeys.TYPE).getAsString(), "TONY");
     JsonArray application = jobExceptionJsonObject.getAsJsonArray(JsonKeys.APPLICATIONS);
     JsonObject applicationJsonObject = application.get(0).getAsJsonObject();
-    Assert.assertEquals(applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString(), "TONY_INFRA_ERROR");
+    Assert.assertEquals("Not a TONY_INFRA_ERROR ",
+        applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString(), "TONY_INFRA_ERROR");
     }
   }
