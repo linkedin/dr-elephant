@@ -144,16 +144,11 @@ public class ExceptionUtils {
     public static EFConfiguration<Integer> NUMBER_OF_RETRIES_FOR_FETCHING_DRIVER_LOGS = null;
     public static EFConfiguration<Integer> DURATION_FOR_THREAD_SLEEP_FOR_FETCHING_DRIVER_LOGS = null;
     public static EFConfiguration<Integer> TOTAL_LENGTH_OF_LOG_SAVED_IN_DB = null;
-
     public static EFConfiguration<Integer> AZKABAN_JOB_LOG_START_OFFSET = null;
     public static EFConfiguration<Integer> AZKABAN_JOB_LOG_MAX_LENGTH = null;
     public static EFConfiguration<Boolean> SHOULD_PROCESS_AZKABAN_LOG = null;
-
-
     public static EFConfiguration<Integer> MAX_LOG_SIMILARITY_PERCENTAGE_THRESHOLD = null;
     public static EFConfiguration<ExceptionCategorization> EXCEPTION_CATEGORIZATION_CONFIGURATION = null;
-
-
 
     private static final String[] DEFAULT_REGEX_FOR_EXCEPTION_IN_LOGS =
         {"^.+Exception.*", "^.+Error.*", ".*Container\\s+killed.*"};
@@ -169,9 +164,10 @@ public class ExceptionUtils {
         {"(?m)^.*(ERROR.+)\n?"};
 
     private static final String[] DEFAULT_EXACT_EXCEPTION_PATTERN_REGEX_IN_TONY_LOGS =
-        {"(?m)(^.+Exception(.+\n))(\t+at .+\n?)+", "(?m)(Container exited with a non-zero exit code (.*))\n(.+\n?)*"
-            + "((\nResourceExhaustedError \\(see above for traceback\\):.+\n(.+\n?)*))?"
-            + "((\n(WARNING.+\\n?\\n?)*)\n(Traceback \\(most recent call last\\)):\n(.+\n?)*)?",
+        {"(?m)(^.+Exception(.+\n))(\t+at .+\n?)+",
+            "(?m)(Container exited with a non-zero exit code (.*))\n(.+\n?)*"
+                + "((\nResourceExhaustedError \\(see above for traceback\\):.+\n(.+\n?)*))?"
+                  + "((\n(WARNING.+\\n?\\n?)*)\n(Traceback \\(most recent call last\\)):\n(.+\n?)*)?",
             "(?m)^(Traceback \\(most recent call last\\)):\n(.+\n?)*"};
 
     private static final String[] DEFAULT_EXCEPTION_PATTERN_REGEX_IN_AZKABAN_LOGS =
