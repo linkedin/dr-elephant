@@ -22,14 +22,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import static org.junit.Assert.assertEquals;
 
-public class EFClassificationConfigurationTest {
+public class EFCategorizationConfigurationTest {
   private static Document document1 = null;
 
   @BeforeClass
@@ -37,7 +35,7 @@ public class EFClassificationConfigurationTest {
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       DocumentBuilder builder = factory.newDocumentBuilder();
-      document1 = builder.parse(EFClassificationConfigurationTest.class.getClassLoader()
+      document1 = builder.parse(EFCategorizationConfigurationTest.class.getClassLoader()
           .getResourceAsStream("configurations/efconfiguration/EFClassificationConfTest1.xml"));
     } catch (ParserConfigurationException e) {
       throw new RuntimeException("XML Parser could not be created.", e);
@@ -49,7 +47,7 @@ public class EFClassificationConfigurationTest {
   }
 
   @Test
-  public void testParseEFClassificationConfigurationConf1() {
+  public void testParseEFCategorizationConfigurationConf1() {
     ExceptionCategorizationConfiguration exceptionCategorization = new ExceptionCategorizationConfiguration(document1.getDocumentElement());
     assertEquals("EFClssificationTest1 is not missing essential information", exceptionCategorization.getExceptionCategorizationData().size(), 0);
   }
