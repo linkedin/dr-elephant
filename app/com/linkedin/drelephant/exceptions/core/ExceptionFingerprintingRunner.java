@@ -223,7 +223,7 @@ public class ExceptionFingerprintingRunner implements Runnable {
     try {
       exceptionInJson = Obj.writeValueAsString(exceptionInfoList.subList(0,
           Math.min(exceptionInfoList.size(), NUMBER_OF_EXCEPTION_TO_PUT_IN_DB.getValue())));
-      logger.debug(" Final Size of the exception List , which will be stored in db " + exceptionInJson);
+      logger.info(" Final Size of the exception List , which will be stored in db " + exceptionInJson);
     } catch (IOException e) {
       logger.error(" Exception while searlizing stack tract list to JSON ", e);
     }

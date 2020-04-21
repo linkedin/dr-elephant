@@ -33,14 +33,14 @@ import org.w3c.dom.NodeList;
  * This class parsed EFCategorizationConf.xml and create List<ExceptionCategorizationData>
  */
 
-public class ExceptionCategorization {
-  private static final Logger logger = Logger.getLogger(ExceptionCategorization.class);
+public class ExceptionCategorizationConfiguration {
+  private static final Logger logger = Logger.getLogger(ExceptionCategorizationConfiguration.class);
   private Map<String, List<ExceptionCategorizationData>> applicationTypeExceptionCategorizationData;
   boolean debugEnabled = logger.isDebugEnabled();
 
   private enum ClassificationTag {APPLICATIONTYPE, RULENAME, RULETRIGGER, RULEPRIORITY, CATEGORY}
 
-  public ExceptionCategorization(Element element) {
+  public ExceptionCategorizationConfiguration(Element element) {
     applicationTypeExceptionCategorizationData = new HashMap<>();
     parseExceptionCategorization(element);
   }

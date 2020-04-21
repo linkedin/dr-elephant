@@ -48,7 +48,7 @@ public class ParameterGenerateManagerHBT extends AbstractParameterGenerateManage
             TuningAlgorithm.OptimizationAlgo.HBT.name())
         // .eq(JobSuggestedParamSet.TABLE.isParamSetDefault, 0)
         .findList();
-    logger.info(
+    logger.debug(
         " Number of Pending Jobs for parameter suggestion " + this._executionEngine + " " + pendingParamSetList.size());
     return pendingParamSetList;
   }
