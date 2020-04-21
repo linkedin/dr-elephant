@@ -65,6 +65,7 @@ public class TonYExceptionFingerprintingTest {
   private final String TEST_JOB_NAME_1 = "job_1";
   private final String TEST_AM_LOG_CONTAINER_URL_1 = "http://localhost:8042/node/containerlogs/container_e42_1576097000949_30598_01_000001/user1";
 
+
   private final String TEST_APPLICATION_ID_2 = "app_2";
   private final String TEST_WORKFLOW_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2";
   private final String TEST_JOB_EXEC_URL_2 = "https://elephant.linkedin.com:8443/executor?execid=2&job=job_2&attempt=0";
@@ -208,8 +209,7 @@ public class TonYExceptionFingerprintingTest {
   }
 
   @Test
-  public void testTonyExceptionFingerprintingWhenNoLogFound()
-  {
+  public void testTonyExceptionFingerprintingWhenNoLogFound() {
     running(testServer(TEST_SERVER_PORT, fakeApp), () -> {
       try {
         mockResponseForContainerLogs(new URL(TEST_AM_LOG_CONTAINER_URL_3).getPath() + stderrContainerLogParameters,

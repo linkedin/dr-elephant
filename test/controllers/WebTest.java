@@ -128,7 +128,7 @@ public class WebTest {
       JsonArray taskExceptionDetailArray = applicationJsonObject.getAsJsonArray(JsonKeys.TASKS);
       Assert.assertEquals(taskExceptionDetailArray.size(), 1);
       Assert.assertEquals(applicationJsonObject.get(JsonKeys.EXCEPTION_SUMMARY).getAsString(), "");
-      Assert.assertEquals(applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString(), "UNKNOWN");
+      Assert.assertEquals("UNKNOWN", applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString());
       for (JsonElement taskExceptionDetail : taskExceptionDetailArray) {
         JsonObject taskExceptionDetailObject = taskExceptionDetail.getAsJsonObject();
         Assert.assertEquals(taskExceptionDetailObject.get(JsonKeys.NAME).getAsString(), "task_id_1");
@@ -148,7 +148,7 @@ public class WebTest {
     for (JsonElement element : application) {
       JsonObject applicationJsonObject = element.getAsJsonObject();
       Assert.assertEquals(applicationJsonObject.get(JsonKeys.NAME).getAsString(), "application_id_1");
-      Assert.assertEquals(applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString(), "UNKNOWN");
+      Assert.assertEquals("UNKNOWN", applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString());
       JsonArray taskExceptionDetail = applicationJsonObject.getAsJsonArray(JsonKeys.TASKS);
       Assert.assertEquals(taskExceptionDetail.size(), 0);
       JsonObject exceptionSummaryElementJsonObject = applicationJsonObject.get(JsonKeys.EXCEPTION_SUMMARY)
@@ -170,12 +170,12 @@ public class WebTest {
 
   private void checkTonyJobExceptionDetailElementForFlow2(JsonElement jobExceptionDetail) {
     JsonObject jobExceptionJsonObject = jobExceptionDetail.getAsJsonObject();
-    Assert.assertEquals(jobExceptionJsonObject.get(JsonKeys.NAME).getAsString(), "job_name_2_3");
-    Assert.assertEquals(jobExceptionJsonObject.get(JsonKeys.ID).getAsString(), "job_name_2_3");
-    Assert.assertEquals(jobExceptionJsonObject.get(JsonKeys.TYPE).getAsString(), "TONY");
+    Assert.assertEquals("job_name_2_3", jobExceptionJsonObject.get(JsonKeys.NAME).getAsString());
+    Assert.assertEquals("job_name_2_3", jobExceptionJsonObject.get(JsonKeys.ID).getAsString());
+    Assert.assertEquals("TONY", jobExceptionJsonObject.get(JsonKeys.TYPE).getAsString());
     JsonArray application = jobExceptionJsonObject.getAsJsonArray(JsonKeys.APPLICATIONS);
     JsonObject applicationJsonObject = application.get(0).getAsJsonObject();
-    Assert.assertEquals("Not a TONY_INFRA_ERROR ",
-        applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString(), "TONY_INFRA_ERROR");
+    Assert.assertEquals("Not a TONY_INFRA_ERROR ", "TONY_INFRA_ERROR",
+        applicationJsonObject.get(JsonKeys.EXCEPTION_CLASSIFICATION).getAsString());
     }
   }
