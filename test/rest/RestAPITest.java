@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import play.Application;
 import play.GlobalSettings;
-import play.libs.WS;
+import play.libs.ws.*;
 import play.test.FakeApplication;
 
 import static common.DBTestUtil.*;
@@ -111,7 +111,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_APP_RESULT_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_APP_RESULT_PATH).
             setQueryParameter("id", TEST_JOB_ID1).setQueryParameter("prioritize", "true").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         final JsonNode jsonResponse = response.asJson();
@@ -133,7 +133,7 @@ public class RestAPITest {
         populateAutoTuningTestData1();
 
         JsonNode jsonNode = getTestGetCurrentRunParameterData();
-        final WS.Response response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
+        final WSResponse response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
             post(jsonNode).get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final JsonNode jsonResponse = response.asJson();
@@ -185,7 +185,7 @@ public class RestAPITest {
         populateAutoTuningTestData1();
 
         JsonNode jsonNode = getTestGetCurrentRunParameterNewData();
-        final WS.Response response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
+        final WSResponse response = WS.url(BASE_URL + REST_GET_CURRENT_RUN_PARAMETERS).
             post(jsonNode).get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
 
         final JsonNode jsonResponse = response.asJson();
@@ -310,7 +310,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_JOB_EXEC_RESULT_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_JOB_EXEC_RESULT_PATH).
             setQueryParameter("id", TEST_JOB_EXEC_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         final JsonNode jsonResponse = response.asJson().get(0);
@@ -337,7 +337,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_FLOW_EXEC_RESULT_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_FLOW_EXEC_RESULT_PATH).
             setQueryParameter("id", TEST_FLOW_EXEC_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         final JsonNode jsonResponse = response.asJson();
@@ -365,7 +365,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_PATH).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         List<String> jobList = response.asJson().findValuesAsText("id");
         assertTrue("Job id1 missing in list", jobList.contains(TEST_JOB_ID1));
@@ -393,7 +393,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_PATH).
             setQueryParameter("username", TEST_USERNAME).
             setQueryParameter("", TEST_JOB_TYPE).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -421,7 +421,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_COMPARE_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_COMPARE_PATH).
             setQueryParameter("flow-exec-id1", TEST_FLOW_EXEC_ID1).
             setQueryParameter("flow-exec-id2", TEST_FLOW_EXEC_ID2).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -445,7 +445,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_FLOW_GRAPH_DATA_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_FLOW_GRAPH_DATA_PATH).
             setQueryParameter("id", TEST_FLOW_DEF_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         List<String> jobList = response.asJson().findValuesAsText("jobexecurl");
@@ -470,7 +470,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_JOB_GRAPH_DATA_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_JOB_GRAPH_DATA_PATH).
             setQueryParameter("id", TEST_JOB_DEF_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         List<String> jobList = response.asJson().findValuesAsText("stageid");
@@ -489,7 +489,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_JOB_METRICS_GRAPH_DATA_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_JOB_METRICS_GRAPH_DATA_PATH).
             setQueryParameter("id", TEST_JOB_DEF_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         List<String> jobList = response.asJson().findValuesAsText("stageid");
@@ -509,7 +509,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_FLOW_METRICS_GRAPH_DATA_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_FLOW_METRICS_GRAPH_DATA_PATH).
             setQueryParameter("id", TEST_FLOW_DEF_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         List<String> jobList = response.asJson().findValuesAsText("jobexecurl");
@@ -524,7 +524,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
             setQueryParameter("startTime", TEST_START_TIME1).
             setQueryParameter("endTime", TEST_END_TIME1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -554,7 +554,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_USER_RESOURCE_USAGE_PATH).
             setQueryParameter("startTime", TEST_START_TIME1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         assertTrue("Invalid input test failed", response.getStatus() == 400);
@@ -567,7 +567,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_WORKFLOW_SUMMARIES_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_WORKFLOW_SUMMARIES_PATH).
             setQueryParameter("username", TEST_USERNAME).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> workflowSummaries = response.asJson().elements();
@@ -602,7 +602,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_JOB_SUMMARIES_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_JOB_SUMMARIES_PATH).
             setQueryParameter("username", TEST_USERNAME).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> jobSummaries = response.asJson().elements();
@@ -639,7 +639,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_APPLICATION_SUMMARIES_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_APPLICATION_SUMMARIES_PATH).
             setQueryParameter("username", TEST_USERNAME).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -691,7 +691,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_WORKFLOWS_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_WORKFLOWS_PATH).
             setQueryParameter("workflowid", TEST_FLOW_EXEC_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> workflows = response.asJson().elements();
@@ -715,7 +715,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_WORKFLOWS_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_WORKFLOWS_PATH).
             setQueryParameter("workflowid", "this_is_a_random_id").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         JsonNode workflows = response.asJson();
@@ -736,7 +736,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_JOBS_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_JOBS_PATH).
             setQueryParameter("jobid", TEST_JOB_EXEC_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> jobs = response.asJson().elements();
@@ -760,7 +760,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_JOBS_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_JOBS_PATH).
             setQueryParameter("jobid", "this_is_a_random_job_id").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         JsonNode jobs = response.asJson();
@@ -781,7 +781,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_APPLICATIONS_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_APPLICATIONS_PATH).
             setQueryParameter("applicationid", TEST_JOB_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> applications = response.asJson().elements();
@@ -807,7 +807,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_APPLICATIONS_PATH).
+        final WSResponse response = WS.url(BASE_URL + REST_APPLICATIONS_PATH).
             setQueryParameter("applicationid", "random_id").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         JsonNode applications = response.asJson();
@@ -828,7 +828,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("queue-name", "misc_default").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();
@@ -842,7 +842,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("job-type", "HadoopJava").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();
@@ -856,7 +856,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS)
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS)
             .
                 setQueryParameter("username", "growth")
             .setQueryParameter("finishTimeBegin", "1460980723925")
@@ -875,7 +875,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("offset", "-1").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();
@@ -889,7 +889,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("limit", "-1").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         JsonNode searchNode = response.asJson();
@@ -903,7 +903,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("offset", "0").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();
@@ -917,7 +917,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("limit", "0").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         JsonNode searchNode = response.asJson();
@@ -931,7 +931,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("limit", "1000").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();
@@ -945,7 +945,7 @@ public class RestAPITest {
     running(testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
       public void run() {
         populateTestData();
-        final WS.Response response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
+        final WSResponse response = WS.url(BASE_URL + REST_SEARCH_RESULTS).
             setQueryParameter("username", "growth").setQueryParameter("offset", "100").
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         Iterator<JsonNode> searchNode = response.asJson().elements();

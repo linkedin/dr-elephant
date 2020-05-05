@@ -21,7 +21,7 @@ import models.AppResult;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import play.api.mvc.Content;
+import play.twirl.api.Content;
 import play.test.FakeApplication;
 import play.test.Helpers;
 import views.html.page.homePage;

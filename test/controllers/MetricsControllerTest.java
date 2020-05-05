@@ -22,15 +22,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
-import play.libs.WS;
+import play.libs.ws.WS;
+import play.libs.ws.WSResponse;
 import play.test.FakeApplication;
 
 import static common.TestConstants.*;
-import static play.test.Helpers.fakeApplication;
-import static play.test.Helpers.running;
-import static play.test.Helpers.testServer;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
+import static play.test.Helpers.*;
 
 
 /**
@@ -79,7 +77,7 @@ public class MetricsControllerTest {
   }
 
   private static JsonNode getMetricsEndpointResponse() {
-    WS.Response response = WS.url(BASE_URL + METRICS_ENDPOINT).
+    WSResponse response = WS.url(BASE_URL + METRICS_ENDPOINT).
         get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
     return response.asJson();
   }

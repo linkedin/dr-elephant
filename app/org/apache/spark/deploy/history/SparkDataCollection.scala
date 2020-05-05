@@ -49,8 +49,8 @@ class SparkDataCollection extends SparkApplicationData {
   lazy val applicationEventListener = new ApplicationEventListener()
   lazy val jobProgressListener = new JobProgressListener(new SparkConf())
   lazy val environmentListener = new EnvironmentListener()
-  lazy val storageStatusListener = new StorageStatusListener()
-  lazy val executorsListener = new ExecutorsListener(storageStatusListener)
+  lazy val storageStatusListener = new StorageStatusListener(new SparkConf)
+  lazy val executorsListener = new ExecutorsListener(storageStatusListener, new SparkConf)
   lazy val storageListener = new StorageListener(storageStatusListener)
 
   // This is a customized listener that tracks peak used memory
@@ -164,33 +164,52 @@ class SparkDataCollection extends SparkApplicationData {
     if (_executorData == null) {
       _executorData = new SparkExecutorData()
 
-      for (statusId <- 0 until executorsListener.storageStatusList.size) {
-        val info = new ExecutorInfo()
-
-        val status = executorsListener.storageStatusList(statusId)
-
-        info.execId = status.blockManagerId.executorId
-        info.hostPort = status.blockManagerId.hostPort
-        info.rddBlocks = status.numBlocks
-
-        // Use a customized listener to fetch the peak memory used, the data contained in status are
-        // the current used memory that is not useful in offline settings.
-        info.memUsed = storageStatusTrackingListener.executorIdToMaxUsedMem.getOrElse(info.execId, 0L)
-        info.maxMem = status.maxMem
-        info.diskUsed = status.diskUsed
-        info.activeTasks = executorsListener.executorToTasksActive.getOrElse(info.execId, 0)
-        info.failedTasks = executorsListener.executorToTasksFailed.getOrElse(info.execId, 0)
-        info.completedTasks = executorsListener.executorToTasksComplete.getOrElse(info.execId, 0)
-        info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
-        info.duration = executorsListener.executorToDuration.getOrElse(info.execId, 0L)
-        info.inputBytes = executorsListener.executorToInputBytes.getOrElse(info.execId, 0L)
-        info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
-        info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
-
+      for (statusId <- 0 until executorsListener.activeStorageStatusList.size) {
+        val status = executorsListener.activeStorageStatusList(statusId)
+        val info = getExecutorInfo(status)
+        _executorData.setExecutorInfo(info.execId, info)
+      }
+      for (statusId <- 0 until executorsListener.deadStorageStatusList.size) {
+        val status = executorsListener.activeStorageStatusList(statusId)
+        val info = getExecutorInfo(status)
         _executorData.setExecutorInfo(info.execId, info)
       }
     }
     _executorData
+  }
+
+  private def getExecutorInfo(status : StorageStatus): ExecutorInfo = {
+    val info = new ExecutorInfo()
+    info.execId = status.blockManagerId.executorId
+    info.hostPort = status.blockManagerId.hostPort
+    info.rddBlocks = status.numBlocks
+
+    // Use a customized listener to fetch the peak memory used, the data contained in status are
+    // the current used memory that is not useful in offline settings.
+    info.memUsed = storageStatusTrackingListener.executorIdToMaxUsedMem.getOrElse(info.execId, 0L)
+    info.maxMem = status.maxMem
+    info.diskUsed = status.diskUsed
+    val taskSummary = executorsListener.executorToTaskSummary.get(info.execId);
+
+    if (!taskSummary.isEmpty) {
+      info.activeTasks = taskSummary.get.tasksActive
+      info.failedTasks = taskSummary.get.tasksFailed
+      info.completedTasks = taskSummary.get.tasksComplete
+      info.duration = taskSummary.get.duration
+      info.inputBytes = taskSummary.get.inputBytes
+      info.shuffleRead = taskSummary.get.shuffleRead
+      info.shuffleWrite = taskSummary.get.shuffleWrite
+    } else {
+      info.activeTasks = 0
+      info.failedTasks = 0
+      info.completedTasks = 0
+      info.duration = 0
+      info.inputBytes = 0
+      info.shuffleRead = 0
+      info.shuffleWrite = 0
+    }
+    info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
+    info
   }
 
   override def getJobProgressData(): SparkJobProgressData = {

@@ -50,7 +50,7 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
-import play.api.templates.Html;
+import play.twirl.api.Html;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.libs.Json;

@@ -267,7 +267,7 @@ require_programs zip unzip
 
 # Default configurations
 HADOOP_VERSION="2.3.0"
-SPARK_VERSION="1.4.0"
+SPARK_VERSION="2.2.3"
 
 
 extra_commands=""

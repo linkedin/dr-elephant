@@ -222,7 +222,7 @@ public class Web extends Controller {
   private static AppResult getAppResultFromApplicationId(String applicationId) {
     AppResult result = AppResult.find.select("*").fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
-        .where().idEq(applicationId).order().desc(AppResult.TABLE.FINISH_TIME).findUnique();
+        .where().idEq(applicationId).setMaxRows(1).order().desc(AppResult.TABLE.FINISH_TIME).findUnique();
     return result;
   }
 
