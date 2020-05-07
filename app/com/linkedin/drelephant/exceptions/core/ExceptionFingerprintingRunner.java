@@ -27,6 +27,7 @@ import com.linkedin.drelephant.exceptions.util.ExceptionInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.PersistenceException;
@@ -79,8 +80,9 @@ public class ExceptionFingerprintingRunner implements Runnable {
         if (SHOULD_PROCESS_AZKABAN_LOG.getValue() && exceptionInfos.size() <= 1) {
           exceptionInfos.addAll(getAzkabanExceptionInfoResults());
         }
-        saveDriverExceptionLogForExceptionFingerPrinting(exceptionInfos, exceptionFingerprinting.getExceptionLogSourceInformation());
-        LogClass logClass = exceptionFingerprinting.classifyException(exceptionInfos);
+        List<ExceptionInfo> deDupedExceptionInfoList = eliminateDuplicateLogs(exceptionInfos);
+        saveDriverExceptionLogForExceptionFingerPrinting(deDupedExceptionInfoList, exceptionFingerprinting.getExceptionLogSourceInformation());
+        LogClass logClass = exceptionFingerprinting.classifyException(deDupedExceptionInfoList);
         boolean isAutoTuningFault = false;
         if (logClass != null && logClass.equals(LogClass.AUTOTUNING_ENABLED)) {
           isAutoTuningFault = true;
@@ -238,4 +240,26 @@ public class ExceptionFingerprintingRunner implements Runnable {
     return logSource.toString();
   }
 
+  private List<ExceptionInfo> eliminateDuplicateLogs(List<ExceptionInfo> exceptionInfos) {
+    HashSet<String> exceptionInfoSet = new HashSet<>();
+    List<ExceptionInfo> deDuplicatedExceptionInfo = new ArrayList<>();
+    logger.info("Size of original exception info list " + exceptionInfos.size());
+    for (ExceptionInfo exceptionInfo : exceptionInfos) {
+      boolean isDuplicate = false;
+      if (exceptionInfoSet.contains(exceptionInfo.getExceptionStackTrace())) {
+        for (String uniqueExceptions : exceptionInfoSet) {
+          if (uniqueExceptions.equals(exceptionInfo.getExceptionStackTrace())) {
+            isDuplicate = true;
+            break;
+          }
+        }
+      }
+      if (!isDuplicate) {
+        deDuplicatedExceptionInfo.add(exceptionInfo);
+        exceptionInfoSet.add(exceptionInfo.getExceptionStackTrace());
+      }
+    }
+    logger.info("Size of exception info list after deduplication" + deDuplicatedExceptionInfo.size());
+    return deDuplicatedExceptionInfo;
+  }
 }
