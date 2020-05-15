@@ -260,6 +260,51 @@ class SparkUtilsTest extends FunSpec with org.scalatest.Matchers with OptionValu
         }
       }
     }
+
+    describe(".withEventLogAndNoCompression") {
+      it("loans the input stream for the event log with no compression") {
+        val expectedLog =
+          """{"Event":"SparkListenerApplicationStart","App Name":"app","App ID":"application_1","Timestamp":1,"User":"foo"}"""
+
+        val eventLogBytes = {
+          val bout = new ByteArrayOutputStream()
+          for {
+            in <- resource.managed(new ByteArrayInputStream(expectedLog.getBytes("UTF-8")))
+            out <- resource.managed(bout)
+          } {
+            IOUtils.copy(in, out)
+          }
+          bout.toByteArray
+        }
+
+        val hadoopConfiguration = new Configuration(false)
+
+        val sparkConf =
+          new SparkConf()
+            .set("spark.eventLog.dir", "/logs/spark")
+            .set("spark.eventLog.compress", "false")
+
+        val sparkUtils = SparkUtilsTest.newFakeSparkUtilsForEventLog(
+          new URI("webhdfs://nn1.grid.example.com:50070"),
+          new Path("/logs/spark"),
+          new Path("application_1"),
+          eventLogBytes
+        )
+
+        val (fs, basePath) = sparkUtils.fileSystemAndPathForEventLogDir(hadoopConfiguration, sparkConf, None)
+
+        val (path, codec) =
+          sparkUtils.pathAndCodecforEventLog(sparkConf: SparkConf, fs: FileSystem, basePath: Path, "application_1", None)
+
+        sparkUtils.withEventLog(fs, path, codec) { in =>
+          val bout = new ByteArrayOutputStream()
+          IOUtils.copy(in, bout)
+
+          val actualLog = new String(bout.toByteArray, "UTF-8")
+          actualLog should be(expectedLog)
+        }
+      }
+    }
   }
 }
 

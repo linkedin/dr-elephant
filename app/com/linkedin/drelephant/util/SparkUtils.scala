@@ -42,6 +42,7 @@ trait SparkUtils {
   val SPARK_EVENT_LOG_DIR_KEY = "spark.eventLog.dir"
   val SPARK_EVENT_LOG_COMPRESS_KEY = "spark.eventLog.compress"
   val DFS_HTTP_PORT = 50070
+  val NO_COMPRESSION_CODEC = "no-compression"
 
   /**
     * Returns the webhdfs FileSystem and Path for the configured Spark event log directory and optionally the
@@ -118,9 +119,13 @@ trait SparkUtils {
           (path, codec)
       }
       case None => {
-        val (logPath, codecName) = getLogPathAndCodecName(fs, fs.getUri.resolve(basePath.toUri), appId)
+        val (logPath, codecName) = getLogPathAndCodecName(sparkConf, fs, fs.getUri.resolve(basePath.toUri), appId)
 
-        (logPath, Some(compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(sparkConf, codecName))))
+        if (codecName.equals(NO_COMPRESSION_CODEC)) {
+          (logPath, None)
+        } else {
+          (logPath, Some(compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(sparkConf, codecName))))
+        }
       }
     }
 
@@ -182,6 +187,7 @@ trait SparkUtils {
   private val IN_PROGRESS = ".inprogress"
   private val DEFAULT_COMPRESSION_CODEC = "lz4"
 
+
   private val compressionCodecClassNamesByShortName = Map(
     "lz4" -> classOf[LZ4CompressionCodec].getName,
     "lzf" -> classOf[LZFCompressionCodec].getName,
@@ -239,10 +245,12 @@ trait SparkUtils {
     (appId, attempt, extension)
   }
   private def getLogPathAndCodecName(
+                                    sparkConf: SparkConf,
                                     fs: FileSystem,
                                     logBaseDir: URI,
                                     appId: String
                                     ): (Path, String) = {
+    val shouldUseCompression = sparkConf.getBoolean(SPARK_EVENT_LOG_COMPRESS_KEY, defaultValue = false)
     val base = logBaseDir.toString.stripSuffix("/");
     val filter = new PathFilter() {
        override def accept(file: Path): Boolean = {
@@ -274,6 +282,9 @@ trait SparkUtils {
       // if codec is not available, but we found a file match with appId, use the actual file Path from the first match
       case nocodec if nocodec._1 != None & nocodec._3 == None => (attemptsList(0).getPath(), DEFAULT_COMPRESSION_CODEC)
 
+      case nocompression if nocompression._1 == None & nocompression._2 == None & nocompression._3 == None
+        & shouldUseCompression == false =>
+        (new Path(base + "/" + appId), NO_COMPRESSION_CODEC)
       // This should be reached only if we can't parse the filename in the path.
       // Try to construct a general path in that case.
       case _ => (new Path(base + "/" + appId + "." + DEFAULT_COMPRESSION_CODEC), DEFAULT_COMPRESSION_CODEC)
