@@ -106,10 +106,10 @@ trait SparkUtils {
     appId: String,
     attemptId: Option[String]
   ): (Path, Option[CompressionCodec]) = {
+    val shouldUseCompression = sparkConf.getBoolean(SPARK_EVENT_LOG_COMPRESS_KEY, defaultValue = false)
     attemptId match {
       // if attemptid is given, use the existing method
       case x: Some[String] => { val path = {
-          val shouldUseCompression = sparkConf.getBoolean(SPARK_EVENT_LOG_COMPRESS_KEY, defaultValue = false)
           val compressionCodecShortName =
             if (shouldUseCompression) Some(shortNameOfCompressionCodec(compressionCodecFromConf(sparkConf))) else None
           getLogPath(fs.getUri.resolve(basePath.toUri), appId, attemptId, compressionCodecShortName)
@@ -118,9 +118,10 @@ trait SparkUtils {
           (path, codec)
       }
       case None => {
-        val (logPath, codecName) = getLogPathAndCodecName(fs, fs.getUri.resolve(basePath.toUri), appId)
-
-        (logPath, Some(compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(sparkConf, codecName))))
+        val (logPath, codecName) = getLogPathAndCodecName(fs, fs.getUri.resolve(basePath.toUri), appId, shouldUseCompression)
+        val codec = 
+          if (shouldUseCompression) Some(compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(sparkConf, codecName))) else None
+        (logPath, codec)
       }
     }
 
@@ -241,7 +242,8 @@ trait SparkUtils {
   private def getLogPathAndCodecName(
                                     fs: FileSystem,
                                     logBaseDir: URI,
-                                    appId: String
+                                    appId: String,
+                                    shouldUseCompression: Boolean = true
                                     ): (Path, String) = {
     val base = logBaseDir.toString.stripSuffix("/");
     val filter = new PathFilter() {
@@ -276,7 +278,13 @@ trait SparkUtils {
 
       // This should be reached only if we can't parse the filename in the path.
       // Try to construct a general path in that case.
-      case _ => (new Path(base + "/" + appId + "." + DEFAULT_COMPRESSION_CODEC), DEFAULT_COMPRESSION_CODEC)
+      case _ => {
+        
+        if (shouldUseCompression)
+          (new Path(base + "/" + appId + "." + DEFAULT_COMPRESSION_CODEC), DEFAULT_COMPRESSION_CODEC)
+        else
+          (new Path(base + "/" + appId), DEFAULT_COMPRESSION_CODEC)
+      }
     }
   }
 
