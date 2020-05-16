@@ -17,4 +17,12 @@
 <p>This analysis shows how much time a job is spending in GC. To normalise the results across all jobs, the ratio of the time a job spends in Gc to the total run time of the job is calculated. </p>
 <p>A job is flagged if the ratio is too high, meaning the job spends too much time in GC.</p>
 <h3>Suggestions</h3>
-<p>We recommend increasing the executor memory.</p>
+<ul>
+<li>We recommend increasing the executor memory.</li>
+<li>Enabling G1GC or ParallelGC using spark.executor.extraJavaOptions could help.</li>
+  <ul>
+    <li>User can enable G1GC or ParallelGC by adding <b>-XX:+UseG1GC</b> or <b>-XX:+UseParallelGC</b> respectively to Spark configuration spark.executor.extraJavaOptions</li>
+  </ul>
+<li>High GC can occur if the number of UDF calls made is high, especially if the UDFs are inefficient or use a lot of memory.</li>
+</ul>
+<p>For some general guideline about how to tune GC for your Spark application refer <a href="https://spark.apache.org/docs/latest/tuning.html#garbage-collection-tuning" target="_blank">here</a></p>

@@ -55,11 +55,13 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
 
     //adding recommendations to the result, severityTimeA corresponds to the ascending severity calculation
     if (evaluator.severityTimeA.getValue > Severity.LOW.getValue) {
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Gc ratio high", "The job is spending too much time on GC. We recommend increasing the executor memory.")
+      resultDetails = resultDetails :+ new HeuristicResultDetails("Gc ratio high",
+        "The job is spending too much time on GC. Recommended to increase the executor memory." + evaluator.parallelGcRecommendation + "Can also try reducing number of UDF calls.")
     }
     //severityTimeD corresponds to the descending severity calculation
     if (evaluator.severityTimeD.getValue > Severity.LOW.getValue) {
-      resultDetails = resultDetails :+ new HeuristicResultDetails("Gc ratio low", "The job is spending too little time in GC. Please check if you have asked for more executor memory than required.")
+      resultDetails = resultDetails :+ new HeuristicResultDetails("Gc ratio low",
+        "The job is spending too little time in GC. Please check if you have asked for more executor memory than required.")
     }
 
     val result = new HeuristicResult(
@@ -102,6 +104,11 @@ object ExecutorGcHeuristic {
     if (executorSummaries.isEmpty) {
       throw new Exception("No executor information available.")
     }
+
+    val sparkExecutorExtraJavaOptions = appConfigurationProperties.getOrElse("spark.executor.extraJavaOptions","")
+    val isParallelGCEnabled: Boolean = sparkExecutorExtraJavaOptions.contains("XX:+UseParallelGC")
+    val isG1GCenabled: Boolean = sparkExecutorExtraJavaOptions.contains("XX:+UseG1GC")
+    val gcRecommendation: String = if (isParallelGCEnabled || isG1GCenabled)  "" else "Enable ParallelGC or G1GC using spark.executor.extraJavaOptions."
 
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
