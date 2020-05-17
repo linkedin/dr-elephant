@@ -24,3 +24,6 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("pla
 
 // Jacoco code coverage plugin
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6")
+
+// An sbt plugin for publishing bintray packages.
+addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.6")

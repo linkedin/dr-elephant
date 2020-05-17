@@ -1,6 +1,13 @@
-/*
-  Paste the tracking javascript snippet into this file for web analytics.
-  This javascript file will be included into every page in the application.
-  See comments section above 'enable.analytics' in the application.conf file for
-  more information.
-*/
+
+// Piwik
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//piwik.corp.linkedin.com/piwik/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', 86]);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+// End Piwik Code
