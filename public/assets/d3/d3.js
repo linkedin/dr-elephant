@@ -9038,7 +9038,7 @@
     var event = d3_eventDispatch(brush, "brushstart", "brush", "brushend"), x = null, y = null, xExtent = [ 0, 0 ], yExtent = [ 0, 0 ], xExtentDomain, yExtentDomain, xClamp = true, yClamp = true, resizes = d3_svg_brushResizes[0];
     function brush(g) {
       g.each(function() {
-        var g = d3.select(this).style("pointer-events", "all").style("-webkit-tap-highlight-color", "rgba(0,0,0,0)").on("mousedown.brush", brushstart).on("touchstart.brush", brushstart);
+        var g = d3.select(this).style("pointer-events.scala", "all").style("-webkit-tap-highlight-color", "rgba(0,0,0,0)").on("mousedown.brush", brushstart).on("touchstart.brush", brushstart);
         var background = g.selectAll(".background").data([ 0 ]);
         background.enter().append("rect").attr("class", "background").style("visibility", "hidden").style("cursor", "crosshair");
         g.selectAll(".extent").data([ 0 ]).enter().append("rect").attr("class", "extent").style("cursor", "move");
@@ -9153,7 +9153,7 @@
         origin[0] = xExtent[ex];
         origin[1] = yExtent[ey];
       } else if (d3.event.altKey) center = origin.slice();
-      g.style("pointer-events", "none").selectAll(".resize").style("display", null);
+      g.style("pointer-events.scala", "none").selectAll(".resize").style("display", null);
       d3.select("body").style("cursor", eventTarget.style("cursor"));
       event_({
         type: "brushstart"
@@ -9234,7 +9234,7 @@
       }
       function brushend() {
         brushmove();
-        g.style("pointer-events", "all").selectAll(".resize").style("display", brush.empty() ? "none" : null);
+        g.style("pointer-events.scala", "all").selectAll(".resize").style("display", brush.empty() ? "none" : null);
         d3.select("body").style("cursor", null);
         w.on("mousemove.brush", null).on("mouseup.brush", null).on("touchmove.brush", null).on("touchend.brush", null).on("keydown.brush", null).on("keyup.brush", null);
         dragRestore();

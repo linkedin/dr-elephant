@@ -40,7 +40,7 @@ public class TonyApplicationData implements HadoopApplicationData {
    * @param appId  application id
    * @param appType  application type (should be TONY)
    * @param configuration  the configuration for this application
-   * @param events  the events emitted by this application
+   * @param events  the events.scala emitted by this application
    */
   public TonyApplicationData(String appId, ApplicationType appType, Configuration configuration, List<Event> events) {
     _appId = appId;

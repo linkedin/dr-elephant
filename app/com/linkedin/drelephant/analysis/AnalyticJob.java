@@ -317,9 +317,11 @@ public class AnalyticJob {
       logger.info("No Data Received for analytic job: " + getAppId());
       analysisResults.add(HeuristicResult.NO_DATA);
     } else {
+      logger.info("getHeuristicsForApplicationType");
       List<Heuristic> heuristics = ElephantContext.instance().getHeuristicsForApplicationType(getAppType());
       for (Heuristic heuristic : heuristics) {
         String confExcludedApps = heuristic.getHeuristicConfData().getParamMap().get(EXCLUDE_JOBTYPE);
+        logger.info("confExcludedApps: " + confExcludedApps + "   cls:" + heuristic.getHeuristicConfData().getClassName());
 
         if (confExcludedApps == null || confExcludedApps.length() == 0 ||
                 !Arrays.asList(confExcludedApps.split(",")).contains(jobTypeName)) {

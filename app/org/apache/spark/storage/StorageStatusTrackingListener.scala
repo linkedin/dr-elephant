@@ -77,7 +77,7 @@ class StorageStatusTrackingListener extends SparkListener {
       val info = taskEnd.taskInfo
       val metrics = taskEnd.taskMetrics
       if (info != null && metrics != null) {
-        val updatedBlocks = metrics.updatedBlocks.getOrElse(Seq[(BlockId, BlockStatus)]())
+        val updatedBlocks = metrics.updatedBlockStatuses
         if (updatedBlocks.length > 0) {
           updateStorageStatus(info.executorId, updatedBlocks)
         }
@@ -96,7 +96,9 @@ class StorageStatusTrackingListener extends SparkListener {
       val blockManagerId = blockManagerAdded.blockManagerId
       val executorId = blockManagerId.executorId
       val maxMem = blockManagerAdded.maxMem
-      val storageStatus = new StorageStatus(blockManagerId, maxMem)
+      val maxOnHeapMem = blockManagerAdded.maxOnHeapMem
+      val maxOffHeapMem = blockManagerAdded.maxOffHeapMem
+      val storageStatus = new StorageStatus(blockManagerId, maxMem, maxOnHeapMem, maxOffHeapMem)
       executorIdToStorageStatus(executorId) = storageStatus
     }
   }

@@ -117,7 +117,7 @@ public class TonyMetricsAggregatorTest {
   }
 
   /**
-   * Verifies that used and wasted resources are 0 when there are no task finished or application finished events.
+   * Verifies that used and wasted resources are 0 when there are no task finished or application finished events.scala.
    */
   @Test
   public void testNoEndEvents() {

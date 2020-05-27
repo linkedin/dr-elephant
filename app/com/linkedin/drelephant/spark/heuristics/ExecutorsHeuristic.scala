@@ -214,6 +214,8 @@ object ExecutorsHeuristic {
     private lazy val ignoreMaxBytesLessThanThreshold = executorsHeuristic.ignoreMaxBytesLessThanThreshold
 
     private lazy val ignoreMaxMillisLessThanThreshold = executorsHeuristic.ignoreMaxMillisLessThanThreshold
+
+    println( "maxToMedianRatioSeverityThresholds=" + maxToMedianRatioSeverityThresholds)
   }
 
   case class Distribution(min: Long, p25: Long, median: Long, p75: Long, max: Long)

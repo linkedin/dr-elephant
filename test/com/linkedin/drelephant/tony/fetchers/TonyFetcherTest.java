@@ -82,7 +82,7 @@ public class TonyFetcherTest {
     File configFile = new File(appDir, Constants.TONY_FINAL_XML);
     conf.writeXml(new FileOutputStream(configFile));
 
-    // create fake events
+    // create fake events.scala
     Event event0 = new Event(EventType.TASK_FINISHED, new TaskFinished("worker", 0, "SUCCEEDED",
         ImmutableList.of(new Metric("my_metric", 0.0))), System.currentTimeMillis());
     Event event1 = new Event(EventType.TASK_FINISHED, new TaskFinished("worker", 1, "SUCCEEDED",
@@ -90,7 +90,7 @@ public class TonyFetcherTest {
     Event event2 = new Event(EventType.TASK_FINISHED, new TaskFinished("ps", 0, "SUCCEEDED",
         ImmutableList.of(new Metric("my_metric", 0.0))), System.currentTimeMillis());
 
-    // write fake events history file
+    // write fake events.scala history file
     File eventFile = new File(appDir,
         APPLICATION_ID_1 + "-0-" + _endDate.getTime() + "-user1-SUCCEEDED." + Constants.HISTFILE_SUFFIX);
     DatumWriter<Event> userDatumWriter = new SpecificDatumWriter<>(Event.class);

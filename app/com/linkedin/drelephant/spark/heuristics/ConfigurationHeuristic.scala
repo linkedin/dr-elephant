@@ -148,7 +148,7 @@ object ConfigurationHeuristic {
   val SPARK_YARN_JARS = "spark.yarn.secondary.jars"
   val SPARK_YARN_EXECUTOR_MEMORY_OVERHEAD = "spark.yarn.executor.memoryOverhead"
   val SPARK_YARN_DRIVER_MEMORY_OVERHEAD = "spark.yarn.driver.memoryOverhead"
-  val THRESHOLD_MIN_EXECUTORS: Int = 1
+  val THRESHOLD_MIN_EXECUTORS: Int = 2   //默认1
   val THRESHOLD_MAX_EXECUTORS: Int = 900
   val SPARK_OVERHEAD_MEMORY_THRESHOLD_KEY = "spark.overheadMemory.thresholds.key"
   val DEFAULT_SPARK_OVERHEAD_MEMORY_THRESHOLDS =
@@ -158,6 +158,9 @@ object ConfigurationHeuristic {
   class Evaluator(configurationHeuristic: ConfigurationHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
       data.appConfigurationProperties
+    println("start====================")
+    appConfigurationProperties.foreach(x => println(x._1, x._2))
+    println("end====================")
 
     lazy val driverMemoryBytes: Option[Long] =
       Try(getProperty(SPARK_DRIVER_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(None)
@@ -187,6 +190,7 @@ object ConfigurationHeuristic {
     }
 
     lazy val sparkYarnJars: String = getProperty(SPARK_YARN_JARS).getOrElse("")
+    println("sparkYarnJars=" + sparkYarnJars)
 
     lazy val jarsSeverity: Severity = if (sparkYarnJars.contains("*")) {
         Severity.CRITICAL
@@ -235,6 +239,8 @@ object ConfigurationHeuristic {
     val severityExecutorMemoryOverhead = configurationHeuristic.sparkOverheadMemoryThreshold.severityOf(MemoryFormatUtils.stringToBytes(sparkYarnExecutorMemoryOverhead))
     val severityDriverMemoryOverhead = configurationHeuristic.sparkOverheadMemoryThreshold.severityOf(MemoryFormatUtils.stringToBytes(sparkYarnDriverMemoryOverhead))
 
+    println("sparkYarnExecutorMemoryOverhead=" + MemoryFormatUtils.stringToBytes(sparkYarnExecutorMemoryOverhead) + "   severityExecutorMemoryOverhead=" + severityExecutorMemoryOverhead)
+    println("sparkYarnDriverMemoryOverhead=" + MemoryFormatUtils.stringToBytes(sparkYarnDriverMemoryOverhead) + "   severityDriverMemoryOverhead=" + severityDriverMemoryOverhead)
 
     //Severity for the configuration thresholds
     val severityConfThresholds: Severity = Severity.max(severityDriverCores, severityDriverMemory, severityExecutorCores, severityExecutorMemory,

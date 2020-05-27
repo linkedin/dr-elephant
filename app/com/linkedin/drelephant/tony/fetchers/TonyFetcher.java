@@ -99,7 +99,7 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
       conf.addResource(_fs.open(confFile));
     }
 
-    // Parse events. For a list of event types, see
+    // Parse events.scala. For a list of event types, see
     // https://github.com/linkedin/TonY/blob/master/tony-core/src/main/avro/EventType.avsc.
     // We get the task start time from the TASK_STARTED event and the finish time and metrics from the TASK_FINISHED
     // event.

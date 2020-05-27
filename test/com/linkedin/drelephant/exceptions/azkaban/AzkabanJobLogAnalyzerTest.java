@@ -102,12 +102,12 @@ public class AzkabanJobLogAnalyzerTest {
 
   @Test
   public void getSubEventsTest(){
-    assertTrue("Succeeded sub events test failed",analyzedSucceededLog.getSubEvents().isEmpty());
-    assertTrue("Script level failed sub events test failed",analyzedScriptLevelFailedLog.getSubEvents().isEmpty());
-    assertTrue("Azkaban level failed sub events test failed",analyzedAzkabanLevelFailedLog.getSubEvents().isEmpty());
+    assertTrue("Succeeded sub events.scala test failed",analyzedSucceededLog.getSubEvents().isEmpty());
+    assertTrue("Script level failed sub events.scala test failed",analyzedScriptLevelFailedLog.getSubEvents().isEmpty());
+    assertTrue("Azkaban level failed sub events.scala test failed",analyzedAzkabanLevelFailedLog.getSubEvents().isEmpty());
     assertTrue(analyzedMRLevelFailedLog.getSubEvents().size() == 1);
     assertTrue(analyzedMRLevelFailedLog.getSubEvents().iterator().next().equals("job_1466048666726_410150"));
-    assertTrue("Killed sub events test failed",analyzedKilledLog.getSubEvents().isEmpty());
+    assertTrue("Killed sub events.scala test failed",analyzedKilledLog.getSubEvents().isEmpty());
   }
 
   @Test

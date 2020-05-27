@@ -20,6 +20,7 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.TxRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.Gson;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.analysis.AnalyticJobGenerator;
 import com.linkedin.drelephant.analysis.AnalyticJobGeneratorHadoop2;
@@ -188,6 +189,7 @@ public class ElephantRunner implements Runnable {
             List<AnalyticJob> todos;
             try {
               todos = _analyticJobGenerator.fetchAnalyticJobs();
+              logger.info("return todos size :" + todos==null?0:todos.size());
             } catch (Exception e) {
               logger.error("Error fetching job list. Try again later...", e);
               //Wait for a while before retry
@@ -386,6 +388,7 @@ public class ElephantRunner implements Runnable {
       long applicableFinishTime = -1;
       long jobFinishTime = -1;
       FinishTimeInfo finishTimeInfo = null;
+      Gson gson = new Gson();
       try {
         final AppResult result = _analyticJob.getAnalysis();
         applicableFinishTime = getApplicableFinishTime(_analyticJob);
@@ -396,6 +399,7 @@ public class ElephantRunner implements Runnable {
           // Execute as a transaction.
           Ebean.execute(new TxRunnable() {
             public void run() {
+              logger.info(String.format("分析结果存储%s:%s", result.id, gson.toJson(result)));
               result.save();
               if (backfillInfo != null) {
                 backfillInfo.save();

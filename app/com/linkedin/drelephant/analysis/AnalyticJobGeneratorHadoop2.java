@@ -69,8 +69,10 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private final List<AnalyticJob> _secondRetryQueue = new LinkedList<AnalyticJob>();
 
   public void updateResourceManagerAddresses() {
+    logger.info("configuration.get(IS_RM_HA_ENABLED):" + configuration.get(IS_RM_HA_ENABLED));
     if (Boolean.valueOf(configuration.get(IS_RM_HA_ENABLED))) {
       String resourceManagers = configuration.get(RESOURCE_MANAGER_IDS);
+      logger.info("updateResourceManagerAddresses_resourceManagers: " + resourceManagers);
       if (resourceManagers != null) {
         logger.info("The list of RM IDs are " + resourceManagers);
         List<String> ids = Arrays.asList(resourceManagers.split(","));
@@ -144,6 +146,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     // There is a lag of job data from AM/NM to JobHistoryServer HDFS, we shouldn't use the current time, since there
     // might be new jobs arriving after we fetch jobs. We provide one minute delay to address this lag.
     _currentTime = System.currentTimeMillis() - FETCH_DELAY;
+    _lastTime = _currentTime - FETCH_DELAY;
     updateAuthToken();
 
     logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)

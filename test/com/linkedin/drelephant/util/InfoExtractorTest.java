@@ -223,14 +223,14 @@ public class InfoExtractorTest {
     InfoExtractor.loadSchedulerInfo(result, data, scheduler);
 
     assertEquals(result.scheduler, "azkaban");
-    assertFalse(StringUtils.isEmpty(result.getJobExecId()));
-    assertFalse(StringUtils.isEmpty(result.getJobDefId()));
-    assertFalse(StringUtils.isEmpty(result.getFlowExecId()));
-    assertFalse(StringUtils.isEmpty(result.getFlowDefId()));
-    assertFalse(StringUtils.isEmpty(result.getJobExecUrl()));
-    assertFalse(StringUtils.isEmpty(result.getJobDefUrl()));
-    assertFalse(StringUtils.isEmpty(result.getFlowExecUrl()));
-    assertFalse(StringUtils.isEmpty(result.getFlowDefUrl()));
+    assertFalse(StringUtils.isEmpty(result.jobExecId));
+    assertFalse(StringUtils.isEmpty(result.jobDefId));
+    assertFalse(StringUtils.isEmpty(result.flowExecId));
+    assertFalse(StringUtils.isEmpty(result.flowDefId));
+    assertFalse(StringUtils.isEmpty(result.jobExecUrl));
+    assertFalse(StringUtils.isEmpty(result.jobDefUrl));
+    assertFalse(StringUtils.isEmpty(result.flowExecUrl));
+    assertFalse(StringUtils.isEmpty(result.flowDefUrl));
   }
 
   @Test
