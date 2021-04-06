@@ -33,7 +33,7 @@ import org.apache.spark.scheduler._
 @DeveloperApi
 class StorageStatusTrackingListener extends SparkListener {
   // This maintains only blocks that are cached (i.e. storage level is not StorageLevel.NONE)
-  private[storage] val executorIdToStorageStatus = mutable.Map[String, StorageStatus]()
+  /*private[storage] val executorIdToStorageStatus = mutable.Map[String, StorageStatus]()
 
   def storageStatusList = executorIdToStorageStatus.values.toSeq
 
@@ -108,5 +108,5 @@ class StorageStatusTrackingListener extends SparkListener {
       val executorId = blockManagerRemoved.blockManagerId.executorId
       executorIdToStorageStatus.remove(executorId)
     }
-  }
+  }*/
 }

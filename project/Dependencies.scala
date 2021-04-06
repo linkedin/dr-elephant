@@ -14,7 +14,8 @@
 // the License.
 //
 
-import play.Project._
+//import play.Project._
+import play.sbt.PlayImport._
 import sbt.ExclusionRule
 import sbt._
 
@@ -41,19 +42,19 @@ object Dependencies {
     hadoopVersion = System.getProperties.getProperty(HADOOP_VERSION)
   }
 
-  var sparkVersion = "2.2.1"
+  var sparkVersion = "2.4.5"
   if (System.getProperties.getProperty(SPARK_VERSION) != null) {
     sparkVersion = System.getProperties.getProperty(SPARK_VERSION)
   }
 
   val sparkExclusion = if (sparkVersion >= "1.5.0") {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+    "org.apache.spark" % "spark-core_2.11" % sparkVersion excludeAll(
       ExclusionRule(organization = "com.typesafe.akka"),
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
       )
-    "org.apache.spark" % "spark-sql_2.10" % sparkVersion excludeAll(
+    "org.apache.spark" % "spark-sql_2.11" % sparkVersion excludeAll(
       ExclusionRule(organization = "com.typesafe.akka"),
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
@@ -69,6 +70,7 @@ object Dependencies {
 
   // Dependency coordinates
   var requiredDep = Seq(
+    "com.alibaba" % "fastjson" % "1.2.67",
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
     "com.jsuereth" %% "scala-arm" % "1.4",
@@ -110,8 +112,13 @@ object Dependencies {
     )
   ) :+ sparkExclusion
 
-  var dependencies = Seq(javaJdbc, javaEbean, cache)
-  dependencies ++= requiredDep
+//  var dependencies = Seq(javaJdbc, javaEbean, cache)
+//  var dependencies = Seq(
+//    "com.typesafe.sbt" % "sbt-play-ebean" % "1.0.0"
+//  )
+
+  var dependencies = requiredDep
+//  dependencies ++= requiredDep
 
   val exclusionRules = Seq(
     ExclusionRule(organization = "com.sun.jersey", name = "jersey-core"),

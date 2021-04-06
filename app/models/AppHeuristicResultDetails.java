@@ -28,8 +28,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import play.db.ebean.Model;
-
+import com.avaje.ebean.Model;
 
 @Entity
 @Table(name = "yarn_app_heuristic_result_details")

@@ -16,11 +16,11 @@
 
 package models;
 
+import com.avaje.ebean.Model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.linkedin.drelephant.analysis.Severity;
 
 import com.linkedin.drelephant.util.Utils;
-import play.db.ebean.Model;
 
 import java.util.List;
 

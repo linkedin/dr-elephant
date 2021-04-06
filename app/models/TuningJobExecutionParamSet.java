@@ -25,7 +25,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import play.db.ebean.Model;
+import com.avaje.ebean.Model;
 
 @Entity
 @Table(name = "tuning_job_execution_param_set")
