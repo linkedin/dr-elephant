@@ -21,7 +21,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import play.db.ebean.Model;
+import com.avaje.ebean.Model;
 
 @Entity
 @Table(name = "backfill_info")

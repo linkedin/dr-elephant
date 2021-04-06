@@ -25,4 +25,4 @@ cpdLanguage := Language.Java
 
 // Take distinct source directories to ensure whole file is not reported as duplicate
 // of itself.
-cpdSourceDirectories in Compile := (cpdSourceDirectories in Compile).value.distinct
+//cpdSourceDirectories in Compile := (cpdSourceDirectories in Compile).value.distinct

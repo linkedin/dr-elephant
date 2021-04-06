@@ -31,14 +31,14 @@ CREATE TABLE yarn_app_result (
   workflow_depth   TINYINT(2)    UNSIGNED DEFAULT 0    COMMENT 'The application depth in the scheduled flow. Depth starts from 0',
   scheduler        VARCHAR(20)   DEFAULT NULL          COMMENT 'The scheduler which triggered the application',
   job_name         VARCHAR(255)  NOT NULL DEFAULT ''   COMMENT 'The name of the job in the flow to which this app belongs',
-  job_exec_id      VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A unique reference to a specific execution of the job/action(job in the workflow). This should filter all applications (mapreduce/spark) triggered by the job for a particular execution.',
+  job_exec_id      TEXT(800)  NOT NULL    COMMENT 'A unique reference to a specific execution of the job/action(job in the workflow). This should filter all applications (mapreduce/spark) triggered by the job for a particular execution.',
   flow_exec_id     VARCHAR(255)  NOT NULL DEFAULT ''   COMMENT 'A unique reference to a specific flow execution. This should filter all applications fired by a particular flow execution. Note that if the scheduler supports sub-workflows, then this ID should be the super parent flow execution id that triggered the the applications and sub-workflows.',
-  job_def_id       VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A unique reference to the job in the entire flow independent of the execution. This should filter all the applications(mapreduce/spark) triggered by the job for all the historic executions of that job.',
-  flow_def_id      VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A unique reference to the entire flow independent of any execution. This should filter all the historic mr jobs belonging to the flow. Note that if your scheduler supports sub-workflows, then this ID should reference the super parent flow that triggered the all the jobs and sub-workflows.',
-  job_exec_url     VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A url to the job execution on the scheduler',
-  flow_exec_url    VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A url to the flow execution on the scheduler',
-  job_def_url      VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A url to the job definition on the scheduler',
-  flow_def_url     VARCHAR(800)  NOT NULL DEFAULT ''   COMMENT 'A url to the flow definition on the scheduler',
+  job_def_id       TEXT(800)  NOT NULL    COMMENT 'A unique reference to the job in the entire flow independent of the execution. This should filter all the applications(mapreduce/spark) triggered by the job for all the historic executions of that job.',
+  flow_def_id      TEXT(800)  NOT NULL    COMMENT 'A unique reference to the entire flow independent of any execution. This should filter all the historic mr jobs belonging to the flow. Note that if your scheduler supports sub-workflows, then this ID should reference the super parent flow that triggered the all the jobs and sub-workflows.',
+  job_exec_url     TEXT(800)  NOT NULL    COMMENT 'A url to the job execution on the scheduler',
+  flow_exec_url    TEXT(800)  NOT NULL    COMMENT 'A url to the flow execution on the scheduler',
+  job_def_url      TEXT(800)  NOT NULL    COMMENT 'A url to the job definition on the scheduler',
+  flow_def_url     TEXT(800)  NOT NULL    COMMENT 'A url to the flow definition on the scheduler',
 
   PRIMARY KEY (id)
 );
@@ -47,8 +47,8 @@ create index yarn_app_result_i1 on yarn_app_result (finish_time);
 create index yarn_app_result_i2 on yarn_app_result (username,finish_time);
 create index yarn_app_result_i3 on yarn_app_result (job_type,username,finish_time);
 create index yarn_app_result_i4 on yarn_app_result (flow_exec_id);
-create index yarn_app_result_i5 on yarn_app_result (job_def_id);
-create index yarn_app_result_i6 on yarn_app_result (flow_def_id);
+# --- create index yarn_app_result_i5 on yarn_app_result (job_def_id);
+# --- create index yarn_app_result_i6 on yarn_app_result (flow_def_id);
 create index yarn_app_result_i7 on yarn_app_result (start_time);
 
 CREATE TABLE yarn_app_heuristic_result (

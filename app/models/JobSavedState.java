@@ -20,7 +20,7 @@ import java.sql.Timestamp;
 
 import javax.persistence.Column;
 
-import play.db.ebean.Model;
+import com.avaje.ebean.Model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

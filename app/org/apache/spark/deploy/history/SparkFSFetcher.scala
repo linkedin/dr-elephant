@@ -16,7 +16,6 @@
 
 package org.apache.spark.deploy.history
 
-import java.io.InputStream
 import java.security.PrivilegedAction
 
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
@@ -26,15 +25,8 @@ import com.linkedin.drelephant.spark.legacydata.SparkApplicationData
 import com.linkedin.drelephant.util.{HadoopUtils, SparkUtils, Utils}
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.scheduler.{ApplicationEventListener, ReplayListenerBus}
-import org.apache.spark.storage.{StorageStatusListener, StorageStatusTrackingListener}
-import org.apache.spark.ui.env.EnvironmentListener
-import org.apache.spark.ui.exec.ExecutorsListener
-import org.apache.spark.ui.jobs.JobProgressListener
-import org.apache.spark.ui.storage.StorageListener
 
 
 /**
@@ -63,7 +55,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
   protected lazy val sparkConf: SparkConf = {
     val sparkConf = new SparkConf()
     sparkUtils.getDefaultPropertiesFile() match {
-      case Some(filename) => sparkConf.setAll(sparkUtils.getPropertiesFromFile(filename))
+      case Some(filename) =>
+        logger.info("Found spark conf file: " + filename)
+        sparkConf.setAll(sparkUtils.getPropertiesFromFile(filename))
       case None => throw new IllegalStateException("can't find Spark conf; please set SPARK_HOME or SPARK_CONF_DIR")
     }
     sparkConf

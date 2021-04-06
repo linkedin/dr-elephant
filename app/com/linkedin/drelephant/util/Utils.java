@@ -157,6 +157,7 @@ public final class Utils {
   public static double[] getParam(String rawLimits, int thresholdLevels) {
     double[] parsedLimits = null;
 
+    logger.info(String.format("rawLimits=%s,  thresholdLevels=%s", rawLimits, thresholdLevels));
     if (rawLimits != null && !rawLimits.isEmpty()) {
       String[] thresholds = rawLimits.split(",");
       if (thresholds.length != thresholdLevels) {
@@ -177,6 +178,7 @@ public final class Utils {
         }
       }
     }
+    logger.info(String.format("parsedLimits=%s", parsedLimits==null?"":parsedLimits.toString()));
 
     return parsedLimits;
   }
@@ -258,7 +260,8 @@ public final class Utils {
    */
   public static String truncateField(String field, int limit, String context) {
     if (field != null && limit > TRUNCATE_SUFFIX.length() && field.length() > limit) {
-      logger.info("Truncating " + field + " to " + limit + " characters for " + context);
+//      logger.info("Truncating " + field + " to " + limit + " characters for " + context);
+      logger.info("Truncating " + limit + " characters for " + context);
       field = field.substring(0, limit - 3) + "...";
     }
     return field;

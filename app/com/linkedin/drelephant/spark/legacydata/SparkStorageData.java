@@ -17,8 +17,10 @@
 package com.linkedin.drelephant.spark.legacydata;
 
 import java.util.List;
+
+import org.apache.spark.status.api.v1.RDDStorageInfo;
 import org.apache.spark.storage.RDDInfo;
-import org.apache.spark.storage.StorageStatus;
+//import org.apache.spark.storage.StorageStatus;
 
 
 /**
@@ -26,7 +28,8 @@ import org.apache.spark.storage.StorageStatus;
  */
 public class SparkStorageData {
   private List<RDDInfo> _rddInfoList;
-  private List<StorageStatus> _storageStatusList;
+  private List<RDDStorageInfo> _rddStorageInfoList;
+//  private List<StorageStatus> _storageStatusList;
 
   public List<RDDInfo> getRddInfoList() {
     return _rddInfoList;
@@ -36,11 +39,19 @@ public class SparkStorageData {
     _rddInfoList = rddInfoList;
   }
 
-  public List<StorageStatus> getStorageStatusList() {
-    return _storageStatusList;
+//  public List<StorageStatus> getStorageStatusList() {
+//    return _storageStatusList;
+//  }
+//
+//  public void setStorageStatusList(List<StorageStatus> storageStatusList) {
+//    _storageStatusList = storageStatusList;
+//  }
+
+  public List<RDDStorageInfo> getRddStorageInfoList() {
+    return _rddStorageInfoList;
   }
 
-  public void setStorageStatusList(List<StorageStatus> storageStatusList) {
-    _storageStatusList = storageStatusList;
+  public void setRddStorageInfoList(List<RDDStorageInfo> rddStorageInfoList) {
+    this._rddStorageInfoList = rddStorageInfoList;
   }
 }

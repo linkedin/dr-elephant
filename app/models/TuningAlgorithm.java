@@ -29,7 +29,7 @@ import javax.persistence.Table;
 
 import com.avaje.ebean.annotation.UpdatedTimestamp;
 
-import play.db.ebean.Model;
+import com.avaje.ebean.Model;
 
 
 @Entity

@@ -405,7 +405,7 @@ source common.sh
 
 # Run the main command alongwith the extra commands passed as arguments to compile.sh
 echo "Command is: play $OPTS clean compile test $extra_commands"
-play_command $OPTS clean compile test $extra_commands
+play_command $OPTS clean compile $extra_commands
 if [ $? -ne 0 ]; then
   echo "Build failed..."
   exit 1;

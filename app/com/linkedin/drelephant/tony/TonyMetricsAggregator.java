@@ -66,7 +66,7 @@ public class TonyMetricsAggregator implements HadoopMetricsAggregator {
       for (TonyTaskData taskData : entry.getValue().values()) {
         long taskDurationSec = (taskData.getTaskEndTime() - taskData.getTaskStartTime()) / Statistics.SECOND_IN_MS;
         if (taskDurationSec < 0) {
-          // Most likely TASK_FINISHED and APPLICATION_FINISHED events are missing for the task.
+          // Most likely TASK_FINISHED and APPLICATION_FINISHED events.scala are missing for the task.
           continue;
         }
         mbSecUsed += mbRequested * taskDurationSec;

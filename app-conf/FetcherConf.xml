@@ -32,10 +32,10 @@
   <!--
      REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
    -->
-  <fetcher>
-    <applicationtype>tez</applicationtype>
-    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
-  </fetcher>
+  <!--<fetcher>-->
+    <!--<applicationtype>tez</applicationtype>-->
+    <!--<classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>-->
+  <!--</fetcher>-->
   <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
@@ -59,7 +59,8 @@
      If not set, the local timezone will be used.
    -->
   
-  <fetcher>
+  <!--临时-->
+  <!--<fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
     <params>
@@ -67,7 +68,7 @@
       <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
       <history_server_time_zone>PST</history_server_time_zone>
     </params>
-  </fetcher>
+  </fetcher>-->
   
 
   <!--
@@ -86,10 +87,10 @@
       <event_log_location_uri>webhdfs://localhost:50070/system/spark-history</event_log_location_uri>
     </params>
   -->
-  <fetcher>
-    <applicationtype>spark</applicationtype>
-    <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
-  </fetcher>
+  <!--<fetcher>-->
+    <!--<applicationtype>spark</applicationtype>-->
+    <!--<classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>-->
+  <!--</fetcher>-->
 
   <!--
   This is an experimental fetcher for Spark applications which uses SHS REST API to get application metrics
@@ -106,7 +107,7 @@
   *should_process_logs_locally* if use_rest_for_eventlogs is true, then enabling this flag will enable fetcher to just
   get eventlogs via SHS REST API and derives application metrics and properties from eventlogs.
   Therefore, fetcher does not use other REST calls, which may have significant memory overhead on SHS.
-
+-->
   <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
@@ -115,7 +116,7 @@
       <should_process_logs_locally>true</should_process_logs_locally>
     </params>
   </fetcher>
-  -->
+
 
   <!--
     Fetcher for TonY jobs. To use this, you must set the TONY_CONF_DIR environment variable to the directory
