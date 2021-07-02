@@ -70,6 +70,11 @@ public class PSOParamGeneratorTest {
     fakeApp = fakeApplication(dbConn, gs);
     Configuration configuration = ElephantContext.instance().getAutoTuningConf();
     Boolean autoTuningEnabled = configuration.getBoolean(DrElephant.AUTO_TUNING_ENABLED, false);
+    
+//    autoTuningEnabled = true;
+
+    System.out.println("\n\nautoTuningEnabled = " + autoTuningEnabled);
+    
     org.junit.Assume.assumeTrue(autoTuningEnabled);
   }
 

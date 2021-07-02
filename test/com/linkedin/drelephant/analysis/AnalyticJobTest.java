@@ -160,6 +160,7 @@ public class AnalyticJobTest {
     List<Heuristic> heuristics = new ArrayList<Heuristic>();
     // dummy hash map
     Map<String, String> paramsMap = new HashMap<String, String>();
+
     heuristics.add(new MapperSkewHeuristic(new HeuristicConfigurationData("Mapper Skew",
         "com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic",
         "views.html.help.mapreduce.helpMapperSkew", new ApplicationType("mapreduce"), paramsMap)));

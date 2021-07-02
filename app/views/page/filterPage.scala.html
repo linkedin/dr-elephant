@@ -1,0 +1,54 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@(paginationStats: controllers.PaginationStats)(results: Html)
+
+@*
+* The Search Page
+*
+* This includes the filter panel at the left and the paginated serach results at the center.
+*
+* @param paginationStats The pagination information
+* @param results The search results
+*@
+
+@main("Dr. Elephant - Filter page", "filterPage") {
+  @tags.column(3) {
+    @tags.panel(){ Search } {
+
+
+      <form id="search-form" role="form" method="get" action="@routes.Application.filter()">
+
+      <input id="cu4" type="checkbox" name="Cu4" value="CU4_"> <label for="cu4"> Cu4</label><br />
+      <input id="cu6" type="checkbox" name="Cu6" value="CU6_"> <label for="cu6"> Cu6</label><br />
+      <input id="cu8" type="checkbox" name="Cu8" value="CU8_"> <label for="cu8"> Cu8</label><br />
+      <input id="Exception" type="checkbox" name="Exception" value="Exception"> <label for="Exception"> Exception</label><br />
+
+      </br>
+
+        <button type="submit" class="btn btn-default" id="submit-button" value="Create">Get Result</button>
+      </form>
+    }
+  }
+
+  <!--The filtered and paginated results-->
+  @tags.column(9) {
+    @results
+    @if(paginationStats != null) {
+      @tags.pagination(paginationStats, routes.Application.filter())
+    }
+  }
+}

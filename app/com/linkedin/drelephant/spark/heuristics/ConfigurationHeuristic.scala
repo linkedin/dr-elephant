@@ -17,6 +17,19 @@
 package com.linkedin.drelephant.spark.heuristics
 
 import java.util.ArrayList
+
+/*
+import com.linkedin.drelephant.math.Statistics
+
+import scala.collection.JavaConverters
+import scala.util.Try
+
+import com.linkedin.drelephant.analysis.{HeuristicResultDetails, Heuristic, HeuristicResult, Severity}
+import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
+import com.linkedin.drelephant.spark.data.SparkApplicationData
+import com.linkedin.drelephant.util.MemoryFormatUtils
+*/
+
 import scala.collection.JavaConverters
 import scala.util.Try
 import com.linkedin.drelephant.analysis._
@@ -78,6 +91,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
       new HeuristicResultDetails(
         SPARK_DYNAMIC_ALLOCATION_ENABLED,
         formatProperty(evaluator.isDynamicAllocationEnabled.map(_.toString))
+
       ),
       new HeuristicResultDetails(
         SPARK_DRIVER_CORES_KEY,
@@ -107,6 +121,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
     }
     if (evaluator.shuffleAndDynamicAllocationSeverity != Severity.NONE) {
       result.addResultDetail(SPARK_SHUFFLE_SERVICE_ENABLED, formatProperty(evaluator.isShuffleServiceEnabled.map(_.toString)),
+
         "Spark shuffle service is not enabled.")
     }
     if (evaluator.severityMinExecutors == Severity.CRITICAL) {
@@ -142,6 +157,7 @@ object ConfigurationHeuristic {
   val SPARK_APPLICATION_DURATION = "spark.application.duration"
   val SPARK_SHUFFLE_SERVICE_ENABLED = "spark.shuffle.service.enabled"
   val SPARK_DYNAMIC_ALLOCATION_ENABLED = "spark.dynamicAllocation.enabled"
+
   val SPARK_DRIVER_CORES_KEY = "spark.driver.cores"
   val SPARK_DYNAMIC_ALLOCATION_MIN_EXECUTORS = "spark.dynamicAllocation.minExecutors"
   val SPARK_DYNAMIC_ALLOCATION_MAX_EXECUTORS = "spark.dynamicAllocation.maxExecutors"
@@ -154,6 +170,7 @@ object ConfigurationHeuristic {
   val DEFAULT_SPARK_OVERHEAD_MEMORY_THRESHOLDS =
     SeverityThresholds(low = MemoryFormatUtils.stringToBytes("2G"), MemoryFormatUtils.stringToBytes("4G"),
       severe = MemoryFormatUtils.stringToBytes("6G"), critical = MemoryFormatUtils.stringToBytes("8G"), ascending = true)
+
 
   class Evaluator(configurationHeuristic: ConfigurationHeuristic, data: SparkApplicationData) {
     lazy val appConfigurationProperties: Map[String, String] =
@@ -171,6 +188,7 @@ object ConfigurationHeuristic {
     lazy val executorCores: Option[Int] =
       Try(getProperty(SPARK_EXECUTOR_CORES_KEY).map(_.toInt)).getOrElse(None)
 
+
     lazy val driverCores: Option[Int] =
       Try(getProperty(SPARK_DRIVER_CORES_KEY).map(_.toInt)).getOrElse(None)
 
@@ -185,6 +203,7 @@ object ConfigurationHeuristic {
       val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
       (lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime) / Statistics.SECOND_IN_MS
     }
+
 
     lazy val sparkYarnJars: String = getProperty(SPARK_YARN_JARS).getOrElse("")
 
@@ -210,6 +229,7 @@ object ConfigurationHeuristic {
       case Some(`serializerIfNonNullRecommendation`) => Severity.NONE
       case Some(_) => DEFAULT_SERIALIZER_IF_NON_NULL_SEVERITY_IF_RECOMMENDATION_UNMET
     }
+
 
     //The following thresholds are for checking if the memory and cores values (executor and driver) are above normal. These thresholds are experimental, and may change in the future.
     val DEFAULT_SPARK_MEMORY_THRESHOLDS =
@@ -261,5 +281,4 @@ object ConfigurationHeuristic {
 
     private def getProperty(key: String): Option[String] = appConfigurationProperties.get(key)
   }
-
 }

@@ -28,7 +28,7 @@
 @main("Dr. Elephant - Search", "search") {
   @tags.column(3) {
     @tags.panel(){ Search } {
-      <form id="search-form" role="form" method="get" action="@routes.Application.search()">
+      <form id="search-form" name="search-form" role="form" method="get" >
         <!--Job Id, FlowExec Url and the Username test input type-->
         <div class="form-group">
           <label for="form-job-id">Job/App ID</label>
@@ -105,8 +105,42 @@
           <input type="hidden" id="form-finished-time-end" name="finished-time-end" value="" />
         </div>
 
-        <button type="submit" class="btn btn-default" id="submit-button">Get Result</button>
+
       </form>
+        <button type="button" onClick="submitFunction(1)" class="btn btn-default" id="submit-button">Get Result</button>
+        <button type="button" data-toggle="modal" data-target="#myModal" class="btn btn-danger" id="Delete-button">Delete</button>
+        
+        <div class="modal" id="myModal">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title">Delete confirmation</h5>
+		      </div>
+		      <div class="modal-body">
+		        <p>Are you sure you want to delete those jobs?</p>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" onClick="submitFunction(2)" class="btn btn-danger">Confirm</button>
+		        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+      
+		<script type="text/javascript">
+		
+	    	function submitFunction(i) {
+		       	if (i==1) {
+		          document.getElementById("search-form").action="/search";
+		       	}
+		       	if (i==2) {
+		          document.getElementById("search-form").action="/delete";
+		       	}
+		       
+				document.getElementById("search-form").submit()
+	       	}
+  		</script>
+	      
     }
   }
 

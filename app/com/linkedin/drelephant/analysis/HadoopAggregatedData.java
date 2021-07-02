@@ -24,6 +24,30 @@ public class HadoopAggregatedData {
   private long resourceUsed = 0;
   private long resourceWasted = 0;
   private long totalDelay = 0;
+  
+  // in/out
+  private long outputCard = 0;
+  private long inputCard = 0;
+  
+  
+  public long getOutputCard() {
+    return outputCard;
+  }
+  
+  public long getInputCard() {
+    return inputCard;
+  }
+  
+  public void setInputCard(long ic)  {
+    this.inputCard = ic;
+  }
+  
+  public void setOutputCard(long oc) {
+    this.outputCard = oc;
+  }
+  
+  // in/out
+
 
   /**
    * Returns the resource usage (in MBSeconds) of the job

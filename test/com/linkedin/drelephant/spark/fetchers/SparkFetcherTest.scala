@@ -48,7 +48,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
     val t1 = t2 - 1
     val duration = 8000000L
 
-    val restApplicationInfo: Seq[ApplicationInfoImpl] = Seq(
+    val restDerivedData = SparkRestDerivedData(
       new ApplicationInfoImpl(
         appId,
         "app",
@@ -56,11 +56,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
           newFakeApplicationAttemptInfo(Some("2"), startTime = new Date(t2 - duration), endTime = new Date(t2)),
           newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(t1 - duration), endTime = new Date(t1))
         )
-      )
-    )
-
-    val restDerivedData = SparkRestDerivedData(
-      restApplicationInfo.head,
+      ),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = Seq.empty
@@ -107,8 +103,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       val mockSparkRestClient = Mockito.mock(classOf[SparkRestClient])
       val mockSparkApplicationData = Mockito.mock(classOf[SparkApplicationData])
       Mockito.when(mockSparkApplicationData.getAppId()).thenReturn(appId)
-      val analyticJob = new AnalyticJob().setAppId(appId)
-      Mockito.when(mockSparkRestClient.fetchEventLogAndParse(analyticJob)).thenReturn(mockSparkApplicationData)
+      Mockito.when(mockSparkRestClient.fetchEventLogAndParse(appId)).thenReturn(mockSparkApplicationData)
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf: SparkConf = new SparkConf()
           .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
@@ -122,8 +117,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       val fetcherConfigurationData = newFakeFetcherConfigurationData(
         Map("use_rest_for_eventlogs" -> "true", "should_process_logs_locally" -> "true"))
       val mockSparkRestClient = Mockito.mock(classOf[SparkRestClient])
-      val analyticJob = new AnalyticJob().setAppId(appId)
-      Mockito.when(mockSparkRestClient.fetchEventLogAndParse(analyticJob)).thenThrow(new RuntimeException())
+      Mockito.when(mockSparkRestClient.fetchEventLogAndParse(appId)).thenThrow(new RuntimeException())
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf: SparkConf = new SparkConf()
           .set(SparkFetcher.SPARK_EVENT_LOG_ENABLED_KEY, "true")
@@ -277,22 +271,6 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
 
       sparkFetcher.shouldProcessLogsLocally should be(false)
     }
-
-    it("fetch jobs for backfill") {
-      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
-        override lazy val sparkConf = new SparkConf()
-        override lazy val sparkRestClient = newFakeSparkRestClient(appId, 100, 200, restApplicationInfo)
-        override lazy val sparkLogClient = newFakeSparkLogClient(appId, Some("2"), Future(logDerivedData))
-      }
-      val result = sparkFetcher.fetchJobsForBackfill(100, 200);
-      result.size() should be(1)
-      result.get(0).getAppId should be(restApplicationInfo.head.id)
-      val lastAttempt = restApplicationInfo.head.attempts.maxBy {
-        _.endTime
-      }
-      result.get(0).getFinishTime should be(lastAttempt.endTime.getTime)
-      result.get(0).getUser should be(lastAttempt.sparkUser)
-    }
   }
 }
 
@@ -322,17 +300,6 @@ object SparkFetcherTest {
   ): SparkRestClient = {
     val sparkRestClient = Mockito.mock(classOf[SparkRestClient])
     Mockito.when(sparkRestClient.fetchData(appId)).thenReturn(restDerivedData)
-    sparkRestClient
-  }
-
-  def newFakeSparkRestClient(
-    appId: String,
-    startTime: Long,
-    endTime: Long,
-    restApplicationInfo: Seq[ApplicationInfoImpl]
-  ) : SparkRestClient = {
-    val sparkRestClient = Mockito.mock(classOf[SparkRestClient])
-    Mockito.when(sparkRestClient.fetchCompletedApplicationsData(startTime, endTime)).thenReturn(restApplicationInfo)
     sparkRestClient
   }
 

@@ -109,10 +109,14 @@ public class MapperSpeedHeuristic implements Heuristic<MapReduceApplicationData>
     for (MapReduceTaskData task : tasks) {
 
       if (task.isTimeAndCounterDataPresent()) {
+
+//        long inputBytes = task.getCounters().get(MapReduceCounterData.CounterName.HDFS_BYTES_READ);
+
         long inputBytes = 0;
         for (MapReduceCounterData.CounterName counterName: _counterNames) {
           inputBytes += task.getCounters().get(counterName);
         }
+        
         long runtimeMs = task.getTotalRunTimeMs();
         inputByteSizes.add(inputBytes);
         totalInputByteSize += inputBytes;

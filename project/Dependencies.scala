@@ -23,14 +23,13 @@ object Dependencies {
   lazy val commonsCodecVersion = "1.10"
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
-  lazy val guavaVersion = "18.0"          // Hadoop by default uses Guava 11.0, might raise NoSuchMethodException
+  lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
   lazy val jacksonMapperAslVersion = "1.7.3"
   lazy val jacksonVersion = "2.5.3"
   lazy val jerseyVersion = "2.24"
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
   lazy val oozieClientVersion = "4.2.0"
-  lazy val tonyVersion = "0.3.16"
 
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
@@ -71,8 +70,6 @@ object Dependencies {
     "mysql" % "mysql-connector-java" % mysqlConnectorVersion,
     "org.apache.hadoop" % "hadoop-auth" % hadoopVersion % "compileonly",
     "org.apache.hadoop" % "hadoop-mapreduce-client-core" % hadoopVersion % "compileonly",
-    "org.apache.hadoop" % "hadoop-mapreduce-client-common" % hadoopVersion % "compileonly",
-    "org.apache.hadoop" % "hadoop-mapreduce-client-common" % hadoopVersion % Test,
     "org.apache.hadoop" % "hadoop-mapreduce-client-core" % hadoopVersion % Test,
     "org.apache.hadoop" % "hadoop-common" % hadoopVersion % "compileonly",
     "org.apache.hadoop" % "hadoop-common" % hadoopVersion % Test,
@@ -94,13 +91,11 @@ object Dependencies {
     "org.mockito" % "mockito-core" % "1.10.19" exclude ("org.hamcrest", "hamcrest-core"),
     "org.jmockit" % "jmockit" % "1.23" % Test,
     "org.apache.httpcomponents" % "httpclient" % "4.5.2",
+
     "org.apache.httpcomponents" % "httpcore" % "4.4.4",
     "org.scalatest" %% "scalatest" % "3.0.0" % Test,
-    "com.h2database" % "h2" % "1.4.196" % Test,
-    "com.linkedin.tony" % "tony-core" % tonyVersion excludeAll(
-      ExclusionRule(organization = "com.fasterxml.jackson.core"),
-      ExclusionRule(organization = "org.apache.hadoop")
-    )
+    "com.h2database" % "h2" % "1.4.196" % Test
+
   ) :+ sparkExclusion
 
   var dependencies = Seq(javaJdbc, javaEbean, cache)

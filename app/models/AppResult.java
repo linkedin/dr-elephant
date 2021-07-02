@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.linkedin.drelephant.analysis.Severity;
 
 import com.linkedin.drelephant.util.Utils;
+import java.util.Date;
 import play.db.ebean.Model;
 
 import java.util.List;
@@ -56,7 +57,7 @@ public class AppResult extends Model {
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String USERNAME = "username";
-      public static final String QUEUE_NAME = "queueName";
+    public static final String QUEUE_NAME = "queueName";
     public static final String START_TIME = "startTime";
     public static final String FINISH_TIME = "finishTime";
     public static final String TRACKING_URL = "trackingUrl";
@@ -78,6 +79,11 @@ public class AppResult extends Model {
     public static final String RESOURCE_USAGE = "resourceUsed";
     public static final String WASTED_RESOURCES = "resourceWasted";
     public static final String TOTAL_DELAY = "totalDelay";
+    //in/out
+    public static final String INPUT_CARD = "inputCard";
+    public static final String OUTPUT_CARD = "outputCard";
+   //in/out
+
   }
 
   public static String getSearchFields() {
@@ -157,6 +163,15 @@ public class AppResult extends Model {
 
   @Column(nullable = true)
   public long totalDelay;
+
+  //in/out
+  @Column(nullable = true)
+  public long inputCard;
+  
+  @Column(nullable = true)
+  public long outputCard;
+  //in/out
+
 
   @JsonManagedReference
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppResult")

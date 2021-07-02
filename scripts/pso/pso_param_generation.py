@@ -26,6 +26,7 @@ param_default_value = []
 param_name = []
 iteration = 0
 job_type = ""
+swarm_size = ""
 
 LARGE_DUMMY_FITNESS = 10000
 
@@ -42,6 +43,8 @@ PARAM_MAPREDUCE_REDUCE_JAVA_OPTS = 'mapreduce.reduce.java.opts'
 ARG_TUNING_STATE_KEY = 'json_tuning_state'
 ARG_PARAMETERS_TO_TUNE_KEY = 'parameters_to_tune'
 ARG_JOB_TYPE = "job_type"
+ARG_SWARM_SIZE = "swarm_size"
+
 
 TUNING_STATE_ARCHIVE_KEY = 'archive'
 TUNING_STATE_PREV_POPULATION_KEY = 'prev_population'
@@ -247,6 +250,8 @@ def main(json_tuning_state, display=False):
     pseudo_random_number_generator = Random()
     args = {}
 
+    POPULATION_SIZE = int(swarm_size)
+
     if TUNING_STATE_ARCHIVE_KEY not in tuning_state:
         pseudo_random_number_generator.seed(time.time())
         pso = restartable_pso.restartable_pso(pseudo_random_number_generator)
@@ -293,10 +298,12 @@ if __name__ == '__main__':
     parser.add_argument(ARG_TUNING_STATE_KEY, help='Saved tuning state object')
     parser.add_argument(ARG_PARAMETERS_TO_TUNE_KEY)
     parser.add_argument(ARG_JOB_TYPE)
+    parser.add_argument(ARG_SWARM_SIZE)
     args = parser.parse_args()
     json_tuning_state = args.json_tuning_state
     parameters_to_tune = args.parameters_to_tune
     job_type = args.job_type
+    swarm_size = args.swarm_size
     parameters_to_tune = json.loads(parameters_to_tune)
     initialize_params(parameters_to_tune)
     main(json_tuning_state)

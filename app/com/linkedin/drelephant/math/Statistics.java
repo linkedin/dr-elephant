@@ -34,8 +34,8 @@ public final class Statistics {
   public static final long MINUTE_IN_MS = 60L * SECOND_IN_MS;
   public static final long HOUR_IN_MS = 60L * MINUTE_IN_MS;
 
-  public static final long MINUTE = 60L;
-  public static final long HOUR = 60L * MINUTE;
+  public static long MINUTE = 60L;
+  public static long HOUR = 60*MINUTE;
 
   private Statistics() {
   }
@@ -219,17 +219,21 @@ public final class Statistics {
     return "(" + String.format("%.2f", factor) + suffix + ")";
   }
 
-  /**
+/**
    * Convert milliseconds to readable value
    *
    * @param milliseconds The number of milliseconds
    * @return A String of readable time
    */
   public static String readableTimespan(long milliseconds) {
+  
     if (milliseconds == 0) {
       return "0 sec";
+    }      
+    if (milliseconds < 1000L) {
+      return milliseconds + " ms";
     }
-
+    
     long seconds = milliseconds / 1000;
     long minutes = seconds / 60;
     long hours = minutes / 60;
@@ -286,4 +290,42 @@ public final class Statistics {
       array[i] = temp;
     }
   }
+  
+      public static long standardDeviation(long mean, List<Long> values) {
+    //Find standard deviation
+    double sum = 0d;
+    for (long value : values) {
+      sum += Math.pow((mean - value), 2);
+    }
+    sum = sum / (double) values.size();
+    return (long) (Math.sqrt(sum));
+  }
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+  
+
+  
+
+

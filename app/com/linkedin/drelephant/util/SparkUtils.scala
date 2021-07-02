@@ -180,6 +180,8 @@ trait SparkUtils {
   }
 
   private val IN_PROGRESS = ".inprogress"
+
+//  private val DEFAULT_COMPRESSION_CODEC = "snappy"
   private val DEFAULT_COMPRESSION_CODEC = "lz4"
 
   private val compressionCodecClassNamesByShortName = Map(

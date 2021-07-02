@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(jobDefId: String, graphType: String, results: Html)
+@(jobDefId: String, graphType: String, results: Html, defList:java.util.List[String])
 
 @main("Dr. Elephant - Job History", "jobhistory") {
 
@@ -23,8 +23,15 @@
     @tags.panel(){ Job History } {
       <form id="job-history-form" role="form" method="get" action="@routes.Application.oldJobHistory()">
         <div class="form-group">
-          <label for="form-job-def-id">Job Definition URL/ID</label>
-          <input type="text" class="form-control" id="form-job-def-id" name="job-def-id" placeholder="Job Def URL/ID" value="@jobDefId">
+
+        <label for="form-job-def-id">Job Definition URL/ID</label>
+        <input type="text" list="CU" autocomplete="off" class="form-control" id="form-job-def-id" name="job-def-id" placeholder="Job Def URL/ID" value=@jobDefId>
+        <datalist id="CU">
+          @for(str <- defList) {
+        			<option value="@str">
+           }
+	      </datalist>
+
         </div>
         <label for="graphType">Filter</label>
         <select class="form-control" name="select-graph-type" id="graphType">
@@ -46,6 +53,14 @@
           } else {
             <option value="heuristics">Heuristics</option>
           }
+          
+          <!-- sagaCounters -->
+          @if(graphType == "sagaCounters") {
+            <option value="sagaCounters" selected>SAGA Counters</option>
+          } else {
+            <option value="sagaCounters">SAGA Counters</option>
+          }
+          <!-- sagaCounters -->
 
         </select>
         <br>

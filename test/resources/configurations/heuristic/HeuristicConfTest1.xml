@@ -21,6 +21,7 @@
 
   <heuristic>
     <applicationtype>mapreduce</applicationtype>
+
     <heuristicname>Mapper Skew</heuristicname>
     <classname>com.linkedin.drelephant.mapreduce.heuristics.MapperSkewHeuristic</classname>
     <viewname>views.html.help.mapreduce.helpMapperSkew</viewname>

@@ -16,9 +16,7 @@
 
 package com.linkedin.drelephant.mapreduce.fetchers;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.linkedin.drelephant.analysis.AnalyticJob;
-import com.linkedin.drelephant.analysis.ElephantBackfillFetcher;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceCounterData;
@@ -38,8 +36,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskID;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.mapreduce.jobhistory.JobHistoryParser;
-import org.apache.hadoop.mapreduce.v2.jobhistory.FileNameIndexUtils;
-import org.apache.hadoop.mapreduce.v2.jobhistory.JobIndexInfo;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -60,12 +56,11 @@ import java.util.TimeZone;
  * HDFS directly. Each job's data consists of a JSON event log file with extension ".jhist" and an
  * XML job configuration file.
  */
-public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements ElephantBackfillFetcher {
+public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
   private static final Logger logger = Logger.getLogger(MapReduceFSFetcherHadoop2.class);
 
   private static final String LOG_SIZE_XML_FIELD = "history_log_size_limit_in_mb";
-  @VisibleForTesting
-  static final String HISTORY_SERVER_TIME_ZONE_XML_FIELD = "history_server_time_zone";
+  private static final String HISTORY_SERVER_TIME_ZONE_XML_FIELD = "history_server_time_zone";
   private static final String TIMESTAMP_DIR_FORMAT = "%04d" + File.separator + "%02d" + File.separator + "%02d";
   private static final int SERIAL_NUMBER_DIRECTORY_DIGITS = 6;
   protected static final double DEFALUT_MAX_LOG_SIZE_IN_MB = 500;
@@ -93,6 +88,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
     logger.info("Using timezone: " + _timeZone.getID());
 
     Configuration conf = new Configuration();
+
     this._historyLocation = conf.get("mapreduce.jobhistory.done-dir");
     this._intermediateHistoryLocation = conf.get("mapreduce.jobhistory.intermediate-done-dir");
     try {
@@ -135,7 +131,12 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
    */
   protected String getHistoryDir(AnalyticJob job) {
     // generate the date part
-    String datePart = getHistoryDirDatePart(job.getFinishTime());
+    Calendar timestamp = Calendar.getInstance(_timeZone);
+    timestamp.setTimeInMillis(job.getFinishTime());
+    String datePart = String.format(TIMESTAMP_DIR_FORMAT,
+            timestamp.get(Calendar.YEAR),
+            timestamp.get(Calendar.MONTH) + 1,
+            timestamp.get(Calendar.DAY_OF_MONTH));
 
     // generate the serial part
     String appId = job.getAppId();
@@ -143,17 +144,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
     String serialPart = String.format("%09d", serialNumber)
             .substring(0, SERIAL_NUMBER_DIRECTORY_DIGITS);
 
-    return StringUtils.join(new String[]{datePart, serialPart, File.separator}, null);
-  }
-
-  private String getHistoryDirDatePart(long timeInMillis) {
-    Calendar timestamp = Calendar.getInstance(_timeZone);
-    timestamp.setTimeInMillis(timeInMillis);
-    String datePart = String.format(TIMESTAMP_DIR_FORMAT,
-        timestamp.get(Calendar.YEAR),
-        timestamp.get(Calendar.MONTH) + 1,
-        timestamp.get(Calendar.DAY_OF_MONTH));
-    return StringUtils.join(new String[]{_historyLocation, datePart, ""}, File.separator);
+    return StringUtils.join(new String[]{_historyLocation, datePart, serialPart, ""}, File.separator);
   }
 
   private DataFiles getHistoryFiles(AnalyticJob job) throws IOException {
@@ -163,6 +154,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
 
     // Search files in done dir
     String jobHistoryDirPath = getHistoryDir(job);
+
 
     if (_fs.exists(new Path(jobHistoryDirPath))) {
       RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(jobHistoryDirPath), false);
@@ -191,7 +183,9 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
     }
     if (jobHistPath == null) {
       try {
+
         RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(intermediateDirPath), false);
+
         while (it.hasNext()) {
           String name = it.next().getPath().getName();
           if (name.contains(jobId) && name.endsWith(".jhist")) {
@@ -234,8 +228,8 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
 
     // Check if job history file is too large and should be throttled
     if (_fs.getFileStatus(new Path(histFile)).getLen() > _maxLogSizeInMB * FileUtils.ONE_MB) {
-      String errMsg =
-          "The history log of MapReduce application: " + appId + " is over the limit size of " + _maxLogSizeInMB + " MB, the parsing process gets throttled.";
+      String errMsg = "The history log of MapReduce application: " + appId + " is over the limit size of "
+              + _maxLogSizeInMB + " MB, the parsing process gets throttled.";
       logger.warn(errMsg);
       jobData.setDiagnosticInfo(errMsg);
       jobData.setSucceeded(false);  // set succeeded to false to avoid heuristic analysis
@@ -249,8 +243,6 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
     if (parseException != null) {
       throw new RuntimeException("Could not parse history file " + histFile, parseException);
     }
-    // Populate missing fields from parsed job info. This info will be missing for backfilled jobs.
-    populateJobFromJobInfo(job, jobInfo);
 
     jobData.setSubmitTime(jobInfo.getSubmitTime());
     jobData.setStartTime(jobInfo.getLaunchTime());
@@ -259,12 +251,14 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
     String state = jobInfo.getJobStatus();
     if (state.equals("SUCCEEDED")) {
       jobData.setSucceeded(true);
-    } else if (state.equals("FAILED")) {
+    }
+    else if (state.equals("FAILED")) {
       jobData.setSucceeded(false);
       jobData.setDiagnosticInfo(jobInfo.getErrorInfo());
     } else {
       throw new RuntimeException("job neither succeeded or failed. can not process it ");
     }
+
 
     // Fetch job counter
     MapReduceCounterData jobCounter = getCounterData(jobInfo.getTotalCounters());
@@ -292,24 +286,6 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
     jobData.setCounters(jobCounter).setMapperData(mapperList).setReducerData(reducerList);
 
     return jobData;
-  }
-
-  private void populateJobFromJobInfo(AnalyticJob job, JobHistoryParser.JobInfo jobInfo) {
-    if(job.getStartTime() <= 0) {
-      job.setStartTime(jobInfo.getSubmitTime());
-    }
-    if(job.getFinishTime() <= 0) {
-      job.setFinishTime(jobInfo.getFinishTime());
-    }
-    if(job.getQueueName() == null || job.getQueueName().isEmpty()) {
-      job.setQueueName(jobInfo.getJobQueueName());
-    }
-    if (job.getUser() == null || job.getUser().isEmpty()) {
-      job.setUser(jobInfo.getUsername());
-    }
-    if (job.getName() == null || job.getName().isEmpty()) {
-      job.setName(jobInfo.getJobname());
-    }
   }
 
   private MapReduceCounterData getCounterData(Counters counters) {
@@ -370,50 +346,6 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher implements Eleph
       taskList.add(taskData);
     }
     return taskList.toArray(new MapReduceTaskData[taskList.size()]);
-  }
-
-  @Override
-  public List<AnalyticJob> fetchJobsForBackfill(long startTime, long endTime) throws Exception {
-    List<AnalyticJob> jobs = new ArrayList<AnalyticJob>();
-    long startTopOfTheDayTs = Utils.getTopOfTheDayTimestamp(startTime);
-    long endTopOfTheDayTs = Utils.getTopOfTheDayTimestamp(startTime);
-    long topOfTheDayTs = startTopOfTheDayTs;
-    // Determine history dir for each day starting from start day till end day. Scan all history files in subdirectories
-    // within each date level history dir. Prune the list of apps based on start and end time.
-    while (topOfTheDayTs <= endTopOfTheDayTs) {
-      String historyDir = getHistoryDirDatePart(topOfTheDayTs);
-      addJobsForHistoryDir(historyDir, jobs, startTime, endTime);
-      topOfTheDayTs = Utils.getNextTopOfTheDayTimestamp(topOfTheDayTs);
-    }
-    return jobs;
-  }
-
-  private void addJobsForHistoryDir(String historyDir, List<AnalyticJob> jobs, long startTime, long endTime)
-      throws Exception {
-    if (_fs.exists(new Path(historyDir))) {
-      RemoteIterator<LocatedFileStatus> it = _fs.listFiles(new Path(historyDir), true);
-      while (it.hasNext()) {
-        String histFilename = it.next().getPath().getName();
-        if (histFilename.endsWith(".jhist")) {
-          try {
-            JobIndexInfo indexInfo = FileNameIndexUtils.getIndexInfo(histFilename);
-            String appId = Utils.getApplicationIdFromJobId(indexInfo.getJobId().toString());
-            // Add the job only if required.
-            if (indexInfo.getFinishTime() >= startTime && indexInfo.getFinishTime() <= endTime) {
-              jobs.add(new AnalyticJob().setAppId(appId).setStartTime(indexInfo.getSubmitTime()).
-                  setFinishTime(indexInfo.getFinishTime()).setName(indexInfo.getJobName()).
-                  setUser(indexInfo.getUser()).setQueueName(indexInfo.getQueueName()).
-                  setAppType(_fetcherConfigurationData.getAppType()));
-            }
-          } catch (IOException e) {
-            // Fall back to parsing the filename by ourselves.
-            String[] jobDetails = histFilename.split("-");
-            jobs.add(new AnalyticJob().setAppId(Utils.getApplicationIdFromJobId(jobDetails[0])).
-                setAppType(_fetcherConfigurationData.getAppType()));
-          }
-        }
-      }
-    }
   }
 
   private class DataFiles {

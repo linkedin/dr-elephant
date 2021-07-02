@@ -50,6 +50,7 @@ Router.map(function () {
   this.route('job');
   this.route('app');
   this.route('search');
+  this.route('delete');
   this.route('not-found');
   this.route('user-details');
   this.route('workflow-exceptions');

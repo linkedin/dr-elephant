@@ -77,7 +77,8 @@
                       <!-- div containing the header table -->
                       <div style="height:100%; width:100%;  display: block">
 
-                        <table class="table" style="height:100%; width:100%; display: table; border-collapse: collapse; margin:0px; padding:0px">
+                        <table class="table" style="height:100%; width:570px; display: table; border-collapse: collapse; margin:0px; padding:0px">
+
 
                           <tbody style="height:100%;">
                             <tr style="text-align: center;">
@@ -101,6 +102,21 @@
                                   <span> The total wait time for the stage in HH:MM:SS</span>
                                 </div>
                               </td>
+                              
+                                <!-- SAGA_counters in -->
+                                <td class="run-time-td hasTooltip" style="width: 95px"><img src='@routes.Assets.at("images/In.png")' class="metrics-icons-table" alt='total input objects'/>
+                                  <div id="tooltip-div">
+                                    <span> Total of input objects</span>
+                                  </div>
+                                </td>
+                                <!-- SAGA_counters out -->
+                                <td class="wait-time-td hasTooltip" style="width: 95px"><img src='@routes.Assets.at("images/Out.png")' class="metrics-icons-table" alt='total output objects'/>
+                                  <div id="tooltip-div">
+                                    <span> Total of output objects</span>
+                                  </div>
+                                </td>
+                                <!-- SAGA_counters -->
+
                             </tr>
                           </tbody>
                         </table>
@@ -140,6 +156,15 @@
                           </td>
                           <td class="wait-time-td hasTooltip" style="width: 95px">@(Utils.getDurationBreakdown(Utils.getTotalWaittime(jobMap.get(jobDefPair))).split("Hours")(0))
                           </td>
+
+
+                            <!-- in/out -->
+                            <td class="run-time-td hasTooltip" style="width: 95px">@(Utils.getTotalIn(jobMap.get(jobDefPair)))
+                            </td>
+                            <td class="wait-time-td hasTooltip" style="width: 95px">@(Utils.getTotalOut(jobMap.get(jobDefPair)))
+                            </td>
+                            <!-- in/out -->
+
                         </tr>
                       </tbody>
                     </table>

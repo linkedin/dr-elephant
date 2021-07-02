@@ -1,0 +1,42 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@(hello: Int, severe : Int, critical : Int)(results: Html)
+
+
+@*
+* The layout of the homepage of Dr. Elephant or the dashboard
+*
+* @param numJobsAnalyzed The count of total jobs analysed by Dr. Elephant
+* @param numJobsSevere The number of jobs which are in severe state
+* @param numJobsCritical The number of jobs which are in critical state
+* @param results The results to be displayed on the dashboard
+*@
+
+@main("Dr. Elephant - filterCu4", "filterCu4") {
+
+  <div class="jumbotron">
+    <h2>Filter for CU4_*</h2>
+    <p>I looked through <b>@hello</b> CU4_* jobs.<br>
+      About <b>@severe</b> of them could use some tuning.<br>
+      About <b>@critical</b> of them need some serious attention!
+    </p>
+  </div>
+
+  @results
+
+
+}

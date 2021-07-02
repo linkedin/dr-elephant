@@ -112,7 +112,7 @@ public class RestAPITest {
       public void run() {
         populateTestData();
         final WS.Response response = WS.url(BASE_URL + REST_APP_RESULT_PATH).
-            setQueryParameter("id", TEST_JOB_ID1).setQueryParameter("prioritize", "true").
+            setQueryParameter("id", TEST_JOB_ID1).
             get().get(RESPONSE_TIMEOUT, TimeUnit.MILLISECONDS);
         final JsonNode jsonResponse = response.asJson();
         assertTrue("Job id did not match", TEST_JOB_ID1.equals(jsonResponse.path("id").asText()));
@@ -661,6 +661,7 @@ public class RestAPITest {
             Iterator<JsonNode> heuristicsSummary = node.findValue("heuristicsummary").elements();
 
             HashMap<String, String> expectedHeuristics = new LinkedHashMap<String, String>();
+
             expectedHeuristics.put("Mapper Skew", "None");
             expectedHeuristics.put("Mapper GC", "None");
             expectedHeuristics.put("Mapper Time", "None");
@@ -980,6 +981,7 @@ public class RestAPITest {
 
         Iterator<JsonNode> heuristicsSummary = node.findValue("heuristicsummary").elements();
         HashMap<String, String> expectedHeuristics = new LinkedHashMap<String, String>();
+
         expectedHeuristics.put("Mapper Skew", "None");
         expectedHeuristics.put("Mapper GC", "None");
         expectedHeuristics.put("Mapper Time", "None");

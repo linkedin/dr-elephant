@@ -72,14 +72,18 @@ public class ApplicationTest {
     Map<String, String> searchParams = new HashMap<String, String>();
 
     // Null searchParams Check
-    Query<AppResult> query1 = Application.generateSearchQuery("*", null);
+
+    Query<AppResult> query1 = Application.generateSearchQuery("*", null); //Query<AppResult> query1 = Application.generateSearchQuery("*", null);
+
     assertNotNull(query1.findList());
     String sql1 = query1.getGeneratedSql();
     assertTrue(sql1.contains("select t0.id c0"));
     assertTrue(sql1.contains("from yarn_app_result t0 order by t0.finish_time desc"));
 
     // No searchParams Check
-    Query<AppResult> query2 = Application.generateSearchQuery("*", searchParams);
+
+    Query<AppResult> query2 = Application.generateSearchQuery("*", searchParams); //Query<AppResult> query2 = Application.generateSearchQuery("*", searchParams);
+
     assertNotNull(query2.findList());
     String sql2 = query2.getGeneratedSql();
     assertTrue(sql2.contains("select t0.id c0"));
@@ -87,7 +91,9 @@ public class ApplicationTest {
 
     // Query by username
     searchParams.put(Application.USERNAME, "username");
-    query2 = Application.generateSearchQuery("*", searchParams);
+
+    query2 = Application.generateSearchQuery("*", searchParams); //query2 = Application.generateSearchQuery("*", searchParams);
+
     assertNotNull(query2.findList());
     sql2 = query2.getGeneratedSql();
     assertTrue(sql2.contains("select t0.id c0"));
@@ -96,7 +102,9 @@ public class ApplicationTest {
 
     // Query by queuename
     searchParams.put(Application.QUEUE_NAME, "queueName");
-    query2 = Application.generateSearchQuery("*", searchParams);
+
+    query2 = Application.generateSearchQuery("*", searchParams); //query2 = Application.generateSearchQuery("*", searchParams);
+
     assertNotNull(query2.findList());
     sql2 = query2.getGeneratedSql();
     assertTrue(sql2.contains("select t0.id c0"));
@@ -106,7 +114,9 @@ public class ApplicationTest {
 
       // Query by jobtype
     searchParams.put(Application.JOB_TYPE, "Pig");
-    query2 = Application.generateSearchQuery("*", searchParams);
+
+    query2 = Application.generateSearchQuery("*", searchParams); //query2 = Application.generateSearchQuery("*", searchParams);
+
     assertNotNull(query2.findList());
     sql2 = query2.getGeneratedSql();
     assertTrue(sql2.contains("select t0.id c0"));
@@ -118,7 +128,9 @@ public class ApplicationTest {
     // Query by username, jobtype and start time
     searchParams.put(Application.STARTED_TIME_BEGIN, "1459713751000");
     searchParams.put(Application.STARTED_TIME_END, "1459713751000");
-    Query<AppResult> query3 = Application.generateSearchQuery("*", searchParams);
+
+    Query<AppResult> query3 = Application.generateSearchQuery("*", searchParams); //Query<AppResult> query3 = Application.generateSearchQuery("*", searchParams);
+
     assertNotNull(query3.findList());
     String sql3 = query3.getGeneratedSql();
     assertTrue(sql3.contains("select t0.id c0"));
@@ -132,7 +144,9 @@ public class ApplicationTest {
     searchParams = new HashMap<String, String>();
     searchParams.put(Application.FINISHED_TIME_BEGIN, "1459713751000");
     searchParams.put(Application.FINISHED_TIME_END, "1459713751000");
-    Query<AppResult> query4 = Application.generateSearchQuery("*", searchParams);
+
+    Query<AppResult> query4 = Application.generateSearchQuery("*", searchParams); //Query<AppResult> query4 = Application.generateSearchQuery("*", searchParams);
+
     assertNotNull(query4.findList());
     String sql4 = query4.getGeneratedSql();
     assertTrue(sql4.contains("select t0.id c0"));

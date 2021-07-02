@@ -22,6 +22,7 @@
 GET        /                                    controllers.Application.dashboard()
 GET        /help                                controllers.Application.oldHelp()
 GET        /search                              controllers.Application.search()
+GET        /delete                              controllers.Application.delete()
 GET        /compare                             controllers.Application.compare()
 GET        /flowhistory                         controllers.Application.oldFlowHistory()
 GET        /jobhistory                          controllers.Application.oldJobHistory()
@@ -32,8 +33,12 @@ GET        /newflowhistory                      controllers.Application.flowHist
 GET        /newjobhistory                       controllers.Application.jobHistory()
 GET        /newhelp                             controllers.Application.help()
 
+## filter
+
+GET        /filterPage                          controllers.Application.filter()
+
 # Rest calls
-GET        /rest/job                            controllers.Application.restAppResult(id: String, prioritize: Boolean ?= false)
+GET        /rest/job                            controllers.Application.restAppResult(id: String)
 GET        /rest/jobexec                        controllers.Application.restJobExecResult(id: String)
 GET        /rest/flowexec                       controllers.Application.restFlowExecResult(id: String)
 GET        /rest/search                         controllers.Application.restSearch()
@@ -57,6 +62,32 @@ GET        /rest/workflow-exceptions            controllers.api.v1.Web.restExcep
 GET        /rest/exception-statuses             controllers.api.v1.Web.restExceptionStatuses()
 POST       /rest/getCurrentRunParameters        controllers.Application.getCurrentRunParameters()
 
+
+# Rest calls
+#GET        /rest/job                            controllers.Application.restAppResult(id: String)
+#GET        /rest/jobexec                        controllers.Application.restJobExecResult(id: String)
+#GET        /rest/flowexec                       controllers.Application.restFlowExecResult(id: String)
+#GET        /rest/search                         controllers.Application.restSearch()
+#GET        /rest/compare                        controllers.Application.restCompare()
+#GET        /rest/flowgraphdata                  controllers.Application.restFlowGraphData(id: String)
+#GET        /rest/jobgraphdata                   controllers.Application.restJobGraphData(id: String)
+#GET        /rest/jobmetricsgraphdata            controllers.Application.restJobMetricsGraphData(id: String)
+#GET        /rest/flowmetricsgraphdata           controllers.Application.restFlowMetricsGraphData(id: String)
+#GET        /rest/dashboard-summaries            controllers.api.v1.Web.restDashboardSummaries()
+#GET        /rest/workflow-summaries             controllers.api.v1.Web.restWorkflowSummariesForUser(username: String)
+#GET        /rest/job-summaries                  controllers.api.v1.Web.restJobSummariesForUser(username: String)
+#GET        /rest/application-summaries          controllers.api.v1.Web.restApplicationSummariesForUser(username: String)
+#GET        /rest/workflows                      controllers.api.v1.Web.restWorkflowFromFlowId(workflowid: String)
+#GET        /rest/jobs                           controllers.api.v1.Web.restJobFromJobId(jobid: String)
+#GET        /rest/applications                   controllers.api.v1.Web.restApplicationFromApplicationId(applicationid: String)
+#GET        /rest/search-options                 controllers.api.v1.Web.restSearchOptions()
+#GET        /rest/search-results                 controllers.api.v1.Web.search()
+#GET        /rest/resourceusagedatabyuser        controllers.Application.restResourceUsageDataByUser(startTime: String, endTime: String)
+#GET        /rest/user-details                   controllers.api.v1.Web.restGetUsersSummaryStats()
+#GET        /rest/workflow-exceptions            controllers.api.v1.Web.restExceptions()
+#GET        /rest/exception-statuses             controllers.api.v1.Web.restExceptionStatuses()
+
+
 # Metrics calls
 GET        /ping                                controllers.MetricsController.ping()
 GET        /metrics                             controllers.MetricsController.index()
@@ -67,3 +98,6 @@ GET        /healthcheck                         controllers.MetricsController.he
 GET        /assets/*file                        controllers.Assets.at(path="/public", file)
 GET        /new                                 controllers.Application.serveAsset(path="index.html")
 GET        /new/*path                           controllers.Application.serveAsset(path)
+
+OPTIONS /*all                                   controllers.Application.preflight(all)
+

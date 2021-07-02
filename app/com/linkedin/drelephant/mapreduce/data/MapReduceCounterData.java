@@ -35,7 +35,9 @@ public class MapReduceCounterData {
   }
 
   public MapReduceCounterData() {
-    _pubCounters = new HashMap<String, Map<String, Long>>(8);
+
+    _pubCounters = new HashMap<String, Map<String, Long>>(12);  //8
+
   }
 
   /**
@@ -70,10 +72,13 @@ public class MapReduceCounterData {
   public void set(String groupName, String counterName, long value) {
     Map<String, Long> counterMap = _pubCounters.get(groupName);
     if (counterMap == null) {
-      counterMap = new HashMap<String, Long>(4);
+      counterMap = new HashMap<String, Long>(6);  //4
       _pubCounters.put(groupName, counterMap);
     }
-    counterMap.put(counterName, value);
+    if ((counterName.equals("Objects-In") || counterName.equals("Objects-Out")) && counterMap.get(counterName)!=null)
+      counterMap.put(counterName, value + counterMap.get(counterName));
+    else
+      counterMap.put(counterName, value);
   }
 
   public Set<String> getGroupNames() {
@@ -98,8 +103,12 @@ public class MapReduceCounterData {
     FileInput,
     FileSystemCounters,
     MapReduce,
-    FileOutput;
+    FileOutput,
+    SagaCounters,
+	SagaSecondsCounters;
   }
+
+  //(groupe, nom de la balise, nom affiche dans le tableau du jobhistory)
 
   public static enum CounterName {
     BYTES_READ(GroupName.FileInput, "BYTES_READ", "Bytes Read"),
@@ -109,6 +118,7 @@ public class MapReduceCounterData {
     FILE_BYTES_WRITTEN(GroupName.FileSystemCounters, "FILE_BYTES_WRITTEN", "FILE_BYTES_WRITTEN"),
     HDFS_BYTES_READ(GroupName.FileSystemCounters, "HDFS_BYTES_READ", "HDFS_BYTES_READ"),
     HDFS_BYTES_WRITTEN(GroupName.FileSystemCounters, "HDFS_BYTES_WRITTEN", "HDFS_BYTES_WRITTEN"),
+
     S3_BYTES_READ(GroupName.FileSystemCounters, "S3_BYTES_READ", "S3_BYTES_READ"),
     S3_BYTES_WRITTEN(GroupName.FileSystemCounters, "S3_BYTES_WRITTEN", "S3_BYTES_WRITTEN"),
     S3N_BYTES_READ(GroupName.FileSystemCounters, "S3N_BYTES_READ", "S3N_BYTES_READ"),
@@ -135,7 +145,15 @@ public class MapReduceCounterData {
     GC_MILLISECONDS(GroupName.MapReduce, "GC_TIME_MILLIS", "GC time elapsed (ms)"),
     COMMITTED_HEAP_BYTES(GroupName.MapReduce, "COMMITTED_HEAP_BYTES", "Total committed heap usage (bytes)"),
     PHYSICAL_MEMORY_BYTES(GroupName.MapReduce, "PHYSICAL_MEMORY_BYTES", "Physical memory (bytes) snapshot"),
-    VIRTUAL_MEMORY_BYTES(GroupName.MapReduce, "VIRTUAL_MEMORY_BYTES", "Virtual memory (bytes) snapshot");
+
+    VIRTUAL_MEMORY_BYTES(GroupName.MapReduce, "VIRTUAL_MEMORY_BYTES", "Virtual memory (bytes) snapshot"),
+    
+    /* <Saga counters> */     
+    JOB_INPUT_OBJECT(GroupName.SagaCounters, "Objects-In", ".-In: [ ... ]"),  //JOB_INPUT_OBJECT_HDFS(GroupName.SagaCounters, "HDFS-In", "HDFS-In: [ ... ]"),
+    JOB_OUTPUT_OBJECT(GroupName.SagaCounters, "Objects-Out", ".-Out: [ ... ]"),  //JOB_INPUT_OBJECT_GBIN(GroupName.SagaCounters, "Gbin-In", "Gbin-In: [ ... ]");
+	DURATION_IN_FACADE_TASK(GroupName.SagaSecondsCounters, "Duration in façade tasks in seconds", "Duration in façade tasks in seconds");
+    /* </Saga counters> */ 
+
 
     GroupName _group;
     String _name;

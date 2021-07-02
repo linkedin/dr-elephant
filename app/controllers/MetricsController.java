@@ -120,12 +120,6 @@ public class MetricsController extends Controller {
         return _retryQueueSize;
       }
     });
-    _metricRegistry.register(name(className, "secondRetryQueue", "size"), new Gauge<Integer>() {
-      @Override
-      public Integer getValue() {
-        return _secondRetryQueueSize;
-      }
-    });
     _metricRegistry.registerAll(new CustomGarbageCollectorMetricSet());
     _metricRegistry.registerAll(new MemoryUsageGaugeSet());
 
