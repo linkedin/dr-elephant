@@ -116,10 +116,12 @@ public class AutoTuningAPIHelper {
    */
   private void setTuningAlgorithm(TuningInput tuningInput) throws IllegalArgumentException {
     //Todo: Handle algorithm version later
+    logger.info(" Optimization Algorithm " + tuningInput.getOptimizationAlgo());
     TuningAlgorithm tuningAlgorithm = TuningAlgorithm.find.select("*")
         .where()
         .eq(TuningAlgorithm.TABLE.jobType, tuningInput.getJobType())
         .eq(TuningAlgorithm.TABLE.optimizationMetric, tuningInput.getOptimizationMetric())
+        .eq(TuningAlgorithm.TABLE.optimizationAlgo, tuningInput.getOptimizationAlgo())
         .findUnique();
     if (tuningAlgorithm == null) {
       throw new IllegalArgumentException(
@@ -437,6 +439,7 @@ public class AutoTuningAPIHelper {
     jobSuggestedParamSet.isParamSetBest = false;
     jobSuggestedParamSet.save();
     insertParameterValues(jobSuggestedParamSet, paramValueMap);
+    intializeOptimizationAlgoPrerequisite(tuningAlgorithm, jobSuggestedParamSet);
     logger.debug("Default parameter set inserted for job: " + job.jobName);
   }
 
@@ -447,12 +450,22 @@ public class AutoTuningAPIHelper {
    */
   @SuppressWarnings("unchecked")
   private void insertParameterValues(JobSuggestedParamSet jobSuggestedParamSet, Map<String, Double> paramValueMap) {
+    ObjectMapper mapper = new ObjectMapper();
     if (paramValueMap != null) {
       for (Map.Entry<String, Double> paramValue : paramValueMap.entrySet()) {
         insertParameterValue(jobSuggestedParamSet, paramValue.getKey(), paramValue.getValue());
       }
     } else {
       logger.warn("ParamValueMap is null ");
+    }
+  }
+
+  private void intializeOptimizationAlgoPrerequisite(TuningAlgorithm tuningAlgorithm,
+      JobSuggestedParamSet jobSuggestedParamSet) {
+    logger.info("Inserting parameter constraint " + tuningAlgorithm.optimizationAlgo.name());
+    AutoTuningOptimizeManager manager = OptimizationAlgoFactory.getOptimizationAlogrithm(tuningAlgorithm);
+    if (manager != null) {
+      manager.intializePrerequisite(tuningAlgorithm, jobSuggestedParamSet);
     }
   }
 

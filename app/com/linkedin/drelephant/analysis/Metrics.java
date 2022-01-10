@@ -22,7 +22,8 @@ public enum Metrics {
     USED_RESOURCES("Used Resources", "resources", "The resources used by the job"),
     WASTED_RESOURCES("Wasted Resources", "resources", "The resources wasted by the job"),
     RUNTIME("Run Time", "time", "The run time of the job"),
-    WAIT_TIME("Wait Time", "time", "The wait time of the job");
+    WAIT_TIME("Wait Time", "time", "The wait time of the job"),
+    SAGA_COUNTERS("SAGA Counters", "counter", "The total of in/out objects");
 
     private String text;
     private String type;

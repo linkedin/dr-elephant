@@ -1,0 +1,39 @@
+@*
+* Copyright 2016 LinkedIn Corp.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*@
+
+@import com.linkedin.drelephant.analysis.Metrics;
+
+<p>
+    SAGA Counters are a special category of Hadoop counters because they are not present natively in Hadoop.
+    The values of these counters are calculated from the SAGA framework.
+    These counters allow to track the number of objects processed by each scientific module
+    and thus to detect abnormal behavior (inadequate filtering, duplicate data, etc.).
+</p>
+
+<h4>Calculation</h4>
+<div>
+        'In' value of SAGA counters is the sum of 'HDFS-In' and 'Gbin-In' counters name for a given job. </br>
+        'Out' value of SAGA counters is the sum of 'HDFS-Out' and 'Gbin-Out' counters name for a given job.
+</div>
+
+<h4>Example</h4>
+<img style="width: 100%;" src='@routes.Assets.at("images/sagaCounters1.png")'/>
+For this job:
+<ul>
+    <li><font color="#FF0000">in = 59 + 59 + 59 + 59 + 59 = 295</font></li>
+    <li><font color="#0080FF">out = 59 + 7 + 150 + 30 + 59 = 305</font></li>
+</ul>
+

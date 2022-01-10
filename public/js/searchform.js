@@ -46,6 +46,7 @@ $(document).ready(function(){
 
   var updateForm = function(){
     if(jobId.val()) {
+
       jobDefId.prop('disabled', true);
       flowExecId.prop('disabled', true);
       user.prop('disabled', true);
@@ -60,6 +61,7 @@ $(document).ready(function(){
       finishTimeEndDate.prop('disabled', true);
     } else if(flowExecId.val()) {
       jobId.prop('disabled', true);
+
       jobDefId.prop('disabled', true);
       user.prop('disabled', true);
       queueName.prop('disabled', true);
@@ -74,6 +76,7 @@ $(document).ready(function(){
     } else if (jobDefId.val()) {
       jobId.prop('disabled', true);
       flowExecId.prop('disabled', true);
+      
       user.prop('disabled', true);
       queueName.prop('disabled', true);
       severity.prop('disabled', true);
@@ -87,6 +90,7 @@ $(document).ready(function(){
     }
     else{
       jobId.prop('disabled', false);
+
       jobDefId.prop('disabled', false);
       flowExecId.prop('disabled', false);
       jobtypeEnable.prop('disabled', false);
@@ -120,6 +124,7 @@ $(document).ready(function(){
   }
   jobId.on("propertychange keyup input paste", updateForm);
   flowExecId.on("propertychange keyup input paste", updateForm);
+
   jobDefId.on("propertychange keyup input paste", updateForm);
   jobtypeEnable.change(updateForm);
   severityEnable.change(updateForm);

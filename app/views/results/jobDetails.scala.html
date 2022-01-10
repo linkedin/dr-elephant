@@ -33,30 +33,38 @@
             <tbody>
               <tr>
                 <td>Jobtracker:</td>
-                <td><a href="@result.trackingUrl">@result.trackingUrl</a></td>
+                <td><a href="@result.trackingUrl">@result.trackingUrl</a></td>  <!--<a href="@result.trackingUrl">@result.trackingUrl</a>-->
               </tr>
               @if(!result.jobExecUrl.isEmpty){
                 <tr>
                   <td>Job execution:</td>
-                  <td><a href="@result.jobExecUrl">@result.jobExecUrl</a></td>
+
+                  <td>@result.jobExecUrl</td>  <!--<a href="@result.jobExecUrl">@result.jobExecUrl</a>-->
+
                 </tr>
               }
               @if(!result.jobDefUrl.isEmpty){
                 <tr>
                   <td>Job definition:</td>
-                  <td><a href="@result.jobDefUrl">@result.jobDefUrl</a></td>
+
+                  <td>@result.jobDefUrl</td>  <!--<a href="@result.jobDefUrl">@result.jobDefUrl</a>-->
+
                 </tr>
               }
               @if(!result.flowExecUrl.isEmpty){
                 <tr>
                   <td>Flow execution:</td>
-                  <td><a href="@result.flowExecUrl">@result.flowExecUrl</a></td>
+
+                  <td>@result.flowExecUrl</td>  <!--<a href="@result.flowExecUrl">@result.flowExecUrl</a>-->
+
                 </tr>
               }
               @if(!result.flowDefUrl.isEmpty){
                 <tr>
                   <td>Flow definition:</td>
-                  <td><a href="@result.flowDefUrl">@result.flowDefUrl</a></td>
+
+                  <td>@result.flowDefUrl</td>  <!--<a href="@result.flowDefUrl">@result.flowDefUrl</a>-->
+
                 </tr>
               }
               @if(!result.jobDefId.isEmpty){

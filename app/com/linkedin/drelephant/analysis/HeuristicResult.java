@@ -40,7 +40,7 @@ public class HeuristicResult {
    * Heuristic Result Constructor
    *
    * @param heuristicClass The Heuristic class
-   * @param heuristicName The name of the Heuristic
+   * @param heuristicName The name of the Heursitic
    * @param severity The severity of the result
    * @param score The computed score
    */
@@ -73,7 +73,7 @@ public class HeuristicResult {
   /**
    * Returns the heuristic analyser class name
    *
-   * @return the heuristic class name
+   * @return the heursitic class name
    */
   public String getHeuristicClassName() {
     return _heuristicClass;

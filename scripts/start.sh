@@ -29,6 +29,9 @@ function check_config() {
   fi
 }
 
+#Java home 1.8 instead of J11
+export JAVA_HOME=/usr/java/jdk1.8.0_181/
+
 # Save project root dir
 project_root=$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )
 
@@ -98,8 +101,8 @@ db_loc="jdbc:mysql://"$db_url"/"$db_name"?characterEncoding=UTF-8"
 # db_password is optional. default is ""
 db_password="${db_password:-""}"
 
-#http port is optional. default is 8080
-http_port="${http_port:-8080}"
+#port is optional. default is 8080
+port="${port:-8080}"
 echo "http port: " $port
 
 # Check for keytab_user, keytab_location and application_secret in the elephant.conf
@@ -163,23 +166,17 @@ elif [[ $HADOOP_VERSION == 2* ]];
 then
   JAVA_LIB_PATH=$HADOOP_HOME"/lib/native"
   echo "This is hadoop2.x grid. Adding Java library to path: "$JAVA_LIB_PATH
+elif [[ $HADOOP_VERSION == 3* ]];
+then
+  JAVA_LIB_PATH=$HADOOP_HOME"/lib/native"
+  echo "This is hadoop3.x grid. Adding Java library to path: "$JAVA_LIB_PATH
 else
   echo "error: Hadoop isn't properly set on this machine. Could you verify cmd 'hadoop version'? "
   exit 1
 fi
 
 OPTS+=" $jvm_args -Djava.library.path=$JAVA_LIB_PATH"
-OPTS+=" -Dhttp.port=$http_port"
-
-if [ -n "${https_port}" ]; then
-  echo "https port: " ${https_port}
-  echo "https_keystore_location: " ${https_keystore_location}
-  echo "https_keystore_type: " ${https_keystore_type}
-
-  OPTS+=" -Dhttps.port=${https_port} -Dhttps.keyStore=${https_keystore_location}
-  -Dhttps.keyStoreType=${https_keystore_type} -Dhttps.keyStorePassword=${https_keystore_password}"
-fi
-
+OPTS+=" -Dhttp.port=$port"
 OPTS+=" -Ddb.default.url=$db_loc -Ddb.default.user=$db_user -Ddb.default.password=$db_password"
 
 # set Java related options (e.g. -Xms1024m -Xmx1024m)

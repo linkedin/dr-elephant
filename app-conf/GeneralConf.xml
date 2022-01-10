@@ -45,30 +45,4 @@
     <name>drelephant.analysis.fetch.initial.windowMillis</name>
     <value>3600000</value>
   </property> -->
-  <property>
-    <name>drelephant.analysis.backfill.enabled</name>
-    <value>false</value>
-    <description>Enables or disables backfilling. Please note that merely enabling backfilling
-    does not ensure backfilling. Backfilling should also be implemented for the fetcher(s) configured.
-    </description>
-  </property>
-  <property>
-    <name>drelephant.analysis.backfill.retry.interval</name>
-    <value>60000</value>
-    <description>Time interval, in milliseconds, to wait before retrying backfill if it failed
-    during an earlier attempt.</description>
-  </property>
-  <property>
-    <name>drelephant.analysis.prioritization-on-job-query.max-wait-interval</name>
-    <value>60000</value>
-    <description>Maximum amount of time, in milliseconds, to wait for job information to appear in DB
-    and return a successful result with job info for a job which was queried using job REST endpoint
-    with prioritize query param set</description>
-  </property>
-  <property>
-    <name>drelephant.analysis.submit-backfill-job.with.low-priority</name>
-    <value>true</value>
-    <description>If this property is "true", it indicates that backfill job will be added to executor
-    for analysis with LOW priority. If "false", it will be submitted with NORMAL priority</description>
-  </property>
 </configuration>

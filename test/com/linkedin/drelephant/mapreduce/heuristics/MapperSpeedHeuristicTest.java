@@ -85,6 +85,7 @@ public class MapperSpeedHeuristicTest extends TestCase {
     MapReduceTaskData[] mappers = new MapReduceTaskData[NUMTASKS + 1];
 
     MapReduceCounterData counter = new MapReduceCounterData();
+
     counter.set(MapReduceCounterData.CounterName.HDFS_BYTES_READ, readBytes / 4);
     counter.set(MapReduceCounterData.CounterName.S3_BYTES_READ, readBytes / 4);
     counter.set(MapReduceCounterData.CounterName.S3A_BYTES_READ, readBytes / 4);

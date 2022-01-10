@@ -20,7 +20,7 @@ import java.io.{BufferedInputStream, InputStream}
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.zip.ZipInputStream
-import java.util.{Calendar, Date, SimpleTimeZone}
+import java.util.{Calendar, SimpleTimeZone}
 
 import com.linkedin.drelephant.spark.legacydata.LegacyDataConverters
 import org.apache.spark.deploy.history.SparkDataCollection
@@ -30,13 +30,13 @@ import scala.util.control.NonFatal
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
-import com.linkedin.drelephant.analysis.AnalyticJob
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl, JobDataImpl, StageDataImpl}
 import com.linkedin.drelephant.util.SparkUtils
 import javax.ws.rs.client.{Client, ClientBuilder, WebTarget}
 import javax.ws.rs.core.MediaType
+
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.glassfish.jersey.client.ClientProperties
@@ -75,31 +75,6 @@ class SparkRestClient(sparkConf: SparkConf) {
 
   private val apiTarget: WebTarget = client.property(ClientProperties.CONNECT_TIMEOUT, CONNECTION_TIMEOUT).property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT).target(historyServerUri).path(API_V1_MOUNT_PATH)
 
-  /**
-    * Fetch completed applications based on start and end finish/end times for the apps. Please note that the query
-    * parameters used in the REST API query below are supported only since Spark 2.3.0
-    *
-    * @param startTime Earliest Finish time for the applications to be retrieved.
-    * @param endTime Latest finish time for the applications to be retrieved.
-    * @return A sequence of applications returned from Spark History Server.
-    */
-  def fetchCompletedApplicationsData(startTime: Long, endTime: Long) : Seq[ApplicationInfoImpl] = {
-    val minEndDate = SparkRestObjectMapper.getDateFormat.format(new Date(startTime))
-    val maxEndDate = SparkRestObjectMapper.getDateFormat.format(new Date(endTime))
-    val appTarget = apiTarget.path(s"applications").queryParam(s"status", "completed").
-      queryParam(s"minEndDate", minEndDate).queryParam(s"maxEndDate", maxEndDate)
-    logger.info(s"calling REST API at ${appTarget.getUri}")
-    try {
-      get(appTarget, SparkRestObjectMapper.readValue[Seq[ApplicationInfoImpl]])
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"error reading jobData ${appTarget.getUri}. Exception Message = " + e.getMessage)
-        logger.debug(e)
-        throw e
-      }
-    }
-  }
-
   def fetchData(appId: String, fetchLogs: Boolean = false)(
     implicit ec: ExecutionContext
   ): Future[SparkRestDerivedData] = {
@@ -132,41 +107,21 @@ class SparkRestClient(sparkConf: SparkConf) {
     }
   }
 
-  def fetchEventLogAndParse(analyticJob: AnalyticJob): SparkApplicationData = {
-    val (applicationInfo, attemptTarget) = getApplicationMetaData(analyticJob.getAppId)
-    analyticJob.setName(applicationInfo.name)
+  def fetchEventLogAndParse(appId: String): SparkApplicationData = {
+    val (_, attemptTarget) = getApplicationMetaData(appId)
     val logTarget = attemptTarget.path("logs")
     logger.info(s"creating SparkApplication by calling REST API at ${logTarget.getUri} to get eventlogs")
     resource.managed {
       getApplicationLogs(logTarget)
     }.acquireAndGet { zipInputStream =>
       getLogInputStream(zipInputStream, logTarget) match {
-        case (None, _) => throw new RuntimeException(s"Failed to read log for application ${analyticJob.getAppId}")
+        case (None, _) => throw new RuntimeException(s"Failed to read log for application ${appId}")
         case (Some(inputStream), fileName) => {
           val dataCollection = new SparkDataCollection()
           dataCollection.load(inputStream, fileName)
-          val sparkDataCollection = LegacyDataConverters.convert(dataCollection)
-          // Augment missing fields, which would happen typically for backfill jobs.
-          augemntAnalyticJob(analyticJob, dataCollection, sparkDataCollection)
-          sparkDataCollection
+          LegacyDataConverters.convert(dataCollection)
         }
       }
-    }
-  }
-
-  private def augemntAnalyticJob(analyticJob: AnalyticJob, dataCollection: SparkDataCollection,
-      sparkDataCollection: SparkApplicationData): Unit = {
-    if (analyticJob.getUser == null || analyticJob.getUser.isEmpty) {
-      analyticJob.setUser(dataCollection.getGeneralData.getSparkUser)
-    }
-    if (analyticJob.getQueueName == null || analyticJob.getQueueName.isEmpty) {
-      analyticJob.setQueueName(sparkDataCollection.appConfigurationProperties.getOrElse("spark.yarn.queue", ""))
-    }
-    if (analyticJob.getStartTime <= 0) {
-      analyticJob.setStartTime(dataCollection.getGeneralData.getStartTime)
-    }
-    if (analyticJob.getFinishTime <= 0) {
-      analyticJob.setFinishTime(dataCollection.getGeneralData.getEndTime)
     }
   }
 

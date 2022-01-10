@@ -29,14 +29,18 @@
   </fetcher>
 -->
 <fetchers>
+
   <!--
      REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
    -->
+<!--
   <fetcher>
     <applicationtype>tez</applicationtype>
     <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
   </fetcher>
-  <!--
+-->
+  
+
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
@@ -44,7 +48,8 @@
       <sampling_enabled>false</sampling_enabled>
     </params>
   </fetcher>
-  -->
+
+
   <!--
      This is a replacement for the MapReduceFetcherHadoop2 that attempts to burn
      through queues of jobs faster by pulling data directly from HDFS rather than going through
@@ -52,6 +57,7 @@
 
      Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
      files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
+
      is 1024MB. To increase this, e.g. to 2048MB, update the below mem conf in app-conf/elephant.conf:
        jvm_args="-mem 2048"
 
@@ -59,6 +65,7 @@
      If not set, the local timezone will be used.
    -->
   
+<!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
@@ -68,7 +75,9 @@
       <history_server_time_zone>PST</history_server_time_zone>
     </params>
   </fetcher>
+  -->
   
+
 
   <!--
     FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties
@@ -93,8 +102,7 @@
 
   <!--
   This is an experimental fetcher for Spark applications which uses SHS REST API to get application metrics
-  and WebHDFS to get application properties from eventlogs. Please note that this fetcher also supports backfill.
-  But backfill implementation in this fetcher relies upon SHS REST APIs' which are only available since Spark 2.3 
+  and WebHDFS to get application properties from eventlogs.
 
    <fetcher>
     <applicationtype>spark</applicationtype>
@@ -116,13 +124,4 @@
     </params>
   </fetcher>
   -->
-
-  <!--
-    Fetcher for TonY jobs. To use this, you must set the TONY_CONF_DIR environment variable to the directory
-    containing the tony-site.xml file.
-  -->
-  <!--fetcher>
-    <applicationtype>tony</applicationtype>
-    <classname>com.linkedin.drelephant.tony.fetchers.TonyFetcher</classname>
-  </fetcher-->
 </fetchers>

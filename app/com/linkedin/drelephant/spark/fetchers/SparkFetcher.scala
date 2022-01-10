@@ -16,16 +16,14 @@
 
 package com.linkedin.drelephant.spark.fetchers
 
-import java.util
 import java.util.concurrent.TimeoutException
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, SECONDS}
 import scala.util.{Failure, Success, Try}
-import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantBackfillFetcher, ElephantFetcher}
+import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
-import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.ApplicationAttemptInfo
+import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.util.SparkUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
@@ -36,7 +34,7 @@ import org.apache.spark.SparkConf
   * A fetcher that gets Spark-related data from a combination of the Spark monitoring REST API and Spark event logs.
   */
 class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
-  extends ElephantFetcher[SparkApplicationData] with ElephantBackfillFetcher {
+  extends ElephantFetcher[SparkApplicationData] {
 
   import SparkFetcher._
   import ExecutionContext.Implicits.global
@@ -104,7 +102,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   private def doFetchSparkApplicationData(analyticJob: AnalyticJob): Future[SparkApplicationData] = {
     if (shouldProcessLogsLocally) {
       Future {
-        sparkRestClient.fetchEventLogAndParse(analyticJob)
+        sparkRestClient.fetchEventLogAndParse(analyticJob.getAppId)
       }
     } else {
       doFetchDataUsingRestAndLogClients(analyticJob)
@@ -114,60 +112,17 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = Future {
     val appId = analyticJob.getAppId
     val restDerivedData = Await.result(sparkRestClient.fetchData(appId, eventLogSource == EventLogSource.Rest), DEFAULT_TIMEOUT)
-    val lastAttemptInfo = restDerivedData.applicationInfo.attempts.maxBy {
-      _.startTime
-    }
+
     val logDerivedData = eventLogSource match {
       case EventLogSource.None => None
       case EventLogSource.Rest => restDerivedData.logDerivedData
       case EventLogSource.WebHdfs =>
-        val lastAttemptId = lastAttemptInfo.attemptId
+        val lastAttemptId = restDerivedData.applicationInfo.attempts.maxBy {
+          _.startTime
+        }.attemptId
         Some(Await.result(sparkLogClient.fetchData(appId, lastAttemptId), DEFAULT_TIMEOUT))
     }
-    val sparkApplicationData = SparkApplicationData(appId, restDerivedData, logDerivedData)
-    // Augment missing fields. Typically such fields may be missing for backfilled jobs.
-    augmentAnalyticJob(analyticJob, sparkApplicationData, restDerivedData, lastAttemptInfo)
-    sparkApplicationData
-  }
-
-  private def augmentAnalyticJob(analyticJob: AnalyticJob, sparkApplicationData: SparkApplicationData,
-      restDerivedData: SparkRestDerivedData, lastAttemptInfo: ApplicationAttemptInfo): Unit = {
-    if (analyticJob.getQueueName == null && sparkApplicationData != null) {
-      analyticJob.setQueueName(sparkApplicationData.appConfigurationProperties.getOrElse("spark.yarn.queue", ""))
-    }
-    if (analyticJob.getName == null || analyticJob.getName.isEmpty) {
-      analyticJob.setName(restDerivedData.applicationInfo.name)
-    }
-    if (analyticJob.getUser == null || analyticJob.getUser.isEmpty) {
-      analyticJob.setUser(lastAttemptInfo.sparkUser)
-    }
-    if (analyticJob.getStartTime <= 0) {
-      analyticJob.setStartTime(restDerivedData.applicationInfo.attempts.minBy(_.startTime).startTime.getTime)
-    }
-    if (analyticJob.getFinishTime <= 0) {
-      analyticJob.setFinishTime(lastAttemptInfo.endTime.getTime)
-    }
-  }
-
-  /**
-    * Fetches a list of jobs to be backfilled for analysis by Dr. Elephant.
-    *
-    * @param startTime Start time from when jobs have to be backfilled.
-    * @param endTime   End time upto which jobs can be backfilled.
-    * @return list of jobs to be backfilled for analysis.
-    * @throws Exception
-    */
-  override def fetchJobsForBackfill(startTime: Long, endTime: Long): util.List[AnalyticJob] = {
-    val list = new util.ArrayList[AnalyticJob]()
-    sparkRestClient.fetchCompletedApplicationsData(startTime, endTime).foreach(
-        appInfo => {
-          val lastAttemptInfo = appInfo.attempts.maxBy {
-            _.endTime
-          }
-          list.add(new AnalyticJob().setAppId(appInfo.id).setFinishTime(lastAttemptInfo.endTime.getTime).
-            setUser(lastAttemptInfo.sparkUser).setName(appInfo.name))
-        })
-    list
+    SparkApplicationData(appId, restDerivedData, logDerivedData)
   }
 }
 

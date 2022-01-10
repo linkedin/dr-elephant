@@ -142,6 +142,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       }
 
       it("returns the serializer") {
+
         val details = heuristicResultDetails.get(9)
         details.getName should include("spark.serializer")
         details.getValue should be("dummySerializer")
@@ -149,6 +150,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
       }
 
       it("returns the shuffle service flag") {
+
         val details = heuristicResultDetails.get(10)
         details.getName should include("spark.shuffle.service.enabled")
         details.getValue should be("false")
@@ -197,6 +199,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.executor.cores" -> "2"))
         evaluator.executorCores should be(Some(2))
       }
+
 
       it("has the driver cores when they're present") {
         val evaluator = newEvaluatorWithConfigurationProperties(Map("spark.driver.cores" -> "3"))
@@ -288,6 +291,7 @@ class ConfigurationHeuristicTest extends FunSpec with Matchers {
         evaluator.isShuffleServiceEnabled should be(Some(false))
         evaluator.serializerSeverity should be(Severity.NONE)
         evaluator.shuffleAndDynamicAllocationSeverity should be(Severity.SEVERE)
+
         evaluator.severityConfThresholds should be(Severity.NONE)
         evaluator.severity should be(Severity.SEVERE)
       }

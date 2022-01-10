@@ -1,21 +1,15 @@
 language: scala
 sudo: true
 jdk:
-  - openjdk8
+  - oraclejdk8
+  - oraclejdk7
 python: "2.6"
 install:
   - sudo pip install inspyred
   - sudo pip install argparse
 
-script:
-  - ./travis.sh
-
-# only build PRs plus branches master and customSHSWork (not all branch pushes)
+# only build PRs and master (not all branch pushes)
 branches:
   only:
     - master
-    - customSHSWork
-    
-env:
-  - PSO_DIR_PATH=$TRAVIS_BUILD_DIR/scripts/pso/
 

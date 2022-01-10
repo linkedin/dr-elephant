@@ -16,15 +16,9 @@
 
 package com.linkedin.drelephant.mapreduce.fetchers;
 
-import com.google.common.collect.ImmutableMap;
 import com.linkedin.drelephant.analysis.AnalyticJob;
-import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
-import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
-import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
-import com.linkedin.drelephant.mapreduce.data.MapReduceCounterData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceTaskData;
-import java.io.FileNotFoundException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
@@ -48,12 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TimeZone;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 
 public class MapReduceFSFetcherHadoop2Test {
 
@@ -160,98 +148,10 @@ public class MapReduceFSFetcherHadoop2Test {
               .setAppId("application_1461566847127_84624")
               .setFinishTime(timestamp.getTimeInMillis());
 
-      String expected = StringUtils.join(new String[]{fetcher.getHistoryLocation(), "2016", "07", "30", "000084", ""},
-          File.separator);
+      String expected = StringUtils.join(new String[]{fetcher.getHistoryLocation(), "2016", "07", "30", "000084", ""}, File.separator);
       Assert.assertEquals("Error history directory", expected, fetcher.getHistoryDir(job));
     } catch (IOException e) {
       Assert.assertNull("Failed to initialize FileSystem", e);
-    }
-  }
-
-  @Test
-  public void testGetBackfillList() {
-    FetcherConfigurationData confData  = new FetcherConfigurationData(MapReduceFSFetcherHadoop2.class.getName(),
-        new ApplicationType("MAPREDUCE"),
-        ImmutableMap.of(MapReduceFSFetcherHadoop2.HISTORY_SERVER_TIME_ZONE_XML_FIELD, "GMT"));
-    try {
-      MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(confData);
-      List<AnalyticJob> jobs = fetcher.fetchJobsForBackfill(1526520000000L, 1526600000000L);
-      assertEquals(2, jobs.size());
-      for (AnalyticJob job : jobs) {
-        if (!job.getAppId().equals("application_1526555215992_0001") &&
-            !job.getAppId().equals("application_1526555215992_0002")) {
-          fail("Unexpected applications returned on backfill");
-        }
-      }
-      assertEquals("MAPREDUCE", jobs.get(0).getAppType().getName());
-      assertEquals("default", jobs.get(0).getQueueName());
-      assertEquals("user", jobs.get(0).getUser());
-
-      jobs = fetcher.fetchJobsForBackfill(1526555658200L, 1526555658400L);
-      assertEquals(1, jobs.size());
-      assertEquals("application_1526555215992_0001", jobs.get(0).getAppId());
-    } catch (Exception e) {
-      fail("Backfill failed.");
-    }
-  }
-
-  @Test
-  public void testFetchData() {
-    FetcherConfigurationData confData  = new FetcherConfigurationData(MapReduceFSFetcherHadoop2.class.getName(),
-        new ApplicationType("MAPREDUCE"),
-        ImmutableMap.of(MapReduceFSFetcherHadoop2.HISTORY_SERVER_TIME_ZONE_XML_FIELD, "GMT"));
-    try {
-      MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(confData);
-      // Fetch data for a job which has history file in done directory.
-      MapReduceApplicationData data = fetcher.fetchData(new AnalyticJob().setAppId("application_1526555215992_0001").
-          setUser("user").setQueueName("default").setStartTime(1526555642677L).setFinishTime(1526555658299L));
-      assertNotNull(data);
-      assertEquals("application_1526555215992_0001", data.getAppId());
-      assertEquals("job_1526555215992_0001", data.getJobId());
-      assertEquals("MAPREDUCE", data.getApplicationType().getName());
-      assertEquals("org.apache.hadoop.util.QuickSort", data.getConf().getProperty("map.sort.class"));
-      assertEquals(28, data.getCounters().get(MapReduceCounterData.CounterName.FILE_BYTES_READ));
-      assertEquals(1, data.getMapperData().length);
-      assertEquals(1, data.getReducerData().length);
-      assertTrue("Job should have succeeded", data.getSucceeded());
-
-      // Fetch data for a job which has history file in intermediate directory.
-      data = fetcher.fetchData(new AnalyticJob().setAppId("application_1526555215992_0004").setUser("user").
-          setQueueName("default").setStartTime(1526567231815L).setFinishTime(1526567243482L));
-      assertNotNull(data);
-      assertEquals("application_1526555215992_0004", data.getAppId());
-      assertEquals("job_1526555215992_0004", data.getJobId());
-      assertEquals("MAPREDUCE", data.getApplicationType().getName());
-      assertEquals("RECORD", data.getConf().getProperty("mapreduce.output.fileoutputformat.compress.type"));
-      assertEquals(346030080, data.getCounters().get(MapReduceCounterData.CounterName.COMMITTED_HEAP_BYTES));
-      assertEquals(1, data.getMapperData().length);
-      assertEquals(1, data.getReducerData().length);
-      assertTrue("Job should have succeeded", data.getSucceeded());
-
-      // Fetching data for a job which does not exist in done and intermediate directories but the date part in done
-      // directory exists.
-      try {
-        data = fetcher.fetchData(new AnalyticJob().setAppId("application_1526555315992_0007").setUser("user").
-            setQueueName("default").setStartTime(1526567231900L).setFinishTime(1526567243567L));
-        fail("File not found Exception should have been thrown for application_1526555315992_0007.");
-      } catch (FileNotFoundException e) {
-        assertTrue(e.getMessage().contains("2018/05/17"));
-      } catch (Exception e) {
-        fail("Unexpected exception thrown for application_1526555315992_0007.");
-      }
-
-      // Fetching data for a job which does not exist in done and intermediate directories.
-      try {
-        data = fetcher.fetchData(new AnalyticJob().setAppId("application_1526555315992_0008").setUser("user").
-            setQueueName("default").setStartTime(1525567230004L).setFinishTime(1525567243567L));
-        fail("File not found Exception should have been thrown for application_1526555315992_0008.");
-      } catch (FileNotFoundException e) {
-        assertTrue(e.getMessage().contains("2018/05/06"));
-      } catch (Exception e) {
-        fail("Unexpected exception thrown for application_1526555315992_0008.");
-      }
-    } catch (Exception e) {
-      fail("Fetch data failed.");
     }
   }
 

@@ -25,6 +25,7 @@
             <a href="@routes.Application.oldHelp()?topic=@Metrics.WASTED_RESOURCES.getText()">Wasted Resources</a><br>
             <a href="@routes.Application.oldHelp()?topic=@Metrics.RUNTIME.getText()">Run Time</a><br>
             <a href="@routes.Application.oldHelp()?topic=@Metrics.WAIT_TIME.getText()">Wait Time</a><br>
+            <a href="@routes.Application.oldHelp()?topic=@Metrics.SAGA_COUNTERS.getText()">Saga Counters</a><br>
             </br>
             @for((appTypeName, heuristicList) <- com.linkedin.drelephant.ElephantContext.instance().getAllHeuristicNames()) {
                 <div class="list-group-item-heading">@appTypeName</div>

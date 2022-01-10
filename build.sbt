@@ -19,14 +19,13 @@ import Dependencies._
 
 name := "dr-elephant"
 
-version := "2.1.7"
+
+version := "2.1"
+
 
 organization := "com.linkedin.drelephant"
 
-// Enable CPD SBT plugin
-lazy val root = (project in file(".")).enablePlugins(CopyPasteDetector)
-
-javacOptions in Compile ++= Seq("-source", "1.8", "-target", "1.8")
+javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
 
 libraryDependencies ++= dependencies map { _.excludeAll(exclusionRules: _*) }
 
@@ -40,4 +39,8 @@ playJavaSettings
 
 scalaVersion := "2.10.4"
 
+
+libraryDependencies += filters
+
 envVars in Test := Map("PSO_DIR_PATH" -> (baseDirectory.value / "scripts/pso").getAbsolutePath)
+

@@ -71,5 +71,4 @@ test('Tests for the rendering of heuristics-summary component', function (assert
   this.render(hbs`{{heuristics-summary heuristics=heuristics}}`);
 
   assert.equal(this.$().text().trim().split("\n").join("").replace(/ /g, ''), 'MapperSkewMapperGCMapperTimeMapperSpeedMapperSpillMapperMemoryReducerSkewReducerGCReducerTimeReducerMemoryShuffle&Sort');
-
 });

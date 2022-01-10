@@ -61,16 +61,19 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
 
     _jsonFactory = new JSONFactory();
     _jhistoryWebAddr = "http://" + jhistoryAddr + "/jobhistory/job/";
+
   }
 
   @Override
   public MapReduceApplicationData fetchData(AnalyticJob analyticJob) throws IOException, AuthenticationException {
     String appId = analyticJob.getAppId();
     MapReduceApplicationData jobData = new MapReduceApplicationData();
-    String jobId = Utils.getJobIdFromApplicationId(appId);
+
+    String jobId = Utils.getJobIdFromApplicationId(appId);  //jobId = job_1492769394186_0242
     jobData.setAppId(appId).setJobId(jobId);
     // Change job tracking url to job history page
-    analyticJob.setTrackingUrl(_jhistoryWebAddr + jobId);
+    analyticJob.setTrackingUrl(_jhistoryWebAddr + jobId);  //l'adresse du job, reste plus qu'a cliquer sur 'counters'
+
     try {
 
       // Fetch job config
@@ -127,6 +130,7 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
         }
         jobData.setDiagnosticInfo(diagnosticInfo);
       } else {
+
         // Should not reach here
         throw new RuntimeException("Job state not supported. Should be either SUCCEEDED or FAILED");
       }
@@ -253,6 +257,7 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
       for (JsonNode group : groups) {
         for (JsonNode counter : group.path("counter")) {
           String counterName = counter.get("name").getValueAsText();
+          counterName = setNameGbinHDFS(counterName);  // In/Out
           Long counterValue = counter.get("totalCounterValue").getLongValue();
           String groupName = group.get("counterGroupName").getValueAsText();
           holder.set(groupName, counterName, counterValue);
@@ -261,6 +266,17 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
       return holder;
     }
 
+    private String setNameGbinHDFS (String name) {
+    
+      if (name.startsWith("Gbin-In: [") || name.startsWith("HDFS-In: ["))
+        return "Objects-In";
+      if (name.startsWith("Gbin-Out: [") || name.startsWith("HDFS-Out: ["))
+        return "Objects-Out";
+        
+      return name;
+    }
+
+  // url = http://gaia0:19888/ws/v1/history/mapreduce/jobs/job_1492769394186_0459/tasks/task_1492769394186_0459_m_000000/counters
     private MapReduceCounterData getTaskCounter(URL url) throws IOException, AuthenticationException {
       JsonNode rootNode = ThreadContextMR2.readJsonNode(url);
       JsonNode groups = rootNode.path("jobTaskCounters").path("taskCounterGroup");
@@ -268,7 +284,8 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
 
       for (JsonNode group : groups) {
         for (JsonNode counter : group.path("counter")) {
-          String name = counter.get("name").getValueAsText();
+          String name = counter.get("name").getValueAsText().trim();
+          name = setNameGbinHDFS(name);  // In/Out
           String groupName = group.get("counterGroupName").getValueAsText();
           Long value = counter.get("value").getLongValue();
           holder.set(groupName, name, value);
