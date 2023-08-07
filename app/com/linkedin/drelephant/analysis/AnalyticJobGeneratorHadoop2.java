@@ -22,8 +22,13 @@ import com.linkedin.drelephant.math.Statistics;
 import controllers.MetricsController;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Stream;
+
 import models.AppResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -32,6 +37,11 @@ import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.json.JSONObject;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 
 /**
@@ -136,18 +146,14 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
    * @throws IOException
    * @throws AuthenticationException
    */
-  @Override
-  public List<AnalyticJob> fetchAnalyticJobs()
-      throws IOException, AuthenticationException {
+
+  private List<AnalyticJob>  fetchAnalyticsJobsFromYarn()
+          throws IOException, AuthenticationException {
     List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
 
-    // There is a lag of job data from AM/NM to JobHistoryServer HDFS, we shouldn't use the current time, since there
-    // might be new jobs arriving after we fetch jobs. We provide one minute delay to address this lag.
-    _currentTime = System.currentTimeMillis() - FETCH_DELAY;
-    updateAuthToken();
 
     logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)
-        + ", and current time: " + _currentTime);
+            + ", and current time: " + _currentTime);
 
     // Fetch all succeeded apps
     URL succeededAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
@@ -161,13 +167,86 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     // state: Application Master State
     // finalStatus: Status of the Application as reported by the Application Master
     URL failedAppsURL = new URL(new URL("http://" + _resourceManagerAddress), String.format(
-        "/ws/v1/cluster/apps?finalStatus=FAILED&state=FINISHED&finishedTimeBegin=%s&finishedTimeEnd=%s",
-        String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
+            "/ws/v1/cluster/apps?finalStatus=FAILED&finishedTimeBegin=%s&finishedTimeEnd=%s",
+            String.valueOf(_lastTime + 1), String.valueOf(_currentTime)));
     List<AnalyticJob> failedApps = readApps(failedAppsURL);
     logger.info("The failed apps URL is " + failedAppsURL);
     appList.addAll(failedApps);
+    return appList;
+  }
 
+  private void processLogFile(Path filePath,List<AnalyticJob> appList) {
+    try {
+      AnalyticJob analyticJob = new AnalyticJob();
+      Files.lines(filePath).forEach(line -> {
+        // Parse the JSON in the line
+        JSONObject log = new JSONObject(line);
+
+        // Check if the log has 'Completion' event and print the needed info
+        if (log.has("Event") && log.getString("Event").equals("SparkListenerApplicationEnd")) {
+          System.out.println("Application End: " + log.getLong("Timestamp"));
+          analyticJob.setFinishTime(log.getLong("Timestamp")); // Set finish time to 0 initially
+        }
+
+        // Check if the log has the 'Start' event and print the needed info
+        if (log.has("Event") && log.getString("Event").equals("SparkListenerApplicationStart")) {
+          String appId = log.getString("App ID");
+          String appName = log.getString("App Name");
+          long startTime = log.getLong("Timestamp");
+          String sparkUser = log.getString("User");
+          ApplicationType applicationType=ElephantContext.instance().getApplicationTypeForName("SPARK");
+          analyticJob.setAppId(appId)
+                  .setName(appName)
+                  .setStartTime(startTime)
+                  .setUser(sparkUser)
+                  .setTrackingUrl("http://localhost:18080/history/" + appId + "/jobs/")
+                  .setAppType(applicationType);
+
+        }
+      });
+      appList.add(analyticJob);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  private List<AnalyticJob>  fetchAnalyticsJobsFromSparkHistoryServer()
+          throws IOException, AuthenticationException {
+
+    String eventLogsDirectory = System.getenv("EVENT_LOGS_DIRECTORY");
+    List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
+
+    logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)
+            + ", and current time: " + _currentTime);
+
+    logger.info("Event log directory " + eventLogsDirectory);
+    try {
+      try (Stream<Path> paths = Files.walk(Paths.get(eventLogsDirectory))) {
+        paths.filter(Files::isRegularFile)
+                .forEach(file -> processLogFile(file,appList));
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return appList;
+  }
+  @Override
+  public List<AnalyticJob> fetchAnalyticJobs()
+      throws IOException, AuthenticationException {
+    List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
+
+    // There is a lag of job data from AM/NM to JobHistoryServer HDFS, we shouldn't use the current time, since there
+    // might be new jobs arriving after we fetch jobs. We provide one minute delay to address this lag.
+    _currentTime = System.currentTimeMillis() - FETCH_DELAY;
+    updateAuthToken();
+
+    String useYarn = System.getenv("USE_YARN");
+    if (useYarn != null && useYarn.equalsIgnoreCase("true")) {
+      appList = fetchAnalyticsJobsFromYarn();
+    } else {
+      appList = fetchAnalyticsJobsFromSparkHistoryServer();
+    }
     // Append promises from the retry queue at the end of the list
+
     while (!_firstRetryQueue.isEmpty()) {
       appList.add(_firstRetryQueue.poll());
     }
