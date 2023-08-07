@@ -20,11 +20,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
 import controllers.MetricsController;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
@@ -41,6 +41,8 @@ import org.json.JSONObject;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.Path;
 
 
@@ -175,12 +177,16 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     return appList;
   }
 
-  private void processLogFile(Path filePath,List<AnalyticJob> appList) {
-    try {
+  private void processLogFileFromHDFS(Path filePath,List<AnalyticJob> appList) {
       AnalyticJob analyticJob = new AnalyticJob();
-      Files.lines(filePath).forEach(line -> {
-        // Parse the JSON in the line
-        JSONObject log = new JSONObject(line);
+      try {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(conf);
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(filePath)));
+        String line;
+        while ((line = br.readLine()) != null) {
+          // Parse the JSON in the line
+          JSONObject log = new JSONObject(line);
 
         // Check if the log has 'Completion' event and print the needed info
         if (log.has("Event") && log.getString("Event").equals("SparkListenerApplicationEnd")) {
@@ -201,9 +207,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                   .setUser(sparkUser)
                   .setTrackingUrl("http://localhost:18080/history/" + appId + "/jobs/")
                   .setAppType(applicationType);
-
         }
-      });
+      }
+      br.close();
       appList.add(analyticJob);
     } catch (IOException e) {
       e.printStackTrace();
@@ -220,9 +226,13 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
     logger.info("Event log directory " + eventLogsDirectory);
     try {
-      try (Stream<Path> paths = Files.walk(Paths.get(eventLogsDirectory))) {
-        paths.filter(Files::isRegularFile)
-                .forEach(file -> processLogFile(file,appList));
+      Configuration conf = new Configuration();
+      FileSystem fs = FileSystem.get(conf);
+      RemoteIterator<LocatedFileStatus> fileStatusIterator = fs.listFiles(new Path(eventLogsDirectory), false);
+
+      while (fileStatusIterator.hasNext()) {
+        LocatedFileStatus fileStatus = fileStatusIterator.next();
+        processLogFileFromHDFS(fileStatus.getPath(), appList);
       }
     } catch (IOException e) {
       e.printStackTrace();
