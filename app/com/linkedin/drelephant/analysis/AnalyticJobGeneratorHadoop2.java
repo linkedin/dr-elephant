@@ -45,6 +45,17 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.Path;
 
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.SnappyCodec;
+
+import org.xerial.snappy.SnappyInputStream;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 
 /**
  * This class provides a list of analysis promises to be generated under Hadoop YARN environment
@@ -182,7 +193,16 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
       try {
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
-        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(filePath)));
+
+        CompressionCodecFactory codecFactory = new CompressionCodecFactory(conf);
+        CompressionCodec codec = codecFactory.getCodec(filePath);
+
+        BufferedReader br = null;
+        if (codec != null && codec instanceof SnappyCodec) {
+          br = new BufferedReader(new InputStreamReader(new SnappyInputStream(fs.open(filePath));
+        } else {
+          br = new BufferedReader(new InputStreamReader(fs.open(filePath)));
+        }
         String line;
         while ((line = br.readLine()) != null) {
           // Parse the JSON in the line
