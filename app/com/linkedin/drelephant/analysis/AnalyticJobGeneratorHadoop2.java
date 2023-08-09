@@ -208,7 +208,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                  InputStream inputStreamDecompressed = getRequiredCodecInputStream(codec,inputStream);
                  BufferedReader br = (inputStreamDecompressed != null) ? new BufferedReader(new InputStreamReader(inputStreamDecompressed)) : new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
                 String line;
-                while ((line = br.readLine()) != null) {
+                boolean appEndFound=false;
+                boolean appStartFound=false;
+                while ((line = br.readLine()) != null && ! (appStartFound && appEndFound) ) {
                     // Parse the JSON in the line
                     JSONObject log = new JSONObject(line);
 
@@ -216,6 +218,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                     if (log.has("Event") && log.getString("Event").equals("SparkListenerApplicationEnd")) {
                         System.out.println("Application End: " + log.getLong("Timestamp"));
                         analyticJob.setFinishTime(log.getLong("Timestamp")); // Set finish time to 0 initially
+                        appEndFound=true;
                     }
 
                     // Check if the log has the 'Start' event and print the needed info
@@ -231,6 +234,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                                 .setUser(sparkUser)
                                 .setTrackingUrl("http://localhost:18080/history/" + appId + "/jobs/")
                                 .setAppType(applicationType);
+                        appStartFound=true;
                     }
                 }
             }
