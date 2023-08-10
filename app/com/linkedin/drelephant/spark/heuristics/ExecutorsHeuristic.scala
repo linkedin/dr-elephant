@@ -219,6 +219,7 @@ object ExecutorsHeuristic {
   case class Distribution(min: Long, p25: Long, median: Long, p75: Long, max: Long)
 
   object Distribution {
+    // at spark versions 3.x.x after applying no values found which cause exceptions in  sortedValues.min
     def apply(values: Seq[Long]): Distribution = {
       val sortedValues = values.sorted
       val sortedValuesAsJava = sortedValues.map(Long.box).to[ArrayBuffer].asJava

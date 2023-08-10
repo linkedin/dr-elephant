@@ -21,10 +21,7 @@ import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.math.Statistics;
 import controllers.MetricsController;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -45,6 +42,7 @@ import org.json.JSONObject;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.Path;
@@ -195,15 +193,22 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
             return inputStream;
 
     }
-    private void processLogFileFromHDFS(Path filePath, List<AnalyticJob> appList) {
+    private void fetchAnalyticsJobsFromSparkHistoryServerUtill(Path filePath, List<AnalyticJob> appList) {
         AnalyticJob analyticJob = new AnalyticJob();
         try {
             Configuration conf = new Configuration();
+            String useRemoteEventLogs = System.getenv("USE_REMOTE_EVENT_LOGS");
+            if(useRemoteEventLogs ==null || useRemoteEventLogs.equalsIgnoreCase("false"))
+            {
+                conf.set("fs.defaultFS", "file:///");
+                conf.set("fs.file.impl", LocalFileSystem.class.getName());
+            }
             FileSystem fs = filePath.getFileSystem(conf);
 
             CompressionCodecFactory codecFactory = new CompressionCodecFactory(conf);
             CompressionCodec codec = codecFactory.getCodec(filePath);
 
+            logger.info("Processing Event log : " + filePath );
             try (InputStream inputStream = fs.open(filePath);
                  InputStream inputStreamDecompressed = getRequiredCodecInputStream(codec,inputStream);
                  BufferedReader br = (inputStreamDecompressed != null) ? new BufferedReader(new InputStreamReader(inputStreamDecompressed)) : new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
@@ -213,10 +218,10 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                 while ((line = br.readLine()) != null && ! (appStartFound && appEndFound) ) {
                     // Parse the JSON in the line
                     JSONObject log = new JSONObject(line);
-
+                    if(log.has("Event")&& log.getString("Event").equals("SparkListenerLogStart"))
+                        logger.info("log file spark version : "+ log.getString("Spark Version"));
                     // Check if the log has 'Completion' event and print the needed info
                     if (log.has("Event") && log.getString("Event").equals("SparkListenerApplicationEnd")) {
-                        System.out.println("Application End: " + log.getLong("Timestamp"));
                         analyticJob.setFinishTime(log.getLong("Timestamp")); // Set finish time to 0 initially
                         appEndFound=true;
                     }
@@ -254,14 +259,28 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                 + ", and current time: " + _currentTime);
 
         logger.info("Event log directory " + eventLogsDirectory);
+        String useRemoteEventLogs = System.getenv("USE_REMOTE_EVENT_LOGS");
         try {
-            Configuration conf = new Configuration();
-            FileSystem fs = FileSystem.get(conf);
-            RemoteIterator<LocatedFileStatus> fileStatusIterator = fs.listFiles(new Path(eventLogsDirectory), false);
+            if(useRemoteEventLogs !=null && useRemoteEventLogs.equalsIgnoreCase("true")) {
+                Configuration conf = new Configuration();
+                FileSystem fs = FileSystem.get(conf);
+                RemoteIterator<LocatedFileStatus> fileStatusIterator = fs.listFiles(new Path(eventLogsDirectory), false);
 
-            while (fileStatusIterator.hasNext()) {
-                LocatedFileStatus fileStatus = fileStatusIterator.next();
-                processLogFileFromHDFS(fileStatus.getPath(), appList);
+                while (fileStatusIterator.hasNext()) {
+                    LocatedFileStatus fileStatus = fileStatusIterator.next();
+                    fetchAnalyticsJobsFromSparkHistoryServerUtill(fileStatus.getPath(), appList);
+                }
+            }else {
+                File directory = new File(eventLogsDirectory);
+
+                File[] files = directory.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        if (file.isFile()) {
+                            fetchAnalyticsJobsFromSparkHistoryServerUtill(new Path(file.getPath()), appList);
+                        }
+                    }
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
