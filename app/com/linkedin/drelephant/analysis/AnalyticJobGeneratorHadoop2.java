@@ -197,12 +197,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         AnalyticJob analyticJob = new AnalyticJob();
         try {
             Configuration conf = new Configuration();
-            String useRemoteEventLogs = System.getenv("USE_REMOTE_EVENT_LOGS");
-            if(useRemoteEventLogs ==null || useRemoteEventLogs.equalsIgnoreCase("false"))
-            {
-                conf.set("fs.defaultFS", "file:///");
-                conf.set("fs.file.impl", LocalFileSystem.class.getName());
-            }
             FileSystem fs = filePath.getFileSystem(conf);
 
             CompressionCodecFactory codecFactory = new CompressionCodecFactory(conf);
@@ -259,29 +253,17 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                 + ", and current time: " + _currentTime);
 
         logger.info("Event log directory " + eventLogsDirectory);
-        String useRemoteEventLogs = System.getenv("USE_REMOTE_EVENT_LOGS");
         try {
-            if(useRemoteEventLogs !=null && useRemoteEventLogs.equalsIgnoreCase("true")) {
                 Configuration conf = new Configuration();
                 FileSystem fs = FileSystem.get(conf);
                 RemoteIterator<LocatedFileStatus> fileStatusIterator = fs.listFiles(new Path(eventLogsDirectory), false);
 
                 while (fileStatusIterator.hasNext()) {
                     LocatedFileStatus fileStatus = fileStatusIterator.next();
-                    fetchAnalyticsJobsFromSparkHistoryServerUtill(fileStatus.getPath(), appList);
+                    if(!fileStatus.getPath().getName().startsWith("."))
+                        fetchAnalyticsJobsFromSparkHistoryServerUtill(fileStatus.getPath(), appList);
                 }
-            }else {
-                File directory = new File(eventLogsDirectory);
 
-                File[] files = directory.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.isFile()) {
-                            fetchAnalyticsJobsFromSparkHistoryServerUtill(new Path(file.getPath()), appList);
-                        }
-                    }
-                }
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
