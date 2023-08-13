@@ -16,16 +16,13 @@
 
 package org.apache.spark.deploy.history
 
-import java.io.InputStream
-import java.util.{Set => JSet, Properties, List => JList, HashSet => JHashSet, ArrayList => JArrayList}
-
+import java.io.{ByteArrayInputStream, InputStream}
+import java.util.{Properties, ArrayList => JArrayList, HashSet => JHashSet, List => JList, Set => JSet}
 import scala.collection.mutable
-
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.spark.legacydata._
 import com.linkedin.drelephant.spark.legacydata.SparkExecutorData.ExecutorInfo
 import com.linkedin.drelephant.spark.legacydata.SparkJobProgressData.JobInfo
-
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{ApplicationEventListener, ReplayListenerBus, StageInfo}
 import org.apache.spark.storage.{RDDInfo, StorageStatus, StorageStatusListener, StorageStatusTrackingListener}
@@ -34,6 +31,9 @@ import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.util.collection.OpenHashSet
+
+import java.nio.charset.StandardCharsets
+import scala.io.Source
 
 /**
  * This class wraps the logic of collecting the data in SparkEventListeners into the
@@ -286,6 +286,12 @@ class SparkDataCollection extends SparkApplicationData {
     getGeneralData().getApplicationId
   }
 
+  def removeLineFromInputStream(inputStream: InputStream, lineToRemove: String): InputStream = {
+    val lines = Source.fromInputStream(inputStream).getLines().filterNot(_.contains(lineToRemove))
+    val modifiedContent = lines.mkString("\n")
+    new ByteArrayInputStream(modifiedContent.getBytes(StandardCharsets.UTF_8))
+  }
+
   def load(in: InputStream, sourceName: String): Unit = {
     val replayBus = new ReplayListenerBus()
     replayBus.addListener(applicationEventListener)
@@ -295,7 +301,8 @@ class SparkDataCollection extends SparkApplicationData {
     replayBus.addListener(executorsListener)
     replayBus.addListener(storageListener)
     replayBus.addListener(storageStatusTrackingListener)
-    replayBus.replay(in, sourceName, maybeTruncated = false)
+    val in2 = removeLineFromInputStream(in,"\"Event:Sparklistnerresourcesprofileadded\"")
+    replayBus.replay(in2, sourceName, maybeTruncated = false)
   }
 }
 
