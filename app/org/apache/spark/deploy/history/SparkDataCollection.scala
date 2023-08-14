@@ -308,6 +308,7 @@ class SparkDataCollection extends SparkApplicationData {
     replayBus.addListener(storageStatusTrackingListener)
     val in2 = removeLineFromInputStream(in,"{\"Event\":\"SparkListenerResourceProfileAdded\"")
     replayBus.replay(in2, sourceName, maybeTruncated = false)
+    in2.close()
   }
 }
 
