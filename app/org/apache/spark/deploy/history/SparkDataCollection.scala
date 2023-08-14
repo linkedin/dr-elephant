@@ -16,7 +16,7 @@
 
 package org.apache.spark.deploy.history
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{BufferedReader, ByteArrayInputStream, InputStream, InputStreamReader}
 import java.util.{Properties, ArrayList => JArrayList, HashSet => JHashSet, List => JList, Set => JSet}
 import scala.collection.mutable
 import com.linkedin.drelephant.analysis.ApplicationType
@@ -287,8 +287,13 @@ class SparkDataCollection extends SparkApplicationData {
   }
 
   def removeLineFromInputStream(inputStream: InputStream, lineToRemove: String): InputStream = {
-    val lines = Source.fromInputStream(inputStream).getLines().filterNot(_.contains(lineToRemove))
+    val reader = new BufferedReader(new InputStreamReader(inputStream))
+    val lines = Stream
+      .continually(reader.readLine())
+      .takeWhile(_ != null)
+      .filterNot(_.contains(lineToRemove))
     val modifiedContent = lines.mkString("\n")
+    reader.close()
     new ByteArrayInputStream(modifiedContent.getBytes(StandardCharsets.UTF_8))
   }
 
@@ -301,7 +306,7 @@ class SparkDataCollection extends SparkApplicationData {
     replayBus.addListener(executorsListener)
     replayBus.addListener(storageListener)
     replayBus.addListener(storageStatusTrackingListener)
-    val in2 = removeLineFromInputStream(in,"\"Event:Sparklistnerresourcesprofileadded\"")
+    val in2 = removeLineFromInputStream(in,"{\"Event\":\"SparkListenerResourceProfileAdded\"")
     replayBus.replay(in2, sourceName, maybeTruncated = false)
   }
 }
