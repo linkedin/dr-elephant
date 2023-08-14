@@ -148,6 +148,7 @@ class SparkRestClient(sparkConf: SparkConf) {
           val sparkDataCollection = LegacyDataConverters.convert(dataCollection)
           // Augment missing fields, which would happen typically for backfill jobs.
           augemntAnalyticJob(analyticJob, dataCollection, sparkDataCollection)
+          inputStream.close()
           sparkDataCollection
         }
       }
