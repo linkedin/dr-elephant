@@ -245,8 +245,15 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
     private List<AnalyticJob> fetchAnalyticsJobsFromSparkHistoryServer()
             throws IOException, AuthenticationException {
+        String eventLogsDirectory = FetcherConfParser.extractEventLogLocationUri();
 
-        String eventLogsDirectory = System.getenv("EVENT_LOGS_DIRECTORY");
+        if (eventLogsDirectory != null) {
+            System.out.println("Event Log Location URI: " + eventLogsDirectory);
+        } else {
+            System.out.println("Event Log Location URI not found.");
+        }
+
+//        String eventLogsDirectory = System.getenv("EVENT_LOGS_DIRECTORY");
         List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
 
         logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)
