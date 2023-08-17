@@ -119,7 +119,7 @@ trait SparkUtils {
       }
       case None => {
         val (logPath, codecName) = getLogPathAndCodecName(fs, fs.getUri.resolve(basePath.toUri), appId)
-        if(codecName == UNCOMPRESSED){
+        if(codecName == UNCOMPRESSED || codecName .equalsIgnoreCase("inprogress")){
           (logPath, None)
         } else {
           (logPath, Some(compressionCodecMap.getOrElseUpdate(codecName, loadCompressionCodec(sparkConf, codecName))))
