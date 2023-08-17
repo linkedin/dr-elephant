@@ -108,6 +108,7 @@ public final class Utils {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       DocumentBuilder builder = factory.newDocumentBuilder();
       document = builder.parse(instream);
+      instream.close();
     } catch (ParserConfigurationException e) {
       throw new RuntimeException("XML Parser could not be created.", e);
     } catch (SAXException e) {
