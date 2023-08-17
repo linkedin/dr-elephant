@@ -265,6 +265,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                     LocatedFileStatus fileStatus = fileStatusIterator.next();
                     long modificationTime = fileStatus.getModificationTime();
                     if(!fileStatus.getPath().getName().startsWith(".")
+                            && ! ( fileStatus.getPath().getName().endsWith(".snappy.inprogress") ||fileStatus.getPath().getName().endsWith(".lz4.inprogress") )
                             && modificationTime >= _lastTime && modificationTime <= _currentTime)
                         fetchAnalyticsJobsFromSparkHistoryServerUtill(fileStatus.getPath(), appList);
                 }
