@@ -192,7 +192,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                 return inputStream;
         }
     }
-    private void fetchAnalyticsJobsFromSparkHistoryServerUtill(Path filePath, List<AnalyticJob> appList) {
+    private void fetchAnalyticsJobsFromEventLogsUtill(Path filePath, List<AnalyticJob> appList) {
         AnalyticJob analyticJob = new AnalyticJob();
         try {
             Configuration conf = new Configuration();
@@ -239,7 +239,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         }
     }
 
-    private List<AnalyticJob> fetchAnalyticsJobsFromSparkHistoryServer()
+    private List<AnalyticJob> fetchAnalyticsJobsFromEventLogs()
             throws IOException, AuthenticationException {
         String eventLogsDirectory = FetcherConfParser.extractEventLogLocationUri();
 
@@ -263,9 +263,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                 while (fileStatusIterator.hasNext()) {
                     LocatedFileStatus fileStatus = fileStatusIterator.next();
                     long modificationTime = fileStatus.getModificationTime();
-                    if(!fileStatus.getPath().getName().startsWith(".")
+                    if(!fileStatus.getPath().getName().startsWith(".") && !fileStatus.getPath().getName().endsWith(".inprogress")
                             && modificationTime >= _lastTime && modificationTime <= _currentTime)
-                        fetchAnalyticsJobsFromSparkHistoryServerUtill(fileStatus.getPath(), appList);
+                        fetchAnalyticsJobsFromEventLogsUtill(fileStatus.getPath(), appList);
                 }
 
         } catch (IOException e) {
@@ -288,7 +288,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         if (useYarn != null && useYarn.equalsIgnoreCase("true")) {
             appList = fetchAnalyticsJobsFromYarn();
         } else {
-            appList = fetchAnalyticsJobsFromSparkHistoryServer();
+            appList = fetchAnalyticsJobsFromEventLogs();
         }
         // Append promises from the retry queue at the end of the list
 
