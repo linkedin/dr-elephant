@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import models.AppResult;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -180,14 +181,16 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         appList.addAll(failedApps);
         return appList;
     }
-    private InputStream getRequiredCodecInputStream(CompressionCodec codec,InputStream inputStream){
-        if(codec instanceof SnappyCodec)
-            return new SnappyCompressionCodec(new SparkConf()).compressedInputStream(inputStream);
-        else if (codec instanceof Lz4Codec)
-            return new LZ4CompressionCodec(new SparkConf()).compressedInputStream(inputStream);
-        else
-            return inputStream;
-
+    private InputStream getRequiredCodecInputStream(Path filePath,InputStream inputStream){
+        String extension = FilenameUtils.getExtension(filePath.getName().replaceFirst("\\.inprogress$", ""));
+        switch (extension){
+            case "snappy":
+                return new SnappyCompressionCodec(new SparkConf()).compressedInputStream(inputStream);
+            case "lz4":
+                return new LZ4CompressionCodec(new SparkConf()).compressedInputStream(inputStream);
+            default:
+                return inputStream;
+        }
     }
     private void fetchAnalyticsJobsFromSparkHistoryServerUtill(Path filePath, List<AnalyticJob> appList) {
         AnalyticJob analyticJob = new AnalyticJob();
@@ -195,12 +198,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
             Configuration conf = new Configuration();
             FileSystem fs = filePath.getFileSystem(conf);
 
-            CompressionCodecFactory codecFactory = new CompressionCodecFactory(conf);
-            CompressionCodec codec = codecFactory.getCodec(filePath);
-
             logger.info("Processing Event log : " + filePath );
             try (InputStream inputStream = fs.open(filePath);
-                 InputStream inputStreamDecompressed = getRequiredCodecInputStream(codec,inputStream);
+                 InputStream inputStreamDecompressed = getRequiredCodecInputStream(filePath,inputStream);
                  BufferedReader br = (inputStreamDecompressed != null) ? new BufferedReader(new InputStreamReader(inputStreamDecompressed)) : new BufferedReader(new InputStreamReader(fs.open(filePath)))) {
                 String line;
                 boolean appEndFound=false;
@@ -249,7 +249,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
             System.out.println("Event Log Location URI not found.");
         }
 
-//        String eventLogsDirectory = System.getenv("EVENT_LOGS_DIRECTORY");
         List<AnalyticJob> appList = new ArrayList<AnalyticJob>();
 
         logger.info("Fetching recent finished application runs between last time: " + (_lastTime + 1)
@@ -265,7 +264,6 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
                     LocatedFileStatus fileStatus = fileStatusIterator.next();
                     long modificationTime = fileStatus.getModificationTime();
                     if(!fileStatus.getPath().getName().startsWith(".")
-                            && ! ( fileStatus.getPath().getName().endsWith(".snappy.inprogress") ||fileStatus.getPath().getName().endsWith(".lz4.inprogress") )
                             && modificationTime >= _lastTime && modificationTime <= _currentTime)
                         fetchAnalyticsJobsFromSparkHistoryServerUtill(fileStatus.getPath(), appList);
                 }

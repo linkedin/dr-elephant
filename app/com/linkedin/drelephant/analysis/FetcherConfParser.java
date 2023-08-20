@@ -9,7 +9,7 @@ public class FetcherConfParser {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(new File("../../app-conf/FetcherConf.xml"));
+            Document document = builder.parse(new File("app-conf/FetcherConf.xml"));
 
             // Get the root element
             Element root = document.getDocumentElement();
