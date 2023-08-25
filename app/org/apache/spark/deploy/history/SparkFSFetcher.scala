@@ -103,7 +103,9 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
       sparkUtils.withEventLog(eventLogFileSystem, eventLogPath, eventLogCodec) { in =>
         dataCollection.load(in, eventLogPath.toString())
+        in.close()
       }
+
 
       logger.info("Replay completed for application: " + appId)
     }

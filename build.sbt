@@ -41,3 +41,7 @@ playJavaSettings
 scalaVersion := "2.10.4"
 
 envVars in Test := Map("PSO_DIR_PATH" -> (baseDirectory.value / "scripts/pso").getAbsolutePath)
+// Add dependencies
+libraryDependencies ++= Seq(
+  "org.json" % "json" % "20210307" // JSON library
+)

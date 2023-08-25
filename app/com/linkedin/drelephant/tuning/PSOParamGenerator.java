@@ -99,6 +99,8 @@ public class PSOParamGenerator extends ParamGenerator {
       if (error.size() != 0) {
         logger.error("Error in python script running PSO: " + error.toString());
       }
+      inputStream.close();
+      errorStream.close();
     } catch (IOException e) {
       logger.error("Error in generateParamSet()", e);
     }

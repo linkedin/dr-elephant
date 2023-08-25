@@ -32,10 +32,10 @@
   <!--
      REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
    -->
-  <fetcher>
-    <applicationtype>tez</applicationtype>
-    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
-  </fetcher>
+<!--  <fetcher>-->
+<!--    <applicationtype>tez</applicationtype>-->
+<!--    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>-->
+<!--  </fetcher>-->
   <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
@@ -58,7 +58,7 @@
      To work properly, this fetcher should use the same timezone with the job history server.
      If not set, the local timezone will be used.
    -->
-  
+
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
@@ -68,7 +68,7 @@
       <history_server_time_zone>PST</history_server_time_zone>
     </params>
   </fetcher>
-  
+
 
   <!--
     FSFetcher for Spark. Loads the eventlog from HDFS and replays to get the metrics and application properties
@@ -89,12 +89,15 @@
   <fetcher>
     <applicationtype>spark</applicationtype>
     <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
+    <params>
+      <event_log_location_uri>/Users/abdelrahmanmosly/IncortaAnalytics/IncortaNode/spark/eventlogs/</event_log_location_uri>
+    </params>
   </fetcher>
 
   <!--
   This is an experimental fetcher for Spark applications which uses SHS REST API to get application metrics
   and WebHDFS to get application properties from eventlogs. Please note that this fetcher also supports backfill.
-  But backfill implementation in this fetcher relies upon SHS REST APIs' which are only available since Spark 2.3 
+  But backfill implementation in this fetcher relies upon SHS REST APIs' which are only available since Spark 2.3
 
    <fetcher>
     <applicationtype>spark</applicationtype>
