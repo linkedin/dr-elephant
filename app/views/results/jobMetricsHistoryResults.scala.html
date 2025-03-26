@@ -93,6 +93,22 @@
                                     <span> The total wait time for the stage in HH:MM:SS</span>
                                   </div>
                                 </td>
+
+                                
+                                <!-- SAGA_counters in -->
+                                <td class="run-time-block hasTooltip" style="width: 95px"><img src='@routes.Assets.at("images/In.png")' class="metrics-icons-table" alt='total input objects'/>
+                                  <div id="tooltip-div">
+                                    <span> Total of input objects</span>
+                                  </div>
+                                </td>
+                                <!-- SAGA_counters out -->
+                                <td class="wait-time-block hasTooltip" style="width: 95px"><img src='@routes.Assets.at("images/Out.png")' class="metrics-icons-table" alt='total output objects'/>
+                                  <div id="tooltip-div">
+                                    <span> Total of output objects</span>
+                                  </div>
+                                </td>
+                                <!-- SAGA_counters -->
+
                               </tr>
                             </tbody>
                           </table>
@@ -130,6 +146,14 @@
                             </td>
                             <td class="wait-time-block hasTooltip">@(Utils.getDurationBreakdown(jobs(i - 1).totalDelay).split("Hours")(0))
                             </td>
+                            
+                            <!-- in/out -->
+                            <td class="run-time-block hasTooltip" style="width: 95px">@(jobs(i - 1).inputCard)
+                            </td>
+                            <td class="wait-time-block hasTooltip" style="width: 95px">@(jobs(i - 1).outputCard)
+                            </td>
+                            <!-- in/out -->
+
                           </tr>
                         </tbody>
                       </table>

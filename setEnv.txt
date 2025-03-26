@@ -1,0 +1,7 @@
+export PATH=/usr/lib/jvm/java-1.8.0-openjdk-amd64/bin:/home/vpapy/Applications/activator/activator-dist-1.3.12/bin:/usr/local/bin/:/home/vpapy/.vscode-server/cli/servers/Stable-f1a4fb101478ce6ec82fe9627c43efbf9e98c813/server/bin/remote-cli:/home/vpapy/.local/bin:/home/vpapy/Documents/mdb_backup_venv/bin/:/home/vpapy/.nvm/versions/node/v11.10.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+export LC_ALL=en_US.UTF-8
+export HTTPS_PROXY=http://10.31.255.65:8080
+export HTTP_PROXY=http://10.31.255.65:8080
+export http_proxy=http://10.31.255.65:8080
+export https_proxy=http://10.31.255.65:8080
+

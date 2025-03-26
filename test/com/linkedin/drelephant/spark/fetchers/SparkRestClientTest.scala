@@ -18,10 +18,13 @@ package com.linkedin.drelephant.spark.fetchers
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import java.text.SimpleDateFormat
-import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
+import java.util.zip.{ZipInputStream, ZipEntry, ZipOutputStream}
 import java.util.{Calendar, Date, SimpleTimeZone}
-
 import javax.ws.rs.client.WebTarget
+
+
+//import org.apache.spark.status.api.v1.StageStatus
+
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageStatus
 
 import scala.concurrent.ExecutionContext
@@ -32,8 +35,8 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInf
 import javax.ws.rs.{GET, Path, PathParam, Produces}
 import javax.ws.rs.core.{Application, MediaType, Response}
 import javax.ws.rs.ext.ContextResolver
+
 import com.google.common.io.Resources
-import com.linkedin.drelephant.analysis.AnalyticJob
 import com.ning.compress.lzf.LZFEncoder
 import org.apache.spark.{JobExecutionStatus, SparkConf}
 import org.glassfish.jersey.client.ClientConfig
@@ -103,8 +106,7 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
 
       val sparkConf = new SparkConf().set("spark.yarn.historyServer.address", s"${historyServerUri.getHost}:${historyServerUri.getPort}")
       val sparkRestClient = new SparkRestClient(sparkConf)
-      val job = new AnalyticJob().setAppId(FetchClusterModeDataFixtures.APP_ID)
-      val sparkApplicationData = sparkRestClient.fetchEventLogAndParse(job)
+      val sparkApplicationData = sparkRestClient.fetchEventLogAndParse(FetchClusterModeDataFixtures.APP_ID)
 
       sparkApplicationData.applicationInfo.id should be("application_1457600942802_0093")
       sparkApplicationData.applicationInfo.name should be("PythonPi")
@@ -158,8 +160,7 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
         }
       }
 
-      val job = new AnalyticJob().setAppId(FetchClusterModeDataFixtures.APP_ID)
-      val thrown = the[RuntimeException] thrownBy(sparkRestClient.fetchEventLogAndParse(job))
+      val thrown = the[RuntimeException] thrownBy(sparkRestClient.fetchEventLogAndParse(FetchClusterModeDataFixtures.APP_ID))
       thrown.getMessage should be (s"Application for the log application_1.lzf.inprogress has not finished yet.")
     }
 
@@ -255,34 +256,6 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
       val applicationAttemptInfo = objectMapper.readValue[ApplicationAttemptInfoImpl](json)
       applicationAttemptInfo.sparkUser should be("foo")
     }
-
-    it("returns the desired list of applications using Spark REST API") {
-      import ExecutionContext.Implicits.global
-      val fakeJerseyServer = new FakeJerseyServer() {
-        override def configure(): Application = super.configure() match {
-          case resourceConfig: ResourceConfig =>
-            resourceConfig
-              .register(classOf[FetchClusterModeDataFixtures.ApiResource])
-              .register(classOf[FetchClusterModeDataFixtures.ApplicationsResource])
-          case config => config
-        }
-      }
-      fakeJerseyServer.setUp()
-
-      val historyServerUri = fakeJerseyServer.target.getUri
-
-      val sparkConf = new SparkConf().set(
-        "spark.yarn.historyServer.address", s"${historyServerUri.getHost}:${historyServerUri.getPort}")
-      val sparkRestClient = new SparkRestClient(sparkConf)
-      val startTs = System.currentTimeMillis - 200000
-      val endTs = System.currentTimeMillis + 120000
-      val sparkApplications = sparkRestClient.fetchCompletedApplicationsData(startTs, endTs)
-
-      sparkApplications.size should be(1)
-      sparkApplications.head.id should be(FetchClusterModeDataFixtures.APP_ID)
-      sparkApplications.head.name should be(FetchClusterModeDataFixtures.APP_NAME)
-      sparkApplications.head.attempts.size should be(2)
-    }
   }
 }
 
@@ -326,9 +299,6 @@ object SparkRestClientTest {
 
     @Path("/api/v1")
     class ApiResource {
-      @Path("applications")
-      def getApplications(): ApplicationsResource = new ApplicationsResource()
-
       @Path("applications/{appId}")
       def getApplication(): ApplicationResource = new ApplicationResource()
 
@@ -358,26 +328,6 @@ object SparkRestClientTest {
           Seq(
             newFakeApplicationAttemptInfo(Some("2"), startTime = new Date(t2 - duration), endTime = new Date(t2)),
             newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(t1 - duration), endTime = new Date(t1))
-          )
-        )
-      }
-    }
-
-    @Produces(Array(MediaType.APPLICATION_JSON))
-    class ApplicationsResource {
-      @GET
-      def getApplications(): Seq[ApplicationInfoImpl] = {
-        val t2 = System.currentTimeMillis
-        val t1 = t2 + 1
-        val duration = 8000000L
-        Seq(
-          new ApplicationInfoImpl(
-            APP_ID,
-            APP_NAME,
-            Seq(
-              newFakeApplicationAttemptInfo(Some("2"), startTime = new Date(t2 - duration), endTime = new Date(t2)),
-              newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(t1 - duration), endTime = new Date(t1))
-            )
           )
         )
       }

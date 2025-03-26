@@ -32,7 +32,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyManagementException;
@@ -286,7 +285,7 @@ public class AzkabanWorkflowClient implements WorkflowClient {
     BufferedReader reader = null;
     StringBuilder result = new StringBuilder();
     try {
-      reader = new BufferedReader(new InputStreamReader(response, Charset.forName("UTF-8")));
+      reader = new BufferedReader(new InputStreamReader(response));
 
       String line = null;
       while ((line = reader.readLine()) != null) {

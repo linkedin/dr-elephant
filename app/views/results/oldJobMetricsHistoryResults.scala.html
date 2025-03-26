@@ -35,12 +35,25 @@
 }
 
 @if(results != null && results.nonEmpty) {
-  @tags.panel(){ Job History Results: <a href="@jobDefPair.getUrl" style="font-size:14px; color:#083d8d">@jobDefPair.getId</a>} {
+
+  @tags.panel(){ Job History Results: @jobDefPair.getId} {  <!-- href="@jobDefPair.getUrl" style="font-size:14px; color:#083d8d">@jobDefPair.getId</a>-->
+
+<!--  @tags.panel(){ Job History Results: <a href="@jobDefPair.getUrl" style="font-size:14px; color:#083d8d">@jobDefPair.getId</a>} { -->
+
     @if(graphType.equals("resources")) {
       <script src="@routes.Assets.at("js/jobresourcesmetricshistoryform.js")" type="text/javascript"></script>
       <script src="@routes.Assets.at("js/graphresourcesmetricsutility.js")" type="text/javascript"></script>
       <script src="@routes.Assets.at("js/resourcegraphtooltiputility.js")" type="text/javascript"></script>
-    } else  {
+
+    }
+    @if(graphType.equals("sagaCounters")) {
+    
+      <script src="@routes.Assets.at("js/jobSagaCountershistoryform.js")" type="text/javascript"></script>
+      <script src="@routes.Assets.at("js/graphSagaCountersmetricsutility.js")" type="text/javascript"></script>
+      <script src="@routes.Assets.at("js/SagaCountersgraphtooltiputility.js")" type="text/javascript"></script>
+    } 
+    @if(graphType.equals("heuristics") || graphType.equals("time")) {
+
       <script src="@routes.Assets.at("js/jobtimehistoryform.js")" type="text/javascript"></script>
       <script src="@routes.Assets.at("js/graphtimemetricsutility.js")" type="text/javascript"></script>
       <script src="@routes.Assets.at("js/timegraphtooltiputility.js")" type="text/javascript"></script>
@@ -95,6 +108,21 @@
                                 <span> The total wait time for the stage in HH:MM:SS</span>
                               </div>
                             </td>
+                            
+                                <!-- SAGA_counters in -->
+                                <td class="run-time-td hasTooltip" style="width: 95px"><img src='@routes.Assets.at("images/In.png")' class="metrics-icons-table" alt='total input objects'/>
+                                  <div id="tooltip-div">
+                                    <span> Total of input objects</span>
+                                  </div>
+                                </td>
+                                <!-- SAGA_counters out -->
+                                <td class="wait-time-td hasTooltip" style="width: 95px"><img src='@routes.Assets.at("images/Out.png")' class="metrics-icons-table" alt='total output objects'/>
+                                  <div id="tooltip-div">
+                                    <span> Total of output objects</span>
+                                  </div>
+                                </td>
+                                <!-- SAGA_counters -->
+
                             </tr>
                           </tbody>
                         </table>
@@ -112,7 +140,9 @@
 
                 <!-- The First column, execution time -->
               <td style="text-align:center">
-                <a class="exectime" href='@flowExecPair.getUrl' data-toggle='tooltip' title='@flowExecPair.getUrl'>Loading...</a>
+
+                <a class="exectime" data-toggle='tooltip' title='@flowExecPair.getUrl'>Loading...</a> <!--<a class="exectime" href='@flowExecPair.getUrl' data-toggle='tooltip' title='@flowExecPair.getUrl'>Loading...</a>-->
+
               </td>
 
                 <!-- The remaining columns -->
@@ -133,6 +163,14 @@
                             </td>
                             <td class="wait-time-td hasTooltip" style="width: 95px">@(Utils.getDurationBreakdown(jobs(i-1).totalDelay).split("Hours")(0))
                             </td>
+
+                            <!-- in/out id="@("input+@(i)")" -->
+                            <td class="run-time-td hasTooltip" name="inputSagaCounters" style="width: 95px">@(jobs(i - 1).inputCard)
+                            </td>
+                            <td class="wait-time-td hasTooltip" name="outputSagaCounters" style="width: 95px">@(jobs(i - 1).outputCard)
+                            </td>
+                            <!-- in/out id="output@(i+1)" -->
+
                           </tr>
                         </tbody>
                       </table>
@@ -149,4 +187,4 @@
       </div>
     </div>
   }
-}
+}}

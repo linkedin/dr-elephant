@@ -408,6 +408,7 @@ public class FitnessComputeUtil {
             if (jobExecution.executionState.equals(JobExecution.ExecutionState.SUCCEEDED)) {
               logger.info("Execution id: " + jobExecution.id + " succeeded");
               updateJobSuggestedParamSetSucceededExecution(jobExecution, jobSuggestedParamSet, tuningJobDefinition);
+              parameterSpaceOptimization(jobSuggestedParamSet, jobExecution, results);
             } else {
               // Resetting param set to created state because this case captures the scenarios when
               // either the job failed for reasons other than auto tuning or was killed/cancelled/skipped etc.
@@ -435,6 +436,16 @@ public class FitnessComputeUtil {
       }
     }
     logger.info("Execution metrics updated");
+  }
+
+  private void parameterSpaceOptimization(JobSuggestedParamSet jobSuggestedParamSet, JobExecution jobExecution,
+      List<AppResult> results) {
+    AutoTuningOptimizeManager optimizeManager =
+        OptimizationAlgoFactory.getOptimizationAlogrithm(jobSuggestedParamSet.tuningAlgorithm);
+    if (optimizeManager != null) {
+      optimizeManager.extractParameterInformation(results);
+      optimizeManager.parameterOptimizer(jobExecution.job.id);
+    }
   }
 
   /**

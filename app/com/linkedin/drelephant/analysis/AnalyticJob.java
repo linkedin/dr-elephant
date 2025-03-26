@@ -17,17 +17,18 @@
 package com.linkedin.drelephant.analysis;
 
 import com.linkedin.drelephant.ElephantContext;
-import com.linkedin.drelephant.priorityexecutor.Priority;
 import com.linkedin.drelephant.util.InfoExtractor;
 import com.linkedin.drelephant.util.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Future;
 import models.AppHeuristicResult;
 import models.AppHeuristicResultDetails;
 import models.AppResult;
 import org.apache.log4j.Logger;
+
+import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
+import com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcher;
 
 
 /**
@@ -38,6 +39,8 @@ public class AnalyticJob {
   private static final Logger logger = Logger.getLogger(AnalyticJob.class);
 
   private static final String UNKNOWN_JOB_TYPE = "Unknown";   // The default job type when the data matches nothing.
+
+  protected static final int MAX_SAMPLE_SIZE = 2000;  //Sample size
   private static final int _RETRY_LIMIT = 3;                  // Number of times a job needs to be tried before going into second retry queue
   private static final int _SECOND_RETRY_LIMIT = 5;           // Number of times a job needs to be tried before dropping
   private static final String EXCLUDE_JOBTYPE = "exclude_jobtypes_filter"; // excluded Job Types for heuristic
@@ -63,13 +66,7 @@ public class AnalyticJob {
   private String _user;
   private String _trackingUrl;
   private long _startTime;
-  private long _finishTime = -1;
-  private Future<?> _jobFuture;
-  // Flag used for tracking if job was pushed for analysis during backfill without known finish time.
-  private boolean _isBackfilledWithNoFinishTime = false;
-  // Backfill timestamp for the app type.
-  private long _backfillTs;
-  private Priority _jobExecutionPriority = Priority.NORMAL;
+  private long _finishTime;
 
   /**
    * Returns the application type
@@ -168,38 +165,6 @@ public class AnalyticJob {
   }
 
   /**
-   * Sets the future for this job after submission to executor for analysis.
-   *
-   * @param future Future returned upon submission to executor.
-   * @return The analytic job
-   */
-  public AnalyticJob setJobFuture(Future<?> future) {
-    _jobFuture = future;
-    return this;
-  }
-
-  /**
-   * Sets the priority at which job will be executed for analysis.
-   *
-   * @param priority Priority of execution.
-   * @return The analytic job
-   */
-  public AnalyticJob setJobExecutionPriority(Priority priority) {
-    _jobExecutionPriority = priority;
-    return this;
-  }
-
-  /**
-   * Sets the flag to indicate whether the job was backfilled, as it was not available in Resource Manager.
-   *
-   * @return The analytic job
-   */
-  public AnalyticJob setIsBackfilledWithNoFinishTime() {
-    _isBackfilledWithNoFinishTime = true;
-    return this;
-  }
-
-  /**
    * Returns the application id
    *
    * @return The analytic job
@@ -263,27 +228,6 @@ public class AnalyticJob {
   }
 
   /**
-   * Returns the Future for this job which was returned upon job submission to executor.
-   *
-   * @return The {@link Future} object
-   */
-  public Future<?> getJobFuture() { return _jobFuture; }
-
-  /**
-   * Returns the job execution priority.
-   *
-   * @return The job execution priority.
-   */
-  public Priority getJobExecutionPriority() { return _jobExecutionPriority; }
-
-  /**
-   * Returns the flag which indicates whether the job was backfilled or not.
-   *
-   * @return The flag indicating whether job was backfilled.
-   */
-  public boolean getIsBackfilledWithNoFinishTime() { return _isBackfilledWithNoFinishTime; }
-
-  /**
    * Sets the tracking url for the job
    *
    * @param trackingUrl The url to track the job
@@ -331,7 +275,6 @@ public class AnalyticJob {
       }
     }
 
-
     HadoopMetricsAggregator hadoopMetricsAggregator = ElephantContext.instance().getAggregatorForApplicationType(getAppType());
     hadoopMetricsAggregator.aggregate(data);
     HadoopAggregatedData hadoopAggregatedData = hadoopMetricsAggregator.getResult();
@@ -339,20 +282,36 @@ public class AnalyticJob {
     // Load app information
     AppResult result = new AppResult();
     result.id = Utils.truncateField(getAppId(), AppResult.ID_LIMIT, getAppId());
-    result.trackingUrl = getTrackingUrl() != null ?
-        Utils.truncateField(getTrackingUrl(), AppResult.TRACKING_URL_LIMIT, getAppId()): "";
-    result.queueName = getQueueName() != null ?
-        Utils.truncateField(getQueueName(), AppResult.QUEUE_NAME_LIMIT, getAppId()): "";
-    result.username = getUser() != null ?
-        Utils.truncateField(getUser(), AppResult.USERNAME_LIMIT, getAppId()) : "";
+    result.trackingUrl = Utils.truncateField(getTrackingUrl(), AppResult.TRACKING_URL_LIMIT, getAppId());
+    result.queueName = Utils.truncateField(getQueueName(), AppResult.QUEUE_NAME_LIMIT, getAppId());
+    result.username = Utils.truncateField(getUser(), AppResult.USERNAME_LIMIT, getAppId());
     result.startTime = getStartTime();
     result.finishTime = getFinishTime();
-    result.name = getName() != null ?
-        Utils.truncateField(getName(), AppResult.APP_NAME_LIMIT, getAppId()) : "";
+    result.name = Utils.truncateField(getName(), AppResult.APP_NAME_LIMIT, getAppId());
     result.jobType = Utils.truncateField(jobTypeName, AppResult.JOBTYPE_LIMIT, getAppId());
+    result.totalDelay = hadoopAggregatedData.getTotalDelay();
+/*
+    //(((MapReduceApplicationData)data).getMapperData().length +((MapReduceApplicationData)data).getReducerData().length > MAX_SAMPLE_SIZE) = nombre total de taches du job
+    if ( ((MapReduceFetcher)fetcher).isSamplingEnabled() && (((MapReduceApplicationData)data).getMapperData().length +((MapReduceApplicationData)data).getReducerData().length > MAX_SAMPLE_SIZE))
+      result.resourceUsed = hadoopAggregatedData.getResourceUsed()* (((MapReduceApplicationData)data).getMapperData().length +((MapReduceApplicationData)data).getReducerData().length) / MAX_SAMPLE_SIZE;
+    else
+      result.resourceUsed = hadoopAggregatedData.getResourceUsed();
+    logger.info("Number of tasks of [" + ((MapReduceApplicationData)data).getAppId() + "] = " + (((MapReduceApplicationData)data).getMapperData().length +((MapReduceApplicationData)data).getReducerData().length));
+    logger.info("[" + ((MapReduceApplicationData)data).getAppId() + "], hadoopAggregatedData.getResourceUsed() = " + hadoopAggregatedData.getResourceUsed() + ((((MapReduceFetcher)fetcher).isSamplingEnabled())?" with sampling enabled":" with sampling disabled"));
+    if ( ((MapReduceFetcher)fetcher).isSamplingEnabled() && (((MapReduceApplicationData)data).getMapperData().length +((MapReduceApplicationData)data).getReducerData().length > MAX_SAMPLE_SIZE))
+      result.resourceWasted = hadoopAggregatedData.getResourceWasted()* (((MapReduceApplicationData)data).getMapperData().length +((MapReduceApplicationData)data).getReducerData().length) / MAX_SAMPLE_SIZE;
+    else
+      result.resourceWasted = hadoopAggregatedData.getResourceWasted();
+*/
+    //in/out
+    result.inputCard = hadoopAggregatedData.getInputCard();
+    result.outputCard = hadoopAggregatedData.getOutputCard(); 
+    //in/out
+
     result.resourceUsed = hadoopAggregatedData.getResourceUsed();
     result.totalDelay = hadoopAggregatedData.getTotalDelay();
     result.resourceWasted = hadoopAggregatedData.getResourceWasted();
+
 
     // Load App Heuristic information
     int jobScore = 0;

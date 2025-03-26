@@ -17,7 +17,7 @@
 $(document).ready(function(){
 
     /* Plot graph for data obtained from ajax call */
-    $.getJSON('/rest/jobmetricsgraphdata?id=' + queryString()['job-def-id'], function(data) {
+    $.getJSON('./rest/jobmetricsgraphdata?id=' + queryString()['job-def-id'], function(data) {
         updateExecTimezone(data);
         plotter(data, []);
     });

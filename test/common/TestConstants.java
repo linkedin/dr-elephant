@@ -22,6 +22,7 @@ public class TestConstants {
   public static final int TEST_SERVER_PORT = 9001;
   public static final String BASE_URL = "http://localhost:" + TEST_SERVER_PORT;
   public static final String TEST_DATA_FILE = "test/resources/test-init.sql";
+  public static final String TEST_IPSO_DATA_FILE = "test/resources/test-init-ipso.sql";
   public static final String TEST_AUTO_TUNING_DATA_FILE1 = "test/resources/tunein-test1.sql";
 
   public static final int RESPONSE_TIMEOUT = 3000; // milliseconds
@@ -60,9 +61,6 @@ public class TestConstants {
   public static final String APPLY_EVOLUTIONS_DEFAULT_KEY = "applyEvolutions.default";
   public static final String APPLY_EVOLUTIONS_DEFAULT_VALUE = "true";
 
-  // Application configurations
-  public static final String METRICS_ENABLE_KEY = "metrics";
-
   // Paths to the rest end-points
   public static final String REST_APP_RESULT_PATH = "/rest/job";
   public static final String REST_JOB_EXEC_RESULT_PATH = "/rest/jobexec";
@@ -75,9 +73,6 @@ public class TestConstants {
   public static final String REST_FLOW_METRICS_GRAPH_DATA_PATH = "/rest/flowmetricsgraphdata";
   public static final String REST_USER_RESOURCE_USAGE_PATH = "/rest/resourceusagedatabyuser";
   public static final String REST_GET_CURRENT_RUN_PARAMETERS = "/rest/getCurrentRunParameters";
-
-  // Paths to metrics end-points.
-  public static final String METRICS_ENDPOINT = "/metrics";
 
   public static final String DEFAULT_ENCODING = "UTF-8";
 

@@ -122,3 +122,53 @@
     In the case above, since mapper input size >> block size and you want to increase mappers, you should decrease min split size close to BlockSize(512MB). <br>
     See <a href="https://github.com/linkedin/dr-elephant/wiki/Tuning-Tips">Hadoop Tuning Tips</a> for further information.
 </p>
+
+<h3>Standard deviation task runtime >> Average task runtime</h3>
+<p>
+    This usually happens when the Hadoop job has:
+<ul>
+	<li>More than <b>one</b> task in the job</li>
+    <li>A <b>small</b> Average task runtime</li>
+    <li>A <b>Long</b> Standard deviation task runtime</li>
+</ul>
+</p>
+<h5>Example</h5>
+<p>
+<div class="list-group">
+    <a class="list-group-item list-group-item-danger" href="#">
+        <h4 class="list-group-item-heading">Mapper Input Size</h4>
+        <table class="list-group-item-text table table-condensed left-table">
+            <thead><tr><th colspan="2">Severity: Critical</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>Average task runtime</td>
+                <td>5 sec (5762 ms)</td>
+            </tr>
+            <tr>
+                <td>Standard deviation task runtime</td>
+                <td>1 sec (1249 ms)</td>
+            </tr>
+            </tbody>
+        </table>
+    </a>
+</div>
+</p>
+<h4>explanation</h4>
+<p>
+	The standard deviation threshold are fixed: 5%, 10%, 15% and 20% of the average
+	<h5>Calculation</h5>
+	<ul>
+		<li>standard deviation between <b>0%</b> and <b>5%</b> of the average   -> severity = <font color="#5cb85c">NONE</font></li>
+		<li>standard deviation between <b>5%</b> and <b>10%</b> of the average  -> severity = <font color="#5cb85c">LOW</font></li>
+		<li>standard deviation between <b>10%</b> and <b>15%</b> of the average -> severity = <font color="#f0ad4e">MODERATE</font></li>
+		<li>standard deviation between <b>15%</b> and <b>20%</b> of the average -> severity = <font color="#e4804e">SEVERE</font></li>
+		<li>standard deviation higher <b>20%</b> of the average	-> severity = <font color="#d9534f">CRITICAL</font></li>
+	</ul>
+</p>
+
+<h4>Suggestions</h4>
+<p>
+    TODO</br>
+    See <a href="https://github.com/linkedin/dr-elephant/wiki/Tuning-Tips">Hadoop Tuning Tips</a> for further information.
+</p>
+

@@ -202,11 +202,13 @@ public class UtilsTest {
     long []numerators = {10,20,30,40,50};
     long []denominators = {100,200,100,52,70};
 
+
     assertEquals("10.00 %", Utils.getPercentage(numerators[0],denominators[0]));
     assertEquals("10.00 %", Utils.getPercentage(numerators[1],denominators[1]));
     assertEquals("30.00 %", Utils.getPercentage(numerators[2],denominators[2]));
     assertEquals("76.92 %", Utils.getPercentage(numerators[3],denominators[3]));
     assertEquals("71.43 %", Utils.getPercentage(numerators[4],denominators[4]));
+
     assertEquals("NaN", Utils.getPercentage(0,0));
   }
 
@@ -215,12 +217,56 @@ public class UtilsTest {
 
     long []durations = {10000, 213234343, 23424, 635322, 213};
 
+
     assertEquals("0.003 GB Hours", Utils.getResourceInGBHours(durations[0]));
     assertEquals("57.844 GB Hours", Utils.getResourceInGBHours(durations[1]));
     assertEquals("0.006 GB Hours", Utils.getResourceInGBHours(durations[2]));
     assertEquals("0.172 GB Hours", Utils.getResourceInGBHours(durations[3]));
+
     assertEquals("0 GB Hours", Utils.getResourceInGBHours(durations[4]));
 
   }
+
+
+  @Test
+  public void testGetStrInOutLabel() {
+  
+    long []in = {123,29090870963L,0,98,0};
+    long []out = {76547867865435689L,2903,23,0,0};
+    
+    assertEquals("123 : 76547867865435689", Utils.getStrInOutLabel(in[0], out[0]));
+    assertEquals("29090870963 : 2903", Utils.getStrInOutLabel(in[1], out[1]));
+    assertEquals("0 : 23", Utils.getStrInOutLabel(in[2], out[2]));
+    assertEquals("98 : 0", Utils.getStrInOutLabel(in[3], out[3]));
+    assertEquals("0 : 0", Utils.getStrInOutLabel(in[4], out[4]));
+  }
+  
+  @Test
+  public void testGetStrInOut() {
+  
+    long []in = {12345678910L,12349111L,    123589111L,675L,              12L,0,          782L,   786543L};
+    long []out = {123L       ,29090870963L,0L        ,76547456865435689L,3L, 765321096L, 80765L, 8743149L};
+    
+    assertEquals("12'345'678'910 : 123", Utils.getStrInOut(in[0], out[0]));
+    assertEquals("12'349'111 : 29'090'870'963", Utils.getStrInOut(in[1], out[1]));
+    assertEquals("123'589'111 : 0", Utils.getStrInOut(in[2], out[2]));
+    assertEquals("675 : 76'547'456'865'435'689", Utils.getStrInOut(in[3], out[3]));
+    assertEquals("12 : 3", Utils.getStrInOut(in[4], out[4]));
+    assertEquals("0 : 765'321'096", Utils.getStrInOut(in[5], out[5]));
+    assertEquals("782 : 80'765", Utils.getStrInOut(in[6], out[6]));
+    assertEquals("786'543 : 8'743'149", Utils.getStrInOut(in[7], out[7]));
+  
+  }
+
+  @Test
+  public void testSum() {
+
+    Long [] tab = new Long[] {7834677859L,6787L,183486L,1000000L,312547867865435689L,0L,87685L};
+
+    java.util.List<Long> l = java.util.Arrays.asList(tab);
+    assertEquals(Utils.sum(l), 312547875701391506L);
+
+  }
+
 
 }

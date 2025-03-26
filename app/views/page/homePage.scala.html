@@ -26,12 +26,24 @@
 *@
 
 @main("Dr. Elephant", "dashboard") {
+
   <div class="jumbotron">
-    <h2>Hello there, I've been busy!</h2>
-    <p>I looked through <b>@numJobsAnalyzed</b> jobs today.<br>
-      About <b>@numJobsSevere</b> of them could use some tuning.<br>
-      About <b>@numJobsCritical</b> of them need some serious attention!
-    </p>
+    <table>
+      <tr>
+        <td>
+          <h2>Hello there, I've been busy!</h2>
+          <p>I looked through <b>@numJobsAnalyzed</b> jobs today.<br>
+          About <b>@numJobsSevere</b> of them could use some tuning.<br>
+          About <b>@numJobsCritical</b> of them need some serious attention!</p>
+        </td>
+        <td>
+          <div class="rien">
+            <img src='@routes.Assets.at("images/drelephant.png")' width="210" height="153" alt=' ' align=right/>
+          <div>
+        </td>
+      </tr>
+    </table>
+
   </div>
   @results
 }

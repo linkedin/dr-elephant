@@ -41,10 +41,10 @@ public class HadoopSecurity {
   private static HadoopSecurity instance = null;
 
   public static HadoopSecurity getInstance() throws IOException{
+
     if (instance == null) {
       instance = new HadoopSecurity();
     }
-
     return instance;
   }
 

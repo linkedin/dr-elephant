@@ -19,7 +19,7 @@
 <configuration>
   <property>
     <name>drelephant.analysis.thread.count</name>
-    <value>1</value>
+    <value>3</value>
     <description>Number of threads to analyze the completed jobs</description>
   </property>
   <property>

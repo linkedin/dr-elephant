@@ -94,7 +94,7 @@ public class MemoryFormatUtils {
       return 0L;
     }
 
-    Matcher matcher = REGEX_MATCHER.matcher(formattedString.replace(",",""));
+    Matcher matcher = REGEX_MATCHER.matcher(formattedString);
     if (!matcher.matches()) {
       throw new IllegalArgumentException(
           "The formatted string [" + formattedString + "] does not match with the regex /" + REGEX_MATCHER.toString()

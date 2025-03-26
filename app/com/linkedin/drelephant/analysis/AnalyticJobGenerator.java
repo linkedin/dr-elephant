@@ -43,7 +43,7 @@ public interface AnalyticJobGenerator {
   public void updateResourceManagerAddresses();
 
   /**
-   * Provides a list of AnalyticJobs that should be calculated in the given time period.
+   * Provides a list of AnalyticJobs that should be calculated
    *
    * @return a list of AnalyticJobs
    * @throws IOException
@@ -67,18 +67,4 @@ public interface AnalyticJobGenerator {
    * @param job The job to add
    */
   public void addIntoSecondRetryQueue(AnalyticJob job);
-
-  /**
-   * Get effective Resource manager address. Should be used after {@link #updateResourceManagerAddresses()} has been
-   * called.
-   *
-   * @return Resource manager address.
-   */
-  String getEffectiveResourceManagerAddress();
-
-  /**
-   *
-   * @return
-   */
-  long getFetchStartTime();
 }

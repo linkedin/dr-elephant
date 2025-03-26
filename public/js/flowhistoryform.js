@@ -17,7 +17,7 @@
 $(document).ready(function(){
 
   /* Plot graph for data obtained from ajax call */
-  $.getJSON('/rest/flowgraphdata?id=' + queryString()['flow-def-id'], function(data) {
+  $.getJSON('./rest/flowgraphdata?id=' + queryString()['flow-def-id'], function(data) {
     updateExecTimezone(data);
 
     // Compute the jobDefId list such that the job numbers in the tooltip match the corresponding job in the table.

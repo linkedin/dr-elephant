@@ -28,6 +28,7 @@ public class MapReduceTaskData {
   // The successful attempt id
   private String _attemptId;
 
+
   public void setTotalTimeMs(long totalTimeMs, boolean isTimeDataPresent) {
     this._totalTimeMs = totalTimeMs;
     this._isTimeDataPresent = isTimeDataPresent;

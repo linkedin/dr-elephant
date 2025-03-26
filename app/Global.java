@@ -21,9 +21,17 @@ import play.Application;
 import play.GlobalSettings;
 import play.Logger;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.logging.Level;
+
+import play.libs.F.Promise;
+import play.mvc.Action;
+import play.mvc.Http;
+import play.mvc.SimpleResult;
+
+import play.mvc.Result;
 
 
 /**
@@ -31,27 +39,25 @@ import java.util.logging.Level;
  */
 public class Global extends GlobalSettings {
 
-  Thread _drElephantThread;
+  DrElephant _drElephant;
 
   public void onStart(Application app) {
     Logger.info("Starting Application...");
 
     fixJavaKerberos();
 
-    _drElephantThread = new Thread(DrElephant.getInstance());
-    _drElephantThread.start();
+    try {
+      _drElephant = new DrElephant();
+      _drElephant.start();
+    } catch (IOException e) {
+      Logger.error("Application start failed...", e);
+    }
   }
 
   public void onStop(Application app) {
     Logger.info("Stopping application...");
-    if (_drElephantThread != null) {
-      DrElephant.getInstance().kill();
-      _drElephantThread.interrupt();
-      try {
-        _drElephantThread.join();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
+    if (_drElephant != null) {
+      _drElephant.kill();
     }
   }
 
@@ -88,4 +94,46 @@ public class Global extends GlobalSettings {
     modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     field.set(null, newValue);
   }
+  
+  
+  
+  /* CORS filter */
+
+    private class ActionWrapper extends Action.Simple {
+        public ActionWrapper(Action<?> action) {
+            this.delegate = action;
+        }
+
+        @Override
+        public Promise<SimpleResult> call(Http.Context ctx) throws java.lang.Throwable {
+            Promise<SimpleResult> result = this.delegate.call(ctx);
+            Http.Response response = ctx.response();
+            response.setHeader("Access-Control-Allow-Origin", "*"); //http://tu-gjt-q01:5777
+            response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, Origin, X-Json");
+            response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Request-Headers", "X-Requested-With, accept, content-type, Origin, X-Json");
+
+            return result;
+        }
+    }
+
+    @Override
+    public Action<?> onRequest(Http.Request request, java.lang.reflect.Method actionMethod) {
+        Logger.info("before each request..." + request.toString());
+        return new ActionWrapper(super.onRequest(request, actionMethod));
+    }
+
+  /* CORS filter */
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 }

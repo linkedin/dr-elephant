@@ -74,10 +74,4 @@
     <conf>mapred.child.java.opts</conf>
     <isDefault/>
   </jobType>
-  <jobType>
-    <name>TonY</name>
-    <applicationtype>TONY</applicationtype>
-    <conf>tony.application.name</conf>
-    <isDefault/>
-  </jobType>
 </jobTypes>

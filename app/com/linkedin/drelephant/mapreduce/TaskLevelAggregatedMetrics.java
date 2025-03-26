@@ -142,7 +142,7 @@ public class TaskLevelAggregatedMetrics {
     }
 
     // wastedResources
-    long wastedMemory = containerSize - (long) (peakMemoryNeed * MEMORY_BUFFER); // give a 50% buffer
+    long wastedMemory = containerSize -  (long) (peakMemoryNeed * MEMORY_BUFFER); // give a 50% buffer
     if(wastedMemory > 0) {
       for (long duration : durations) {
         _resourceWasted += (wastedMemory) * (duration / Statistics.SECOND_IN_MS); // MB Seconds
